@@ -6,13 +6,13 @@
         <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-1">
           <span>Gamification</span>
           <span>/</span>
-          <span class="text-[#499ec7] dark:text-[#84cded] font-bold">Star Odyssey Journey Map</span>
+          <span class="text-[#499ec7] dark:text-[#84cded] font-bold">World Map Journey</span>
         </div>
         <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-          Peta Perjalanan & Ekspedisi Bintang
+          Peta Petualangan Bintang (World Map Journey)
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          Jelajahi alur pipa ekspedisi 3 minggu operasional gerai Re.juve, pantau posisi pos aktif, dan klaim bintang mutu.
+          Jelajahi kepulauan gamifikasi Re.juve! Pantau posisi pos karakter Anda, buka pulau aktif, dan selesaikan seluruh misi.
         </p>
       </div>
 
@@ -35,12 +35,12 @@
       </div>
     </div>
 
-    <!-- Main Journey Map Component -->
-    <JourneyMap />
+    <!-- Main World Map Journey Component -->
+    <WorldMapJourney />
   </div>
 </template>
 
 <script setup>
-import JourneyMap from '~/components/gamification/JourneyMap.vue'
+import WorldMapJourney from '~/components/gamification/WorldMapJourney.vue'
 import { Target, Trophy } from 'lucide-vue-next'
 </script>
