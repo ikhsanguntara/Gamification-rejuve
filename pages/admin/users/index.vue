@@ -16,14 +16,13 @@
         </p>
       </div>
 
-      <button
-        type="button"
-        @click="openCreateUserModal"
+      <NuxtLink
+        to="/admin/users/create"
         class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer self-start sm:self-auto"
       >
         <Plus class="w-4 h-4" />
         <span>+ Tambah User Baru</span>
-      </button>
+      </NuxtLink>
     </div>
 
     <!-- Filters & Search Toolbar -->
@@ -143,14 +142,13 @@
               <!-- Actions -->
               <td class="py-3 px-4 text-right">
                 <div class="flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    @click="editUser(u)"
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  <NuxtLink
+                    :to="`/admin/users/${u.id}`"
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-block"
                     title="Edit User"
                   >
                     <Edit3 class="w-4 h-4" />
-                  </button>
+                  </NuxtLink>
                   <button
                     type="button"
                     @click="confirmDeleteUser(u)"
@@ -166,92 +164,6 @@
         </table>
       </div>
     </div>
-
-    <!-- Create / Edit User Modal -->
-    <BaseModal
-      :modelValue="showUserModal"
-      :title="editingUser ? 'Edit User' : 'Tambah User / Crew Baru'"
-      subtitle="Isi data profil dan tentukan cabang penempatan gerai"
-      max-width="md"
-      @update:modelValue="showUserModal = $event"
-      @close="showUserModal = false"
-    >
-      <form @submit.prevent="saveUser" class="space-y-3 py-2">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label>
-          <input
-            v-model="userForm.name"
-            type="text"
-            required
-            placeholder="Contoh: Rian Hidayat"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Role Akun</label>
-            <select
-              v-model="userForm.role"
-              class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="CREW">Crew Member (Store Specialist)</option>
-              <option value="SUPERVISOR">Area Supervisor</option>
-              <option value="HEAD">Head of Operations</option>
-              <option value="SUPERADMIN">Superadmin</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Cabang Penempatan</label>
-            <select
-              v-model="userForm.batchId"
-              class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
-            >
-              <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
-                {{ b.name.split('—')[1] || b.name }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jabatan (Position)</label>
-            <input
-              v-model="userForm.position"
-              type="text"
-              placeholder="Store Specialist"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email</label>
-            <input
-              v-model="userForm.email"
-              type="email"
-              placeholder="rian.hidayat@rejuve.co.id"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-        </div>
-
-        <div class="pt-3 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            @click="showUserModal = false"
-            class="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20 cursor-pointer"
-          >
-            {{ editingUser ? 'Simpan User' : 'Buat User' }}
-          </button>
-        </div>
-      </form>
-    </BaseModal>
   </div>
 </template>
 
@@ -260,7 +172,6 @@ import { ref, computed } from 'vue'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useToast } from '~/composables/useToast.js'
-import BaseModal from '~/components/ui/BaseModal.vue'
 import { Plus, Edit3, Trash2, Search } from 'lucide-vue-next'
 
 const userStore = useUserStore()
@@ -270,17 +181,6 @@ const toast = useToast()
 const searchQuery = ref('')
 const userRoleFilter = ref('ALL')
 const userBatchFilter = ref('ALL')
-
-const showUserModal = ref(false)
-const editingUser = ref(null)
-
-const userForm = ref({
-  name: '',
-  role: 'CREW',
-  batchId: 'batch-alpha',
-  position: 'Store Specialist',
-  email: ''
-})
 
 const filteredUsers = computed(() => {
   return userStore.allUsers.filter(u => {
@@ -296,37 +196,8 @@ const filteredUsers = computed(() => {
   })
 })
 
-const openCreateUserModal = () => {
-  editingUser.value = null
-  userForm.value = {
-    name: '',
-    role: 'CREW',
-    batchId: batchStore.selectedBatchId || 'batch-alpha',
-    position: 'Store Specialist',
-    email: ''
-  }
-  showUserModal.value = true
-}
-
-const editUser = (user) => {
-  editingUser.value = user
-  userForm.value = { ...user }
-  showUserModal.value = true
-}
-
-const saveUser = () => {
-  if (editingUser.value) {
-    userStore.updateUser(editingUser.value.id, userForm.value)
-    toast.success('User Diperbarui', `Profil ${userForm.value.name} telah diperbarui.`)
-  } else {
-    const newU = userStore.createUser(userForm.value)
-    toast.success('User Baru Terdaftar', `${newU.name} (${newU.role}) berhasil ditambahkan dan ditugaskan ke gerai.`)
-  }
-  showUserModal.value = false
-}
-
 const confirmDeleteUser = (user) => {
-  if (confirm(`Hapus user ${user.name}?`)) {
+  if (confirm(`Apakah Anda yakin ingin menghapus user ${user.name}?`)) {
     userStore.deleteUser(user.id)
     toast.info('User Dihapus', `${user.name} telah dihapus dari direktori.`)
   }
