@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { mockMissions } from '~/mocks/missions.js'
 import { calculateStars } from '~/utils/star.js'
+import { useGamificationStore } from './gamification.js'
 
 /**
- * Mission Store: Manages store-wide missions across batches and weeks
+ * Mission Store: Manages store-wide missions across batches and weeks, and Superadmin CRUD
  */
 
 export const useMissionStore = defineStore('mission', {
@@ -76,6 +77,63 @@ export const useMissionStore = defineStore('mission', {
       if (search !== undefined) this.searchQuery = search
       if (category !== undefined) this.selectedCategory = category
       if (status !== undefined) this.selectedStatus = status
+    },
+
+    // ==================== SUPERADMIN ACTIONS ====================
+
+    createMission(payload) {
+      const id = `mission-${Date.now()}`
+      const gamificationStore = useGamificationStore()
+      const batchCrews = gamificationStore.crewsByBatch(payload.batchId)
+      const assignedCrewIds = batchCrews.map(c => c.id)
+
+      const newMission = {
+        id,
+        code: payload.code || `MSN-${payload.week || 1}-${String(this.missions.length + 1).padStart(2, '0')}`,
+        title: payload.title,
+        description: payload.description || 'Misi kepatuhan operasional dan standar mutu gerai Re.juve.',
+        category: payload.category || 'Quality Control',
+        week: Number(payload.week) || 1,
+        batchId: payload.batchId || 'batch-alpha',
+        assignedCrewIds,
+        crewEvaluations: assignedCrewIds.map(cId => ({
+          crewId: cId,
+          score: 0,
+          calculatedStars: 0,
+          awardedStars: 0,
+          status: 'NOT_STARTED'
+        })),
+        status: payload.status || 'NOT_STARTED',
+        averageScore: 0,
+        calculatedStars: 0,
+        awardedStars: 0,
+        deadline: payload.deadline || '2026-09-14',
+        requirements: payload.requirements || [
+          'Verifikasi suhu chiller penyimpanan pada kisaran 2-4°C.',
+          'Pemeriksaan sanitasi alat pemeras hidrolik cold-pressed.',
+          'Uji sampling Brix dan kejernihan sari buah.'
+        ],
+        supervisorId: 'spv-001',
+        createdAt: new Date().toISOString()
+      }
+
+      this.missions.push(newMission)
+      return newMission
+    },
+
+    updateMission(id, payload) {
+      const mission = this.missions.find(m => m.id === id)
+      if (!mission) return null
+      Object.assign(mission, payload)
+      return mission
+    },
+
+    deleteMission(id) {
+      const idx = this.missions.findIndex(m => m.id === id)
+      if (idx !== -1) {
+        return this.missions.splice(idx, 1)[0]
+      }
+      return null
     }
   }
 })

@@ -53,7 +53,7 @@
           class="w-5 h-5 flex-shrink-0 transition-colors"
           :class="[
             $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard')
-              ? 'text-amber-500'
+              ? 'text-[#499ec7] dark:text-[#84cded]'
               : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
           ]"
         />
@@ -71,8 +71,8 @@
     <!-- Active Batch & Week Mini Widget -->
     <div class="p-4 m-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">
-          {{ batchStore.currentBatch.name.split('-')[0].trim() }}
+        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[130px]">
+          {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name.split('-')[0].trim() }}
         </span>
         <span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
           Week {{ batchStore.selectedWeek }} Active
@@ -80,7 +80,7 @@
       </div>
       <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
         <div
-          class="bg-amber-500 h-full rounded-full transition-all duration-500"
+          class="bg-[#499ec7] h-full rounded-full transition-all duration-500"
           :style="{ width: `${batchStore.currentBatch.weeks[batchStore.selectedWeek - 1]?.completionRate || 65}%` }"
         ></div>
       </div>
@@ -140,11 +140,11 @@ import {
   Target,
   ClipboardCheck,
   ShieldCheck,
+  Sliders,
   Medal,
   Trophy,
   User,
   Settings,
-  Star,
   Sparkles,
   LogOut
 } from 'lucide-vue-next'
@@ -170,6 +170,8 @@ const roleBadgeStyle = computed(() => {
       return 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
     case 'HEAD':
       return 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
+    case 'SUPERADMIN':
+      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
     default:
       return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
   }
@@ -177,6 +179,31 @@ const roleBadgeStyle = computed(() => {
 
 const navItems = computed(() => {
   const role = userStore.currentRole
+
+  if (role === 'SUPERADMIN') {
+    return [
+      { label: 'Master Admin', path: '/admin', icon: Sliders },
+      { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+      { label: 'Cabang Gerai', path: '/batches', icon: Layers },
+      { label: 'Missions', path: '/missions', icon: Target },
+      {
+        label: 'Evaluations',
+        path: '/evaluations',
+        icon: ClipboardCheck,
+        badge: missionStore.revisionCount > 0 ? `${missionStore.revisionCount} Rev` : null,
+        badgeStyle: 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+      },
+      {
+        label: 'Approvals',
+        path: '/approvals',
+        icon: ShieldCheck,
+        badge: approvalStore.pendingApprovals.length > 0 ? `${approvalStore.pendingApprovals.length}` : null,
+        badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+      },
+      { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
+      { label: 'Achievements', path: '/achievements', icon: Trophy }
+    ]
+  }
 
   if (role === 'CREW') {
     return [
@@ -191,7 +218,7 @@ const navItems = computed(() => {
   if (role === 'SUPERVISOR') {
     return [
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      { label: 'Batches', path: '/batches', icon: Layers },
+      { label: 'Cabang Gerai', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
         label: 'Evaluations',
@@ -208,7 +235,7 @@ const navItems = computed(() => {
   // HEAD Role
   return [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { label: 'Batches', path: '/batches', icon: Layers },
+    { label: 'Cabang Gerai', path: '/batches', icon: Layers },
     {
       label: 'Approvals',
       path: '/approvals',

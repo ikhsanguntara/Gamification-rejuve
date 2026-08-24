@@ -77,6 +77,57 @@ export const useGamificationStore = defineStore('gamification', {
   },
 
   actions: {
+    // ==================== SUPERADMIN ACTIONS ====================
+    addCrew(payload) {
+      const newCrew = {
+        id: payload.id || `crew-${Date.now()}`,
+        name: payload.name,
+        code: payload.code || `CRW-${String(this.crews.length + 1).padStart(3, '0')}`,
+        avatar: payload.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+        position: payload.position || 'Store Specialist',
+        department: payload.department || 'Store Operations',
+        storeLocation: payload.storeLocation || 'Re.juve Store',
+        batchId: payload.batchId || 'batch-alpha',
+        stars: Number(payload.stars) || 0,
+        level: calculateStarLevel(Number(payload.stars) || 0),
+        completedMissions: Number(payload.completedMissions) || 0,
+        averageScore: Number(payload.averageScore) || 0,
+        status: 'ACTIVE'
+      }
+
+      this.crews.push(newCrew)
+      return newCrew
+    },
+
+    updateCrew(id, payload) {
+      const crew = this.crews.find(c => c.id === id)
+      if (!crew) return null
+      Object.assign(crew, payload)
+      if (payload.stars !== undefined) {
+        crew.level = calculateStarLevel(crew.stars)
+      }
+      return crew
+    },
+
+    removeCrew(id) {
+      const idx = this.crews.findIndex(c => c.id === id)
+      if (idx !== -1) {
+        return this.crews.splice(idx, 1)[0]
+      }
+      return null
+    },
+
+    reassignCrewBatch(crewId, newBatchId, storeLocation = '') {
+      const crew = this.crews.find(c => c.id === crewId)
+      if (crew) {
+        crew.batchId = newBatchId
+        if (storeLocation) crew.storeLocation = storeLocation
+        return true
+      }
+      return false
+    },
+
+    // ==================== GAMIFICATION ACTIONS ====================
     awardStarsToCrew(crewId, starsAmount, meta = {}) {
       const crew = this.crews.find(c => c.id === crewId)
       if (!crew) return null

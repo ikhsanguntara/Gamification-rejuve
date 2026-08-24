@@ -1,11 +1,11 @@
 <template>
-  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 px-3 py-2 shadow-2xl safe-area-bottom">
+  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 px-2 py-2 shadow-2xl safe-area-bottom">
     <div class="flex items-center justify-around max-w-md mx-auto">
       <NuxtLink
         v-for="item in navItems"
         :key="item.path"
         :to="item.path"
-        class="flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl text-[10px] font-bold transition-all relative group flex-1"
+        class="flex flex-col items-center justify-center py-1 px-2 rounded-2xl text-[10px] font-bold transition-all relative group flex-1"
         :class="[
           $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard')
             ? 'text-[#24779f] dark:text-[#84cded] scale-105'
@@ -42,6 +42,7 @@ import {
   Target,
   ClipboardCheck,
   ShieldCheck,
+  Sliders,
   Medal,
   Trophy,
   User
@@ -53,6 +54,21 @@ const missionStore = useMissionStore()
 
 const navItems = computed(() => {
   const role = userStore.currentRole
+
+  if (role === 'SUPERADMIN') {
+    return [
+      { label: 'Admin', path: '/admin', icon: Sliders },
+      { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
+      { label: 'Gerai', path: '/batches', icon: Layers },
+      { label: 'Missions', path: '/missions', icon: Target },
+      {
+        label: 'Approvals',
+        path: '/approvals',
+        icon: ShieldCheck,
+        hasBadge: approvalStore.pendingApprovals.length > 0
+      }
+    ]
+  }
 
   if (role === 'CREW') {
     return [
