@@ -45,7 +45,8 @@ import {
   Sliders,
   Medal,
   Trophy,
-  User
+  User,
+  Compass
 } from 'lucide-vue-next'
 
 const userStore = useUserStore()
@@ -73,9 +74,9 @@ const navItems = computed(() => {
   if (role === 'CREW') {
     return [
       { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
+      { label: 'Journey', path: '/journey', icon: Compass },
       { label: 'Missions', path: '/missions', icon: Target },
       { label: 'Ranking', path: '/leaderboard', icon: Medal },
-      { label: 'Badges', path: '/achievements', icon: Trophy },
       { label: 'Profile', path: '/profile', icon: User }
     ]
   }

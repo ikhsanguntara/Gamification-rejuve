@@ -249,7 +249,8 @@ import {
   Sparkles,
   LogOut,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Compass
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -299,6 +300,7 @@ const navItems = computed(() => {
   if (role === 'SUPERADMIN') {
     return [
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+      { label: 'Journey Map', path: '/journey', icon: Compass },
       { label: 'Cabang Gerai', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
@@ -323,6 +325,7 @@ const navItems = computed(() => {
   if (role === 'CREW') {
     return [
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+      { label: 'Journey Map', path: '/journey', icon: Compass },
       { label: 'Missions', path: '/missions', icon: Target },
       { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
       { label: 'Achievements', path: '/achievements', icon: Trophy },
@@ -333,6 +336,7 @@ const navItems = computed(() => {
   if (role === 'SUPERVISOR') {
     return [
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+      { label: 'Journey Map', path: '/journey', icon: Compass },
       { label: 'Cabang Gerai', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
@@ -350,6 +354,7 @@ const navItems = computed(() => {
   // HEAD Role
   return [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { label: 'Journey Map', path: '/journey', icon: Compass },
     { label: 'Cabang Gerai', path: '/batches', icon: Layers },
     {
       label: 'Approvals',
