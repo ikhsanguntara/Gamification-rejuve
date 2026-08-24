@@ -57,7 +57,7 @@
           <ChevronDown v-else class="w-4 h-4 text-slate-400 transition-transform" />
         </button>
 
-        <!-- Submenu with Dot Bullets matching the screenshot -->
+        <!-- Submenu with Dot Bullets matching the user reference screenshot -->
         <Transition
           enter-active-class="transition duration-150 ease-out"
           enter-from-class="opacity-0 -translate-y-1"
@@ -72,14 +72,14 @@
               to="/admin/users"
               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
               :class="[
-                $route.path === '/admin/users'
+                $route.path.startsWith('/admin/users')
                   ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-bold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               ]"
             >
               <span
                 class="w-1.5 h-1.5 rounded-full transition-colors"
-                :class="$route.path === '/admin/users' ? 'bg-indigo-600 dark:bg-indigo-400' : 'bg-slate-400 dark:bg-slate-600'"
+                :class="$route.path.startsWith('/admin/users') ? 'bg-indigo-600 dark:bg-indigo-400' : 'bg-slate-400 dark:bg-slate-600'"
               ></span>
               <span>User</span>
             </NuxtLink>
@@ -89,14 +89,14 @@
               to="/admin/batches"
               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
               :class="[
-                $route.path === '/admin/batches'
+                $route.path.startsWith('/admin/batches')
                   ? 'bg-[#499ec7]/15 text-[#24779f] dark:text-[#84cded] font-bold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               ]"
             >
               <span
                 class="w-1.5 h-1.5 rounded-full transition-colors"
-                :class="$route.path === '/admin/batches' ? 'bg-[#499ec7]' : 'bg-slate-400 dark:bg-slate-600'"
+                :class="$route.path.startsWith('/admin/batches') ? 'bg-[#499ec7]' : 'bg-slate-400 dark:bg-slate-600'"
               ></span>
               <span>Batch</span>
             </NuxtLink>
@@ -106,16 +106,33 @@
               to="/admin/missions"
               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
               :class="[
-                $route.path === '/admin/missions'
+                $route.path.startsWith('/admin/missions')
                   ? 'bg-[#963189]/15 text-[#963189] dark:text-[#db92d7] font-bold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               ]"
             >
               <span
                 class="w-1.5 h-1.5 rounded-full transition-colors"
-                :class="$route.path === '/admin/missions' ? 'bg-[#963189]' : 'bg-slate-400 dark:bg-slate-600'"
+                :class="$route.path.startsWith('/admin/missions') ? 'bg-[#963189]' : 'bg-slate-400 dark:bg-slate-600'"
               ></span>
               <span>Mission</span>
+            </NuxtLink>
+
+            <!-- Template Misi Submenu -->
+            <NuxtLink
+              to="/admin/templates"
+              class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
+              :class="[
+                $route.path.startsWith('/admin/templates')
+                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              ]"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full transition-colors"
+                :class="$route.path.startsWith('/admin/templates') ? 'bg-amber-500 dark:bg-amber-400' : 'bg-slate-400 dark:bg-slate-600'"
+              ></span>
+              <span>Template Misi</span>
             </NuxtLink>
           </div>
         </Transition>

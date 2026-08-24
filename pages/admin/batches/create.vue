@@ -21,7 +21,7 @@
             Tambah Cabang Gerai (Batch) Baru
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">
-            Daftarkan outlet cabang baru dan sistem akan otomatis menginisialisasi siklus 3 minggu.
+            Daftarkan outlet cabang baru dan sistem akan otomatis menginisialisasi siklus 3 minggu serta paket 12 misi.
           </p>
         </div>
       </div>
@@ -66,14 +66,30 @@
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Deskripsi Gerai</label>
           <textarea
             v-model="form.description"
-            rows="3"
+            rows="2"
             placeholder="Deskripsi operasional gerai, jam operasional, atau karakteristik cabang..."
             class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none p-3.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
           ></textarea>
         </div>
 
-        <div class="p-3.5 rounded-2xl bg-[#499ec7]/10 text-xs text-[#24779f] dark:text-[#84cded]">
-          ℹ️ Sistem akan secara otomatis menginisialisasi <strong>Siklus 3 Minggu Operasional</strong> (*Week 1 Cold Chain Setup, Week 2 Core Quality, Week 3 HACCP Certification*).
+        <!-- ⚡ 1-Click Template Preset Package Generator Toggle -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-[#499ec7]/10 via-[#963189]/5 to-transparent border border-[#499ec7]/30 dark:border-[#499ec7]/20 space-y-2">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input
+              v-model="form.applyTemplatePackage"
+              type="checkbox"
+              class="w-4 h-4 mt-0.5 rounded text-[#499ec7] focus:ring-[#499ec7] cursor-pointer"
+            />
+            <div class="flex-1">
+              <span class="text-xs font-black text-slate-900 dark:text-white block flex items-center gap-1.5">
+                <span>⚡ Terapkan Paket Misi Standar Re.juve (12 Misi Otomatis)</span>
+                <span class="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Direkomendasikan</span>
+              </span>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                Sistem akan <strong>otomatis membuat 12 Misi Lengkap</strong> (Cold Chain 2-4°C, Sanitasi Swab Test, Uji Brix Buah, Rasio Jus 100%, Rekonsiliasi Stok, Layanan Barista, Audit HACCP) untuk Week 1, 2, dan 3. Anda <strong>tidak perlu mengetik misi satu per satu</strong>!
+              </p>
+            </div>
+          </label>
         </div>
 
         <div class="pt-4 flex items-center justify-end gap-3">
@@ -110,12 +126,17 @@ const form = ref({
   name: '',
   code: `BTH-0${batchStore.allBatches.length + 1}`,
   storeLocation: '',
-  description: ''
+  description: '',
+  applyTemplatePackage: true
 })
 
 const handleSubmit = () => {
   const newB = batchStore.createBatch(form.value)
-  toast.success('Gerai Baru Dibuat', `Cabang ${newB.name} berhasil ditambahkan dengan siklus 3 minggu.`)
+  if (form.value.applyTemplatePackage) {
+    toast.success('Gerai & 12 Misi Berhasil Dibuat!', `Cabang ${newB.name} aktif dengan 12 Misi Standar Re.juve untuk Week 1, 2, dan 3.`)
+  } else {
+    toast.success('Gerai Baru Dibuat', `Cabang ${newB.name} berhasil ditambahkan.`)
+  }
   router.push('/admin/batches')
 }
 </script>

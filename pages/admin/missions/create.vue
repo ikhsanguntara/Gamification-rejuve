@@ -21,12 +21,45 @@
             Buat Misi Operasional Gerai Baru
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">
-            Tentukan target cabang gerai, siklus minggu, kode SOP, dan daftar spesifikasi yang dinilai.
+            Pilih dari template standar yang sudah ada atau ketik manual spesifikasi SOP baru.
           </p>
         </div>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+      <!-- 📋 1-Click Template Preset Selector Callout -->
+      <div class="my-4 p-4 rounded-2xl bg-gradient-to-r from-[#963189]/10 via-[#499ec7]/10 to-transparent border border-[#963189]/20 space-y-2">
+        <label class="block text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+          <Sparkles class="w-4 h-4 text-[#963189]" />
+          <span>Pilih dari Template Standar Re.juve (Auto-Fill Cepat)</span>
+        </label>
+        <select
+          v-model="selectedTemplateId"
+          @change="handleSelectTemplate"
+          class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189] cursor-pointer"
+        >
+          <option value="">-- Pilih Template untuk Isi Otomatis --</option>
+          <optgroup label="Week 1: Setup & Cold Chain Safety">
+            <option v-for="t in templateStore.templatesByWeek(1)" :key="t.id" :value="t.id">
+              {{ t.title }} ({{ t.category }})
+            </option>
+          </optgroup>
+          <optgroup label="Week 2: Core Quality & Fresh Extraction">
+            <option v-for="t in templateStore.templatesByWeek(2)" :key="t.id" :value="t.id">
+              {{ t.title }} ({{ t.category }})
+            </option>
+          </optgroup>
+          <optgroup label="Week 3: HACCP Certification & Service">
+            <option v-for="t in templateStore.templatesByWeek(3)" :key="t.id" :value="t.id">
+              {{ t.title }} ({{ t.category }})
+            </option>
+          </optgroup>
+        </select>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400">
+          Memilih template akan <strong>otomatis mengisi</strong> Judul, Kategori, Deskripsi, dan Checklist SOP di bawah.
+        </p>
+      </div>
+
+      <form @submit.prevent="handleSubmit" class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Cabang Gerai Target *</label>
@@ -104,8 +137,46 @@
           ></textarea>
         </div>
 
+        <!-- Requirements Checklist Builder -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+              Spesifikasi Checklist SOP ({{ form.requirements.length }} Poin)
+            </label>
+            <button
+              type="button"
+              @click="addRequirement"
+              class="text-[11px] font-bold text-[#963189] dark:text-[#db92d7] hover:underline"
+            >
+              + Tambah Poin SOP
+            </button>
+          </div>
+          <div class="space-y-2">
+            <div
+              v-for="(req, idx) in form.requirements"
+              :key="idx"
+              class="flex items-center gap-2"
+            >
+              <input
+                v-model="form.requirements[idx]"
+                type="text"
+                required
+                class="flex-1 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
+              />
+              <button
+                type="button"
+                @click="removeRequirement(idx)"
+                class="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                :disabled="form.requirements.length <= 1"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="p-3.5 rounded-2xl bg-[#963189]/10 text-xs text-[#963189] dark:text-[#db92d7]">
-          ℹ️ Misi ini akan otomatis ditugaskan ke <strong>seluruh Crew</strong> yang terdaftar di cabang gerai terpilih dan langsung tersedia pada form evaluasi Supervisor.
+          ℹ️ Misi ini akan otomatis ditugaskan ke <strong>seluruh Crew</strong> yang terdaftar di cabang gerai terpilih.
         </div>
 
         <div class="pt-4 flex items-center justify-end gap-3">
@@ -132,13 +203,17 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBatchStore } from '~/stores/batch.js'
 import { useMissionStore } from '~/stores/mission.js'
+import { useTemplateStore } from '~/stores/template.js'
 import { useToast } from '~/composables/useToast.js'
-import { ArrowLeft, Target } from 'lucide-vue-next'
+import { ArrowLeft, Target, Sparkles } from 'lucide-vue-next'
 
 const router = useRouter()
 const batchStore = useBatchStore()
 const missionStore = useMissionStore()
+const templateStore = useTemplateStore()
 const toast = useToast()
+
+const selectedTemplateId = ref('')
 
 const form = ref({
   title: '',
@@ -146,8 +221,35 @@ const form = ref({
   category: 'Quality Control',
   batchId: batchStore.selectedBatchId || 'batch-alpha',
   week: 2,
-  description: ''
+  description: '',
+  requirements: [
+    'Pemeriksaan standar operasional prosedur mutu gerai Re.juve.'
+  ]
 })
+
+const handleSelectTemplate = () => {
+  if (!selectedTemplateId.value) return
+  const tmpl = templateStore.templateById(selectedTemplateId.value)
+  if (tmpl) {
+    form.value.title = tmpl.title
+    form.value.category = tmpl.category
+    form.value.week = tmpl.week
+    form.value.description = tmpl.description
+    form.value.requirements = [...tmpl.requirements]
+    form.value.code = `MSN-W${tmpl.week}-0${missionStore.allMissions.length + 1}`
+    toast.info('Template Diterapkan', `Form terisi otomatis dari template "${tmpl.title}".`)
+  }
+}
+
+const addRequirement = () => {
+  form.value.requirements.push('Poin spesifikasi standar mutu baru...')
+}
+
+const removeRequirement = (idx) => {
+  if (form.value.requirements.length > 1) {
+    form.value.requirements.splice(idx, 1)
+  }
+}
 
 const handleSubmit = () => {
   const newM = missionStore.createMission(form.value)

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { mockBatches } from '~/mocks/batches.js'
+import { useTemplateStore } from './template.js'
 
 /**
  * Batch Store: Manage active batch, 3-week lifecycle, aggregated metrics, and Superadmin CRUD
@@ -116,6 +117,13 @@ export const useBatchStore = defineStore('batch', {
       }
 
       this.batches.push(newBatch)
+
+      // ⚡ Automatically apply template package (12 missions) if enabled!
+      if (payload.applyTemplatePackage !== false) {
+        const templateStore = useTemplateStore()
+        templateStore.applyPackageToBatch(id, payload.templatePackageId || 'pkg-rejuve-standard')
+      }
+
       return newBatch
     },
 
