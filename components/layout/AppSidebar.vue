@@ -1,21 +1,25 @@
 <template>
   <aside class="hidden lg:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 transition-all">
     <!-- Brand Logo & App Name -->
-    <div class="h-16 flex items-center px-6 gap-3 border-b border-slate-100 dark:border-slate-800/80">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#499ec7] to-[#24779f] flex items-center justify-center text-white shadow-md shadow-[#499ec7]/20">
-        <Sparkles class="w-5 h-5 text-white" />
+    <div class="h-16 flex items-center px-5 gap-3 border-b border-slate-100 dark:border-slate-800/80">
+      <div class="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 shadow-md ring-2 ring-[#831843]/30">
+        <img
+          src="/images/logo.png"
+          alt="Re.juve Logo"
+          class="w-full h-full object-cover"
+        />
       </div>
       <div>
         <div class="flex items-center gap-1.5">
           <h1 class="font-black text-base text-slate-900 dark:text-white leading-tight">
             Re.juve
           </h1>
-          <span class="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-[#963189]/10 text-[#963189] dark:text-[#db92d7]">
-            PRO
+          <span class="text-[9px] font-black px-1.5 py-0.2 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
+            SOP
           </span>
         </div>
-        <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-          True Cold-Pressed
+        <p class="text-[9px] font-extrabold text-[#9d174d] dark:text-[#f472b6] uppercase tracking-wider">
+          #CleanLabel 100% Fresh
         </p>
       </div>
     </div>
@@ -146,7 +150,7 @@
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group"
         :class="[
           $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard' && !item.path.startsWith('/admin'))
-            ? 'bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded] font-bold shadow-sm'
+            ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] dark:bg-[#831843]/20 font-bold shadow-sm'
             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
         ]"
       >
@@ -155,7 +159,7 @@
           class="w-5 h-5 flex-shrink-0 transition-colors"
           :class="[
             $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard' && !item.path.startsWith('/admin'))
-              ? 'text-[#499ec7] dark:text-[#84cded]'
+              ? 'text-[#831843] dark:text-[#f472b6]'
               : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
           ]"
         />

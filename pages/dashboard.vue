@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6">
     <!-- Top Greeting & Context Hero -->
-    <div class="rounded-3xl bg-gradient-to-r from-[#1a4257] via-[#24779f] to-[#491b41] text-white p-5 sm:p-8 relative overflow-hidden shadow-xl border border-white/10">
+    <div class="rounded-3xl bg-gradient-to-r from-[#4a0e28] via-[#6b133a] to-[#831843] text-white p-5 sm:p-8 relative overflow-hidden shadow-xl border border-white/10">
       <!-- Glow decoration -->
-      <div class="absolute -right-10 -top-10 w-60 h-60 bg-[#499ec7]/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute right-1/4 -bottom-10 w-48 h-48 bg-[#963189]/25 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -right-10 -top-10 w-60 h-60 bg-[#be185d]/25 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute right-1/4 -bottom-10 w-48 h-48 bg-[#9d174d]/30 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
         <div>
@@ -39,7 +39,7 @@
           <NuxtLink
             v-if="userStore.isSupervisor"
             to="/evaluations"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#499ec7] to-[#24779f] hover:from-[#24779f] hover:to-[#1d5e7f] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#499ec7]/30 transition-all active:scale-95 border border-white/20"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#831843]/30 transition-all active:scale-95 border border-white/20"
           >
             <ClipboardCheck class="w-4 h-4" />
             <span>Evaluate Store Missions</span>
@@ -48,7 +48,7 @@
           <NuxtLink
             v-else-if="userStore.isHead"
             to="/approvals"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#963189] to-[#812474] hover:from-[#812474] hover:to-[#6a1d5f] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#963189]/30 transition-all active:scale-95 border border-white/20"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#9d174d]/30 transition-all active:scale-95 border border-white/20"
           >
             <ShieldCheck class="w-4 h-4" />
             <span>Review Approvals ({{ approvalStore.pendingApprovals.length }})</span>
@@ -66,7 +66,7 @@
           <NuxtLink
             v-else
             to="/missions"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#499ec7] to-[#24779f] hover:from-[#24779f] hover:to-[#1d5e7f] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#499ec7]/30 transition-all active:scale-95 border border-white/20"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#831843]/30 transition-all active:scale-95 border border-white/20"
           >
             <Target class="w-4 h-4" />
             <span>Misi Saya</span>
@@ -182,7 +182,7 @@
     <!-- 🗺️ Interactive Journey Odyssey Banner Widget (Strictly for Crew) -->
     <div
       v-if="userStore.isCrew"
-      class="rounded-3xl bg-gradient-to-r from-[#1a4257] via-[#24779f] to-[#491b41] text-white p-5 sm:p-6 border border-white/10 shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4"
+      class="rounded-3xl bg-gradient-to-r from-[#4a0e28] via-[#6b133a] to-[#831843] text-white p-5 sm:p-6 border border-white/10 shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4"
     >
       <div class="flex items-center gap-4 relative z-10">
         <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-amber-300 flex-shrink-0 shadow-md animate-bounce-gentle">
@@ -208,7 +208,7 @@
         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-slate-900 font-black text-xs hover:bg-slate-100 transition-all active:scale-95 shadow-md flex-shrink-0 cursor-pointer"
       >
         <span>Buka Peta Ekspedisi</span>
-        <ChevronRight class="w-4 h-4 text-[#499ec7]" />
+        <ChevronRight class="w-4 h-4 text-[#831843]" />
       </NuxtLink>
     </div>
 

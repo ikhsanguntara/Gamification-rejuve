@@ -1,9 +1,9 @@
 <template>
   <div class="space-y-6 select-none">
     <!-- Top Adventure Banner & Current Location Indicator -->
-    <div class="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#1a4257] via-[#24779f] to-[#491b41] text-white relative overflow-hidden shadow-xl border border-white/10">
+    <div class="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#4a0e28] via-[#6b133a] to-[#831843] text-white relative overflow-hidden shadow-xl border border-white/10">
       <!-- Glow ambient -->
-      <div class="absolute -right-10 -top-10 w-60 h-60 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -right-10 -top-10 w-60 h-60 bg-[#be185d]/25 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="flex items-center gap-4">

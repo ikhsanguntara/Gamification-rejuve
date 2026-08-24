@@ -4,8 +4,8 @@
     <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
       <!-- Mobile Brand Logo -->
       <NuxtLink to="/dashboard" class="lg:hidden flex items-center gap-2 flex-shrink-0">
-        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#499ec7] to-[#24779f] flex items-center justify-center text-white shadow-sm shadow-[#499ec7]/20">
-          <Sparkles class="w-4 h-4 text-white" />
+        <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shadow-sm ring-2 ring-[#831843]/30">
+          <img src="/images/logo.png" alt="Re.juve" class="w-full h-full object-cover" />
         </div>
         <span class="font-black text-sm text-slate-900 dark:text-white hidden xs:inline">Re.juve</span>
       </NuxtLink>
@@ -17,7 +17,7 @@
           v-if="userStore.isCrew"
           class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60"
         >
-          <MapPin class="w-3.5 h-3.5 text-[#499ec7] flex-shrink-0" />
+          <MapPin class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6] flex-shrink-0" />
           <span class="truncate max-w-[140px] xs:max-w-[180px]">
             {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}
           </span>

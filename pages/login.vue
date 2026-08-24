@@ -1,21 +1,25 @@
 <template>
   <div class="min-h-screen bg-[#faf7fa] dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden transition-colors">
-    <!-- Ambient Background Glows inspired by Re.juve Fresh Juice Palette -->
-    <div class="absolute -top-40 -left-40 w-96 h-96 bg-[#499ec7]/15 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-[#963189]/15 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+    <!-- Ambient Background Glows inspired by Re.juve Beet & Berry Palette -->
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-[#831843]/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-[#9d174d]/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#6b133a]/10 rounded-full blur-3xl pointer-events-none"></div>
 
     <div class="sm:mx-auto sm:w-full sm:max-w-xl text-center relative z-10 px-4">
       <!-- Re.juve App Brand Logo -->
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#499ec7] via-[#24779f] to-[#963189] text-white shadow-xl shadow-[#499ec7]/25 mb-4 animate-bounce-short">
-        <Sparkles class="w-8 h-8 text-white" />
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full shadow-2xl ring-4 ring-[#831843]/40 mb-4 overflow-hidden animate-bounce-short">
+        <img
+          src="/images/logo.png"
+          alt="Re.juve True Cold-Pressed"
+          class="w-full h-full object-cover"
+        />
       </div>
 
       <div class="flex items-center justify-center gap-2 mb-1">
         <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
           Re.juve
         </h1>
-        <span class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-[#499ec7]/10 text-[#499ec7] dark:bg-[#499ec7]/20 border border-[#499ec7]/30">
+        <span class="text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] border border-[#831843]/30">
           TRUE COLD-PRESSED
         </span>
       </div>
@@ -23,7 +27,7 @@
       <p class="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400">
         Mission Management & Store Performance Gamification
       </p>
-      <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+      <p class="text-[11px] font-bold text-[#9d174d] dark:text-[#f472b6] mt-0.5">
         #CleanLabel • 100% Fresh, Pure & Natural Operations
       </p>
     </div>
@@ -161,7 +165,7 @@
                 v-model="password"
                 type="password"
                 required
-                class="w-full text-xs font-medium rounded-xl bg-slate-100 dark:bg-slate-800 border-none pl-10 pr-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
+                class="w-full text-xs font-medium rounded-xl bg-slate-100 dark:bg-slate-800 border-none pl-10 pr-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
               />
               <Lock class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
@@ -190,11 +194,11 @@
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-xs font-extrabold bg-gradient-to-r from-[#499ec7] to-[#24779f] hover:from-[#24779f] hover:to-[#1d5e7f] text-white shadow-lg shadow-[#499ec7]/25 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+            class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-xs font-extrabold bg-gradient-to-r from-[#6b133a] via-[#831843] to-[#9d174d] hover:from-[#4a0e28] hover:to-[#6b133a] text-white shadow-lg shadow-[#831843]/30 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           >
             <span v-if="isLoading" class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
             <LogIn v-else class="w-4 h-4" />
-            <span>Sign In as {{ selectedRole }}</span>
+            <span>Sign In to Re.juve Console</span>
           </button>
         </form>
       </div>
