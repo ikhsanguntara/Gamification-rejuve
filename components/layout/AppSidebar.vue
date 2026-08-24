@@ -300,7 +300,6 @@ const navItems = computed(() => {
   if (role === 'SUPERADMIN') {
     return [
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      { label: 'Journey Map', path: '/journey', icon: Compass },
       { label: 'Cabang Gerai', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
@@ -336,7 +335,6 @@ const navItems = computed(() => {
   if (role === 'SUPERVISOR') {
     return [
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      { label: 'Journey Map', path: '/journey', icon: Compass },
       { label: 'Cabang Gerai', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
@@ -354,7 +352,6 @@ const navItems = computed(() => {
   // HEAD Role
   return [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { label: 'Journey Map', path: '/journey', icon: Compass },
     { label: 'Cabang Gerai', path: '/batches', icon: Layers },
     {
       label: 'Approvals',

@@ -41,6 +41,18 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '~/stores/user.js'
 import WorldMapJourney from '~/components/gamification/WorldMapJourney.vue'
 import { Target, Trophy } from 'lucide-vue-next'
+
+const router = useRouter()
+const userStore = useUserStore()
+
+onMounted(() => {
+  if (!userStore.isCrew) {
+    router.replace('/dashboard')
+  }
+})
 </script>

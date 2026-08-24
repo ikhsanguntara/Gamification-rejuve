@@ -179,8 +179,11 @@
       />
     </div>
 
-    <!-- 🗺️ Interactive Journey Odyssey Banner Widget -->
-    <div class="rounded-3xl bg-gradient-to-r from-[#1a4257] via-[#24779f] to-[#491b41] text-white p-5 sm:p-6 border border-white/10 shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
+    <!-- 🗺️ Interactive Journey Odyssey Banner Widget (Strictly for Crew) -->
+    <div
+      v-if="userStore.isCrew"
+      class="rounded-3xl bg-gradient-to-r from-[#1a4257] via-[#24779f] to-[#491b41] text-white p-5 sm:p-6 border border-white/10 shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4"
+    >
       <div class="flex items-center gap-4 relative z-10">
         <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-amber-300 flex-shrink-0 shadow-md animate-bounce-gentle">
           <Compass class="w-6 h-6" />
