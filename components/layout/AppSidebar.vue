@@ -18,9 +18,7 @@
             SOP
           </span>
         </div>
-        <p class="text-[9px] font-extrabold text-[#9d174d] dark:text-[#f472b6] uppercase tracking-wider">
-          #CleanLabel 100% Fresh
-        </p>
+     
       </div>
     </div>
 
