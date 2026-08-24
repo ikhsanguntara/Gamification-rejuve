@@ -36,14 +36,99 @@
     </div>
 
     <!-- Navigation Links -->
-    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+    <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+      <!-- ⚙️ Collapsible Administrator Dropdown Menu Group (for Superadmin) -->
+      <div v-if="userStore.isSuperadmin" class="space-y-1 pb-2 border-b border-slate-100 dark:border-slate-800">
+        <button
+          type="button"
+          @click="isAdminOpen = !isAdminOpen"
+          class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          :class="[
+            isAdminActive
+              ? 'bg-[#24779f]/10 text-[#24779f] dark:text-[#84cded] dark:bg-[#499ec7]/15'
+              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+          ]"
+        >
+          <div class="flex items-center gap-3">
+            <Settings class="w-4 h-4 text-[#499ec7]" />
+            <span class="font-extrabold text-xs">Administrator</span>
+          </div>
+          <ChevronUp v-if="isAdminOpen" class="w-4 h-4 text-slate-400 transition-transform" />
+          <ChevronDown v-else class="w-4 h-4 text-slate-400 transition-transform" />
+        </button>
+
+        <!-- Submenu with Dot Bullets matching the screenshot -->
+        <Transition
+          enter-active-class="transition duration-150 ease-out"
+          enter-from-class="opacity-0 -translate-y-1"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-100 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-1"
+        >
+          <div v-show="isAdminOpen" class="pl-4 pr-1 py-1 space-y-1">
+            <!-- User Submenu -->
+            <NuxtLink
+              to="/admin/users"
+              class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
+              :class="[
+                $route.path === '/admin/users'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-bold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              ]"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full transition-colors"
+                :class="$route.path === '/admin/users' ? 'bg-indigo-600 dark:bg-indigo-400' : 'bg-slate-400 dark:bg-slate-600'"
+              ></span>
+              <span>User</span>
+            </NuxtLink>
+
+            <!-- Batch Submenu -->
+            <NuxtLink
+              to="/admin/batches"
+              class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
+              :class="[
+                $route.path === '/admin/batches'
+                  ? 'bg-[#499ec7]/15 text-[#24779f] dark:text-[#84cded] font-bold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              ]"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full transition-colors"
+                :class="$route.path === '/admin/batches' ? 'bg-[#499ec7]' : 'bg-slate-400 dark:bg-slate-600'"
+              ></span>
+              <span>Batch</span>
+            </NuxtLink>
+
+            <!-- Mission Submenu -->
+            <NuxtLink
+              to="/admin/missions"
+              class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
+              :class="[
+                $route.path === '/admin/missions'
+                  ? 'bg-[#963189]/15 text-[#963189] dark:text-[#db92d7] font-bold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              ]"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full transition-colors"
+                :class="$route.path === '/admin/missions' ? 'bg-[#963189]' : 'bg-slate-400 dark:bg-slate-600'"
+              ></span>
+              <span>Mission</span>
+            </NuxtLink>
+          </div>
+        </Transition>
+      </div>
+
+      <!-- Standard Navigation Links -->
       <NuxtLink
         v-for="item in navItems"
         :key="item.path"
         :to="item.path"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group"
         :class="[
-          $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard')
+          $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard' && !item.path.startsWith('/admin'))
             ? 'bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded] font-bold shadow-sm'
             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
         ]"
@@ -52,7 +137,7 @@
           :is="item.icon"
           class="w-5 h-5 flex-shrink-0 transition-colors"
           :class="[
-            $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard')
+            $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard' && !item.path.startsWith('/admin'))
               ? 'text-[#499ec7] dark:text-[#84cded]'
               : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
           ]"
@@ -116,7 +201,7 @@
         <button
           type="button"
           @click="handleLogout"
-          class="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+          class="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
           title="Sign Out"
         >
           <LogOut class="w-4 h-4" />
@@ -127,8 +212,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useApprovalStore } from '~/stores/approval.js'
@@ -140,21 +225,35 @@ import {
   Target,
   ClipboardCheck,
   ShieldCheck,
-  Sliders,
   Medal,
   Trophy,
   User,
   Settings,
   Sparkles,
-  LogOut
+  LogOut,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-vue-next'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const batchStore = useBatchStore()
 const approvalStore = useApprovalStore()
 const missionStore = useMissionStore()
 const toast = useToast()
+
+const isAdminOpen = ref(true)
+
+const isAdminActive = computed(() => {
+  return route.path.startsWith('/admin')
+})
+
+watch(() => route.path, (newPath) => {
+  if (newPath.startsWith('/admin')) {
+    isAdminOpen.value = true
+  }
+}, { immediate: true })
 
 const handleLogout = () => {
   userStore.logout()
@@ -182,7 +281,6 @@ const navItems = computed(() => {
 
   if (role === 'SUPERADMIN') {
     return [
-      { label: 'Master Admin', path: '/admin', icon: Sliders },
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
       { label: 'Cabang Gerai', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
