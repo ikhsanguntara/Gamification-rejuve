@@ -26,13 +26,13 @@
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
             <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
               <span class="text-[10px] font-bold text-slate-400 uppercase">Assigned Batch</span>
-              <p class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">Batch Alpha</p>
+              <p class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">{{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}</p>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
               <span class="text-[10px] font-bold text-slate-400 uppercase">Total Stars Earned</span>
               <p class="text-xs font-black text-amber-500 mt-0.5 flex items-center justify-center sm:justify-start gap-1">
                 <Star class="w-3.5 h-3.5 fill-amber-400" />
-                {{ crewProfile?.stars?.toLocaleString() || '1,850' }}
+                {{ (crewProfile?.stars || userStore.currentUser.stars || 0).toLocaleString() }}
               </p>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 col-span-2 sm:col-span-1">
@@ -47,7 +47,7 @@
     </div>
 
     <!-- Star Level Progression Card -->
-    <StarProgress :stars="crewProfile?.stars || 1850" />
+    <StarProgress :stars="crewProfile?.stars || userStore.currentUser.stars || 0" />
 
     <!-- Unlocked Achievements Showcase -->
     <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6">
@@ -74,15 +74,17 @@
 <script setup>
 import { computed } from 'vue'
 import { useUserStore } from '~/stores/user.js'
+import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import StarProgress from '~/components/gamification/StarProgress.vue'
 import AchievementCard from '~/components/gamification/AchievementCard.vue'
 import { Star } from 'lucide-vue-next'
 
 const userStore = useUserStore()
+const batchStore = useBatchStore()
 const gamificationStore = useGamificationStore()
 
 const crewProfile = computed(() => {
-  return gamificationStore.crewById(userStore.currentUser.id) || gamificationStore.crewById('crew-001')
+  return gamificationStore.crewById(userStore.currentUser.id) || userStore.currentUser
 })
 </script>

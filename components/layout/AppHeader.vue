@@ -10,9 +10,21 @@
         <span class="font-black text-sm text-slate-900 dark:text-white hidden xs:inline">Re.juve</span>
       </NuxtLink>
 
-      <!-- Batch / Gerai Selector Dropdown -->
+      <!-- Batch / Gerai Selector: Locked for Crew, Dropdown for Supervisor/Head/Admin -->
       <div class="flex items-center gap-1.5 sm:gap-2">
-        <div class="relative max-w-[140px] xs:max-w-[180px] sm:max-w-[240px]">
+        <!-- For CREW: Locked Branch Badge -->
+        <div
+          v-if="userStore.isCrew"
+          class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60"
+        >
+          <MapPin class="w-3.5 h-3.5 text-[#499ec7] flex-shrink-0" />
+          <span class="truncate max-w-[140px] xs:max-w-[180px]">
+            {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}
+          </span>
+        </div>
+
+        <!-- For SUPERVISOR/HEAD/SUPERADMIN: Interactive Dropdown -->
+        <div v-else class="relative max-w-[140px] xs:max-w-[180px] sm:max-w-[240px]">
           <select
             :value="batchStore.selectedBatchId"
             @change="handleBatchChange($event.target.value)"
@@ -215,7 +227,8 @@ import {
   Bell,
   User,
   Settings,
-  LogOut
+  LogOut,
+  MapPin
 } from 'lucide-vue-next'
 
 const router = useRouter()

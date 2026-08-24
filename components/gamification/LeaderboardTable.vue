@@ -1,7 +1,10 @@
 <template>
   <div class="space-y-6">
-    <!-- Batch Filter Selector -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+    <!-- Batch Filter Selector: Only shown if non-Crew (Supervisor/Head/Admin) -->
+    <div
+      v-if="!userStore.isCrew"
+      class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm"
+    >
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Store Branch:</span>
         <div class="flex items-center gap-1.5 overflow-x-auto">
@@ -10,7 +13,7 @@
             :key="b.id"
             type="button"
             @click="selectedBatch = b.id"
-            class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap"
+            class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
             :class="[
               selectedBatch === b.id
                 ? 'bg-[#499ec7] text-white shadow-sm'
@@ -27,12 +30,34 @@
       </span>
     </div>
 
+    <!-- Crew Branch Banner -->
+    <div
+      v-else
+      class="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm"
+    >
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Peringkat Cabang Gerai:</span>
+        <span class="text-xs font-black text-[#499ec7] dark:text-[#84cded] px-3 py-1 rounded-xl bg-[#499ec7]/10">
+          📍 {{ batchStore.currentBatch.name }}
+        </span>
+      </div>
+
+      <span class="text-xs font-semibold text-slate-400">
+        {{ displayedLeaderboard.length }} Crew Terdaftar
+      </span>
+    </div>
+
     <!-- Top 3 Visual Podium -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
       <!-- 2nd Place (Silver) -->
       <div
         v-if="topThreeList[1]"
         class="order-2 sm:order-1 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 flex flex-col items-center text-center relative card-hover"
+        :class="[
+          (topThreeList[1].crewId || topThreeList[1].id) === userStore.currentUser.id
+            ? 'ring-2 ring-[#499ec7] bg-[#499ec7]/5'
+            : ''
+        ]"
       >
         <span class="absolute -top-3 px-3 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black shadow-sm">
           🥈 #2 Silver
@@ -42,8 +67,9 @@
           :alt="topThreeList[1].name"
           class="w-16 h-16 rounded-full object-cover ring-4 ring-slate-200 dark:ring-slate-700 mt-2 mb-3 shadow-md"
         />
-        <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate w-full">
-          {{ topThreeList[1].name }}
+        <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate w-full flex items-center justify-center gap-1.5">
+          <span>{{ topThreeList[1].name }}</span>
+          <span v-if="(topThreeList[1].crewId || topThreeList[1].id) === userStore.currentUser.id" class="px-1.5 py-0.2 rounded bg-[#499ec7] text-white text-[9px] font-black">ANDA</span>
         </h4>
         <p class="text-xs text-slate-400 truncate w-full">{{ topThreeList[1].position }}</p>
         <p class="text-[10px] text-[#499ec7] dark:text-[#84cded] font-semibold truncate w-full mt-0.5">
@@ -60,6 +86,11 @@
       <div
         v-if="topThreeList[0]"
         class="order-1 sm:order-2 rounded-2xl bg-gradient-to-b from-amber-500/15 via-amber-500/5 to-transparent dark:from-amber-950/40 border-2 border-amber-400 dark:border-amber-500/80 p-6 flex flex-col items-center text-center relative card-hover sm:-translate-y-3 shadow-lg shadow-amber-500/10"
+        :class="[
+          (topThreeList[0].crewId || topThreeList[0].id) === userStore.currentUser.id
+            ? 'ring-2 ring-[#499ec7]'
+            : ''
+        ]"
       >
         <div class="absolute -top-4 px-4 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-xs font-black shadow-md flex items-center gap-1">
           <Crown class="w-3.5 h-3.5 fill-amber-950" />
@@ -70,8 +101,9 @@
           :alt="topThreeList[0].name"
           class="w-20 h-20 rounded-full object-cover ring-4 ring-amber-400 dark:ring-amber-500 mt-3 mb-3 shadow-lg"
         />
-        <h4 class="text-base font-extrabold text-slate-900 dark:text-white truncate w-full">
-          {{ topThreeList[0].name }}
+        <h4 class="text-base font-extrabold text-slate-900 dark:text-white truncate w-full flex items-center justify-center gap-1.5">
+          <span>{{ topThreeList[0].name }}</span>
+          <span v-if="(topThreeList[0].crewId || topThreeList[0].id) === userStore.currentUser.id" class="px-1.5 py-0.2 rounded bg-[#499ec7] text-white text-[9px] font-black">ANDA</span>
         </h4>
         <p class="text-xs text-amber-600 dark:text-amber-400 font-semibold truncate w-full">
           {{ topThreeList[0].position }}
@@ -94,6 +126,11 @@
       <div
         v-if="topThreeList[2]"
         class="order-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 flex flex-col items-center text-center relative card-hover"
+        :class="[
+          (topThreeList[2].crewId || topThreeList[2].id) === userStore.currentUser.id
+            ? 'ring-2 ring-[#499ec7] bg-[#499ec7]/5'
+            : ''
+        ]"
       >
         <span class="absolute -top-3 px-3 py-0.5 rounded-full bg-amber-800/20 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-xs font-black shadow-sm">
           🥉 #3 Bronze
@@ -103,8 +140,9 @@
           :alt="topThreeList[2].name"
           class="w-16 h-16 rounded-full object-cover ring-4 ring-amber-700/30 dark:ring-amber-800 mt-2 mb-3 shadow-md"
         />
-        <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate w-full">
-          {{ topThreeList[2].name }}
+        <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate w-full flex items-center justify-center gap-1.5">
+          <span>{{ topThreeList[2].name }}</span>
+          <span v-if="(topThreeList[2].crewId || topThreeList[2].id) === userStore.currentUser.id" class="px-1.5 py-0.2 rounded bg-[#499ec7] text-white text-[9px] font-black">ANDA</span>
         </h4>
         <p class="text-xs text-slate-400 truncate w-full">{{ topThreeList[2].position }}</p>
         <p class="text-[10px] text-[#499ec7] dark:text-[#84cded] font-semibold truncate w-full mt-0.5">
@@ -143,10 +181,14 @@
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
             <tr
               v-for="crew in displayedLeaderboard"
-              :key="crew.crewId"
+              :key="crew.crewId || crew.id"
               class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
               :class="[
-                crew.rank <= 3 ? 'bg-amber-50/20 dark:bg-amber-950/10' : ''
+                (crew.crewId || crew.id) === userStore.currentUser.id
+                  ? 'bg-[#499ec7]/10 dark:bg-[#499ec7]/15 ring-1 ring-[#499ec7]/30 font-bold'
+                  : crew.rank <= 3
+                  ? 'bg-amber-50/20 dark:bg-amber-950/10'
+                  : ''
               ]"
             >
               <!-- Rank -->
@@ -177,7 +219,15 @@
                     class="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
                   />
                   <div>
-                    <span class="font-bold text-slate-900 dark:text-white block">{{ crew.name }}</span>
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-bold text-slate-900 dark:text-white block">{{ crew.name }}</span>
+                      <span
+                        v-if="(crew.crewId || crew.id) === userStore.currentUser.id"
+                        class="px-1.5 py-0.2 rounded bg-[#499ec7] text-white text-[9px] font-black"
+                      >
+                        ANDA
+                      </span>
+                    </div>
                     <span class="text-[11px] text-slate-400">{{ crew.position }}</span>
                   </div>
                 </div>
@@ -222,14 +272,19 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useUserStore } from '~/stores/user.js'
+import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import {
   Crown,
   Star
 } from 'lucide-vue-next'
 
+const userStore = useUserStore()
+const batchStore = useBatchStore()
 const gamificationStore = useGamificationStore()
-const selectedBatch = ref('ALL')
+
+const selectedBatch = ref(userStore.isCrew ? (userStore.currentUser.batchId || 'batch-alpha') : 'ALL')
 
 const batchOptions = [
   { id: 'ALL', label: 'All Store Batches' },
@@ -239,7 +294,8 @@ const batchOptions = [
 ]
 
 const displayedLeaderboard = computed(() => {
-  return gamificationStore.leaderboardByBatch(selectedBatch.value)
+  const batchId = userStore.isCrew ? (userStore.currentUser.batchId || 'batch-alpha') : selectedBatch.value
+  return gamificationStore.leaderboardByBatch(batchId)
 })
 
 const topThreeList = computed(() => {

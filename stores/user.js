@@ -147,6 +147,11 @@ export const useUserStore = defineStore('user', {
           localStorage.setItem('auth-status', 'true')
           localStorage.setItem('auth-user-role', upperRole)
         }
+        // Auto-lock active batch for Crew to their assigned store branch
+        if (upperRole === 'CREW') {
+          const batchStore = useBatchStore()
+          batchStore.selectBatch(this.currentUser.batchId || 'batch-alpha')
+        }
         return true
       }
       return false

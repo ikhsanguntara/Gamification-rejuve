@@ -44,6 +44,8 @@ export function calculateStarLevel(totalStars) {
   return 1
 }
 
+export const calculateLevel = calculateStarLevel
+
 /**
  * Get details about next star level
  * @param {number} totalStars 

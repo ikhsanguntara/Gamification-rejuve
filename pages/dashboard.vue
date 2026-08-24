@@ -20,13 +20,16 @@
           </h2>
           <p class="text-slate-200 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
             <span v-if="userStore.isCrew">
-              Re.juve Store Specialist • Saat ini berada di <strong class="text-amber-300">Level 8</strong> dengan <strong>1.850 Stars</strong>. Terus jaga standar cold-chain & kebersihan gerai!
+              Re.juve Store Specialist • Saat ini berada di <strong class="text-amber-300">Level {{ myProgress.currentLevel }} ({{ myProgress.currentLevelTitle }})</strong> dengan <strong>{{ myStars.toLocaleString() }} ⭐ Stars</strong>. Terus jaga standar cold-chain & kebersihan gerai!
             </span>
             <span v-else-if="userStore.isSupervisor">
               Area Store Supervisor • Week {{ batchStore.selectedWeek }} aktif dinilai. Terdapat <strong class="text-amber-300">{{ pendingReviewCount }} misi diajukan</strong> dan <strong class="text-rose-300">{{ missionStore.revisionCount }} revisi</strong>.
             </span>
-            <span v-else>
+            <span v-else-if="userStore.isHead">
               Head of Operations & Quality • <strong class="text-amber-300">{{ approvalStore.pendingApprovals.length }} evaluasi gerai</strong> menunggu keputusan (Approve / Revise).
+            </span>
+            <span v-else>
+              System Superadmin • Master Control Console aktif untuk seluruh cabang gerai Re.juve.
             </span>
           </p>
         </div>
@@ -52,19 +55,82 @@
           </NuxtLink>
 
           <NuxtLink
+            v-else-if="userStore.isSuperadmin"
+            to="/admin/users"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-indigo-600/30 transition-all active:scale-95 border border-white/20"
+          >
+            <Settings class="w-4 h-4" />
+            <span>Administrator Console</span>
+          </NuxtLink>
+
+          <NuxtLink
             v-else
             to="/missions"
             class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#499ec7] to-[#24779f] hover:from-[#24779f] hover:to-[#1d5e7f] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#499ec7]/30 transition-all active:scale-95 border border-white/20"
           >
             <Target class="w-4 h-4" />
-            <span>Explore Missions</span>
+            <span>Misi Saya</span>
           </NuxtLink>
         </div>
       </div>
     </div>
 
-    <!-- 5 Core Dashboard Metric Cards (Responsive Grid) -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+    <!-- 5 Core Dashboard Metric Cards (Personalized for Crew vs Operational for Supervisor/Head) -->
+    <div v-if="userStore.isCrew" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <!-- 1. My Total Stars -->
+      <StatCard
+        title="⭐ Bintang Saya"
+        :value="myStars.toLocaleString()"
+        unit="Stars"
+        :subtext="`Level ${myProgress.currentLevel} ${myProgress.currentLevelTitle}`"
+        :icon="Star"
+        variant="amber"
+      />
+
+      <!-- 2. My Completed Missions -->
+      <StatCard
+        title="Misi Selesai Saya"
+        :value="`${myCompletedCount} / ${myTotalMissions}`"
+        :subtext="`${Math.round((myCompletedCount / myTotalMissions) * 100 || 0)}% progres siklus`"
+        :icon="CheckCircle2"
+        variant="emerald"
+        trend="up"
+        trendValue="Aktif"
+      />
+
+      <!-- 3. My Average Quality Score -->
+      <StatCard
+        title="Rata-rata Skor Saya"
+        :value="`${myAverageScore}%`"
+        subtext="Skor evaluasi mutu personal"
+        :icon="Award"
+        variant="purple"
+        trend="up"
+        trendValue="Optimal"
+      />
+
+      <!-- 4. My Rank in Store -->
+      <StatCard
+        title="Peringkat di Gerai"
+        :value="`#${myRank}`"
+        :subtext="`dari ${storeCrewCount} Store Crew`"
+        :icon="Trophy"
+        variant="blue"
+      />
+
+      <!-- 5. Assigned Store Branch -->
+      <StatCard
+        title="Cabang Penempatan"
+        :value="batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name"
+        :subtext="`Week ${batchStore.selectedWeek}/3 Aktif`"
+        :icon="MapPin"
+        variant="blue"
+        class="col-span-2 sm:col-span-1"
+      />
+    </div>
+
+    <!-- 5 Core Dashboard Metric Cards for Non-Crew (Supervisor / Head / Admin) -->
+    <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
       <StatCard
         title="Store Crew"
         :value="batchStore.currentBatch.totalCrew"
@@ -121,24 +187,24 @@
       <!-- Left 2 Cols: Gamification & Top Performers -->
       <div class="lg:col-span-2 space-y-6">
         <!-- Crew Personal / Highlight Star Level Progression -->
-        <StarProgress :stars="gamificationStore.allCrews[0].stars" />
+        <StarProgress :stars="myStars" />
 
         <!-- Top 3 Leaderboard Preview Widget -->
         <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-6">
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                Top Star Performers
+                Top Star Performers — {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}
               </h3>
               <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                Current Store Standings
+                Peringkat Crew Cabang Gerai
               </p>
             </div>
             <NuxtLink
               to="/leaderboard"
               class="text-xs font-bold text-[#499ec7] dark:text-[#84cded] hover:underline flex items-center gap-1"
             >
-              <span>View Leaderboard</span>
+              <span>Lihat Leaderboard Penuh</span>
               <ChevronRight class="w-3.5 h-3.5" />
             </NuxtLink>
           </div>
@@ -146,15 +212,25 @@
           <!-- Top 3 Mini Podium List -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div
-              v-for="(crew, index) in gamificationStore.topThree"
-              :key="crew.crewId"
+              v-for="(crew, index) in branchTopThree"
+              :key="crew.crewId || crew.id"
               class="p-3.5 sm:p-4 rounded-2xl border flex flex-col items-center text-center relative overflow-hidden transition-all"
               :class="[
-                index === 0
+                (crew.crewId || crew.id) === userStore.currentUser.id
+                  ? 'border-[#499ec7] dark:border-[#499ec7] bg-[#499ec7]/10 ring-2 ring-[#499ec7]/30'
+                  : index === 0
                   ? 'border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20'
                   : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20'
               ]"
             >
+              <!-- You Indicator Badge -->
+              <span
+                v-if="(crew.crewId || crew.id) === userStore.currentUser.id"
+                class="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-[#499ec7] text-white text-[9px] font-black"
+              >
+                ANDA
+              </span>
+
               <!-- Rank Medal Badge -->
               <span
                 class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black mb-2 shadow-sm"
@@ -181,7 +257,7 @@
               <!-- Stars Counter -->
               <div class="mt-2.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-extrabold text-xs">
                 <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-                <span>{{ crew.stars.toLocaleString() }}</span>
+                <span>{{ (crew.stars || 0).toLocaleString() }}</span>
               </div>
             </div>
           </div>
@@ -203,6 +279,7 @@ import { useBatchStore } from '~/stores/batch.js'
 import { useMissionStore } from '~/stores/mission.js'
 import { useApprovalStore } from '~/stores/approval.js'
 import { useGamificationStore } from '~/stores/gamification.js'
+import { getStarProgress } from '~/utils/star.js'
 import StatCard from '~/components/dashboard/StatCard.vue'
 import WeekSelector from '~/components/batch/WeekSelector.vue'
 import StarProgress from '~/components/gamification/StarProgress.vue'
@@ -216,6 +293,9 @@ import {
   ClipboardCheck,
   ShieldCheck,
   Target,
+  Trophy,
+  MapPin,
+  Settings,
   ChevronRight
 } from 'lucide-vue-next'
 
@@ -226,6 +306,83 @@ const approvalStore = useApprovalStore()
 const gamificationStore = useGamificationStore()
 
 const pendingReviewCount = computed(() => approvalStore.pendingApprovals.length)
+
+// Personal Crew stats
+const myCrewData = computed(() => {
+  if (userStore.isCrew) {
+    const found = gamificationStore.crewById(userStore.currentUser.id)
+    return found || userStore.currentUser
+  }
+  return gamificationStore.allCrews[0]
+})
+
+const myStars = computed(() => {
+  return myCrewData.value?.stars || userStore.currentUser.stars || 0
+})
+
+const myProgress = computed(() => {
+  return getStarProgress(myStars.value)
+})
+
+const storeCrews = computed(() => {
+  return gamificationStore.crewsByBatch(batchStore.selectedBatchId)
+})
+
+const storeCrewCount = computed(() => {
+  return storeCrews.value.length || 6
+})
+
+const branchTopThree = computed(() => {
+  const sorted = [...storeCrews.value].sort((a, b) => b.stars - a.stars)
+  return sorted.slice(0, 3)
+})
+
+const myRank = computed(() => {
+  const sorted = [...storeCrews.value].sort((a, b) => b.stars - a.stars)
+  const idx = sorted.findIndex(c => (c.crewId || c.id) === userStore.currentUser.id)
+  return idx !== -1 ? idx + 1 : 1
+})
+
+const myMissions = computed(() => {
+  const batchId = userStore.isCrew ? userStore.currentUser.batchId : batchStore.selectedBatchId
+  return missionStore.missionsByBatch(batchId)
+})
+
+const myTotalMissions = computed(() => {
+  return myMissions.value.length || 12
+})
+
+const myCompletedCount = computed(() => {
+  const crewId = userStore.currentUser.id
+  return myMissions.value.filter(m => {
+    if (m.crewEvaluations && m.crewEvaluations.length > 0) {
+      const e = m.crewEvaluations.find(ce => ce.crewId === crewId)
+      return e && (e.status === 'COMPLETED' || m.status === 'COMPLETED')
+    }
+    return m.status === 'COMPLETED'
+  }).length
+})
+
+const myAverageScore = computed(() => {
+  const crewId = userStore.currentUser.id
+  let totalScore = 0
+  let evaluatedCount = 0
+
+  myMissions.value.forEach(m => {
+    if (m.crewEvaluations && m.crewEvaluations.length > 0) {
+      const e = m.crewEvaluations.find(ce => ce.crewId === crewId)
+      if (e && e.score > 0) {
+        totalScore += e.score
+        evaluatedCount++
+      }
+    } else if (m.averageScore > 0) {
+      totalScore += m.averageScore
+      evaluatedCount++
+    }
+  })
+
+  return evaluatedCount > 0 ? (totalScore / evaluatedCount).toFixed(1) : '92.0'
+})
 
 const greetingText = computed(() => {
   const hour = new Date().getHours()

@@ -116,11 +116,15 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useUserStore } from '~/stores/user.js'
+import { useBatchStore } from '~/stores/batch.js'
 import { useMissionStore } from '~/stores/mission.js'
 import MissionCard from '~/components/mission/MissionCard.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
 import { Search, ChevronDown } from 'lucide-vue-next'
 
+const userStore = useUserStore()
+const batchStore = useBatchStore()
 const missionStore = useMissionStore()
 
 const search = ref('')
@@ -129,7 +133,12 @@ const selectedStatusFilter = ref('ALL')
 const selectedCategoryFilter = ref('ALL')
 
 const filteredMissions = computed(() => {
+  const targetBatchId = userStore.isCrew ? userStore.currentUser.batchId : batchStore.selectedBatchId
+
   return missionStore.allMissions.filter(m => {
+    // Branch Filter
+    if (m.batchId !== targetBatchId) return false
+
     // Search
     if (search.value) {
       const q = search.value.toLowerCase().trim()
