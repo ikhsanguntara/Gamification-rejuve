@@ -1,0 +1,130 @@
+{
+  "auth": {
+    "login_request": {
+      "email": "andi.pratama@rejuve.co.id",
+      "password": "Password123!"
+    },
+    "login_response": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_token",
+      "user": {
+        "id": "crew-001",
+        "name": "Andi Pratama",
+        "email": "andi.pratama@rejuve.co.id",
+        "role": "CREW",
+        "roleTitle": "Store Specialist",
+        "position": "Senior Barista",
+        "department": "Store Operations",
+        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        "batchId": "batch-alpha",
+        "storeLocation": "Re.juve Grand Indonesia",
+        "stars": 1850,
+        "level": 7
+      }
+    }
+  },
+  "batches": [
+    {
+      "id": "batch-alpha",
+      "name": "Batch Alpha — Grand Indonesia",
+      "code": "B-ALPHA",
+      "location": "Grand Indonesia Mall, Jakarta Pusat",
+      "status": "ACTIVE",
+      "startDate": "2026-08-10",
+      "endDate": "2026-08-31",
+      "currentWeek": 2,
+      "totalWeeks": 3,
+      "totalCrew": 6,
+      "totalMissions": 12,
+      "completedMissions": 4,
+      "totalStars": 11100,
+      "averageScore": 92.4
+    },
+    {
+      "id": "batch-beta",
+      "name": "Batch Beta — Senayan City",
+      "code": "B-BETA",
+      "location": "Senayan City Mall, Jakarta Pusat",
+      "status": "ACTIVE",
+      "startDate": "2026-08-10",
+      "endDate": "2026-08-31",
+      "currentWeek": 2,
+      "totalWeeks": 3,
+      "totalCrew": 5,
+      "totalMissions": 12,
+      "completedMissions": 3,
+      "totalStars": 8450,
+      "averageScore": 90.8
+    }
+  ],
+  "missions": [
+    {
+      "id": "m-01",
+      "batchId": "batch-alpha",
+      "week": 1,
+      "code": "CC-01",
+      "title": "Verifikasi & Logbook Suhu Cold Chain Chiller 2-4°C",
+      "category": "Cold Chain",
+      "status": "COMPLETED",
+      "averageScore": 95.0,
+      "awardedStars": 5,
+      "crewEvaluations": [
+        { "crewId": "crew-001", "score": 96, "status": "COMPLETED" },
+        { "crewId": "crew-002", "score": 94, "status": "COMPLETED" }
+      ]
+    },
+    {
+      "id": "m-05",
+      "batchId": "batch-alpha",
+      "week": 2,
+      "code": "QC-01",
+      "title": "Audit Rasio Ekstraksi Jus Murni & Brix Monitor",
+      "category": "Quality Control",
+      "status": "PENDING_REVIEW",
+      "averageScore": 94.5,
+      "calculatedStars": 5,
+      "crewEvaluations": [
+        { "crewId": "crew-001", "score": 95, "status": "PENDING_REVIEW" }
+      ]
+    },
+    {
+      "id": "m-06",
+      "batchId": "batch-alpha",
+      "week": 2,
+      "code": "SV-01",
+      "title": "Speed of Service Barista < 45 Detik",
+      "category": "Service",
+      "status": "IN_PROGRESS",
+      "averageScore": 0,
+      "calculatedStars": null,
+      "crewEvaluations": []
+    }
+  ],
+  "evaluations_submit_payload": {
+    "missionId": "m-05",
+    "batchId": "batch-alpha",
+    "week": 2,
+    "comment": "Audit SOP ekstraksi buah dingin terlaksana sesuai standar #CleanLabel.",
+    "evidence": [
+      {
+        "url": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600",
+        "caption": "Pemeriksaan brix tester & sensor suhu"
+      }
+    ],
+    "crewScores": [
+      { "crewId": "crew-001", "score": 95, "notes": "Disiplin SOP sangat baik" },
+      { "crewId": "crew-002", "score": 92, "notes": "Bagus" }
+    ]
+  },
+  "journey_map": {
+    "currentWeek": 2,
+    "activeNodeIndex": 6,
+    "totalMissions": 12,
+    "completedMissions": 5,
+    "progressPercent": 42,
+    "chapters": [
+      { "week": 1, "title": "Cold Chain Lagoon", "status": "COMPLETED", "starsEarned": 5, "isLocked": false },
+      { "week": 2, "title": "Pure Extraction Ridge", "status": "ACTIVE", "starsEarned": 5, "isLocked": false },
+      { "week": 3, "title": "HACCP Summit Fortress", "status": "LOCKED", "bountyStars": 500, "isLocked": true }
+    ]
+  }
+}
