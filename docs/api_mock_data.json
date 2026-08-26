@@ -12,11 +12,11 @@
         "email": "andi.pratama@rejuve.co.id",
         "role": "CREW",
         "roleTitle": "Store Specialist",
-        "position": "Senior Barista",
-        "department": "Store Operations",
+        "position": "Store Leader",
+        "department": "Operasional Gerai",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
         "batchId": "batch-alpha",
-        "storeLocation": "Re.juve Grand Indonesia",
+        "storeLocation": "Gerai Grand Indonesia",
         "stars": 1850,
         "level": 7
       }
@@ -25,74 +25,74 @@
   "batches": [
     {
       "id": "batch-alpha",
-      "name": "Batch Alpha — Grand Indonesia",
-      "code": "B-ALPHA",
+      "name": "Gerai Grand Indonesia",
+      "code": "GI-01",
       "location": "Grand Indonesia Mall, Jakarta Pusat",
       "status": "ACTIVE",
       "startDate": "2026-08-10",
-      "endDate": "2026-08-31",
+      "endDate": "2026-08-30",
       "currentWeek": 2,
       "totalWeeks": 3,
       "totalCrew": 6,
       "totalMissions": 12,
       "completedMissions": 4,
       "totalStars": 11100,
-      "averageScore": 92.4
+      "averageScore": 93.0
     },
     {
       "id": "batch-beta",
-      "name": "Batch Beta — Senayan City",
-      "code": "B-BETA",
+      "name": "Gerai Senayan City",
+      "code": "SC-02",
       "location": "Senayan City Mall, Jakarta Pusat",
       "status": "ACTIVE",
       "startDate": "2026-08-10",
-      "endDate": "2026-08-31",
+      "endDate": "2026-08-30",
       "currentWeek": 2,
       "totalWeeks": 3,
       "totalCrew": 5,
       "totalMissions": 12,
       "completedMissions": 3,
       "totalStars": 8450,
-      "averageScore": 90.8
+      "averageScore": 91.5
     }
   ],
   "missions": [
     {
-      "id": "m-01",
+      "id": "msn-w1-001",
       "batchId": "batch-alpha",
       "week": 1,
-      "code": "CC-01",
-      "title": "Verifikasi & Logbook Suhu Cold Chain Chiller 2-4°C",
-      "category": "Cold Chain",
+      "code": "M-01",
+      "title": "Cek Suhu Chiller (2–4°C)",
+      "category": "Suhu Dingin",
       "status": "COMPLETED",
-      "averageScore": 95.0,
+      "averageScore": 94.0,
       "awardedStars": 5,
       "crewEvaluations": [
-        { "crewId": "crew-001", "score": 96, "status": "COMPLETED" },
-        { "crewId": "crew-002", "score": 94, "status": "COMPLETED" }
+        { "crewId": "crew-001", "score": 95, "status": "COMPLETED" },
+        { "crewId": "crew-002", "score": 93, "status": "COMPLETED" }
       ]
     },
     {
-      "id": "m-05",
+      "id": "msn-w2-001",
       "batchId": "batch-alpha",
       "week": 2,
-      "code": "QC-01",
-      "title": "Audit Rasio Ekstraksi Jus Murni & Brix Monitor",
-      "category": "Quality Control",
+      "code": "M-05",
+      "title": "Cek Rasa & Kemanisan Alami Buah",
+      "category": "Kualitas Buah",
       "status": "PENDING_REVIEW",
-      "averageScore": 94.5,
+      "averageScore": 94.0,
       "calculatedStars": 5,
       "crewEvaluations": [
         { "crewId": "crew-001", "score": 95, "status": "PENDING_REVIEW" }
       ]
     },
     {
-      "id": "m-06",
+      "id": "msn-w2-002",
       "batchId": "batch-alpha",
       "week": 2,
-      "code": "SV-01",
-      "title": "Speed of Service Barista < 45 Detik",
-      "category": "Service",
+      "code": "M-06",
+      "title": "Kecepatan Layanan Barista (< 45 Detik)",
+      "category": "Pelayanan",
       "status": "IN_PROGRESS",
       "averageScore": 0,
       "calculatedStars": null,
@@ -100,31 +100,31 @@
     }
   ],
   "evaluations_submit_payload": {
-    "missionId": "m-05",
+    "missionId": "msn-w2-001",
     "batchId": "batch-alpha",
     "week": 2,
-    "comment": "Audit SOP ekstraksi buah dingin terlaksana sesuai standar #CleanLabel.",
+    "comment": "Pemeriksaan rasa jus segar dan proses pembuatan sudah sesuai standar. Disiplin kebersihan bar sangat baik.",
     "evidence": [
       {
-        "url": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600",
-        "caption": "Pemeriksaan brix tester & sensor suhu"
+        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600",
+        "caption": "Foto pengecekan sampel rasa botol jus segar"
       }
     ],
     "crewScores": [
       { "crewId": "crew-001", "score": 95, "notes": "Disiplin SOP sangat baik" },
-      { "crewId": "crew-002", "score": 92, "notes": "Bagus" }
+      { "crewId": "crew-002", "score": 93, "notes": "Bagus" }
     ]
   },
   "journey_map": {
     "currentWeek": 2,
     "activeNodeIndex": 6,
     "totalMissions": 12,
-    "completedMissions": 5,
-    "progressPercent": 42,
+    "completedMissions": 4,
+    "progressPercent": 33,
     "chapters": [
-      { "week": 1, "title": "Cold Chain Lagoon", "status": "COMPLETED", "starsEarned": 5, "isLocked": false },
-      { "week": 2, "title": "Pure Extraction Ridge", "status": "ACTIVE", "starsEarned": 5, "isLocked": false },
-      { "week": 3, "title": "HACCP Summit Fortress", "status": "LOCKED", "bountyStars": 500, "isLocked": true }
+      { "week": 1, "title": "Pulau Suhu & Sanitasi", "status": "COMPLETED", "starsEarned": 5, "isLocked": false },
+      { "week": 2, "title": "Pulau Rasa & Layanan", "status": "ACTIVE", "starsEarned": 5, "isLocked": false },
+      { "week": 3, "title": "Pulau Audit & Stok", "status": "LOCKED", "bountyStars": 500, "isLocked": true }
     ]
   }
 }

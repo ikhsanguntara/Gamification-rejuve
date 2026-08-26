@@ -157,13 +157,13 @@
             <span class="text-[9px] font-black uppercase">PULAU 1 SELESAI</span>
           </div>
           <div class="mt-1 px-2.5 py-0.5 rounded-lg bg-white/95 dark:bg-slate-900/95 text-slate-900 dark:text-white border border-emerald-500/40 shadow-sm text-center">
-            <h4 class="text-[11px] font-black">Cold Chain Lagoon</h4>
+            <h4 class="text-[11px] font-black">Pulau Suhu & Sanitasi</h4>
           </div>
         </div>
       </div>
 
       <!-- ========================================================================= -->
-      <!-- 🏝️ ISLAND 2 LANDMARK: PURE EXTRACTION RIDGE (Week 2 - Aktif) -->
+      <!-- 🏝️ ISLAND 2 LANDMARK: PULAU RASA & LAYANAN (Week 2 - Aktif) -->
       <!-- ========================================================================= -->
       <div
         @click="openIslandModal(2)"
@@ -184,13 +184,13 @@
             <span class="text-[9px] font-black uppercase">PULAU 2 AKTIF</span>
           </div>
           <div class="mt-1 px-2.5 py-0.5 rounded-lg bg-amber-400 text-amber-950 font-black shadow-sm text-center">
-            <h4 class="text-[11px] font-black">Pure Extraction Ridge</h4>
+            <h4 class="text-[11px] font-black">Pulau Rasa & Layanan</h4>
           </div>
         </div>
       </div>
 
       <!-- ========================================================================= -->
-      <!-- 🏝️ ISLAND 3 LANDMARK: HACCP SUMMIT FORTRESS (Week 3 - Terkunci) -->
+      <!-- 🏝️ ISLAND 3 LANDMARK: PULAU AUDIT & STOK (Week 3 - Terkunci) -->
       <!-- ========================================================================= -->
       <div
         @click="openIslandModal(3)"
@@ -211,7 +211,7 @@
             <span class="text-[9px] font-black uppercase">PULAU 3 TERKUNCI</span>
           </div>
           <div class="mt-1 px-2.5 py-0.5 rounded-lg bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 border border-slate-300 shadow-sm text-center">
-            <h4 class="text-[11px] font-black">HACCP Summit Fortress</h4>
+            <h4 class="text-[11px] font-black">Pulau Audit & Stok</h4>
           </div>
         </div>
       </div>
@@ -613,30 +613,30 @@ const islandMeta = computed(() => {
     return {
       week: 1,
       icon: '🏝️',
-      title: 'Pulau 1: Cold Chain Lagoon & Basecamp',
-      subtitle: 'Chapter 1 • Minggu 1 Selesai',
-      description: 'Audit suhu chiller 2-4°C, sanitasi mesin hidrolik, uji kemanisan brix buah segar, dan standar keselamatan gerai.',
-      statusLabel: '✓ VERIFIED & COMPLETED'
+      title: 'Pulau 1: Suhu Dingin & Sanitasi',
+      subtitle: 'Minggu 1 • Selesai',
+      description: 'Pemeriksaan suhu chiller 2–4°C, sanitasi mesin press jus, dan pemilihan buah segar.',
+      statusLabel: 'SELESAI ✓'
     }
   }
   if (activeIslandModal.value === 2) {
     return {
       week: 2,
       icon: '🍊',
-      title: 'Pulau 2: Pure Extraction & #CleanLabel Ridge',
-      subtitle: 'Chapter 2 • Minggu 2 Aktif Dinilai',
-      description: 'Audit rasio ekstraksi jus 100% murni, sanitasi bar berkala, rekonsiliasi stok harian, dan kecepatan barista < 45 detik.',
-      statusLabel: '⚡ SIKLUS AKTIF DINILAI'
+      title: 'Pulau 2: Kualitas Rasa & Layanan',
+      subtitle: 'Minggu 2 • Sedang Berjalan',
+      description: 'Pengecekan rasa alami jus, kecepatan layanan barista (< 45 detik), dan rotasi stok FIFO.',
+      statusLabel: 'SEDANG DINILAI'
     }
   }
   if (activeIslandModal.value === 3) {
     return {
       week: 3,
       icon: '🏔️',
-      title: 'Pulau 3: HACCP Summit Fortress & Legend Trophy',
-      subtitle: 'Chapter 3 • Segera Dibuka Minggu Depan',
-      description: 'Puncak evaluasi sertifikasi higienitas total HACCP, perawatan preventif chiller, dan penandatanganan sertifikat mutu gerai.',
-      statusLabel: '🔒 TERKUNCI (MINGGU 3)'
+      title: 'Pulau 3: Audit Akhir & Rekap Stok',
+      subtitle: 'Minggu 3 • Segera Dibuka',
+      description: 'Pembersihan total chiller mingguan, rekap stok fisik botol, dan checklist closing gerai.',
+      statusLabel: 'TERKUNCI'
     }
   }
   return null

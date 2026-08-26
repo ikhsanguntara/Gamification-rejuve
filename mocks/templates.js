@@ -1,179 +1,167 @@
 /**
- * Mock Data: Re.juve Standard Mission Templates & Presets
- * Used by Superadmin to generate 3-week store-wide operational missions in 1 click.
+ * Mock Data: Paket Template Misi Standar Re.juve (12 Misi)
+ * Template siap pakai untuk membuat misi 3 minggu dalam 1 klik.
  */
 
 export const mockMissionTemplates = [
-  // ==================== WEEK 1 TEMPLATES (Setup & Cold Chain Safety) ====================
+  // ==================== WEEK 1 ====================
   {
     id: 'tmpl-w1-01',
     week: 1,
-    codePrefix: 'W1-CC-01',
-    title: 'Audit Suhu Chiller 2-4°C & Sensor Digital Display',
-    category: 'Cold Chain',
-    description: 'Pemeriksaan harian log suhu termometer digital chiller display dan walk-in cold room gerai. Suhu wajib terjaga konsisten di 2.0°C - 4.0°C.',
+    codePrefix: 'M-01',
+    title: 'Cek Suhu Chiller (2–4°C)',
+    category: 'Suhu Dingin',
+    description: 'Pastikan suhu chiller display dan penyimpanan stabil di 2–4°C setiap pagi dan sore.',
     requirements: [
-      'Verifikasi log suhu digital setiap 2 jam pada kisaran 2.0°C - 4.0°C',
-      'Periksa segel karet pintu chiller (gasket) dari potensi kebocoran udara dingin',
-      'Kalibrasi termometer sekunder dengan standar benchmark Re.juve'
+      'Catat suhu chiller pada logbook pagi dan sore (2–4°C)',
+      'Pastikan pintu chiller tertutup rapat dan tidak ada kebocoran udara dingin'
     ],
     maxStars: 5
   },
   {
     id: 'tmpl-w1-02',
     week: 1,
-    codePrefix: 'W1-SAN-02',
-    title: 'Sanitasi Mesin Cold-Pressed & Swab Test ATP',
-    category: 'Sanitation',
-    description: 'Pembersihan mendalam dan sanitasi food-grade pada kantong hidrolik (hydraulic press bag) dan nampan stainless steel mesin jus.',
+    codePrefix: 'M-02',
+    title: 'Sanitasi Mesin Press & Meja Bar',
+    category: 'Kebersihan',
+    description: 'Bersihkan mesin press jus, nampan penampung, dan meja bar agar selalu bersih higienis.',
     requirements: [
-      'Bongkar plat hidrolik dan cuci menggunakan larutan sanitasi food-grade',
-      'Inspeksi kerapatan saringan mesh kantong jus tanpa robekan',
-      'Uji swab ATP kebersihan permukaan kontak dengan hasil < 10 RLU'
+      'Cuci plat dan corong mesin press dengan cairan food-grade',
+      'Lap meja bar dan pastikan tidak ada sisa tetesan jus'
     ],
     maxStars: 5
   },
   {
     id: 'tmpl-w1-03',
     week: 1,
-    codePrefix: 'W1-QC-03',
-    title: 'Uji Brix Kemanisan & Sortir Buah Segar Organik',
-    category: 'Quality Control',
-    description: 'Inspeksi kualitas bahan baku buah nanas, apel, bayam organik, dan wortel yang masuk. Pengukuran kadar gula alami Brix.',
+    codePrefix: 'M-03',
+    title: 'Sortir & Cuci Buah Segar',
+    category: 'Kualitas Buah',
+    description: 'Pilih buah yang masuk (apel, nanas, bayam), buang yang rusak, dan cuci bersih sebelum diproses.',
     requirements: [
-      'Ukur kadar kemanisan Brix buah dengan refraktometer digital',
-      'Karantina dan laporkan buah yang cacat, memar, atau tidak memenuhi standar',
-      'Pastikan protokol pencucian 3 tahap air ber-ozon berjalan sempurna'
+      'Pisahkan buah yang memar atau tidak layak konsumsi',
+      'Cuci buah dengan air mengalir bersih sesuai SOP'
     ],
     maxStars: 5
   },
   {
     id: 'tmpl-w1-04',
     week: 1,
-    codePrefix: 'W1-CMP-04',
-    title: 'Pemeriksaan APAR & Standar K3 Bar Gerai',
-    category: 'Compliance',
-    description: 'Audit kelayakan alat pemadam api ringan (APAR), jalur evakuasi gerai, dan kepatuhan penggunaan APD (sarung tangan, apron, hairnet) seluruh crew.',
+    codePrefix: 'M-04',
+    title: 'Kerapian Seragam & APD Crew',
+    category: 'Kerapian',
+    description: 'Pastikan seluruh crew memakai seragam bersih, apron, masker, dan hairnet dengan rapi saat melayani.',
     requirements: [
-      'Periksa jarum tekanan APAR pada zona hijau dan masa berlaku inspeksi',
-      'Pastikan seluruh crew mengenakan apron bersih, masker, dan hairnet',
-      'Pastikan dry mat lantai kasir dan area bar terpasang rapi mencegah slip'
+      'Pakai apron bersih, hairnet, dan masker lengkap',
+      'Kuku bersih dan tidak memakai aksesoris tangan saat bertugas'
     ],
     maxStars: 5
   },
 
-  // ==================== WEEK 2 TEMPLATES (Core Quality & Fresh Extraction) ====================
+  // ==================== WEEK 2 ====================
   {
     id: 'tmpl-w2-01',
     week: 2,
-    codePrefix: 'W2-QC-01',
-    title: 'Audit Rasio Ekstraksi Jus Murni 100% (#CleanLabel)',
-    category: 'Quality Control',
-    description: 'Audit kepatuhan resep jus khas Re.juve (u.Glow, Asian Green, Tropic Golden). Memastikan 100% murni, 0% air tambahan, 0% gula tambahan, 0% pengawet.',
+    codePrefix: 'M-05',
+    title: 'Cek Rasa & Kemanisan Alami Buah',
+    category: 'Kualitas Buah',
+    description: 'Uji sampel rasa jus sebelum dikemas ke botol agar rasa 100% segar dan alami tanpa gula tambahan.',
     requirements: [
-      'Ukur gramatur hasil ekstraksi per kg buah segar sesuai SOP resep',
-      'Pastikan 100% Cold-Pressed murni tanpa air, gula, atau perisa sintetis',
-      'Dokumentasikan parameter pH dan densitas pada lembar kendali mutu'
+      'Cek sampel rasa per batch jus yang diproduksi',
+      'Pastikan tidak ada penambahan air atau pemanis buatan'
     ],
     maxStars: 5
   },
   {
     id: 'tmpl-w2-02',
     week: 2,
-    codePrefix: 'W2-SAN-02',
-    title: 'Sanitasi Bar Depan & Standar Kebersihan Kaca Gerai',
-    category: 'Sanitation',
-    description: 'Audit sanitasi berkala setiap jam pada meja pemesanan kasir, layar sentuh POS, permukaan bar stainless steel, dan kaca etalase produk.',
+    codePrefix: 'M-06',
+    title: 'Kecepatan Layanan Barista (< 45 Detik)',
+    category: 'Pelayanan',
+    description: 'Sambut customer dengan ramah dan siapkan produk pesanan dalam waktu kurang dari 45 detik.',
     requirements: [
-      'Sanitasi meja bar dan kasir dengan cairan alkohol food-grade',
-      'Pastikan kaca etalase chiller bersih berkilau bebas sidik jari',
-      'Verifikasi pemilahan tempat sampah organik kulit buah vs daur ulang botol'
+      'Beri salam ramah kepada setiap customer yang datang',
+      'Serahkan pesanan tepat waktu dan kemas dengan rapi'
     ],
     maxStars: 5
   },
   {
     id: 'tmpl-w2-03',
     week: 2,
-    codePrefix: 'W2-LOG-03',
-    title: 'Rekonsiliasi Stok Harian & Buffer Kemasan Botol',
-    category: 'Logistics',
-    description: 'Penghitungan fisik stok botol cold-pressed, almond milk, dan booster shot dibandingkan dengan data sistem POS/ERP gerai.',
+    codePrefix: 'M-07',
+    title: 'Cek Tanggal Expired & Rotasi FIFO',
+    category: 'Stok',
+    description: 'Pajang botol jus di chiller dengan sistem FIFO (First In, First Out). Tanggal terdekat di depan.',
     requirements: [
-      'Scan barcode seluruh varian produk di rak chiller display',
-      'Cocokkan selisih stok fisik dengan laporan penjualan sistem ERP gerai',
-      'Verifikasi ketersediaan tas pendingin (thermal bag) dan ice gel buffer'
+      'Letakkan botol dengan expired date terdekat di baris paling depan',
+      'Pisahkan botol yang sudah mendekati batas tanggal konsumsi'
     ],
     maxStars: 5
   },
   {
     id: 'tmpl-w2-04',
     week: 2,
-    codePrefix: 'W2-SRV-04',
-    title: 'Kecepatan Layanan Barista & Edukasi Pelanggan < 45s',
-    category: 'Service',
-    description: 'Evaluasi kecepatan pelayanan transaksi kasir, salam ramah Re.juve, dan penjelasan manfaat hidup sehat #CleanLabel kepada pelanggan.',
+    codePrefix: 'M-08',
+    title: 'Kebersihan Wastafel & Area Kasir',
+    category: 'Kebersihan',
+    description: 'Jaga area kasir tetap rapi, wastafel cuci tangan selalu bersih, dan sabun selalu terisi.',
     requirements: [
-      'Pertahankan rata-rata waktu transaksi kasir di bawah 45 detik',
-      'Sampaikan penjelasan keunggulan 100% Cold-Pressed dengan fasih',
-      'Raih skor kepuasan pelanggan minimal bintang 4.8 pada survei digital'
+      'Pastikan sabun cuci tangan dan tisu selalu tersedia',
+      'Bersihkan meja kasir dan buang sampah sebelum penuh'
     ],
     maxStars: 5
   },
 
-  // ==================== WEEK 3 TEMPLATES (HACCP Certification & Final Sign-Off) ====================
+  // ==================== WEEK 3 ====================
   {
     id: 'tmpl-w3-01',
     week: 3,
-    codePrefix: 'W3-CMP-01',
-    title: 'Audit Sertifikasi HACCP & Higienitas Total',
-    category: 'Compliance',
-    description: 'Inspeksi komprehensif kepatuhan standar keamanan pangan HACCP internasional pada seluruh alur penanganan produk di gerai.',
+    codePrefix: 'M-09',
+    title: 'Pembersihan Total Chiller Mingguan',
+    category: 'Kebersihan',
+    description: 'Kuras dan bersihkan rak chiller display & chiller gudang secara menyeluruh di akhir minggu.',
     requirements: [
-      'Raih skor minimal 95% pada checklist 80 poin audit sanitasi HACCP',
-      'Verifikasi catatan sterilisasi botol dan penyimpanan tutup bersegel',
-      'Tanda tangani berita acara audit kepatuhan higienitas gerai'
+      'Pindahkan botol jus ke chiller cadangan saat dibersihkan',
+      'Lap rak chiller hingga bersih kering dan susun kembali dengan rapi'
     ],
     maxStars: 5
   },
   {
     id: 'tmpl-w3-02',
     week: 3,
-    codePrefix: 'W3-MNT-02',
-    title: 'Audit Perawatan Chiller & Mesin Hidrolik',
-    category: 'Maintenance',
-    description: 'Pemeriksaan preventif kondensor chiller, pembersihan filter udara mesin, dan pelumasan hidrolik bersertifikasi halal & food-grade.',
+    codePrefix: 'M-10',
+    title: 'Rekap & Opname Stok Botol Harian',
+    category: 'Stok',
+    description: 'Hitung sisa stok botol jus fisik di gerai dan cocokkan dengan data sistem kasir.',
     requirements: [
-      'Bersihkan sirip kondensor pendingin dari debu dan kotoran',
-      'Cek kebocoran oli hidrolik food-grade pada sistem silinder press',
-      'Dokumentasikan stiker tanggal servis berkala pada unit mesin'
+      'Hitung fisik botol per varian rasa',
+      'Catat dan laporkan jika ada selisih stok harian'
     ],
     maxStars: 5
   },
   {
     id: 'tmpl-w3-03',
     week: 3,
-    codePrefix: 'W3-SRV-03',
-    title: 'Survei Kepuasan Pelanggan Bintang 5',
-    category: 'Service',
-    description: 'Pengumpulan ulasan dan testimoni pelanggan gerai mengenai kesegaran jus, keramahan crew, dan kenyamanan outlet.',
+    codePrefix: 'M-11',
+    title: 'Cek Mesin Kasir POS & EDC',
+    category: 'Kasir',
+    description: 'Pastikan mesin kasir (POS), mesin EDC pembayaran, dan printer struk berfungsi lancar.',
     requirements: [
-      'Kumpulkan minimal 25 ulasan pelanggan bintang 5 dalam seminggu',
-      'Pastikan zero komplain kualitas rasa atau suhu botol jus',
-      'Implementasikan masukan pelanggan untuk peningkatan kualitas layanan'
+      'Tes mesin kasir & EDC sebelum buka gerai',
+      'Pastikan kertas struk terpasang rapi'
     ],
     maxStars: 5
   },
   {
     id: 'tmpl-w3-04',
     week: 3,
-    codePrefix: 'W3-QC-04',
-    title: 'Final Cycle Store Excellence Sign-off',
-    category: 'Quality Control',
-    description: 'Verifikasi akhir seluruh pencapaian siklus 3 minggu, penutupan evaluasi crew, dan penandatanganan sertifikat keunggulan gerai.',
+    codePrefix: 'M-12',
+    title: 'Closing Gerai & Evaluasi Siklus',
+    category: 'Closing',
+    description: 'Lakukan checklist penutupan gerai, matikan peralatan non-chiller, dan pastikan chiller tetap menyala aman.',
     requirements: [
-      'Verifikasi kelengkapan seluruh 12 evaluasi misi siklus 3 minggu',
-      'Pastikan rata-rata nilai kualitas gerai mencapai target benchmark >= 90%',
-      'Kirim laporan evaluasi final ke Head of Operations untuk approval siklus'
+      'Pastikan seluruh chiller menyala 24 jam dan suhu stabil',
+      'Kunci pintu gerai dan pastikan area kasir rapi aman'
     ],
     maxStars: 5
   }
@@ -181,14 +169,12 @@ export const mockMissionTemplates = [
 
 export const mockTemplatePackages = [
   {
-    id: 'pkg-rejuve-standard',
-    name: 'Paket Standar Operasional & Penjaminan Mutu Re.juve (3 Minggu)',
-    code: 'PKG-REJUVE-STD-01',
-    category: 'Master SOP Package',
-    description: 'Paket lengkap 12 misi operasional gerai Re.juve yang mencakup Cold Chain 2-4°C, sanitasi mesin hidrolik, uji brix buah, #CleanLabel service, dan sertifikasi HACCP.',
+    id: 'pkg-rejuve-master-12',
+    name: 'Paket Standar Operasional Gerai Re.juve (12 Misi)',
+    code: 'PKG-SOP-12',
+    description: 'Paket standar 12 misi operasional 3 minggu: Suhu Chiller, Sanitasi Bar, Kualitas Buah, Layanan Kasir, dan Stok.',
     totalMissions: 12,
-    weeksCovered: [1, 2, 3],
-    missionsPerWeek: 4,
-    templateIds: mockMissionTemplates.map(t => t.id)
+    totalWeeks: 3,
+    templates: mockMissionTemplates
   }
 ]
