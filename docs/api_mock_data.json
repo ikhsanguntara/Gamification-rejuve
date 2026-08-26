@@ -13,21 +13,21 @@
         "role": "CREW",
         "roleTitle": "Store Specialist",
         "position": "Store Leader",
-        "department": "Operasional Gerai",
+        "department": "Operasional Batch",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
         "batchId": "batch-alpha",
-        "storeLocation": "Gerai Grand Indonesia",
+        "batchName": "Batch 1",
         "stars": 1850,
-        "level": 7
+        "level": 7,
+        "levelTitle": "Elite Inspector"
       }
     }
   },
   "batches": [
     {
       "id": "batch-alpha",
-      "name": "Gerai Grand Indonesia",
-      "code": "GI-01",
-      "location": "Grand Indonesia Mall, Jakarta Pusat",
+      "name": "Batch 1",
+      "code": "BTH-01",
       "status": "ACTIVE",
       "startDate": "2026-08-10",
       "endDate": "2026-08-30",
@@ -41,9 +41,8 @@
     },
     {
       "id": "batch-beta",
-      "name": "Gerai Senayan City",
-      "code": "SC-02",
-      "location": "Senayan City Mall, Jakarta Pusat",
+      "name": "Batch 2",
+      "code": "BTH-02",
       "status": "ACTIVE",
       "startDate": "2026-08-10",
       "endDate": "2026-08-30",
@@ -68,8 +67,8 @@
       "averageScore": 94.0,
       "awardedStars": 5,
       "crewEvaluations": [
-        { "crewId": "crew-001", "score": 95, "status": "COMPLETED" },
-        { "crewId": "crew-002", "score": 93, "status": "COMPLETED" }
+        { "crewId": "crew-001", "crewName": "Andi Pratama", "score": 95, "status": "COMPLETED" },
+        { "crewId": "crew-002", "crewName": "Bella Saphira", "score": 93, "status": "COMPLETED" }
       ]
     },
     {
@@ -83,7 +82,7 @@
       "averageScore": 94.0,
       "calculatedStars": 5,
       "crewEvaluations": [
-        { "crewId": "crew-001", "score": 95, "status": "PENDING_REVIEW" }
+        { "crewId": "crew-001", "crewName": "Andi Pratama", "score": 95, "status": "PENDING_REVIEW" }
       ]
     },
     {
@@ -111,8 +110,8 @@
       }
     ],
     "crewScores": [
-      { "crewId": "crew-001", "score": 95, "notes": "Disiplin SOP sangat baik" },
-      { "crewId": "crew-002", "score": 93, "notes": "Bagus" }
+      { "crewId": "crew-001", "crewName": "Andi Pratama", "score": 95, "calculatedStars": 5 },
+      { "crewId": "crew-002", "crewName": "Bella Saphira", "score": 93, "calculatedStars": 5 }
     ]
   },
   "journey_map": {
@@ -122,7 +121,7 @@
     "completedMissions": 4,
     "progressPercent": 33,
     "chapters": [
-      { "week": 1, "title": "Pulau Suhu & Sanitasi", "status": "COMPLETED", "starsEarned": 5, "isLocked": false },
+      { "week": 1, "title": "Pulau Suhu & Sanitasi", "status": "COMPLETED", "starsEarned": 20, "isLocked": false },
       { "week": 2, "title": "Pulau Rasa & Layanan", "status": "ACTIVE", "starsEarned": 5, "isLocked": false },
       { "week": 3, "title": "Pulau Audit & Stok", "status": "LOCKED", "bountyStars": 500, "isLocked": true }
     ]

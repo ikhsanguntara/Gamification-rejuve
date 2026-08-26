@@ -1,6 +1,6 @@
 # 📋 Re.juve Gamification Platform — Backend REST API Specification & Data Contract
 
-Dokumen spesifikasi lengkap kontrak API (Application Programming Interface) untuk Backend Developer. Mencakup seluruh endpoint, header otentikasi, request body, query parameters, dan struktur response JSON standar untuk seluruh fitur aplikasi.
+Dokumen spesifikasi lengkap kontrak API (Application Programming Interface) untuk Backend Developer. Mencakup seluruh endpoint, header otentikasi, request body, query parameters, dan struktur response JSON standar untuk seluruh fitur aplikasi berdasarkan sudut pandang **Batch Operasional Re.juve**.
 
 ---
 
@@ -42,7 +42,7 @@ Authorization: Bearer <JWT_TOKEN>
 {
   "success": false,
   "statusCode": 400,
-  "message": "Validasi gagal: Nama gerai wajib diisi",
+  "message": "Validasi gagal: Nama batch wajib diisi",
   "errors": [
     {
       "field": "name",
@@ -80,11 +80,11 @@ Authorization: Bearer <JWT_TOKEN>
       "email": "andi.pratama@rejuve.co.id",
       "role": "CREW",
       "roleTitle": "Store Specialist",
-      "position": "Senior Barista",
-      "department": "Store Operations",
+      "position": "Store Leader",
+      "department": "Operasional Batch",
       "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
       "batchId": "batch-alpha",
-      "storeLocation": "Re.juve Grand Indonesia",
+      "batchName": "Batch 1",
       "stars": 1850,
       "level": 7,
       "levelTitle": "Elite Inspector"
@@ -107,6 +107,7 @@ Authorization: Bearer <JWT_TOKEN>
     "email": "andi.pratama@rejuve.co.id",
     "role": "CREW",
     "batchId": "batch-alpha",
+    "batchName": "Batch 1",
     "stars": 1850,
     "level": 7,
     "completedMissions": 8,
@@ -139,9 +140,9 @@ Authorization: Bearer <JWT_TOKEN>
       "name": "Andi Pratama",
       "email": "andi.pratama@rejuve.co.id",
       "role": "CREW",
-      "position": "Senior Barista",
+      "position": "Store Leader",
       "batchId": "batch-alpha",
-      "batchName": "Batch Alpha — Grand Indonesia",
+      "batchName": "Batch 1",
       "stars": 1850,
       "status": "ACTIVE",
       "createdAt": "2026-08-01T08:00:00Z"
@@ -161,8 +162,8 @@ Authorization: Bearer <JWT_TOKEN>
   "email": "budi.santoso@rejuve.co.id",
   "password": "TempPassword123!",
   "role": "CREW",
-  "position": "Store Specialist Barista",
-  "department": "Store Operations",
+  "position": "Senior Barista",
+  "department": "Operasional Batch",
   "batchId": "batch-alpha"
 }
 ```
@@ -174,7 +175,7 @@ Authorization: Bearer <JWT_TOKEN>
 ```json
 {
   "name": "Budi Santoso Updated",
-  "position": "Senior Barista Specialist",
+  "position": "Senior Barista",
   "batchId": "batch-beta"
 }
 ```
@@ -198,9 +199,8 @@ Authorization: Bearer <JWT_TOKEN>
   "data": [
     {
       "id": "batch-alpha",
-      "name": "Batch Alpha — Grand Indonesia",
-      "code": "B-ALPHA",
-      "location": "Grand Indonesia Mall, Jakarta Pusat",
+      "name": "Batch 1",
+      "code": "BTH-01",
       "status": "ACTIVE",
       "startDate": "2026-08-10",
       "endDate": "2026-08-31",
@@ -210,7 +210,33 @@ Authorization: Bearer <JWT_TOKEN>
       "totalMissions": 12,
       "completedMissions": 4,
       "totalStars": 11100,
-      "averageScore": 92.4
+      "averageScore": 92.4,
+      "weeks": [
+        {
+          "weekNumber": 1,
+          "title": "Cold Chain & Sanitasi",
+          "status": "COMPLETED",
+          "isLocked": false,
+          "missionCount": 4,
+          "completionRate": 100
+        },
+        {
+          "weekNumber": 2,
+          "title": "Rasa & Layanan Barista",
+          "status": "ACTIVE",
+          "isLocked": false,
+          "missionCount": 4,
+          "completionRate": 50
+        },
+        {
+          "weekNumber": 3,
+          "title": "Audit & Evaluasi Siklus",
+          "status": "LOCKED",
+          "isLocked": true,
+          "missionCount": 4,
+          "completionRate": 0
+        }
+      ]
     }
   ]
 }
@@ -222,13 +248,12 @@ Authorization: Bearer <JWT_TOKEN>
 * **Request Body**:
 ```json
 {
-  "name": "Batch Delta — Kota Kasablanka",
-  "code": "B-DELTA",
-  "location": "Mall Kota Kasablanka, Jakarta Selatan",
+  "name": "Batch 4",
+  "code": "BTH-04",
   "startDate": "2026-08-25",
   "endDate": "2026-09-15",
   "applyTemplatePackage": true,
-  "packageId": "pkg-rejuve-master-12"
+  "templatePackageId": "pkg-rejuve-standard"
 }
 ```
 
@@ -238,7 +263,7 @@ Authorization: Bearer <JWT_TOKEN>
 * **Request Body**:
 ```json
 {
-  "name": "Batch Delta — Kota Kasablanka (Updated)",
+  "name": "Batch 4 (Updated)",
   "currentWeek": 2,
   "status": "ACTIVE"
 }
@@ -262,22 +287,22 @@ Authorization: Bearer <JWT_TOKEN>
   "statusCode": 200,
   "data": [
     {
-      "id": "m-05",
+      "id": "msn-w2-001",
       "batchId": "batch-alpha",
       "week": 2,
-      "code": "QC-01",
-      "title": "Audit Rasio Ekstraksi Jus Murni & Brix Monitor",
-      "description": "Verifikasi rendemen ekstraksi cold-pressed 100% buah murni tanpa tambahan air dan gula.",
-      "category": "Quality Control",
+      "code": "M-05",
+      "title": "Cek Rasa & Kemanisan Alami Buah",
+      "description": "Cicipi sampel jus dari setiap batch pembuatan untuk memastikan rasa manis alami buah tanpa gula.",
+      "category": "Kualitas Buah",
       "requirements": [
-        "Uji brix meter pada 3 batch sampel jus harian",
-        "Pencatatan yield rasio bahan baku ke dalam log digital",
-        "Pemeriksaan segel #CleanLabel botol kemasan"
+        "Cicipi 3 sampel botol dari batch pembuatan hari ini",
+        "Pastikan tingkat kemanisan murni dari buah segar",
+        "Catat hasil pengecekan rasa pada logbook harian"
       ],
       "status": "PENDING_REVIEW",
       "deadline": "2026-08-28T23:59:59Z",
       "assignedCrewIds": ["crew-001", "crew-002", "crew-003", "crew-004", "crew-005", "crew-006"],
-      "averageScore": 94.5,
+      "averageScore": 94.0,
       "calculatedStars": 5,
       "awardedStars": null,
       "crewEvaluations": [
@@ -306,11 +331,11 @@ Authorization: Bearer <JWT_TOKEN>
 {
   "batchId": "batch-alpha",
   "week": 2,
-  "code": "QC-03",
-  "title": "Kalibrasi Termometer Digital Chiller",
-  "description": "Pemeriksaan kalibrasi sensor suhu digital chiller 2-4°C.",
-  "category": "Cold Chain",
-  "requirements": ["Uji dengan termometer pembanding standar"],
+  "code": "M-13",
+  "title": "Pengecekan Kebersihan Area Kasir",
+  "description": "Memastikan meja POS, EDC, dan akrilik kasir bebas debu dan noda.",
+  "category": "Area Kasir",
+  "requirements": ["Lap permukaan meja kasir dengan cairan sanitasi"],
   "deadline": "2026-08-29"
 }
 ```
@@ -321,7 +346,7 @@ Authorization: Bearer <JWT_TOKEN>
 * **Request Body**:
 ```json
 {
-  "packageId": "pkg-rejuve-master-12",
+  "packageId": "pkg-rejuve-standard",
   "targetBatchId": "batch-beta"
 }
 ```
@@ -336,23 +361,23 @@ Authorization: Bearer <JWT_TOKEN>
 * **Request Body**:
 ```json
 {
-  "missionId": "m-05",
+  "missionId": "msn-w2-001",
   "batchId": "batch-alpha",
   "week": 2,
-  "comment": "SOP ekstraksi buah dingin terlaksana sangat baik, suhu chiller stabil di 2.8°C.",
+  "comment": "Pemeriksaan rasa jus segar dan proses pembuatan sudah sesuai standar. Disiplin kebersihan bar sangat baik.",
   "evidence": [
     {
-      "url": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600",
-      "caption": "Bukti kalibrasi brix meter dan suhu display chiller"
+      "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600",
+      "caption": "Foto pengecekan sampel rasa botol jus segar"
     }
   ],
   "crewScores": [
-    { "crewId": "crew-001", "score": 95, "notes": "Disiplin SOP sangat tinggi" },
-    { "crewId": "crew-002", "score": 90, "notes": "Baik" },
-    { "crewId": "crew-003", "score": 92, "notes": "Baik" },
-    { "crewId": "crew-004", "score": 96, "notes": "Sangat teliti" },
-    { "crewId": "crew-005", "score": 94, "notes": "Bagus" },
-    { "crewId": "crew-006", "score": 95, "notes": "Optimal" }
+    { "crewId": "crew-001", "crewName": "Andi Pratama", "score": 95, "calculatedStars": 5 },
+    { "crewId": "crew-002", "crewName": "Bella Saphira", "score": 93, "calculatedStars": 5 },
+    { "crewId": "crew-003", "crewName": "Candra Wijaya", "score": 92, "calculatedStars": 5 },
+    { "crewId": "crew-004", "crewName": "Dedi Kurniawan", "score": 96, "calculatedStars": 5 },
+    { "crewId": "crew-005", "crewName": "Eka Putri", "score": 94, "calculatedStars": 5 },
+    { "crewId": "crew-006", "crewName": "Fajar Nugraha", "score": 94, "calculatedStars": 5 }
   ]
 }
 ```
@@ -371,13 +396,13 @@ Authorization: Bearer <JWT_TOKEN>
 * **Request Body**:
 ```json
 {
-  "decisionNote": "Kualitas cold-chain terverifikasi memenuhi standar HACCP Re.juve. Bintang disetujui."
+  "decisionNote": "Kualitas operasional dan rasa jus segar terverifikasi baik. Bintang disetujui."
 }
 ```
 * **Effect Backend**:
   1. Ubah status misi & evaluasi menjadi `COMPLETED` / `APPROVED`.
-  2. Tambahkan ⭐ Bintang (misal 5 bintang) ke profil seluruh Crew yang dinilai.
-  3. Buka pos misi berikutnya di Journey Map.
+  2. Tambahkan ⭐ Bintang resmi (1–5 bintang) ke profil seluruh Crew yang dinilai.
+  3. Buka pos misi berikutnya di World Map Journey.
 
 ### 7.3 Request Revision to Supervisor
 * **Method & Endpoint**: `POST /approvals/:evaluationId/revise`
@@ -385,7 +410,7 @@ Authorization: Bearer <JWT_TOKEN>
 * **Request Body**:
 ```json
 {
-  "revisionNote": "Foto bukti kalibrasi brix buah apel kurang tajam. Mohon re-audit dan upload ulang."
+  "revisionNote": "Foto bukti pengecekan rasa kurang jelas. Mohon upload ulang foto dokumentasi."
 }
 ```
 * **Effect Backend**: Ubah status misi menjadi `REVISION_REQUIRED`.
@@ -404,29 +429,29 @@ Authorization: Bearer <JWT_TOKEN>
   "statusCode": 200,
   "data": {
     "currentWeek": 2,
-    "activeNodeId": "m-06",
+    "activeNodeId": "msn-w2-002",
     "activeNodeIndex": 6,
     "totalMissions": 12,
-    "completedMissions": 5,
-    "progressPercent": 42,
+    "completedMissions": 4,
+    "progressPercent": 33,
     "chapters": [
       {
         "week": 1,
-        "title": "Cold Chain Lagoon",
+        "title": "Pulau Suhu & Sanitasi",
         "status": "COMPLETED",
-        "starsEarned": 5,
+        "starsEarned": 20,
         "isLocked": false
       },
       {
         "week": 2,
-        "title": "Pure Extraction Ridge",
+        "title": "Pulau Rasa & Layanan",
         "status": "ACTIVE",
         "starsEarned": 5,
         "isLocked": false
       },
       {
         "week": 3,
-        "title": "HACCP Summit Fortress",
+        "title": "Pulau Audit & Stok",
         "status": "LOCKED",
         "bountyStars": 500,
         "isLocked": true
@@ -434,20 +459,20 @@ Authorization: Bearer <JWT_TOKEN>
     ],
     "waypoints": [
       {
-        "id": "m-01",
+        "id": "msn-w1-001",
         "index": 1,
-        "code": "CC-01",
-        "title": "Verifikasi Suhu Cold Chain Chiller 2-4°C",
+        "code": "M-01",
+        "title": "Cek Suhu Chiller (2–4°C)",
         "week": 1,
         "status": "COMPLETED",
-        "personalScore": 96,
+        "personalScore": 95,
         "starsAwarded": 5
       },
       {
-        "id": "m-06",
+        "id": "msn-w2-002",
         "index": 6,
-        "code": "SV-01",
-        "title": "Speed of Service Barista < 45 Detik",
+        "code": "M-06",
+        "title": "Kecepatan Layanan Barista (< 45 Detik)",
         "week": 2,
         "status": "IN_PROGRESS",
         "isCurrentAvatarPos": true,
@@ -459,7 +484,7 @@ Authorization: Bearer <JWT_TOKEN>
 }
 ```
 
-### 8.2 Get Store Branch Leaderboard
+### 8.2 Get Batch Leaderboard
 * **Method & Endpoint**: `GET /gamification/leaderboard`
 * **Access**: Authenticated
 * **Query Parameters**:
@@ -474,8 +499,8 @@ Authorization: Bearer <JWT_TOKEN>
       "rank": 1,
       "crewId": "crew-001",
       "name": "Andi Pratama",
-      "position": "Senior Barista",
-      "storeLocation": "Re.juve Grand Indonesia",
+      "position": "Store Leader",
+      "batchName": "Batch 1",
       "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
       "level": 7,
       "completedMissions": 8,
@@ -485,14 +510,14 @@ Authorization: Bearer <JWT_TOKEN>
     {
       "rank": 2,
       "crewId": "crew-002",
-      "name": "Bambang Wijaya",
-      "position": "Cold-Pressed Specialist",
-      "storeLocation": "Re.juve Grand Indonesia",
-      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-      "level": 6,
+      "name": "Bella Saphira",
+      "position": "Senior Barista",
+      "batchName": "Batch 1",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+      "level": 7,
       "completedMissions": 7,
-      "averageScore": 91.0,
-      "stars": 1720
+      "averageScore": 92.0,
+      "stars": 1780
     }
   ]
 }
