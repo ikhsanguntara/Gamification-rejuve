@@ -1,7 +1,7 @@
 <template>
-  <aside class="hidden lg:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 transition-all">
+  <aside class="hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 z-20 overflow-hidden">
     <!-- Brand Logo & App Name -->
-    <div class="h-16 flex items-center px-5 gap-3 border-b border-slate-100 dark:border-slate-800/80">
+    <div class="h-16 flex items-center px-5 gap-3 border-b border-slate-100 dark:border-slate-800/80 flex-shrink-0">
       <div class="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 shadow-md ring-2 ring-[#831843]/30">
         <img
           src="/images/logo.png"
@@ -23,7 +23,7 @@
     </div>
 
     <!-- Active Role Indicator Badge -->
-    <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30">
+    <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 flex-shrink-0">
       <div class="flex items-center justify-between">
         <span class="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">
           Current Persona
@@ -38,7 +38,7 @@
     </div>
 
     <!-- Navigation Links -->
-    <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+    <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto min-h-0">
       <!-- ⚙️ Collapsible Administrator Dropdown Menu Group (for Superadmin) -->
       <div v-if="userStore.isSuperadmin" class="space-y-1 pb-2 border-b border-slate-100 dark:border-slate-800">
         <button
@@ -173,29 +173,29 @@
     </nav>
 
     <!-- Active Batch & Week Mini Widget -->
-    <div class="p-4 m-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+    <div class="p-3.5 m-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[130px]">
-          {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name.split('-')[0].trim() }}
+        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[130px]">
+          {{ batchStore.currentBatch.name }}
         </span>
-        <span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
           Week {{ batchStore.selectedWeek }} Active
         </span>
       </div>
       <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
         <div
-          class="bg-[#499ec7] h-full rounded-full transition-all duration-500"
+          class="bg-[#831843] dark:bg-[#f472b6] h-full rounded-full transition-all duration-500"
           :style="{ width: `${batchStore.currentBatch.weeks[batchStore.selectedWeek - 1]?.completionRate || 65}%` }"
         ></div>
       </div>
-      <div class="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
+      <div class="flex items-center justify-between text-[10px] text-slate-400 mt-1.5">
         <span>Cycle Progress</span>
-        <span>{{ batchStore.currentBatch.weeks[batchStore.selectedWeek - 1]?.completionRate || 65 }}%</span>
+        <span class="font-bold">{{ batchStore.currentBatch.weeks[batchStore.selectedWeek - 1]?.completionRate || 65 }}%</span>
       </div>
     </div>
 
     <!-- Bottom User Section -->
-    <div class="p-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-3">
+    <div class="p-3.5 px-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-3 flex-shrink-0 bg-white dark:bg-slate-900">
       <img
         :src="userStore.currentUser.avatar"
         :alt="userStore.currentUser.name"

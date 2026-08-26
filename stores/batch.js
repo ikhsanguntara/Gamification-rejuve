@@ -29,6 +29,11 @@ export const useBatchStore = defineStore('batch', {
       const batch = state.batches.find(b => b.id === state.selectedBatchId)
       if (!batch) return false
       return state.selectedWeek !== batch.currentWeek
+    },
+    isWeekLocked: (state) => (weekNumber) => {
+      const batch = state.batches.find(b => b.id === state.selectedBatchId)
+      if (!batch) return false
+      return Number(weekNumber) !== Number(batch.currentWeek)
     }
   },
 
