@@ -60,7 +60,7 @@ const navItems = computed(() => {
     return [
       { label: 'Admin', path: '/admin', icon: Sliders },
       { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
-      { label: 'Gerai', path: '/batches', icon: Layers },
+      { label: 'Batch', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
         label: 'Approvals',
@@ -84,7 +84,7 @@ const navItems = computed(() => {
   if (role === 'SUPERVISOR') {
     return [
       { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
-      { label: 'Gerai', path: '/batches', icon: Layers },
+      { label: 'Batch', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
         label: 'Evaluate',
@@ -99,7 +99,7 @@ const navItems = computed(() => {
   // HEAD
   return [
     { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
-    { label: 'Gerai', path: '/batches', icon: Layers },
+    { label: 'Batch', path: '/batches', icon: Layers },
     {
       label: 'Approvals',
       path: '/approvals',

@@ -55,9 +55,9 @@
           v-model="userBatchFilter"
           class="text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
         >
-          <option value="ALL">Semua Gerai</option>
+          <option value="ALL">Semua Batch</option>
           <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
-            {{ b.name.split('—')[1] || b.name }}
+            {{ b.name }}
           </option>
         </select>
       </div>
@@ -71,7 +71,7 @@
             <tr>
               <th class="py-3.5 px-4">User</th>
               <th class="py-3.5 px-4">Role & Jabatan</th>
-              <th class="py-3.5 px-4">Cabang Gerai (Batch Assignment)</th>
+              <th class="py-3.5 px-4">Batch Assignment</th>
               <th class="py-3.5 px-4 text-center">⭐ Stars</th>
               <th class="py-3.5 px-4 text-right">Aksi</th>
             </tr>

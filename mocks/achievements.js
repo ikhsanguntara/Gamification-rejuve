@@ -6,7 +6,7 @@ export const mockAchievements = [
   {
     id: 'ach-001',
     title: 'Juara Misi',
-    description: 'Selesaikan 10 misi operasional gerai.',
+    description: 'Selesaikan 10 misi operasional Batch.',
     category: 'Misi',
     icon: 'Target',
     targetValue: 10,
@@ -41,8 +41,8 @@ export const mockAchievements = [
   },
   {
     id: 'ach-004',
-    title: 'Peringkat #1 Gerai',
-    description: 'Raih posisi nomor 1 di leaderboard bintang gerai.',
+    title: 'Peringkat #1 Batch',
+    description: 'Raih posisi nomor 1 di leaderboard bintang Batch.',
     category: 'Peringkat',
     icon: 'Crown',
     targetValue: 1,
@@ -54,7 +54,7 @@ export const mockAchievements = [
   {
     id: 'ach-005',
     title: 'Kolektor 1.000 Bintang',
-    description: 'Kumpulkan total 1.000 ⭐ Bintang dari misi gerai.',
+    description: 'Kumpulkan total 1.000 ⭐ Bintang dari misi Batch.',
     category: 'Bintang',
     icon: 'Star',
     targetValue: 1000,
@@ -102,7 +102,7 @@ export const mockAchievements = [
   {
     id: 'ach-009',
     title: 'Master Siklus 3 Minggu',
-    description: 'Tuntaskan seluruh 12 misi dalam 1 siklus batch penuh.',
+    description: 'Tuntaskan seluruh 12 misi dalam 1 siklus Batch penuh.',
     category: 'Siklus',
     icon: 'Trophy',
     targetValue: 12,

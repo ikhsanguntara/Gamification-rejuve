@@ -1,14 +1,14 @@
 /**
- * Mock Data: Cabang Gerai Re.juve (Batches)
+ * Mock Data: Batch Misi Re.juve
  */
 
 export const mockBatches = [
   {
     id: 'batch-alpha',
-    name: 'Gerai Grand Indonesia',
-    code: 'GI-01',
-    description: 'Siklus misi 3 minggu untuk tim operasional Re.juve Grand Indonesia.',
-    storeLocation: 'Grand Indonesia Mall, Jakarta Pusat',
+    name: 'Batch 1',
+    code: 'BTH-01',
+    description: 'Siklus misi 3 minggu untuk tim Batch 1.',
+    storeLocation: 'Grand Indonesia, Jakarta Pusat',
     startDate: '2026-08-10',
     endDate: '2026-08-30',
     currentWeek: 2,
@@ -60,10 +60,10 @@ export const mockBatches = [
   },
   {
     id: 'batch-beta',
-    name: 'Gerai Senayan City',
-    code: 'SC-02',
-    description: 'Siklus misi 3 minggu untuk tim operasional Re.juve Senayan City.',
-    storeLocation: 'Senayan City Mall, Jakarta Pusat',
+    name: 'Batch 2',
+    code: 'BTH-02',
+    description: 'Siklus misi 3 minggu untuk tim Batch 2.',
+    storeLocation: 'Senayan City, Jakarta Pusat',
     startDate: '2026-08-10',
     endDate: '2026-08-30',
     currentWeek: 2,
@@ -115,10 +115,10 @@ export const mockBatches = [
   },
   {
     id: 'batch-gamma',
-    name: 'Gerai Pondok Indah Mall',
-    code: 'PIM-03',
-    description: 'Siklus misi 3 minggu untuk tim operasional Re.juve PIM 2.',
-    storeLocation: 'Pondok Indah Mall 2, Jakarta Selatan',
+    name: 'Batch 3',
+    code: 'BTH-03',
+    description: 'Siklus misi 3 minggu untuk tim Batch 3.',
+    storeLocation: 'Pondok Indah Mall, Jakarta Selatan',
     startDate: '2026-08-10',
     endDate: '2026-08-30',
     currentWeek: 2,

@@ -302,7 +302,7 @@ const navItems = computed(() => {
   if (role === 'SUPERADMIN') {
     return [
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      { label: 'Cabang Gerai', path: '/batches', icon: Layers },
+      { label: 'Batch Misi', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
         label: 'Evaluations',
@@ -337,7 +337,7 @@ const navItems = computed(() => {
   if (role === 'SUPERVISOR') {
     return [
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      { label: 'Cabang Gerai', path: '/batches', icon: Layers },
+      { label: 'Batch Misi', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
         label: 'Evaluations',
@@ -354,7 +354,7 @@ const navItems = computed(() => {
   // HEAD Role
   return [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { label: 'Cabang Gerai', path: '/batches', icon: Layers },
+    { label: 'Batch Misi', path: '/batches', icon: Layers },
     {
       label: 'Approvals',
       path: '/approvals',

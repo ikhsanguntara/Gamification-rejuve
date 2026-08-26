@@ -7,27 +7,27 @@
         <span>Kembali ke Daftar Batch</span>
       </NuxtLink>
       <span>/</span>
-      <span class="text-slate-800 dark:text-slate-200">Edit Cabang Gerai</span>
+      <span class="text-slate-800 dark:text-slate-200">Edit Batch</span>
     </div>
 
     <!-- Error State -->
     <div v-if="!batch" class="p-8 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
-      <p class="text-sm font-bold text-slate-700 dark:text-slate-300">Cabang Gerai tidak ditemukan.</p>
-      <NuxtLink to="/admin/batches" class="text-xs text-[#499ec7] font-bold mt-2 inline-block">Kembali ke Daftar</NuxtLink>
+      <p class="text-sm font-bold text-slate-700 dark:text-slate-300">Batch tidak ditemukan.</p>
+      <NuxtLink to="/admin/batches" class="text-xs text-[#831843] font-bold mt-2 inline-block">Kembali ke Daftar</NuxtLink>
     </div>
 
     <!-- Edit Form Card -->
     <div v-else class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
       <div class="flex items-center gap-3 mb-2">
-        <div class="w-10 h-10 rounded-2xl bg-[#499ec7]/10 flex items-center justify-center text-[#499ec7]">
+        <div class="w-10 h-10 rounded-2xl bg-[#831843]/10 flex items-center justify-center text-[#831843]">
           <Layers class="w-5 h-5" />
         </div>
         <div>
           <h2 class="text-xl font-black text-slate-900 dark:text-white">
-            Edit Cabang Gerai: {{ batch.name }}
+            Edit Batch: {{ batch.name }}
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">
-            Perbarui data cabang, kode batch, lokasi outlet, dan deskripsi gerai.
+            Perbarui data Batch, kode batch, lokasi, dan deskripsi.
           </p>
         </div>
       </div>

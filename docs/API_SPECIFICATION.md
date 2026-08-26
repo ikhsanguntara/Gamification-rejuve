@@ -185,7 +185,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
-## 🏬 4. Modul Administrator: Manajemen Cabang Gerai/Batch (`/batches`)
+## 📦 4. Modul Administrator: Manajemen Batch (`/batches`)
 
 ### 4.1 List All Batches
 * **Method & Endpoint**: `GET /batches`

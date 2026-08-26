@@ -36,8 +36,8 @@
       class="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm"
     >
       <div class="flex items-center gap-2">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Peringkat Cabang Gerai:</span>
-        <span class="text-xs font-black text-[#499ec7] dark:text-[#84cded] px-3 py-1 rounded-xl bg-[#499ec7]/10">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Peringkat Batch:</span>
+        <span class="text-xs font-black text-[#831843] dark:text-[#f472b6] px-3 py-1 rounded-xl bg-[#831843]/10">
           📍 {{ batchStore.currentBatch.name }}
         </span>
       </div>

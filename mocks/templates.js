@@ -170,9 +170,9 @@ export const mockMissionTemplates = [
 export const mockTemplatePackages = [
   {
     id: 'pkg-rejuve-master-12',
-    name: 'Paket Standar Operasional Gerai Re.juve (12 Misi)',
+    name: 'Paket Standar Operasional Batch Re.juve (12 Misi)',
     code: 'PKG-SOP-12',
-    description: 'Paket standar 12 misi operasional 3 minggu: Suhu Chiller, Sanitasi Bar, Kualitas Buah, Layanan Kasir, dan Stok.',
+    description: 'Paket standar 12 misi operasional 3 minggu untuk Batch: Suhu Chiller, Sanitasi Bar, Kualitas Buah, Layanan Kasir, dan Stok.',
     totalMissions: 12,
     totalWeeks: 3,
     templates: mockMissionTemplates

@@ -43,9 +43,9 @@
           v-model="missionBatchFilter"
           class="text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#963189] cursor-pointer"
         >
-          <option value="ALL">Semua Cabang Gerai</option>
+          <option value="ALL">Semua Batch</option>
           <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
-            {{ b.name.split('—')[1] || b.name }}
+            {{ b.name }}
           </option>
         </select>
 

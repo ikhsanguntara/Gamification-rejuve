@@ -12,14 +12,14 @@
 
       <!-- Batch / Gerai Selector: Locked for Crew, Dropdown for Supervisor/Head/Admin -->
       <div class="flex items-center gap-1.5 sm:gap-2">
-        <!-- For CREW: Locked Branch Badge -->
+        <!-- For CREW: Locked Batch Badge -->
         <div
           v-if="userStore.isCrew"
           class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60"
         >
-          <MapPin class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6] flex-shrink-0" />
+          <Layers class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6] flex-shrink-0" />
           <span class="truncate max-w-[140px] xs:max-w-[180px]">
-            {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}
+            {{ batchStore.currentBatch.name }}
           </span>
         </div>
 
@@ -28,14 +28,14 @@
           <select
             :value="batchStore.selectedBatchId"
             @change="handleBatchChange($event.target.value)"
-            class="appearance-none w-full bg-slate-100/80 dark:bg-slate-800/80 border-none text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 rounded-xl pl-2.5 sm:pl-3 pr-7 py-1.5 focus:ring-2 focus:ring-[#499ec7] cursor-pointer truncate"
+            class="appearance-none w-full bg-slate-100/80 dark:bg-slate-800/80 border-none text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 rounded-xl pl-2.5 sm:pl-3 pr-7 py-1.5 focus:ring-2 focus:ring-[#831843] cursor-pointer truncate"
           >
             <option
               v-for="b in batchStore.allBatches"
               :key="b.id"
               :value="b.id"
             >
-              {{ b.name.split('—')[1] || b.name.split('-')[0].trim() }}
+              {{ b.name }}
             </option>
           </select>
           <ChevronDown class="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -248,7 +248,7 @@ const roleDotClass = computed(() => {
 
 const handleBatchChange = (batchId) => {
   batchStore.selectBatch(batchId)
-  toast.info('Gerai Switched', `Active branch changed to ${batchStore.currentBatch.name}`)
+  toast.info('Batch Diubah', `Batch aktif beralih ke ${batchStore.currentBatch.name}`)
 }
 
 const handleLogout = () => {

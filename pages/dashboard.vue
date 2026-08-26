@@ -20,16 +20,16 @@
           </h2>
           <p class="text-slate-200 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
             <span v-if="userStore.isCrew">
-              Re.juve Store Specialist • Saat ini berada di <strong class="text-amber-300">Level {{ myProgress.currentLevel }} ({{ myProgress.currentLevelTitle }})</strong> dengan <strong>{{ myStars.toLocaleString() }} ⭐ Stars</strong>. Terus jaga standar cold-chain & kebersihan gerai!
+              Re.juve Specialist • Saat ini berada di <strong class="text-amber-300">Level {{ myProgress.currentLevel }} ({{ myProgress.currentLevelTitle }})</strong> dengan <strong>{{ myStars.toLocaleString() }} ⭐ Stars</strong>. Terus selesaikan seluruh misi di {{ batchStore.currentBatch.name }}!
             </span>
             <span v-else-if="userStore.isSupervisor">
-              Area Store Supervisor • Week {{ batchStore.selectedWeek }} aktif dinilai. Terdapat <strong class="text-amber-300">{{ pendingReviewCount }} misi diajukan</strong> dan <strong class="text-rose-300">{{ missionStore.revisionCount }} revisi</strong>.
+              Area Supervisor • Week {{ batchStore.selectedWeek }} aktif dinilai. Terdapat <strong class="text-amber-300">{{ pendingReviewCount }} misi diajukan</strong> dan <strong class="text-rose-300">{{ missionStore.revisionCount }} revisi</strong>.
             </span>
             <span v-else-if="userStore.isHead">
-              Head of Operations & Quality • <strong class="text-amber-300">{{ approvalStore.pendingApprovals.length }} evaluasi gerai</strong> menunggu keputusan (Approve / Revise).
+              Head of Operations & Quality • <strong class="text-amber-300">{{ approvalStore.pendingApprovals.length }} evaluasi Batch</strong> menunggu keputusan (Approve / Revise).
             </span>
             <span v-else>
-              System Superadmin • Master Control Console aktif untuk seluruh cabang gerai Re.juve.
+              System Superadmin • Master Control Console aktif untuk seluruh Batch Re.juve.
             </span>
           </p>
         </div>

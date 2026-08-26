@@ -9,19 +9,19 @@
           <span class="text-[#499ec7] dark:text-[#84cded] font-bold">Batch Management</span>
         </div>
         <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-          Manajemen Cabang Gerai (Batches)
+          Manajemen Batch
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          Kelola cabang gerai Re.juve, inisialisasi siklus 3 minggu operasional, dan pantau status aktif.
+          Kelola Batch Re.juve, inisialisasi siklus 3 minggu operasional, dan pantau status aktif.
         </p>
       </div>
 
       <NuxtLink
         to="/admin/batches/create"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white text-xs font-bold transition-all shadow-md shadow-[#499ec7]/20 active:scale-95 cursor-pointer self-start sm:self-auto"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white text-xs font-bold transition-all shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer self-start sm:self-auto"
       >
         <Plus class="w-4 h-4" />
-        <span>+ Buat Batch Gerai Baru</span>
+        <span>+ Buat Batch Baru</span>
       </NuxtLink>
     </div>
 

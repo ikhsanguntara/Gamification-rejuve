@@ -26,9 +26,9 @@
       <!-- Batch Location Badge -->
       <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
         <div class="text-right">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Target Gerai</p>
-          <p class="text-xs font-extrabold text-[#499ec7] dark:text-[#84cded]">
-            {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Target Batch</p>
+          <p class="text-xs font-extrabold text-[#831843] dark:text-[#f472b6]">
+            {{ batchStore.currentBatch.name }}
           </p>
         </div>
       </div>
