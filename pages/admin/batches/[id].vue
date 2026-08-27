@@ -39,7 +39,7 @@
             v-model="form.name"
             type="text"
             required
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           />
         </div>
 
@@ -50,7 +50,7 @@
               v-model="form.code"
               type="text"
               required
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
 
@@ -60,7 +60,7 @@
               v-model="form.storeLocation"
               type="text"
               required
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
         </div>
@@ -70,7 +70,7 @@
           <textarea
             v-model="form.description"
             rows="3"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none p-3.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none p-3.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           ></textarea>
         </div>
 
@@ -83,7 +83,7 @@
           </NuxtLink>
           <button
             type="submit"
-            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white shadow-md shadow-[#499ec7]/20 active:scale-95 cursor-pointer"
+            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#831843] hover:bg-[#701a40] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
           >
             Simpan Perubahan
           </button>

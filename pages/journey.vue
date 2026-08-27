@@ -6,7 +6,7 @@
         <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-1">
           <span>Gamification</span>
           <span>/</span>
-          <span class="text-[#499ec7] dark:text-[#84cded] font-semibold">World Map Journey</span>
+          <span class="text-[#831843] dark:text-[#f472b6] font-semibold">World Map Journey</span>
         </div>
         <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
           Peta Petualangan Bintang (World Map Journey)
@@ -21,13 +21,13 @@
           to="/missions"
           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer"
         >
-          <Target class="w-4 h-4 text-[#499ec7]" />
+          <Target class="w-4 h-4 text-[#831843] dark:text-[#f472b6]" />
           <span>Katalog Misi</span>
         </NuxtLink>
 
         <NuxtLink
           to="/leaderboard"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white text-xs font-semibold transition-all shadow-md shadow-[#499ec7]/20 active:scale-95 cursor-pointer"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#831843] hover:bg-[#701a40] text-white text-xs font-semibold transition-all shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
         >
           <Trophy class="w-4 h-4 text-amber-300" />
           <span>Leaderboard Gerai</span>

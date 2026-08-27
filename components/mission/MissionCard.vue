@@ -10,7 +10,7 @@
     <!-- Top Row: Category & Status Badge -->
     <div>
       <div class="flex items-center justify-between gap-2 mb-3">
-        <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-[#963189]/10 text-[#963189] dark:text-[#db92d7] tracking-wide uppercase">
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] tracking-wide uppercase">
           {{ mission.category || 'Quality SOP' }}
         </span>
         <MissionStatus :status="mission.status" />
@@ -24,7 +24,7 @@
         <p class="text-xs font-medium text-slate-400 dark:text-slate-500 mb-1">
           {{ mission.code }} • Week {{ mission.week }}
         </p>
-        <h4 class="text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-[#499ec7] dark:group-hover:text-[#84cded] transition-colors line-clamp-2">
+        <h4 class="text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-[#831843] dark:group-hover:text-[#f472b6] transition-colors line-clamp-2">
           {{ mission.title }}
         </h4>
       </NuxtLink>
@@ -40,7 +40,7 @@
       <!-- Assigned Multi-Crew Summary -->
       <div class="flex items-center justify-between text-xs">
         <div class="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 font-medium">
-          <Users class="w-3.5 h-3.5 text-[#499ec7]" />
+          <Users class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
           <span>{{ assignedCrewList.length }} Store Crew Members</span>
         </div>
 
@@ -97,7 +97,7 @@
       <div class="pt-2">
         <NuxtLink
           :to="`/missions/${mission.id}`"
-          class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-[#499ec7] hover:text-white dark:hover:bg-[#499ec7] dark:hover:text-white text-slate-700 dark:text-slate-200 transition-all group"
+          class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] dark:hover:text-white text-slate-700 dark:text-slate-200 transition-all group cursor-pointer"
         >
           <span>{{ userStore.isCrew ? 'Lihat Evaluasi & SOP Misi' : 'View Mission Details' }}</span>
           <ChevronRight class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />

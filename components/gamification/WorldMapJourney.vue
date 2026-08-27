@@ -59,7 +59,7 @@
     </div>
 
     <!-- 🗺️ WORLD MAP CANVAS (SVG + CSS Adventure Landscape with Mission Dots) -->
-    <div class="relative w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-[#24779f]/30 dark:border-slate-800 bg-[#38bdf8] dark:bg-[#0369a1] min-h-[640px] sm:min-h-[720px]">
+    <div class="relative w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-[#831843]/30 dark:border-slate-800 bg-[#38bdf8] dark:bg-[#0369a1] min-h-[640px] sm:min-h-[720px]">
       <!-- Animated Ocean Waves Surface -->
       <div class="absolute inset-0 bg-gradient-to-b from-[#38bdf8] via-[#0ea5e9] to-[#0284c7] dark:from-[#0369a1] dark:via-[#075985] dark:to-[#0c4a6e]"></div>
 
@@ -171,8 +171,8 @@
       >
         <div class="relative w-44 sm:w-56 h-36 sm:h-44 flex flex-col items-center justify-center">
           <div class="absolute inset-0 rounded-full bg-amber-400/20 animate-pulse pointer-events-none scale-110"></div>
-          <div class="absolute -bottom-2 w-40 sm:w-52 h-14 bg-[#0369a1]/70 dark:bg-black/50 rounded-full blur-lg"></div>
-          <div class="relative w-36 sm:w-48 h-24 sm:h-30 rounded-[55%_45%_50%_50%/45%_55%_45%_55%] bg-gradient-to-b from-[#fde047] via-[#f59e0b] to-[#c2410c] border-4 border-amber-200 shadow-2xl overflow-hidden flex items-center justify-center ring-4 ring-[#499ec7]">
+          <div class="absolute -bottom-2 w-40 sm:w-52 h-14 bg-[#831843]/70 dark:bg-black/50 rounded-full blur-lg"></div>
+          <div class="relative w-36 sm:w-48 h-24 sm:h-30 rounded-[55%_45%_50%_50%/45%_55%_45%_55%] bg-gradient-to-b from-[#fde047] via-[#f59e0b] to-[#c2410c] border-4 border-amber-200 shadow-2xl overflow-hidden flex items-center justify-center ring-4 ring-[#831843]">
             <div class="flex items-center gap-1 text-2xl sm:text-3xl z-10">
               <span>🍊</span>
               <span class="text-3xl sm:text-4xl animate-bounce-gentle">🥤</span>
@@ -190,28 +190,31 @@
       </div>
 
       <!-- ========================================================================= -->
-      <!-- 🏝️ ISLAND 3 LANDMARK: PULAU AUDIT & STOK (Week 3 - Terkunci) -->
+      <!-- 🏝️ ISLAND 3 LANDMARK: PUNCAK HACCP (Week 3 - Terkunci) -->
       <!-- ========================================================================= -->
       <div
         @click="openIslandModal(3)"
-        class="absolute right-[4%] sm:right-[6%] top-[14%] sm:top-[12%] -translate-y-1/2 z-20 cursor-pointer group transition-transform duration-300 hover:scale-105"
+        class="absolute right-[8%] sm:right-[10%] top-[48%] sm:top-[45%] -translate-y-1/2 z-20 cursor-pointer group transition-transform duration-300 hover:scale-105"
       >
-        <div class="relative w-44 sm:w-54 h-36 sm:h-44 flex flex-col items-center justify-center">
-          <div class="absolute inset-0 bg-white/40 dark:bg-slate-900/40 rounded-full blur-xl pointer-events-none"></div>
-          <div class="absolute -bottom-2 w-40 sm:w-48 h-12 bg-[#0369a1]/50 dark:bg-black/30 rounded-full blur-md"></div>
-          <div class="relative w-36 sm:w-46 h-24 sm:h-28 rounded-[50%_50%_60%_40%/60%_60%_40%_40%] bg-gradient-to-b from-[#e0e7ff] via-[#818cf8] to-[#4338ca] border-4 border-slate-300 shadow-xl overflow-hidden flex items-center justify-center opacity-90">
-            <div class="flex items-center gap-1 text-2xl sm:text-3xl z-10">
-              <span>🏔️</span>
+        <div class="relative w-44 sm:w-56 h-36 sm:h-44 flex flex-col items-center justify-center">
+          <div class="absolute -bottom-2 w-40 sm:w-52 h-14 bg-[#831843]/60 dark:bg-black/50 rounded-full blur-lg"></div>
+          <div class="relative w-36 sm:w-48 h-24 sm:h-30 rounded-[50%_50%_45%_55%/55%_45%_55%_45%] bg-gradient-to-b from-[#fce7f3] via-[#db2777] to-[#831843] border-4 border-emerald-200 shadow-2xl overflow-hidden flex items-center justify-center ring-4 ring-slate-400/40">
+            <div class="flex items-center gap-1 text-2xl sm:text-3xl z-10 opacity-75">
+              <span>🍏</span>
               <span class="text-3xl sm:text-4xl">🏆</span>
-              <span>🌲</span>
+              <span>🥬</span>
+            </div>
+            <!-- Frosted locked ice overlay -->
+            <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center">
+              <Lock class="w-8 h-8 text-white/90 drop-shadow-md" />
             </div>
           </div>
-          <div class="absolute -top-4 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900 text-amber-300 border border-slate-700 shadow-md">
-            <Lock class="w-3 h-3 text-amber-400" />
+          <div class="absolute -top-4 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-200 font-bold shadow-md border border-slate-600 text-xs">
+            <Lock class="w-3 h-3 text-slate-300" />
             <span class="text-xs font-semibold uppercase">PULAU 3 TERKUNCI</span>
           </div>
-          <div class="mt-1 px-2.5 py-0.5 rounded-lg bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 border border-slate-300 shadow-sm text-center">
-            <h4 class="text-xs font-semibold">Pulau Audit & Stok</h4>
+          <div class="mt-1 px-2.5 py-0.5 rounded-lg bg-slate-800/90 text-slate-200 font-semibold shadow-sm text-center">
+            <h4 class="text-xs font-semibold">Puncak HACCP & Audit</h4>
           </div>
         </div>
       </div>
@@ -250,7 +253,7 @@
           v-if="node.isActive"
           class="absolute -top-16 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center animate-bob-character pointer-events-none"
         >
-          <div class="px-2 py-0.5 rounded-full bg-gradient-to-r from-[#499ec7] to-[#24779f] text-white text-xs font-semibold shadow-lg border border-white flex items-center gap-1 mb-0.5 whitespace-nowrap">
+          <div class="px-2 py-0.5 rounded-full bg-gradient-to-r from-[#9d174d] to-[#831843] text-white text-xs font-semibold shadow-lg border border-white flex items-center gap-1 mb-0.5 whitespace-nowrap">
             <span class="animate-pulse">📍</span>
             <span>POS ANDA</span>
           </div>
@@ -266,7 +269,7 @@
           class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-bold text-xs shadow-xl border-2 transition-all"
           :class="[
             selectedNode?.id === node.id
-              ? 'bg-[#499ec7] text-white ring-4 ring-[#499ec7]/50 scale-110'
+              ? 'bg-[#831843] text-white ring-4 ring-[#831843]/50 scale-110'
               : node.status === 'COMPLETED'
               ? 'bg-emerald-500 text-white border-white ring-2 ring-emerald-300 shadow-emerald-500/40'
               : node.isActive
@@ -370,7 +373,7 @@
           </button>
           <NuxtLink
             :to="`/missions/${selectedNode.id}`"
-            class="px-5 py-2 text-xs font-semibold rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white shadow-md shadow-[#499ec7]/20 flex items-center gap-1.5 cursor-pointer"
+            class="px-5 py-2 text-xs font-semibold rounded-xl bg-[#831843] hover:bg-[#701a40] text-white shadow-md shadow-[#831843]/20 flex items-center gap-1.5 cursor-pointer"
           >
             <span>Buka Detail Misi</span>
             <ChevronRight class="w-3.5 h-3.5" />
@@ -428,7 +431,7 @@
           <div
             v-for="(m, idx) in islandMissions"
             :key="m.id"
-            class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3 hover:border-[#499ec7] transition-all shadow-sm"
+            class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3 hover:border-[#831843] transition-all shadow-sm"
           >
             <div class="flex items-center gap-3 min-w-0">
               <div
@@ -446,7 +449,7 @@
               <div class="min-w-0">
                 <div class="flex items-center gap-1.5">
                   <span class="text-xs font-semibold text-slate-400">{{ m.code }}</span>
-                  <span class="text-xs font-semibold px-1.5 py-0.2 rounded bg-[#963189]/10 text-[#963189] dark:text-[#db92d7]">
+                  <span class="text-xs font-semibold px-1.5 py-0.2 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
                     {{ m.category }}
                   </span>
                 </div>
@@ -463,10 +466,10 @@
 
               <NuxtLink
                 :to="`/missions/${m.id}`"
-                class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#499ec7] hover:text-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all flex items-center gap-1"
+                class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#831843] hover:text-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all flex items-center gap-1"
               >
                 <span>Buka</span>
-                <ChevronRight class="w-3 h-3" />
+                <ChevronRight class="w-3.5 h-3.5" />
               </NuxtLink>
             </div>
           </div>

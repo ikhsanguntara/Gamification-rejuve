@@ -10,7 +10,7 @@
           <span class="text-xs font-semibold px-2 py-0.5 rounded-lg bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
             Week {{ mission.week }}
           </span>
-          <span class="text-xs font-semibold px-2 py-0.5 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-lg bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
             {{ mission.category }}
           </span>
           <MissionStatus :status="mission.status" />

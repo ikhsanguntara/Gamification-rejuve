@@ -19,7 +19,7 @@
       <button
         type="button"
         @click="openApplyPackageModal"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#499ec7] to-[#24779f] hover:from-[#24779f] hover:to-[#1d5e7f] text-white text-xs font-semibold transition-all shadow-md shadow-[#499ec7]/25 active:scale-95 cursor-pointer self-start sm:self-auto"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white text-xs font-semibold transition-all shadow-md shadow-[#831843]/25 active:scale-95 cursor-pointer self-start sm:self-auto"
       >
         <Sparkles class="w-4 h-4" />
         <span>⚡ Terapkan Paket 12 Misi ke Gerai</span>
@@ -27,8 +27,8 @@
     </div>
 
     <!-- Master Package Highlight Card -->
-    <div class="p-6 rounded-3xl bg-gradient-to-br from-[#1a4257] via-[#24779f] to-[#491b41] text-white relative overflow-hidden shadow-xl border border-white/10">
-      <div class="absolute -right-10 -top-10 w-60 h-60 bg-[#499ec7]/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="p-6 rounded-3xl bg-gradient-to-br from-[#4a0e28] via-[#831843] to-[#9d174d] text-white relative overflow-hidden shadow-xl border border-white/10">
+      <div class="absolute -right-10 -top-10 w-60 h-60 bg-[#831843]/30 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -50,7 +50,7 @@
             @click="openApplyPackageModal"
             class="px-5 py-3 rounded-2xl bg-white text-slate-900 font-semibold text-xs shadow-lg hover:bg-slate-100 transition-all active:scale-95 cursor-pointer flex items-center gap-2"
           >
-            <Download class="w-4 h-4 text-[#499ec7]" />
+            <Download class="w-4 h-4 text-[#831843]" />
             <span>Terapkan ke Cabang Gerai</span>
           </button>
         </div>
@@ -69,7 +69,7 @@
             class="px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
             :class="[
               activeWeekTab === w
-                ? 'bg-white dark:bg-slate-900 text-[#499ec7] dark:text-[#84cded] shadow-sm'
+                ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-sm'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             ]"
           >
@@ -91,7 +91,7 @@
         >
           <div>
             <div class="flex items-center justify-between gap-2 mb-2">
-              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
                 {{ tmpl.codePrefix }} • Week {{ tmpl.week }}
               </span>
               <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
@@ -144,7 +144,7 @@
           <select
             v-model="targetBatchId"
             required
-            class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
+            class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           >
             <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
               {{ b.name.split('—')[1] || b.name }} ({{ b.code }})
@@ -159,7 +159,7 @@
             • 4 Misi Week 2 (Ekstraksi 100% Murni, Sanitasi Bar, Stok, Barista)<br />
             • 4 Misi Week 3 (HACCP Certification, Servis Chiller, Sign-off)
           </p>
-          <p class="text-xs text-[#24779f] dark:text-[#84cded] font-semibold pt-1">
+          <p class="text-xs text-[#831843] dark:text-[#f472b6] font-semibold pt-1">
             ✓ Otomatis menugaskan seluruh Crew yang terdaftar di cabang tersebut.
           </p>
         </div>
@@ -174,7 +174,7 @@
           </button>
           <button
             type="submit"
-            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white shadow-md shadow-[#499ec7]/20 active:scale-95 cursor-pointer"
+            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#831843] hover:bg-[#701a40] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
           >
             Terapkan 12 Misi Sekarang
           </button>

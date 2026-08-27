@@ -27,7 +27,7 @@
         <!-- Status & Week Pill -->
         <div class="flex flex-col items-end gap-1 flex-shrink-0">
           <MissionStatus :status="item.status" />
-          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
             Week {{ item.week }}
           </span>
         </div>
@@ -52,7 +52,7 @@
           <span class="font-semibold uppercase tracking-wider text-slate-400">
             Assessed Crew Scores ({{ item.crewScores?.length || 0 }})
           </span>
-          <span class="text-xs text-[#499ec7] dark:text-[#84cded] font-semibold">
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">
             All Crew in Batch
           </span>
         </div>
@@ -133,7 +133,7 @@
         <button
           type="button"
           @click="$emit('approve', item)"
-          class="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-gradient-to-r from-[#499ec7] to-[#24779f] hover:from-[#24779f] hover:to-[#1d5e7f] text-white shadow-md shadow-[#499ec7]/20 transition-all active:scale-95"
+          class="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white shadow-md shadow-[#831843]/20 transition-all active:scale-95 cursor-pointer"
         >
           <Star class="w-3.5 h-3.5 fill-white" />
           <span>Approve All ({{ item.crewScores?.length || 0 }})</span>

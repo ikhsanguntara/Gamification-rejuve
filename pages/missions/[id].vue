@@ -13,7 +13,7 @@
     <!-- Error State if Mission Not Found -->
     <div v-if="!mission" class="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
       <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Mission not found</p>
-      <NuxtLink to="/missions" class="text-xs text-[#499ec7] mt-2 inline-block font-bold">Return to Catalog</NuxtLink>
+      <NuxtLink to="/missions" class="text-xs text-[#831843] mt-2 inline-block font-bold">Return to Catalog</NuxtLink>
     </div>
 
     <template v-else>
@@ -25,10 +25,10 @@
               <span class="text-xs font-semibold text-slate-400">
                 {{ mission.code }}
               </span>
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-[#963189]/10 text-[#963189] dark:text-[#db92d7] uppercase tracking-wider">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] uppercase tracking-wider">
                 {{ mission.category }}
               </span>
-              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
                 Week {{ mission.week }}
               </span>
               <MissionStatus :status="mission.status" />
@@ -137,7 +137,7 @@
                 <img
                   :src="userStore.currentUser.avatar"
                   :alt="userStore.currentUser.name"
-                  class="w-11 h-11 rounded-full object-cover ring-2 ring-[#499ec7]/30"
+                  class="w-11 h-11 rounded-full object-cover ring-2 ring-[#831843]/30"
                 />
                 <div>
                   <h4 class="text-sm font-semibold text-slate-900 dark:text-white">
@@ -317,7 +317,7 @@
             </h3>
 
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-[#499ec7]/10 flex items-center justify-center text-[#499ec7]">
+              <div class="w-10 h-10 rounded-xl bg-[#831843]/10 flex items-center justify-center text-[#831843] dark:text-[#f472b6]">
                 <Users class="w-5 h-5" />
               </div>
               <div>

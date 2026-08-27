@@ -14,25 +14,25 @@ export const MISSION_STATUSES = {
   IN_PROGRESS: {
     key: 'IN_PROGRESS',
     label: 'In Progress',
-    color: 'blue',
-    badgeClass: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800/60',
-    dotClass: 'bg-blue-500',
+    color: 'rose',
+    badgeClass: 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] border border-[#831843]/20',
+    dotClass: 'bg-[#831843]',
     icon: 'Clock'
   },
   DRAFT: {
     key: 'DRAFT',
     label: 'Draft Saved',
-    color: 'indigo',
-    badgeClass: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/60',
-    dotClass: 'bg-indigo-500',
+    color: 'slate',
+    badgeClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+    dotClass: 'bg-slate-500',
     icon: 'FileText'
   },
   EVALUATED: {
     key: 'EVALUATED',
     label: 'Evaluated',
-    color: 'cyan',
-    badgeClass: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800/60',
-    dotClass: 'bg-cyan-500',
+    color: 'rose',
+    badgeClass: 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] border border-[#831843]/20',
+    dotClass: 'bg-[#831843]',
     icon: 'ClipboardCheck'
   },
   PENDING_REVIEW: {

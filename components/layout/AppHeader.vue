@@ -109,7 +109,7 @@
               <button
                 type="button"
                 @click="userStore.markNotificationsAsRead"
-                class="text-xs text-[#499ec7] dark:text-[#84cded] hover:underline font-semibold cursor-pointer"
+                class="text-xs text-[#831843] dark:text-[#f472b6] hover:underline font-semibold cursor-pointer"
               >
                 Mark all as read
               </button>
@@ -121,7 +121,7 @@
                 class="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
               >
                 <div class="flex items-start gap-2.5">
-                  <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" :class="n.isRead ? 'bg-slate-300 dark:bg-slate-600' : 'bg-[#499ec7]'"></div>
+                  <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" :class="n.isRead ? 'bg-slate-300 dark:bg-slate-600' : 'bg-[#831843]'"></div>
                   <div>
                     <p class="text-xs font-semibold text-slate-900 dark:text-white">{{ n.title }}</p>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ n.message }}</p>
@@ -139,12 +139,12 @@
         <button
           type="button"
           @click="showUserMenu = !showUserMenu; showNotifications = false"
-          class="flex items-center gap-1.5 p-0.5 rounded-full hover:ring-2 hover:ring-[#499ec7]/50 transition-all"
+          class="flex items-center gap-1.5 p-0.5 rounded-full hover:ring-2 hover:ring-[#831843]/50 transition-all"
         >
           <img
             :src="userStore.currentUser.avatar"
             :alt="userStore.currentUser.name"
-            class="w-8 h-8 rounded-full object-cover ring-2 ring-[#499ec7]/30"
+            class="w-8 h-8 rounded-full object-cover ring-2 ring-[#831843]/30"
           />
         </button>
 
@@ -168,7 +168,7 @@
               <p class="text-xs text-slate-400 truncate">
                 {{ userStore.currentUser.email }}
               </p>
-              <span class="inline-block text-xs font-semibold px-2 py-0.5 mt-1 rounded bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
+              <span class="inline-block text-xs font-semibold px-2 py-0.5 mt-1 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
                 {{ userStore.currentUser.roleTitle }}
               </span>
             </div>
@@ -228,7 +228,8 @@ import {
   User,
   Settings,
   LogOut,
-  MapPin
+  MapPin,
+  Layers
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -241,9 +242,10 @@ const showNotifications = ref(false)
 const showUserMenu = ref(false)
 
 const roleDotClass = computed(() => {
-  if (userStore.isCrew) return 'bg-[#499ec7]'
+  if (userStore.isCrew) return 'bg-[#831843]'
   if (userStore.isSupervisor) return 'bg-amber-500'
-  return 'bg-[#963189]'
+  if (userStore.isHead) return 'bg-[#6b133a]'
+  return 'bg-slate-500'
 })
 
 const handleBatchChange = (batchId) => {

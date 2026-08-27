@@ -6,7 +6,7 @@
         <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-1">
           <span>Administrator</span>
           <span>/</span>
-          <span class="text-[#499ec7] dark:text-[#84cded] font-semibold">Batch Management</span>
+          <span class="text-[#831843] dark:text-[#f472b6] font-semibold">Batch Management</span>
         </div>
         <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
           Manajemen Batch
@@ -46,7 +46,7 @@
             {{ b.name }}
           </h4>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
-            <MapPin class="w-3.5 h-3.5 text-[#499ec7]" />
+            <MapPin class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
             <span>{{ b.storeLocation }}</span>
           </p>
           <p class="text-xs text-slate-400 dark:text-slate-500 mt-2 line-clamp-2 leading-relaxed">
@@ -62,7 +62,7 @@
             </div>
             <div>
               <span class="text-xs text-slate-400 block">Active Cycle:</span>
-              <span class="font-semibold text-[#499ec7] dark:text-[#84cded]">
+              <span class="font-semibold text-[#831843] dark:text-[#f472b6]">
                 Week {{ b.currentWeek }} of {{ b.totalWeeks }}
               </span>
             </div>
@@ -72,7 +72,7 @@
         <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <NuxtLink
             :to="`/admin/batches/${b.id}`"
-            class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-[#499ec7] dark:hover:text-[#84cded] flex items-center gap-1 cursor-pointer"
+            class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-[#831843] dark:hover:text-[#f472b6] flex items-center gap-1 cursor-pointer"
           >
             <Edit3 class="w-3.5 h-3.5" />
             <span>Edit Gerai</span>

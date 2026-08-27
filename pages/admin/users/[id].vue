@@ -13,7 +13,7 @@
     <!-- Error State if not found -->
     <div v-if="!user" class="p-8 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
       <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">User tidak ditemukan.</p>
-      <NuxtLink to="/admin/users" class="text-xs text-indigo-600 font-semibold mt-2 inline-block">Kembali ke Daftar</NuxtLink>
+      <NuxtLink to="/admin/users" class="text-xs text-[#831843] font-semibold mt-2 inline-block">Kembali ke Daftar</NuxtLink>
     </div>
 
     <!-- Edit Form Card -->
@@ -22,7 +22,7 @@
         <img
           :src="user.avatar"
           :alt="user.name"
-          class="w-12 h-12 rounded-2xl object-cover ring-2 ring-indigo-500/20"
+          class="w-12 h-12 rounded-2xl object-cover ring-2 ring-[#831843]/20"
         />
         <div>
           <h2 class="text-xl font-bold text-slate-900 dark:text-white">
@@ -41,7 +41,7 @@
             v-model="form.name"
             type="text"
             required
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           />
         </div>
 
@@ -51,7 +51,7 @@
             <select
               v-model="form.role"
               required
-              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             >
               <option value="CREW">Crew Member (Store Specialist)</option>
               <option value="SUPERVISOR">Area Store Supervisor</option>
@@ -65,7 +65,7 @@
             <select
               v-model="form.batchId"
               required
-              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             >
               <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
                 {{ b.name }}
@@ -80,7 +80,7 @@
             <input
               v-model="form.position"
               type="text"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
 
@@ -89,7 +89,7 @@
             <input
               v-model="form.email"
               type="email"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
         </div>
@@ -99,7 +99,7 @@
           <input
             v-model="form.avatar"
             type="url"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           />
         </div>
 
@@ -112,7 +112,7 @@
           </NuxtLink>
           <button
             type="submit"
-            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer"
+            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#831843] hover:bg-[#701a40] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
           >
             Simpan Perubahan
           </button>

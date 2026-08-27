@@ -47,19 +47,19 @@
           class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer"
           :class="[
             isAdminActive
-              ? 'bg-[#24779f]/10 text-[#24779f] dark:text-[#84cded] dark:bg-[#499ec7]/15'
+              ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] dark:bg-[#831843]/20'
               : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
           ]"
         >
           <div class="flex items-center gap-3">
-            <Settings class="w-4 h-4 text-[#499ec7]" />
+            <Settings class="w-4 h-4 text-[#831843] dark:text-[#f472b6]" />
             <span class="font-semibold text-xs">Administrator</span>
           </div>
           <ChevronUp v-if="isAdminOpen" class="w-4 h-4 text-slate-400 transition-transform" />
           <ChevronDown v-else class="w-4 h-4 text-slate-400 transition-transform" />
         </button>
 
-        <!-- Submenu with Dot Bullets matching the user reference screenshot -->
+        <!-- Submenu with Dot Bullets -->
         <Transition
           enter-active-class="transition duration-150 ease-out"
           enter-from-class="opacity-0 -translate-y-1"
@@ -75,13 +75,13 @@
               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
               :class="[
                 $route.path.startsWith('/admin/users')
-                  ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-semibold'
+                  ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-semibold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               ]"
             >
               <span
                 class="w-1.5 h-1.5 rounded-full transition-colors"
-                :class="$route.path.startsWith('/admin/users') ? 'bg-indigo-600 dark:bg-indigo-400' : 'bg-slate-400 dark:bg-slate-600'"
+                :class="$route.path.startsWith('/admin/users') ? 'bg-[#831843] dark:bg-[#f472b6]' : 'bg-slate-400 dark:bg-slate-600'"
               ></span>
               <span>User</span>
             </NuxtLink>
@@ -92,13 +92,13 @@
               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
               :class="[
                 $route.path.startsWith('/admin/batches')
-                  ? 'bg-[#499ec7]/15 text-[#24779f] dark:text-[#84cded] font-semibold'
+                  ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-semibold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               ]"
             >
               <span
                 class="w-1.5 h-1.5 rounded-full transition-colors"
-                :class="$route.path.startsWith('/admin/batches') ? 'bg-[#499ec7]' : 'bg-slate-400 dark:bg-slate-600'"
+                :class="$route.path.startsWith('/admin/batches') ? 'bg-[#831843] dark:bg-[#f472b6]' : 'bg-slate-400 dark:bg-slate-600'"
               ></span>
               <span>Batch</span>
             </NuxtLink>
@@ -109,13 +109,13 @@
               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
               :class="[
                 $route.path.startsWith('/admin/missions')
-                  ? 'bg-[#963189]/15 text-[#963189] dark:text-[#db92d7] font-semibold'
+                  ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-semibold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               ]"
             >
               <span
                 class="w-1.5 h-1.5 rounded-full transition-colors"
-                :class="$route.path.startsWith('/admin/missions') ? 'bg-[#963189]' : 'bg-slate-400 dark:bg-slate-600'"
+                :class="$route.path.startsWith('/admin/missions') ? 'bg-[#831843] dark:bg-[#f472b6]' : 'bg-slate-400 dark:bg-slate-600'"
               ></span>
               <span>Mission</span>
             </NuxtLink>
@@ -126,13 +126,13 @@
               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
               :class="[
                 $route.path.startsWith('/admin/templates')
-                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold'
+                  ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-semibold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               ]"
             >
               <span
                 class="w-1.5 h-1.5 rounded-full transition-colors"
-                :class="$route.path.startsWith('/admin/templates') ? 'bg-amber-500 dark:bg-amber-400' : 'bg-slate-400 dark:bg-slate-600'"
+                :class="$route.path.startsWith('/admin/templates') ? 'bg-[#831843] dark:bg-[#f472b6]' : 'bg-slate-400 dark:bg-slate-600'"
               ></span>
               <span>Template Misi</span>
             </NuxtLink>
@@ -284,13 +284,13 @@ const handleLogout = () => {
 const roleBadgeStyle = computed(() => {
   switch (userStore.currentRole) {
     case 'CREW':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+      return 'bg-[#831843]/15 text-[#831843] dark:text-[#f472b6]'
     case 'SUPERVISOR':
       return 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
     case 'HEAD':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
+      return 'bg-[#6b133a]/15 text-[#831843] dark:text-[#fbcfe8]'
     case 'SUPERADMIN':
-      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
+      return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
     default:
       return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
   }

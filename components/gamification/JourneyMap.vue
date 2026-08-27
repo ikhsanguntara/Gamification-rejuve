@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6">
     <!-- Journey Header & Odyssey Level Progress -->
-    <div class="p-6 rounded-3xl bg-gradient-to-br from-[#1a4257] via-[#24779f] to-[#491b41] text-white relative overflow-hidden shadow-xl border border-white/10">
+    <div class="p-6 rounded-3xl bg-gradient-to-br from-[#4a0e28] via-[#831843] to-[#9d174d] text-white relative overflow-hidden shadow-xl border border-white/10">
       <!-- Ambient Glows -->
-      <div class="absolute -right-12 -top-12 w-64 h-64 bg-[#499ec7]/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -left-12 -bottom-12 w-64 h-64 bg-[#963189]/25 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -right-12 -top-12 w-64 h-64 bg-[#831843]/30 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -left-12 -bottom-12 w-64 h-64 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -53,7 +53,7 @@
         </div>
         <div class="w-full h-3 rounded-full bg-black/30 overflow-hidden p-0.5 border border-white/10">
           <div
-            class="h-full rounded-full bg-gradient-to-r from-[#499ec7] via-[#963189] to-amber-400 transition-all duration-1000 relative"
+            class="h-full rounded-full bg-gradient-to-r from-[#831843] via-[#9d174d] to-amber-400 transition-all duration-1000 relative"
             :style="{ width: `${odysseyProgressPercent}%` }"
           >
             <!-- Animated fluid sheen -->
@@ -66,7 +66,7 @@
     <!-- Interactive Journey Map Canvas (Winding SVG Pipeline & Waypoints) -->
     <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-10 shadow-sm relative overflow-hidden">
       <!-- Background Grid Pattern -->
-      <div class="absolute inset-0 bg-[radial-gradient(#499ec7_1px,transparent_1px)] [background-size:24px_24px] opacity-10 dark:opacity-20 pointer-events-none"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(#831843_1px,transparent_1px)] [background-size:24px_24px] opacity-5 dark:opacity-10 pointer-events-none"></div>
 
       <!-- Chapter Milestones Stepper -->
       <div class="relative z-10 space-y-12">
@@ -99,7 +99,7 @@
               class="group p-4 rounded-2xl border transition-all duration-300 cursor-pointer relative overflow-hidden"
               :class="[
                 selectedNode?.id === m.id
-                  ? 'border-[#499ec7] ring-2 ring-[#499ec7]/40 bg-[#499ec7]/10'
+                  ? 'border-[#831843] ring-2 ring-[#831843]/40 bg-[#831843]/10'
                   : isMissionCompleted(m)
                   ? 'border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-950/20 hover:border-emerald-400 hover:shadow-md'
                   : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-slate-300'
@@ -113,7 +113,7 @@
                 <span class="text-xs font-medium">⭐ 5/5</span>
               </div>
 
-              <h4 class="text-xs font-semibold text-slate-900 dark:text-white line-clamp-2 group-hover:text-[#499ec7] transition-colors">
+              <h4 class="text-xs font-semibold text-slate-900 dark:text-white line-clamp-2 group-hover:text-[#831843] dark:group-hover:text-[#f472b6] transition-colors">
                 {{ m.title }}
               </h4>
 
@@ -122,7 +122,7 @@
                   <CheckCircle2 class="w-3.5 h-3.5" />
                   <span>Nilai: {{ getMissionScore(m) }}/100</span>
                 </span>
-                <span class="text-slate-400 group-hover:text-[#499ec7] font-medium">Lihat Info →</span>
+                <span class="text-slate-400 group-hover:text-[#831843] dark:group-hover:text-[#f472b6] font-medium">Lihat Info →</span>
               </div>
             </div>
           </div>
@@ -130,7 +130,7 @@
 
         <!-- Animated Connecting Fluid Tube (W1 to W2) -->
         <div class="flex items-center justify-center py-2 relative">
-          <div class="w-full max-w-md h-2 rounded-full bg-gradient-to-r from-emerald-500 via-[#499ec7] to-[#963189] relative overflow-hidden shadow-sm">
+          <div class="w-full max-w-md h-2 rounded-full bg-gradient-to-r from-emerald-500 via-[#831843] to-amber-500 relative overflow-hidden shadow-sm">
             <div class="absolute inset-0 bg-white/40 animate-fluid-stream"></div>
           </div>
           <span class="absolute px-3 py-1 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm">
@@ -142,8 +142,8 @@
         <div class="space-y-4">
           <!-- Chapter Header Banner -->
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-2xl bg-[#499ec7]/20 border border-[#499ec7]/40 flex items-center justify-center text-[#499ec7] dark:text-[#84cded] font-bold text-sm relative">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-2xl bg-[#499ec7]/30 opacity-75"></span>
+            <div class="w-9 h-9 rounded-2xl bg-[#831843]/15 border border-[#831843]/30 flex items-center justify-center text-[#831843] dark:text-[#f472b6] font-bold text-sm relative">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-2xl bg-[#831843]/30 opacity-75"></span>
               <span>W2</span>
             </div>
             <div>
@@ -168,18 +168,18 @@
               class="group p-4 rounded-2xl border transition-all duration-300 cursor-pointer relative overflow-hidden"
               :class="[
                 selectedNode?.id === m.id
-                  ? 'border-[#499ec7] ring-2 ring-[#499ec7]/40 bg-[#499ec7]/10 shadow-lg'
+                  ? 'border-[#831843] ring-2 ring-[#831843]/40 bg-[#831843]/10 shadow-lg'
                   : m.status === 'PENDING_REVIEW'
                   ? 'border-amber-300 dark:border-amber-700/80 bg-amber-50/40 dark:bg-amber-950/20 shadow-sm hover:border-amber-400'
                   : m.status === 'REVISION_REQUIRED'
                   ? 'border-rose-300 dark:border-rose-700/80 bg-rose-50/40 dark:bg-rose-950/20 shadow-sm'
-                  : 'border-[#499ec7]/40 bg-white dark:bg-slate-900 hover:border-[#499ec7] shadow-sm'
+                  : 'border-[#831843]/30 bg-white dark:bg-slate-900 hover:border-[#831843] shadow-sm'
               ]"
             >
               <!-- Stepping Mascot Pin on Current Active Mission -->
               <div
                 v-if="idx === 0"
-                class="absolute -top-1 -right-1 z-20 flex items-center gap-1 px-2 py-0.5 rounded-bl-xl bg-gradient-to-r from-[#499ec7] to-[#24779f] text-white text-xs font-semibold shadow-md animate-bounce-gentle"
+                class="absolute -top-1 -right-1 z-20 flex items-center gap-1 px-2 py-0.5 rounded-bl-xl bg-gradient-to-r from-[#9d174d] to-[#831843] text-white text-xs font-semibold shadow-md animate-bounce-gentle"
               >
                 <img
                   :src="userStore.currentUser.avatar"
@@ -191,7 +191,7 @@
 
               <!-- Status Badge -->
               <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
+                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
                   Pos {{ idx + 5 }} • {{ m.category }}
                 </span>
                 <span
@@ -206,7 +206,7 @@
                 </span>
               </div>
 
-              <h4 class="text-xs font-semibold text-slate-900 dark:text-white line-clamp-2 group-hover:text-[#499ec7] transition-colors">
+              <h4 class="text-xs font-semibold text-slate-900 dark:text-white line-clamp-2 group-hover:text-[#831843] dark:group-hover:text-[#f472b6] transition-colors">
                 {{ m.title }}
               </h4>
 
@@ -214,7 +214,7 @@
                 <span class="font-semibold text-amber-600 dark:text-amber-400">
                   {{ getMissionScore(m) > 0 ? `Nilai: ${getMissionScore(m)}/100` : 'Menunggu Nilai' }}
                 </span>
-                <span class="text-[#499ec7] font-semibold group-hover:underline">Buka Intel →</span>
+                <span class="text-[#831843] dark:text-[#f472b6] font-semibold group-hover:underline">Buka Intel →</span>
               </div>
             </div>
           </div>
@@ -222,7 +222,7 @@
 
         <!-- Animated Connecting Fluid Tube (W2 to W3) -->
         <div class="flex items-center justify-center py-2 relative">
-          <div class="w-full max-w-md h-2 rounded-full bg-gradient-to-r from-[#963189] via-indigo-500 to-amber-500 relative overflow-hidden shadow-sm">
+          <div class="w-full max-w-md h-2 rounded-full bg-gradient-to-r from-[#831843] via-[#9d174d] to-amber-500 relative overflow-hidden shadow-sm">
             <div class="absolute inset-0 bg-white/40 animate-fluid-stream"></div>
           </div>
           <span class="absolute px-3 py-1 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm">
@@ -329,7 +329,7 @@
         </div>
 
         <!-- Personal Score / Status Banner -->
-        <div class="p-3.5 rounded-xl bg-[#499ec7]/10 flex items-center justify-between text-xs">
+        <div class="p-3.5 rounded-xl bg-[#831843]/10 flex items-center justify-between text-xs">
           <div>
             <span class="text-xs text-slate-400 block">Status Pos:</span>
             <strong class="text-slate-800 dark:text-slate-200 font-semibold">{{ selectedNode.status }}</strong>
@@ -350,7 +350,7 @@
           </button>
           <NuxtLink
             :to="`/missions/${selectedNode.id}`"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white shadow-md shadow-[#499ec7]/20 flex items-center gap-1.5"
+            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#701a40] text-white shadow-md shadow-[#831843]/20 flex items-center gap-1.5 cursor-pointer"
           >
             <span>Buka Detail Misi</span>
             <ChevronRight class="w-3.5 h-3.5" />

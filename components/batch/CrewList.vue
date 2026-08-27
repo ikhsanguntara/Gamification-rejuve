@@ -6,7 +6,7 @@
           <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
             Assigned Crew Roster ({{ batchCrews.length }} Members)
           </h3>
-          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
             {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}
           </span>
         </div>
@@ -21,7 +21,7 @@
           v-model="searchQuery"
           type="text"
           placeholder="Search crew name or code..."
-          class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none pl-9 pr-4 py-2 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#499ec7]"
+          class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none pl-9 pr-4 py-2 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#831843]"
         />
         <Search class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
       </div>
@@ -32,7 +32,7 @@
       <div
         v-for="crew in filteredCrews"
         :key="crew.id"
-        class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 flex flex-col justify-between hover:border-[#499ec7]/50 hover:shadow-md transition-all group"
+        class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 flex flex-col justify-between hover:border-[#831843]/50 hover:shadow-md transition-all group"
       >
         <!-- Top Info -->
         <div class="flex items-start gap-3">
@@ -56,7 +56,7 @@
             <p class="text-xs text-slate-400 dark:text-slate-500 truncate">
               {{ crew.position }}
             </p>
-            <p class="text-xs font-medium text-[#499ec7] dark:text-[#84cded] truncate mt-0.5">
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
               📍 {{ crew.storeLocation }}
             </p>
           </div>
@@ -78,7 +78,7 @@
         <div v-if="userStore.isSupervisor" class="mt-3 pt-2">
           <NuxtLink
             :to="`/evaluations?crewId=${crew.id}`"
-            class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-[#499ec7] hover:bg-[#24779f] text-white shadow-sm transition-all"
+            class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-[#831843] hover:bg-[#701a40] text-white shadow-sm transition-all cursor-pointer"
           >
             <ClipboardCheck class="w-3.5 h-3.5" />
             <span>Evaluate {{ crew.name.split(' ')[0] }}</span>

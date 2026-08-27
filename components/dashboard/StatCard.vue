@@ -88,33 +88,49 @@ const props = defineProps({
 
 const iconContainerClass = computed(() => {
   switch (props.variant) {
-    case 'amber': return 'bg-amber-100 dark:bg-amber-950/60'
-    case 'emerald': return 'bg-emerald-100 dark:bg-emerald-950/60'
-    case 'blue': return 'bg-blue-100 dark:bg-blue-950/60'
-    case 'purple': return 'bg-purple-100 dark:bg-purple-950/60'
-    case 'rose': return 'bg-rose-100 dark:bg-rose-950/60'
-    default: return 'bg-slate-100 dark:bg-slate-800'
+    case 'brand':
+    case 'beet':
+    case 'purple':
+    case 'rose':
+      return 'bg-[#831843]/10 dark:bg-[#831843]/20'
+    case 'amber':
+      return 'bg-amber-100 dark:bg-amber-950/60'
+    case 'emerald':
+      return 'bg-emerald-100 dark:bg-emerald-950/60'
+    default:
+      return 'bg-slate-100 dark:bg-slate-800'
   }
 })
 
 const iconColorClass = computed(() => {
   switch (props.variant) {
-    case 'amber': return 'text-amber-600 dark:text-amber-400'
-    case 'emerald': return 'text-emerald-600 dark:text-emerald-400'
-    case 'blue': return 'text-blue-600 dark:text-blue-400'
-    case 'purple': return 'text-purple-600 dark:text-purple-400'
-    case 'rose': return 'text-rose-600 dark:text-rose-400'
-    default: return 'text-slate-600 dark:text-slate-400'
+    case 'brand':
+    case 'beet':
+    case 'purple':
+    case 'rose':
+      return 'text-[#831843] dark:text-[#f472b6]'
+    case 'amber':
+      return 'text-amber-600 dark:text-amber-400'
+    case 'emerald':
+      return 'text-emerald-600 dark:text-emerald-400'
+    default:
+      return 'text-slate-600 dark:text-slate-400'
   }
 })
 
 const glowBgClass = computed(() => {
   switch (props.variant) {
-    case 'amber': return 'bg-amber-500'
-    case 'emerald': return 'bg-emerald-500'
-    case 'blue': return 'bg-blue-500'
-    case 'purple': return 'bg-purple-500'
-    default: return 'bg-slate-400'
+    case 'brand':
+    case 'beet':
+    case 'purple':
+    case 'rose':
+      return 'bg-[#831843]'
+    case 'amber':
+      return 'bg-amber-500'
+    case 'emerald':
+      return 'bg-emerald-500'
+    default:
+      return 'bg-slate-400'
   }
 })
 

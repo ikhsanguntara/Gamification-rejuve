@@ -6,7 +6,7 @@
         <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-1">
           <span>Administrator</span>
           <span>/</span>
-          <span class="text-indigo-600 dark:text-indigo-400 font-semibold">User Management</span>
+          <span class="text-[#831843] dark:text-[#f472b6] font-semibold">User Management</span>
         </div>
         <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
           Manajemen User & Penugasan Gerai
@@ -18,7 +18,7 @@
 
       <NuxtLink
         to="/admin/users/create"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-all shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer self-start sm:self-auto"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#831843] hover:bg-[#701a40] text-white text-xs font-semibold transition-all shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer self-start sm:self-auto"
       >
         <Plus class="w-4 h-4" />
         <span>+ Tambah User Baru</span>
@@ -32,7 +32,7 @@
           v-model="searchQuery"
           type="text"
           placeholder="Cari nama atau email user..."
-          class="w-full text-xs font-medium rounded-xl bg-slate-100 dark:bg-slate-800 border-none pl-9 pr-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500"
+          class="w-full text-xs font-medium rounded-xl bg-slate-100 dark:bg-slate-800 border-none pl-9 pr-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#831843]"
         />
         <Search class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
       </div>
@@ -41,7 +41,7 @@
         <!-- Role Filter -->
         <select
           v-model="userRoleFilter"
-          class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+          class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#831843] cursor-pointer"
         >
           <option value="ALL">Semua Role</option>
           <option value="CREW">Crew Member (Store Specialist)</option>
@@ -53,7 +53,7 @@
         <!-- Batch Filter -->
         <select
           v-model="userBatchFilter"
-          class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+          class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#831843] cursor-pointer"
         >
           <option value="ALL">Semua Batch</option>
           <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
@@ -102,10 +102,10 @@
                 <span
                   class="text-xs font-semibold px-2 py-0.5 rounded-full inline-block mb-0.5"
                   :class="[
-                    u.role === 'CREW' ? 'bg-[#499ec7]/15 text-[#24779f] dark:text-[#84cded]' :
+                    u.role === 'CREW' ? 'bg-[#831843]/15 text-[#831843] dark:text-[#f472b6]' :
                     u.role === 'SUPERVISOR' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
-                    u.role === 'HEAD' ? 'bg-[#963189]/15 text-[#963189] dark:text-[#db92d7]' :
-                    'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
+                    u.role === 'HEAD' ? 'bg-[#6b133a]/15 text-[#831843] dark:text-[#fbcfe8]' :
+                    'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
                   ]"
                 >
                   {{ u.role }}
@@ -119,7 +119,7 @@
                   <select
                     :value="u.batchId"
                     @change="handleReassignBatch(u.id, $event.target.value)"
-                    class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-2.5 py-1 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                    class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-2.5 py-1 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#831843] cursor-pointer"
                   >
                     <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
                       {{ b.name.split('—')[1] || b.name }}
@@ -144,7 +144,7 @@
                 <div class="flex items-center justify-end gap-2">
                   <NuxtLink
                     :to="`/admin/users/${u.id}`"
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-block"
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-[#831843] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-block"
                     title="Edit User"
                   >
                     <Edit3 class="w-4 h-4" />

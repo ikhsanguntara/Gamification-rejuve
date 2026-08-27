@@ -13,7 +13,7 @@
     <!-- Header Card -->
     <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
       <div class="flex items-center gap-3 mb-2">
-        <div class="w-10 h-10 rounded-2xl bg-[#963189]/10 flex items-center justify-center text-[#963189] dark:text-[#db92d7]">
+        <div class="w-10 h-10 rounded-2xl bg-[#831843]/10 flex items-center justify-center text-[#831843] dark:text-[#f472b6]">
           <Target class="w-5 h-5" />
         </div>
         <div>
@@ -27,15 +27,15 @@
       </div>
 
       <!-- 📋 1-Click Template Preset Selector Callout -->
-      <div class="my-4 p-4 rounded-2xl bg-gradient-to-r from-[#963189]/10 via-[#499ec7]/10 to-transparent border border-[#963189]/20 space-y-2">
+      <div class="my-4 p-4 rounded-2xl bg-gradient-to-r from-[#831843]/10 via-[#9d174d]/5 to-transparent border border-[#831843]/20 space-y-2">
         <label class="block text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-          <Sparkles class="w-4 h-4 text-[#963189]" />
+          <Sparkles class="w-4 h-4 text-[#831843] dark:text-[#f472b6]" />
           <span>Pilih dari Template Standar Re.juve (Auto-Fill Cepat)</span>
         </label>
         <select
           v-model="selectedTemplateId"
           @change="handleSelectTemplate"
-          class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189] cursor-pointer"
+          class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] cursor-pointer"
         >
           <option value="">-- Pilih Template untuk Isi Otomatis --</option>
           <optgroup label="Week 1: Setup & Cold Chain Safety">
@@ -66,7 +66,7 @@
             <select
               v-model="form.batchId"
               required
-              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             >
               <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
                 {{ b.name }}
@@ -79,7 +79,7 @@
             <select
               v-model="form.week"
               required
-              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             >
               <option :value="1">Week 1 (Cold Chain Setup)</option>
               <option :value="2">Week 2 (Core Quality - Active Cycle)</option>
@@ -95,7 +95,7 @@
             type="text"
             required
             placeholder="Contoh: Audit Suhu Chiller 2-4°C & Rotasi Stok Cold-Pressed"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           />
         </div>
 
@@ -107,7 +107,7 @@
               type="text"
               required
               placeholder="MSN-W2-05"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
 
@@ -115,7 +115,7 @@
             <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori Standar Mutu *</label>
             <select
               v-model="form.category"
-              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             >
               <option value="Cold Chain">Cold Chain (2-4°C)</option>
               <option value="Quality Control">Quality Control</option>
@@ -133,7 +133,7 @@
             v-model="form.description"
             rows="3"
             placeholder="Instruksi operasional detail bagi Supervisor dan Crew..."
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none p-3.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none p-3.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           ></textarea>
         </div>
 
@@ -146,7 +146,7 @@
             <button
               type="button"
               @click="addRequirement"
-              class="text-xs font-semibold text-[#963189] dark:text-[#db92d7] hover:underline"
+              class="text-xs font-semibold text-[#831843] dark:text-[#f472b6] hover:underline cursor-pointer"
             >
               + Tambah Poin SOP
             </button>
@@ -161,12 +161,12 @@
                 v-model="form.requirements[idx]"
                 type="text"
                 required
-                class="flex-1 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
+                class="flex-1 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
               />
               <button
                 type="button"
                 @click="removeRequirement(idx)"
-                class="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                class="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 :disabled="form.requirements.length <= 1"
               >
                 ✕
@@ -175,7 +175,7 @@
           </div>
         </div>
 
-        <div class="p-3.5 rounded-2xl bg-[#963189]/10 text-xs text-[#963189] dark:text-[#db92d7]">
+        <div class="p-3.5 rounded-2xl bg-[#831843]/10 text-xs text-[#831843] dark:text-[#f472b6]">
           ℹ️ Misi ini akan otomatis ditugaskan ke <strong>seluruh Crew</strong> yang terdaftar di cabang gerai terpilih.
         </div>
 
@@ -188,7 +188,7 @@
           </NuxtLink>
           <button
             type="submit"
-            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#963189] hover:bg-[#812474] text-white shadow-md shadow-[#963189]/20 active:scale-95 cursor-pointer"
+            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#831843] hover:bg-[#701a40] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
           >
             Buat Misi Gerai
           </button>

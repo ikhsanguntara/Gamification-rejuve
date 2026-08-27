@@ -122,7 +122,7 @@
                   <span class="text-xs font-semibold text-slate-500">
                     {{ m.code }}
                   </span>
-                  <span class="text-xs font-semibold px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                  <span class="text-xs font-semibold px-1.5 py-0.2 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
                     {{ m.category }}
                   </span>
                 </div>

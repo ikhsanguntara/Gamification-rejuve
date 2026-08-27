@@ -13,7 +13,7 @@
     <!-- Header Card -->
     <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
       <div class="flex items-center gap-3 mb-2">
-        <div class="w-10 h-10 rounded-2xl bg-[#499ec7]/10 flex items-center justify-center text-[#499ec7]">
+        <div class="w-10 h-10 rounded-2xl bg-[#831843]/10 flex items-center justify-center text-[#831843]">
           <Layers class="w-5 h-5" />
         </div>
         <div>
@@ -46,7 +46,7 @@
               type="text"
               required
               placeholder="BTH-KK-04"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
 
@@ -57,7 +57,7 @@
               type="text"
               required
               placeholder="Kota Kasablanka LG Floor"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
         </div>
@@ -68,17 +68,17 @@
             v-model="form.description"
             rows="2"
             placeholder="Deskripsi operasional gerai, jam operasional, atau karakteristik cabang..."
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none p-3.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none p-3.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           ></textarea>
         </div>
 
         <!-- ⚡ 1-Click Template Preset Package Generator Toggle -->
-        <div class="p-4 rounded-2xl bg-gradient-to-br from-[#499ec7]/10 via-[#963189]/5 to-transparent border border-[#499ec7]/30 dark:border-[#499ec7]/20 space-y-2">
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-[#831843]/10 via-[#9d174d]/5 to-transparent border border-[#831843]/30 dark:border-[#831843]/20 space-y-2">
           <label class="flex items-start gap-3 cursor-pointer">
             <input
               v-model="form.applyTemplatePackage"
               type="checkbox"
-              class="w-4 h-4 mt-0.5 rounded text-[#499ec7] focus:ring-[#499ec7] cursor-pointer"
+              class="w-4 h-4 mt-0.5 rounded text-[#831843] focus:ring-[#831843] cursor-pointer"
             />
             <div class="flex-1">
               <span class="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
@@ -101,7 +101,7 @@
           </NuxtLink>
           <button
             type="submit"
-            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white shadow-md shadow-[#499ec7]/20 active:scale-95 cursor-pointer"
+            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#831843] hover:bg-[#701a40] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
           >
             Buat Cabang Gerai
           </button>

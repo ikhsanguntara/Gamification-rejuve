@@ -57,7 +57,7 @@
           <NuxtLink
             v-else-if="userStore.isSuperadmin"
             to="/admin/users"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-indigo-600/30 transition-all active:scale-95 border border-white/20"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white font-semibold text-xs sm:text-sm shadow-lg shadow-[#9d174d]/30 transition-all active:scale-95 border border-white/20"
           >
             <Settings class="w-4 h-4" />
             <span>Administrator Console</span>
@@ -104,7 +104,7 @@
         :value="`${myAverageScore}%`"
         subtext="Skor evaluasi mutu personal"
         :icon="Award"
-        variant="purple"
+        variant="brand"
         trend="up"
         trendValue="Optimal"
       />
@@ -115,7 +115,7 @@
         :value="`#${myRank}`"
         :subtext="`dari ${storeCrewCount} Store Crew`"
         :icon="Trophy"
-        variant="blue"
+        variant="brand"
       />
 
       <!-- 5. Assigned Store Branch -->
@@ -124,7 +124,7 @@
         :value="batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name"
         :subtext="`Week ${batchStore.selectedWeek}/3 Aktif`"
         :icon="MapPin"
-        variant="blue"
+        variant="slate"
         class="col-span-2 sm:col-span-1"
       />
     </div>
@@ -137,7 +137,7 @@
         unit="Crew"
         subtext="Active in branch"
         :icon="Users"
-        variant="blue"
+        variant="brand"
       />
 
       <StatCard
@@ -155,7 +155,7 @@
         :value="`${batchStore.currentBatch.averageScore}%`"
         subtext="Branch benchmark"
         :icon="Award"
-        variant="purple"
+        variant="brand"
         trend="up"
         trendValue="+2.1%"
       />
@@ -233,7 +233,7 @@
           </div>
           <NuxtLink
             to="/leaderboard"
-            class="text-xs font-semibold text-[#499ec7] dark:text-[#84cded] hover:underline flex items-center gap-1"
+            class="text-xs font-semibold text-[#831843] dark:text-[#f472b6] hover:underline flex items-center gap-1"
           >
             <span>Lihat Leaderboard Penuh</span>
             <ChevronRight class="w-3.5 h-3.5" />
@@ -248,7 +248,7 @@
             class="p-4 sm:p-5 rounded-2xl border flex flex-col items-center text-center relative overflow-hidden transition-all"
             :class="[
               (crew.crewId || crew.id) === userStore.currentUser.id
-                ? 'border-[#499ec7] dark:border-[#499ec7] bg-[#499ec7]/10 ring-2 ring-[#499ec7]/30'
+                ? 'border-[#831843] dark:border-[#831843] bg-[#831843]/10 ring-2 ring-[#831843]/30'
                 : index === 0
                 ? 'border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20'
                 : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20'
@@ -257,7 +257,7 @@
             <!-- You Indicator Badge -->
             <span
               v-if="(crew.crewId || crew.id) === userStore.currentUser.id"
-              class="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-[#499ec7] text-white text-xs font-semibold tracking-wider"
+              class="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-[#831843] text-white text-xs font-semibold tracking-wider"
             >
               ANDA
             </span>

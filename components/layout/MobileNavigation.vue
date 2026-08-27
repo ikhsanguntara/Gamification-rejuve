@@ -8,13 +8,13 @@
         class="flex flex-col items-center justify-center py-1 px-2 rounded-2xl text-xs font-medium transition-all relative group flex-1"
         :class="[
           $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard')
-            ? 'text-[#24779f] dark:text-[#84cded] font-semibold scale-105'
+            ? 'text-[#831843] dark:text-[#f472b6] font-semibold scale-105'
             : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
         ]"
       >
         <div class="relative p-1 rounded-xl transition-colors" :class="[
           $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard')
-            ? 'bg-[#499ec7]/15 dark:bg-[#499ec7]/20'
+            ? 'bg-[#831843]/15 dark:bg-[#831843]/20'
             : ''
         ]">
           <component :is="item.icon" class="w-4 h-4 sm:w-5 sm:h-5" />

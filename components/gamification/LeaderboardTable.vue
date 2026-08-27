@@ -16,7 +16,7 @@
             class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
             :class="[
               selectedBatch === b.id
-                ? 'bg-[#499ec7] text-white shadow-sm'
+                ? 'bg-[#831843] text-white shadow-sm'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             ]"
           >
@@ -55,7 +55,7 @@
         class="order-2 sm:order-1 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 flex flex-col items-center text-center relative card-hover"
         :class="[
           (topThreeList[1].crewId || topThreeList[1].id) === userStore.currentUser.id
-            ? 'ring-2 ring-[#499ec7] bg-[#499ec7]/5'
+            ? 'ring-2 ring-[#831843] bg-[#831843]/5'
             : ''
         ]"
       >
@@ -69,10 +69,10 @@
         />
         <h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate w-full flex items-center justify-center gap-1.5">
           <span>{{ topThreeList[1].name }}</span>
-          <span v-if="(topThreeList[1].crewId || topThreeList[1].id) === userStore.currentUser.id" class="px-1.5 py-0.2 rounded bg-[#499ec7] text-white text-xs font-semibold tracking-wider">ANDA</span>
+          <span v-if="(topThreeList[1].crewId || topThreeList[1].id) === userStore.currentUser.id" class="px-1.5 py-0.2 rounded bg-[#831843] text-white text-xs font-semibold tracking-wider">ANDA</span>
         </h4>
         <p class="text-xs text-slate-400 truncate w-full">{{ topThreeList[1].position }}</p>
-        <p class="text-xs text-[#499ec7] dark:text-[#84cded] font-medium truncate w-full mt-0.5">
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate w-full mt-0.5">
           📍 {{ topThreeList[1].storeLocation }}
         </p>
 
@@ -88,7 +88,7 @@
         class="order-1 sm:order-2 rounded-2xl bg-gradient-to-b from-amber-500/15 via-amber-500/5 to-transparent dark:from-amber-950/40 border-2 border-amber-400 dark:border-amber-500/80 p-6 flex flex-col items-center text-center relative card-hover sm:-translate-y-3 shadow-lg shadow-amber-500/10"
         :class="[
           (topThreeList[0].crewId || topThreeList[0].id) === userStore.currentUser.id
-            ? 'ring-2 ring-[#499ec7]'
+            ? 'ring-2 ring-[#831843]'
             : ''
         ]"
       >
@@ -103,12 +103,12 @@
         />
         <h4 class="text-base font-bold text-slate-900 dark:text-white truncate w-full flex items-center justify-center gap-1.5">
           <span>{{ topThreeList[0].name }}</span>
-          <span v-if="(topThreeList[0].crewId || topThreeList[0].id) === userStore.currentUser.id" class="px-1.5 py-0.2 rounded bg-[#499ec7] text-white text-xs font-semibold tracking-wider">ANDA</span>
+          <span v-if="(topThreeList[0].crewId || topThreeList[0].id) === userStore.currentUser.id" class="px-1.5 py-0.2 rounded bg-[#831843] text-white text-xs font-semibold tracking-wider">ANDA</span>
         </h4>
         <p class="text-xs text-amber-600 dark:text-amber-400 font-medium truncate w-full">
           {{ topThreeList[0].position }}
         </p>
-        <p class="text-xs text-[#499ec7] dark:text-[#84cded] font-medium truncate w-full mt-0.5">
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate w-full mt-0.5">
           📍 {{ topThreeList[0].storeLocation }}
         </p>
 
@@ -128,7 +128,7 @@
         class="order-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 flex flex-col items-center text-center relative card-hover"
         :class="[
           (topThreeList[2].crewId || topThreeList[2].id) === userStore.currentUser.id
-            ? 'ring-2 ring-[#499ec7] bg-[#499ec7]/5'
+            ? 'ring-2 ring-[#831843] bg-[#831843]/5'
             : ''
         ]"
       >
@@ -142,10 +142,10 @@
         />
         <h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate w-full flex items-center justify-center gap-1.5">
           <span>{{ topThreeList[2].name }}</span>
-          <span v-if="(topThreeList[2].crewId || topThreeList[2].id) === userStore.currentUser.id" class="px-1.5 py-0.2 rounded bg-[#499ec7] text-white text-xs font-semibold tracking-wider">ANDA</span>
+          <span v-if="(topThreeList[2].crewId || topThreeList[2].id) === userStore.currentUser.id" class="px-1.5 py-0.2 rounded bg-[#831843] text-white text-xs font-semibold tracking-wider">ANDA</span>
         </h4>
         <p class="text-xs text-slate-400 truncate w-full">{{ topThreeList[2].position }}</p>
-        <p class="text-xs text-[#499ec7] dark:text-[#84cded] font-medium truncate w-full mt-0.5">
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate w-full mt-0.5">
           📍 {{ topThreeList[2].storeLocation }}
         </p>
 
@@ -185,7 +185,7 @@
               class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
               :class="[
                 (crew.crewId || crew.id) === userStore.currentUser.id
-                  ? 'bg-[#499ec7]/10 dark:bg-[#499ec7]/15 ring-1 ring-[#499ec7]/30 font-semibold'
+                  ? 'bg-[#831843]/10 dark:bg-[#831843]/20 ring-1 ring-[#831843]/30 font-semibold'
                   : crew.rank <= 3
                   ? 'bg-amber-50/20 dark:bg-amber-950/10'
                   : ''
@@ -223,7 +223,7 @@
                       <span class="font-semibold text-slate-900 dark:text-white block">{{ crew.name }}</span>
                       <span
                         v-if="(crew.crewId || crew.id) === userStore.currentUser.id"
-                        class="px-1.5 py-0.2 rounded bg-[#499ec7] text-white text-xs font-semibold tracking-wider"
+                        class="px-1.5 py-0.2 rounded bg-[#831843] text-white text-xs font-semibold tracking-wider"
                       >
                         ANDA
                       </span>

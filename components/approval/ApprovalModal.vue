@@ -24,7 +24,7 @@
         </div>
         <div class="text-right">
           <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Average Score</span>
-          <p class="text-sm font-bold text-[#499ec7] dark:text-[#84cded]">
+          <p class="text-sm font-bold text-[#831843] dark:text-[#f472b6]">
             {{ item.averageScore || item.score }}/100
           </p>
         </div>
@@ -68,7 +68,7 @@
       <button
         type="button"
         @click="$emit('confirm')"
-        class="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-[#499ec7] to-[#24779f] hover:from-[#24779f] hover:to-[#1d5e7f] text-white shadow-md shadow-[#499ec7]/20 transition-all active:scale-95"
+        class="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white shadow-md shadow-[#831843]/20 transition-all active:scale-95 cursor-pointer"
       >
         <Star class="w-3.5 h-3.5 fill-white" />
         <span>Approve All Crew</span>

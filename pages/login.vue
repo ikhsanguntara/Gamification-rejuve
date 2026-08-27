@@ -47,8 +47,8 @@
               class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
               :class="[
                 selectedRole === 'CREW'
-                  ? 'border-[#499ec7] ring-2 ring-[#499ec7] bg-[#499ec7]/5 dark:bg-[#499ec7]/10 shadow-md scale-[1.02]'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-[#499ec7]/60 bg-slate-50/50 dark:bg-slate-950/40'
+                  ? 'border-[#831843] ring-2 ring-[#831843] bg-[#831843]/10 dark:bg-[#831843]/20 shadow-md scale-[1.02]'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-[#831843]/60 bg-slate-50/50 dark:bg-slate-950/40'
               ]"
             >
               <img
@@ -59,7 +59,7 @@
               <span class="text-xs font-semibold text-slate-900 dark:text-white block truncate w-full">
                 {{ mockUsers.CREW.name.split(' ')[0] }}
               </span>
-              <span class="text-xs font-semibold px-1.5 py-0.2 mt-1 rounded-md bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
+              <span class="text-xs font-semibold px-1.5 py-0.2 mt-1 rounded-md bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
                 Store Crew
               </span>
             </button>
@@ -95,8 +95,8 @@
               class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
               :class="[
                 selectedRole === 'HEAD'
-                  ? 'border-[#963189] ring-2 ring-[#963189] bg-[#963189]/5 dark:bg-[#963189]/10 shadow-md scale-[1.02]'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-[#963189]/60 bg-slate-50/50 dark:bg-slate-950/40'
+                  ? 'border-[#6b133a] ring-2 ring-[#6b133a] bg-[#6b133a]/10 dark:bg-[#6b133a]/20 shadow-md scale-[1.02]'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-[#6b133a]/60 bg-slate-50/50 dark:bg-slate-950/40'
               ]"
             >
               <img
@@ -107,7 +107,7 @@
               <span class="text-xs font-semibold text-slate-900 dark:text-white block truncate w-full">
                 {{ mockUsers.HEAD.name.split(' ')[0] }}
               </span>
-              <span class="text-xs font-semibold px-1.5 py-0.2 mt-1 rounded-md bg-[#963189]/10 text-[#963189] dark:text-[#db92d7]">
+              <span class="text-xs font-semibold px-1.5 py-0.2 mt-1 rounded-md bg-[#6b133a]/15 text-[#831843] dark:text-[#fbcfe8]">
                 Head Ops
               </span>
             </button>
@@ -119,8 +119,8 @@
               class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
               :class="[
                 selectedRole === 'SUPERADMIN'
-                  ? 'border-indigo-500 ring-2 ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 shadow-md scale-[1.02]'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-indigo-500/60 bg-slate-50/50 dark:bg-slate-950/40'
+                  ? 'border-slate-700 dark:border-slate-300 ring-2 ring-slate-700 dark:ring-slate-300 bg-slate-100 dark:bg-slate-800 shadow-md scale-[1.02]'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40'
               ]"
             >
               <img
@@ -131,7 +131,7 @@
               <span class="text-xs font-semibold text-slate-900 dark:text-white block truncate w-full">
                 {{ mockUsers.SUPERADMIN.name.split(' ')[0] }}
               </span>
-              <span class="text-xs font-semibold px-1.5 py-0.2 mt-1 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300">
+              <span class="text-xs font-semibold px-1.5 py-0.2 mt-1 rounded-md bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
                 Superadmin
               </span>
             </button>
@@ -150,7 +150,7 @@
                 type="email"
                 required
                 readonly
-                class="w-full text-xs font-medium rounded-xl bg-slate-100 dark:bg-slate-800 border-none pl-10 pr-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
+                class="w-full text-xs font-medium rounded-xl bg-slate-100 dark:bg-slate-800 border-none pl-10 pr-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
               />
               <Mail class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
