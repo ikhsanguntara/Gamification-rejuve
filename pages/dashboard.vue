@@ -215,91 +215,83 @@
     <!-- Interactive Weekly Progression Stepper -->
     <WeekSelector />
 
-    <!-- 2 Column Layout: Star Gamification & Leaderboard + Feed -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Left 2 Cols: Gamification & Top Performers -->
-      <div class="lg:col-span-2 space-y-6">
-        <!-- Crew Personal / Highlight Star Level Progression -->
-        <StarProgress :stars="myStars" />
+    <!-- Star Gamification & Top Performers Section -->
+    <div class="space-y-6">
+      <!-- Crew Personal / Highlight Star Level Progression -->
+      <StarProgress :stars="myStars" />
 
-        <!-- Top 3 Leaderboard Preview Widget -->
-        <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h3 class="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
-                Top Star Performers — {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}
-              </h3>
-              <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                Peringkat Crew Cabang Gerai
-              </p>
-            </div>
-            <NuxtLink
-              to="/leaderboard"
-              class="text-xs font-semibold text-[#499ec7] dark:text-[#84cded] hover:underline flex items-center gap-1"
-            >
-              <span>Lihat Leaderboard Penuh</span>
-              <ChevronRight class="w-3.5 h-3.5" />
-            </NuxtLink>
+      <!-- Top 3 Leaderboard Preview Widget -->
+      <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
+              Top Star Performers — {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}
+            </h3>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+              Peringkat Crew Cabang Gerai
+            </p>
           </div>
+          <NuxtLink
+            to="/leaderboard"
+            class="text-xs font-semibold text-[#499ec7] dark:text-[#84cded] hover:underline flex items-center gap-1"
+          >
+            <span>Lihat Leaderboard Penuh</span>
+            <ChevronRight class="w-3.5 h-3.5" />
+          </NuxtLink>
+        </div>
 
-          <!-- Top 3 Mini Podium List -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div
-              v-for="(crew, index) in branchTopThree"
-              :key="crew.crewId || crew.id"
-              class="p-3.5 sm:p-4 rounded-2xl border flex flex-col items-center text-center relative overflow-hidden transition-all"
+        <!-- Top 3 Mini Podium List -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div
+            v-for="(crew, index) in branchTopThree"
+            :key="crew.crewId || crew.id"
+            class="p-4 sm:p-5 rounded-2xl border flex flex-col items-center text-center relative overflow-hidden transition-all"
+            :class="[
+              (crew.crewId || crew.id) === userStore.currentUser.id
+                ? 'border-[#499ec7] dark:border-[#499ec7] bg-[#499ec7]/10 ring-2 ring-[#499ec7]/30'
+                : index === 0
+                ? 'border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20'
+                : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20'
+            ]"
+          >
+            <!-- You Indicator Badge -->
+            <span
+              v-if="(crew.crewId || crew.id) === userStore.currentUser.id"
+              class="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-[#499ec7] text-white text-xs font-semibold tracking-wider"
+            >
+              ANDA
+            </span>
+
+            <!-- Rank Medal Badge -->
+            <span
+              class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold mb-2 shadow-sm"
               :class="[
-                (crew.crewId || crew.id) === userStore.currentUser.id
-                  ? 'border-[#499ec7] dark:border-[#499ec7] bg-[#499ec7]/10 ring-2 ring-[#499ec7]/30'
-                  : index === 0
-                  ? 'border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20'
-                  : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20'
+                index === 0 ? 'bg-amber-400 text-amber-950' : index === 1 ? 'bg-slate-300 text-slate-900' : 'bg-amber-700 text-white'
               ]"
             >
-              <!-- You Indicator Badge -->
-              <span
-                v-if="(crew.crewId || crew.id) === userStore.currentUser.id"
-                class="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-[#499ec7] text-white text-xs font-semibold tracking-wider"
-              >
-                ANDA
-              </span>
+              {{ index + 1 }}
+            </span>
 
-              <!-- Rank Medal Badge -->
-              <span
-                class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold mb-2 shadow-sm"
-                :class="[
-                  index === 0 ? 'bg-amber-400 text-amber-950' : index === 1 ? 'bg-slate-300 text-slate-900' : 'bg-amber-700 text-white'
-                ]"
-              >
-                {{ index + 1 }}
-              </span>
+            <img
+              :src="crew.avatar"
+              :alt="crew.name"
+              class="w-14 h-14 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 shadow-md mb-2"
+            />
 
-              <img
-                :src="crew.avatar"
-                :alt="crew.name"
-                class="w-12 h-12 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 shadow-md mb-2"
-              />
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate w-full">
+              {{ crew.name }}
+            </h4>
+            <span class="text-xs text-slate-400 dark:text-slate-500 truncate w-full">
+              {{ crew.position }}
+            </span>
 
-              <h4 class="text-xs font-semibold text-slate-900 dark:text-white truncate w-full">
-                {{ crew.name }}
-              </h4>
-              <span class="text-xs text-slate-400 dark:text-slate-500 truncate w-full">
-                {{ crew.position }}
-              </span>
-
-              <!-- Stars Counter -->
-              <div class="mt-2.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-semibold text-xs">
-                <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-                <span>{{ (crew.stars || 0).toLocaleString() }}</span>
-              </div>
+            <!-- Stars Counter -->
+            <div class="mt-2.5 inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-semibold text-xs">
+              <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+              <span>{{ (crew.stars || 0).toLocaleString() }} Stars</span>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Right 1 Col: Recent Activity Stream -->
-      <div class="space-y-6">
-        <RecentActivity />
       </div>
     </div>
   </div>
@@ -316,7 +308,6 @@ import { getStarProgress } from '~/utils/star.js'
 import StatCard from '~/components/dashboard/StatCard.vue'
 import WeekSelector from '~/components/batch/WeekSelector.vue'
 import StarProgress from '~/components/gamification/StarProgress.vue'
-import RecentActivity from '~/components/dashboard/RecentActivity.vue'
 import {
   Users,
   CheckCircle2,
