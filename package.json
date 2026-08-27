@@ -6,8 +6,8 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "build:deploy": "nuxt build",
-    "deploy": "nuxt build && npx --yes firebase-tools deploy --only hosting --non-interactive",
+    "build:deploy": "nuxt generate",
+    "deploy": "nuxt generate && npx --yes firebase-tools deploy --only hosting --non-interactive",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },

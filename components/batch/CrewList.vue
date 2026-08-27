@@ -76,13 +76,14 @@
 
         <!-- Quick Supervisor Action -->
         <div v-if="userStore.isSupervisor" class="mt-3 pt-2">
-          <NuxtLink
-            :to="`/evaluations?crewId=${crew.id}`"
+          <button
+            type="button"
+            @click="goToEvaluation(crew.id)"
             class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-[#831843] hover:bg-[#701a40] text-white shadow-sm transition-all cursor-pointer"
           >
             <ClipboardCheck class="w-3.5 h-3.5" />
             <span>Evaluate {{ crew.name.split(' ')[0] }}</span>
-          </NuxtLink>
+          </button>
         </div>
       </div>
     </div>
@@ -99,11 +100,13 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { Search, Star, ClipboardCheck } from 'lucide-vue-next'
 
+const router = useRouter()
 const props = defineProps({
   batchId: {
     type: String,
@@ -131,4 +134,8 @@ const filteredCrews = computed(() => {
     c.position.toLowerCase().includes(q)
   )
 })
+
+const goToEvaluation = (crewId) => {
+  router.push({ path: '/evaluations', query: { crewId } })
+}
 </script>
