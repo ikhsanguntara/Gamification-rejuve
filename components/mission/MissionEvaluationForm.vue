@@ -4,18 +4,18 @@
     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
       <div class="space-y-1 min-w-0 flex-1">
         <div class="flex items-center gap-2 flex-wrap mb-1">
-          <span class="text-xs font-black px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
             {{ mission.code }}
           </span>
-          <span class="text-xs font-bold px-2 py-0.5 rounded-lg bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-lg bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
             Week {{ mission.week }}
           </span>
-          <span class="text-xs font-bold px-2 py-0.5 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
             {{ mission.category }}
           </span>
           <MissionStatus :status="mission.status" />
         </div>
-        <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight">
+        <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-tight">
           {{ mission.title }}
         </h3>
         <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -27,8 +27,8 @@
       <div class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
         <Layers class="w-4 h-4 text-[#831843] dark:text-[#f472b6]" />
         <div>
-          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Target Batch</p>
-          <p class="text-xs font-black text-slate-900 dark:text-white">
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Target Batch</p>
+          <p class="text-xs font-semibold text-slate-900 dark:text-white">
             {{ batchStore.currentBatch.name }}
           </p>
         </div>
@@ -37,11 +37,11 @@
 
     <!-- Requirements Checklist Box -->
     <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 text-xs">
-      <span class="font-bold text-slate-700 dark:text-slate-300 block mb-1.5 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+      <span class="font-semibold text-slate-700 dark:text-slate-300 block mb-1.5 uppercase tracking-wider text-xs flex items-center gap-1.5">
         <CheckSquare class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
         <span>Checklist Standar SOP:</span>
       </span>
-      <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-600 dark:text-slate-400 text-[11px]">
+      <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-600 dark:text-slate-400 text-xs">
         <li v-for="(req, idx) in mission.requirements" :key="idx" class="flex items-start gap-2 bg-white dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200/40 dark:border-slate-800">
           <span class="w-1.5 h-1.5 rounded-full bg-[#831843] mt-1.5 flex-shrink-0"></span>
           <span>{{ req }}</span>
@@ -54,7 +54,7 @@
       v-if="mission.status === 'REVISION_REQUIRED' && revisionNote"
       class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 space-y-1"
     >
-      <div class="flex items-center gap-2 text-rose-700 dark:text-rose-300 font-bold text-xs">
+      <div class="flex items-center gap-2 text-rose-700 dark:text-rose-300 font-semibold text-xs">
         <RotateCcw class="w-4 h-4" />
         <span>Catatan Revisi dari Head:</span>
       </div>
@@ -70,7 +70,7 @@
     >
       <Lock class="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
       <div>
-        <p class="font-bold text-slate-800 dark:text-slate-200">🔒 Minggu Terkunci (Read-Only)</p>
+        <p class="font-semibold text-slate-800 dark:text-slate-200">🔒 Minggu Terkunci (Read-Only)</p>
         <p class="mt-0.5">Penilaian untuk minggu ini sudah berstatus arsip dan tidak dapat diubah.</p>
       </div>
     </div>
@@ -80,38 +80,38 @@
       <div class="space-y-3">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <label class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
               <span>Penilaian Individu Anggota Crew</span>
-              <span class="text-xs font-bold text-[#831843] dark:text-[#f472b6]">
+              <span class="text-xs font-semibold text-[#831843] dark:text-[#f472b6]">
                 ({{ filteredBatchCrews.length }} / {{ batchCrews.length }} Crew)
               </span>
             </label>
-            <p class="text-[11px] text-slate-400 mt-0.5">
+            <p class="text-xs text-slate-400 mt-0.5">
               Geser slider atau masukkan angka nilai (0–100). Bintang (⭐ 1–5) dihitung otomatis secara realtime.
             </p>
           </div>
 
           <!-- Quick Bulk Score Helpers -->
           <div v-if="!isLocked" class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex-wrap">
-            <span class="text-[10px] font-bold text-slate-400 px-1.5 uppercase">Set Semua:</span>
+            <span class="text-xs font-semibold text-slate-400 px-1.5 uppercase">Set Semua:</span>
             <button
               type="button"
               @click="applyBulkScore(95)"
-              class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
+              class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
             >
               95 (⭐⭐⭐⭐⭐)
             </button>
             <button
               type="button"
               @click="applyBulkScore(90)"
-              class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
+              class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
             >
               90 (⭐⭐⭐⭐⭐)
             </button>
             <button
               type="button"
               @click="applyBulkScore(85)"
-              class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
+              class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
             >
               85 (⭐⭐⭐⭐)
             </button>
@@ -168,14 +168,14 @@
                 />
                 <div class="min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h4 class="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight">
+                    <h4 class="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white leading-tight">
                       {{ crew.name }}
                     </h4>
-                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex-shrink-0">
+                    <span class="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex-shrink-0">
                       Lvl {{ crew.level }}
                     </span>
                   </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                  <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                     {{ crew.code }} • {{ crew.position }}
                   </p>
                 </div>
@@ -190,16 +190,16 @@
                     min="0"
                     max="100"
                     :disabled="isLocked"
-                    class="w-16 text-center text-sm font-black rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 py-1.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] focus:border-[#831843] disabled:opacity-50 shadow-inner"
+                    class="w-16 text-center text-sm font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 py-1.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] focus:border-[#831843] disabled:opacity-50 shadow-inner"
                   />
                 </div>
-                <span class="text-xs font-bold text-slate-400">/ 100</span>
+                <span class="text-xs font-medium text-slate-400">/ 100</span>
               </div>
             </div>
 
             <!-- Middle Row: Interactive Stars Visualizer Bar -->
             <div class="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200/50 dark:border-slate-700/50">
-              <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <span class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Hasil Bintang:
               </span>
               <StarReward :score="crewScoresMap[crew.id] || 0" size="sm" :show-label="true" />
@@ -228,7 +228,7 @@
               </div>
 
               <!-- Score Indicator Markers -->
-              <div class="flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400 px-1">
+              <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400 px-1">
                 <span>0</span>
                 <span>50 (1⭐)</span>
                 <span class="text-amber-600 dark:text-amber-400">80 (4⭐)</span>
@@ -251,16 +251,16 @@
         <div class="p-4 rounded-2xl bg-gradient-to-r from-[#831843]/10 via-[#9d174d]/10 to-amber-500/10 border border-[#831843]/20 flex items-center justify-between text-xs">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-[#831843] animate-ping"></span>
-            <span class="font-black text-slate-800 dark:text-slate-200">
+            <span class="font-semibold text-slate-800 dark:text-slate-200">
               Rata-Rata Nilai Batch:
             </span>
           </div>
           <div class="flex items-center gap-2.5">
-            <span class="font-black text-[#831843] dark:text-[#f472b6] text-sm">
+            <span class="font-bold text-[#831843] dark:text-[#f472b6] text-sm">
               {{ averageBatchScore }} / 100
             </span>
             <span class="text-slate-400">•</span>
-            <span class="font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+            <span class="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
               <Star class="w-4 h-4 fill-amber-400" />
               <span>Rata-Rata {{ averageCalculatedStars }} Bintang</span>
             </span>
@@ -274,10 +274,10 @@
         <div class="space-y-3">
           <div class="flex items-center justify-between">
             <div>
-              <label class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+              <label class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">
                 Foto Bukti & Inspeksi ({{ formData.evidence.length }})
               </label>
-              <p class="text-[11px] text-slate-400">
+              <p class="text-xs text-slate-400">
                 Lampiran foto chiller, logbook, atau kebersihan bar
               </p>
             </div>
@@ -286,7 +286,7 @@
               v-if="!isLocked"
               type="button"
               @click="showAddEvidenceModal = true"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
             >
               <Plus class="w-3.5 h-3.5" />
               <span>+ Tambah Foto</span>
@@ -306,7 +306,7 @@
                 class="w-full h-full object-cover"
               />
               <div class="absolute inset-0 bg-slate-950/75 flex flex-col justify-between p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span class="text-[10px] text-white font-medium line-clamp-2">{{ img.caption }}</span>
+                <span class="text-xs text-white font-medium line-clamp-2">{{ img.caption }}</span>
                 <button
                   v-if="!isLocked"
                   type="button"
@@ -326,8 +326,8 @@
               class="col-span-full border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-[#831843] cursor-pointer transition-colors"
             >
               <Image class="w-6 h-6 mb-1 text-slate-400" />
-              <span class="text-xs font-bold">Belum ada foto bukti</span>
-              <span class="text-[10px] mt-0.5 text-slate-400">Klik untuk melampirkan foto inspeksi</span>
+              <span class="text-xs font-semibold">Belum ada foto bukti</span>
+              <span class="text-xs mt-0.5 text-slate-400">Klik untuk melampirkan foto inspeksi</span>
             </div>
           </div>
         </div>
@@ -335,10 +335,10 @@
         <!-- Right: Supervisor Notes -->
         <div class="space-y-3">
           <div>
-            <label class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+            <label class="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">
               Catatan & Temuan Supervisor
             </label>
-            <p class="text-[11px] text-slate-400">
+            <p class="text-xs text-slate-400">
               Evaluasi kepatuhan SOP, temuan lapangan, dan catatan mutu
             </p>
           </div>
@@ -358,14 +358,14 @@
         <button
           type="button"
           @click="handleSaveDraft"
-          class="w-full sm:w-auto px-5 py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          class="w-full sm:w-auto px-5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         >
           Simpan Draft
         </button>
 
         <button
           type="submit"
-          class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-black rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white shadow-lg shadow-[#831843]/25 transition-all active:scale-95 cursor-pointer"
+          class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white shadow-lg shadow-[#831843]/25 transition-all active:scale-95 cursor-pointer"
         >
           <Send class="w-3.5 h-3.5" />
           <span>{{ mission.status === 'REVISION_REQUIRED' ? 'Kirim Ulang Evaluasi ke Head' : 'Kirim Evaluasi Seluruh Crew ke Head' }}</span>
@@ -407,7 +407,7 @@
             <div class="aspect-video rounded-xl overflow-hidden bg-slate-200">
               <img :src="preset.url" :alt="preset.caption" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
             </div>
-            <p class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
+            <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
               {{ preset.caption }}
             </p>
           </div>
@@ -416,7 +416,7 @@
         <!-- Custom URL Input -->
         <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Keterangan Foto</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Keterangan Foto</label>
             <input
               v-model="newEvidenceCaption"
               type="text"

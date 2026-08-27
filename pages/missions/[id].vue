@@ -22,10 +22,10 @@
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <div class="flex items-center gap-2.5 mb-2.5">
-              <span class="text-xs font-bold text-slate-400">
+              <span class="text-xs font-semibold text-slate-400">
                 {{ mission.code }}
               </span>
-              <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#963189]/10 text-[#963189] dark:text-[#db92d7] uppercase tracking-wider">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-[#963189]/10 text-[#963189] dark:text-[#db92d7] uppercase tracking-wider">
                 {{ mission.category }}
               </span>
               <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
@@ -34,7 +34,7 @@
               <MissionStatus :status="mission.status" />
             </div>
 
-            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
               {{ mission.title }}
             </h1>
             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-3xl leading-relaxed">
@@ -46,7 +46,7 @@
           <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 flex flex-col items-center justify-center min-w-[220px] text-center">
             <!-- CREW View -->
             <template v-if="userStore.isCrew">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">
                 Bintang & Nilai Anda
               </span>
               <div class="my-1.5">
@@ -56,7 +56,7 @@
                   :show-label="false"
                 />
               </div>
-              <p class="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <span v-if="myScore > 0" class="text-amber-600 dark:text-amber-400">
                   ⭐ {{ myStars }} Stars Diperoleh ({{ myScore }}/100)
                 </span>
@@ -68,7 +68,7 @@
 
             <!-- NON-CREW View -->
             <template v-else>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">
                 Average Store Score
               </span>
               <div class="my-1.5">
@@ -78,7 +78,7 @@
                   :show-label="false"
                 />
               </div>
-              <p class="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <span v-if="mission.awardedStars" class="text-emerald-600 dark:text-emerald-400">
                   ⭐ {{ mission.awardedStars }} Stars Awarded to All Crew
                 </span>
@@ -100,7 +100,7 @@
         <div class="lg:col-span-2 space-y-6">
           <!-- Requirements Checklist -->
           <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6">
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
               Spesifikasi Standar SOP Mutu Misi
             </h3>
             <ul class="space-y-2.5">
@@ -119,14 +119,14 @@
           <div v-if="userStore.isCrew" class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6 space-y-4">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
                   Hasil Evaluasi Personal Anda
                 </h3>
                 <p class="text-xs text-slate-400 mt-0.5">
                   Dinilai oleh {{ evaluation ? evaluation.supervisorName : 'Area Supervisor' }}
                 </p>
               </div>
-              <span class="text-xs font-black px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+              <span class="text-xs font-semibold px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
                 {{ myScore > 0 ? `Nilai: ${myScore}/100` : 'Menunggu Penilaian' }}
               </span>
             </div>
@@ -140,7 +140,7 @@
                   class="w-11 h-11 rounded-full object-cover ring-2 ring-[#499ec7]/30"
                 />
                 <div>
-                  <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+                  <h4 class="text-sm font-semibold text-slate-900 dark:text-white">
                     {{ userStore.currentUser.name }}
                   </h4>
                   <p class="text-xs text-slate-400">{{ userStore.currentUser.position }} • {{ batchStore.currentBatch.name }}</p>
@@ -148,10 +148,10 @@
               </div>
 
               <div class="text-right">
-                <span class="text-xs font-black text-amber-500 block">
+                <span class="text-xs font-semibold text-amber-500 block">
                   ⭐ {{ myStars }} Stars Diperoleh
                 </span>
-                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
                   {{ mission.status === 'COMPLETED' ? 'Selesai Terverifikasi' : 'Siklus Berjalan' }}
                 </span>
               </div>
@@ -160,7 +160,7 @@
             <!-- Supervisor Comment for this Mission -->
             <div v-if="evaluation" class="pt-2">
               <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                   Catatan & Observasi Supervisor
                 </p>
                 <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed italic">
@@ -171,7 +171,7 @@
 
             <!-- Evidence Gallery -->
             <div v-if="evaluation?.evidence?.length" class="pt-2">
-              <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 Foto Bukti Inspeksi Gerai ({{ evaluation.evidence.length }})
               </p>
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -186,7 +186,7 @@
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span class="text-[10px] text-white font-medium truncate">{{ img.caption }}</span>
+                    <span class="text-xs text-white font-medium truncate">{{ img.caption }}</span>
                   </div>
                 </div>
               </div>
@@ -197,15 +197,15 @@
           <div v-else class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6 space-y-4">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
                   Store Crew Performance Breakdown ({{ participatingCrews.length }} Members)
                 </h3>
                 <p class="text-xs text-slate-400 mt-0.5">
                   Evaluated by {{ evaluation ? evaluation.supervisorName : 'Supervisor' }}
                 </p>
               </div>
-              <span v-if="evaluation?.averageScore" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                Avg Score: <strong class="text-slate-900 dark:text-white">{{ evaluation.averageScore }}/100</strong>
+              <span v-if="evaluation?.averageScore" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                Avg Score: <strong class="text-slate-900 dark:text-white font-semibold">{{ evaluation.averageScore }}/100</strong>
               </span>
             </div>
 
@@ -223,18 +223,18 @@
                     class="w-9 h-9 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700 flex-shrink-0"
                   />
                   <div class="min-w-0">
-                    <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">
+                    <h4 class="text-xs font-semibold text-slate-900 dark:text-white truncate">
                       {{ c.name }}
                     </h4>
-                    <p class="text-[10px] text-slate-400 truncate">{{ c.position }}</p>
+                    <p class="text-xs text-slate-400 truncate">{{ c.position }}</p>
                   </div>
                 </div>
 
                 <div class="text-right flex-shrink-0">
-                  <span class="text-xs font-black text-slate-900 dark:text-white block">
+                  <span class="text-xs font-semibold text-slate-900 dark:text-white block">
                     {{ getCrewScore(c.id) }} / 100
                   </span>
-                  <span class="text-[10px] font-bold text-amber-500">
+                  <span class="text-xs font-semibold text-amber-500">
                     ⭐ {{ getCrewStars(c.id) }} Stars
                   </span>
                 </div>
@@ -244,7 +244,7 @@
             <!-- Supervisor Comment -->
             <div v-if="evaluation" class="pt-2">
               <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                   Supervisor Observations & Notes
                 </p>
                 <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed italic">
@@ -255,7 +255,7 @@
 
             <!-- Evidence Gallery -->
             <div v-if="evaluation?.evidence?.length" class="pt-2">
-              <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 Evidence Photos ({{ evaluation.evidence.length }})
               </p>
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -270,7 +270,7 @@
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span class="text-[10px] text-white font-medium truncate">{{ img.caption }}</span>
+                    <span class="text-xs text-white font-medium truncate">{{ img.caption }}</span>
                   </div>
                 </div>
               </div>
@@ -291,7 +291,7 @@
               <RotateCcw v-if="mission.status === 'REVISION_REQUIRED'" class="w-5 h-5 text-rose-500" />
               <CheckCircle2 v-else class="w-5 h-5 text-emerald-500" />
               <h3
-                class="text-sm font-bold"
+                class="text-sm font-semibold"
                 :class="mission.status === 'REVISION_REQUIRED' ? 'text-rose-900 dark:text-rose-200' : 'text-emerald-900 dark:text-emerald-200'"
               >
                 {{ mission.status === 'REVISION_REQUIRED' ? 'Catatan Permintaan Revisi' : 'Keputusan Head: Approved & Bintang Didistribusikan' }}
@@ -312,7 +312,7 @@
         <div class="space-y-6">
           <!-- Batch Branch Info -->
           <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
               Penugasan Gerai
             </h3>
 
@@ -321,10 +321,10 @@
                 <Users class="w-5 h-5" />
               </div>
               <div>
-                <h4 class="text-xs font-bold text-slate-900 dark:text-white">
+                <h4 class="text-xs font-semibold text-slate-900 dark:text-white">
                   {{ batchStore.currentBatch.name }}
                 </h4>
-                <p class="text-[11px] text-slate-400">
+                <p class="text-xs text-slate-400">
                   {{ participatingCrews.length }} Active Store Crew Members
                 </p>
               </div>
@@ -333,7 +333,7 @@
 
           <!-- Mission Audit Timeline -->
           <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
               Audit Lifecycle Trail
             </h3>
             <MissionTimeline

@@ -5,10 +5,10 @@
         v-for="item in navItems"
         :key="item.path"
         :to="item.path"
-        class="flex flex-col items-center justify-center py-1 px-2 rounded-2xl text-[10px] font-bold transition-all relative group flex-1"
+        class="flex flex-col items-center justify-center py-1 px-2 rounded-2xl text-xs font-medium transition-all relative group flex-1"
         :class="[
           $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard')
-            ? 'text-[#24779f] dark:text-[#84cded] scale-105'
+            ? 'text-[#24779f] dark:text-[#84cded] font-semibold scale-105'
             : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
         ]"
       >
@@ -25,7 +25,7 @@
             class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"
           ></span>
         </div>
-        <span class="mt-0.5 tracking-tight font-extrabold truncate max-w-[64px]">{{ item.label }}</span>
+        <span class="mt-0.5 tracking-tight truncate max-w-[64px]">{{ item.label }}</span>
       </NuxtLink>
     </div>
   </nav>

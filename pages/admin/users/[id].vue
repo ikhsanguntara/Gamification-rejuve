@@ -12,8 +12,8 @@
 
     <!-- Error State if not found -->
     <div v-if="!user" class="p-8 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
-      <p class="text-sm font-bold text-slate-700 dark:text-slate-300">User tidak ditemukan.</p>
-      <NuxtLink to="/admin/users" class="text-xs text-indigo-600 font-bold mt-2 inline-block">Kembali ke Daftar</NuxtLink>
+      <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">User tidak ditemukan.</p>
+      <NuxtLink to="/admin/users" class="text-xs text-indigo-600 font-semibold mt-2 inline-block">Kembali ke Daftar</NuxtLink>
     </div>
 
     <!-- Edit Form Card -->
@@ -25,7 +25,7 @@
           class="w-12 h-12 rounded-2xl object-cover ring-2 ring-indigo-500/20"
         />
         <div>
-          <h2 class="text-xl font-black text-slate-900 dark:text-white">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">
             Edit User: {{ user.name }}
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">
@@ -36,7 +36,7 @@
 
       <form @submit.prevent="handleUpdate" class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap *</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap *</label>
           <input
             v-model="form.name"
             type="text"
@@ -47,11 +47,11 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Role Akun *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Role Akun *</label>
             <select
               v-model="form.role"
               required
-              class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
             >
               <option value="CREW">Crew Member (Store Specialist)</option>
               <option value="SUPERVISOR">Area Store Supervisor</option>
@@ -61,11 +61,11 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Penempatan Batch *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Penempatan Batch *</label>
             <select
               v-model="form.batchId"
               required
-              class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
             >
               <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
                 {{ b.name }}
@@ -76,7 +76,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jabatan (Position)</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jabatan (Position)</label>
             <input
               v-model="form.position"
               type="text"
@@ -85,7 +85,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Perusahaan</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Perusahaan</label>
             <input
               v-model="form.email"
               type="email"
@@ -95,7 +95,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Avatar Image URL</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Avatar Image URL</label>
           <input
             v-model="form.avatar"
             type="url"
@@ -106,13 +106,13 @@
         <div class="pt-4 flex items-center justify-end gap-3">
           <NuxtLink
             to="/admin/users"
-            class="px-5 py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            class="px-5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             Batal
           </NuxtLink>
           <button
             type="submit"
-            class="px-6 py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer"
+            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer"
           >
             Simpan Perubahan
           </button>

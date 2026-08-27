@@ -3,12 +3,12 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <div class="flex items-center gap-2 mb-1">
-          <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
             {{ userStore.isCrew ? 'My Personal Achievements & Badges' : 'Re.juve Store Milestone & Badge Catalog' }}
           </h2>
           <span
-            class="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase"
+            class="text-xs font-semibold px-2 py-0.5 rounded-md uppercase"
             :class="userStore.isCrew ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'"
           >
             {{ userStore.isCrew ? 'Crew Profile: ' + userStore.currentUser.name : 'Master Standards' }}
@@ -25,7 +25,7 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
           {{ unlockedCount }} / {{ gamificationStore.allAchievements.length }} Badges Unlocked
         </span>
       </div>
@@ -38,7 +38,7 @@
         :key="cat"
         type="button"
         @click="selectedCategory = cat"
-        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex-shrink-0"
+        class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer"
         :class="[
           selectedCategory === cat
             ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm'

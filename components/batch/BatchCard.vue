@@ -3,11 +3,11 @@
     <!-- Top Row: Code & Status -->
     <div>
       <div class="flex items-center justify-between gap-2 mb-3">
-        <span class="text-xs font-bold text-slate-400 dark:text-slate-500">
+        <span class="text-xs font-semibold text-slate-400 dark:text-slate-500">
           {{ batch.code }}
         </span>
         <span
-          class="text-xs font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider"
+          class="text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider"
           :class="getStatusBadgeClass(batch.status)"
         >
           {{ batch.status }}
@@ -19,7 +19,7 @@
         :to="`/batches/${batch.id}`"
         class="block group"
       >
-        <h3 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+        <h3 class="text-base sm:text-lg font-semibold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
           {{ batch.name }}
         </h3>
       </NuxtLink>
@@ -45,8 +45,8 @@
       <!-- Progress Bar -->
       <div>
         <div class="flex items-center justify-between text-xs mb-1.5">
-          <span class="font-semibold text-slate-600 dark:text-slate-400">Mission Progress</span>
-          <span class="font-bold text-slate-900 dark:text-white">
+          <span class="font-medium text-slate-600 dark:text-slate-400">Mission Progress</span>
+          <span class="font-semibold text-slate-900 dark:text-white">
             {{ batch.completedMissions }} / {{ batch.totalMissions }} ({{ completionPercentage }}%)
           </span>
         </div>
@@ -62,12 +62,12 @@
       <div class="flex items-center justify-between text-xs pt-1">
         <div class="flex items-center gap-1.5">
           <span class="text-slate-400">Avg Score:</span>
-          <span class="font-bold text-slate-800 dark:text-slate-200">
+          <span class="font-semibold text-slate-800 dark:text-slate-200">
             {{ batch.averageScore > 0 ? `${batch.averageScore}%` : 'N/A' }}
           </span>
         </div>
 
-        <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-extrabold text-xs">
+        <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-semibold text-xs">
           <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
           <span>{{ batch.totalStars.toLocaleString() }} Stars</span>
         </div>
@@ -76,7 +76,7 @@
       <!-- Action Button -->
       <NuxtLink
         :to="`/batches/${batch.id}`"
-        class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 transition-all group"
+        class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 transition-all group"
       >
         <span>Open Batch Dashboard</span>
         <ChevronRight class="w-4 h-4 transition-transform group-hover:translate-x-1" />

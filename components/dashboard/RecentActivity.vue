@@ -2,7 +2,7 @@
   <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6">
     <div class="flex items-center justify-between mb-5">
       <div>
-        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+        <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
           Recent Activity Feed
         </h3>
         <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
@@ -31,17 +31,17 @@
 
         <!-- Activity Body -->
         <div class="flex-1 min-w-0">
-          <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-snug">
-            <span class="text-slate-900 dark:text-white font-bold">{{ act.actor }}</span>
+          <p class="text-xs font-medium text-slate-800 dark:text-slate-200 leading-snug">
+            <span class="text-slate-900 dark:text-white font-semibold">{{ act.actor }}</span>
             {{ act.action }}
             <span class="text-amber-600 dark:text-amber-400 font-semibold">"{{ act.target }}"</span>
           </p>
-          <p v-if="act.details" class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 italic">
+          <p v-if="act.details" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 italic">
             "{{ act.details }}"
           </p>
-          <div class="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400">
+          <div class="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
             <span>{{ act.time }}</span>
-            <span v-if="act.badge" class="font-bold text-amber-500 flex items-center gap-0.5">
+            <span v-if="act.badge" class="font-semibold text-amber-500 flex items-center gap-0.5">
               ⭐ {{ act.badge }}
             </span>
           </div>

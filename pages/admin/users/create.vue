@@ -17,7 +17,7 @@
           <UserPlus class="w-5 h-5" />
         </div>
         <div>
-          <h2 class="text-xl font-black text-slate-900 dark:text-white">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">
             Tambah User / Crew Baru
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">
@@ -29,7 +29,7 @@
       <!-- Create Form -->
       <form @submit.prevent="handleSubmit" class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap *</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap *</label>
           <input
             v-model="form.name"
             type="text"
@@ -41,11 +41,11 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Role Akun *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Role Akun *</label>
             <select
               v-model="form.role"
               required
-              class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
             >
               <option value="CREW">Crew Member (Store Specialist)</option>
               <option value="SUPERVISOR">Area Store Supervisor</option>
@@ -55,11 +55,11 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Cabang Penempatan Gerai *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Cabang Penempatan Gerai *</label>
             <select
               v-model="form.batchId"
               required
-              class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
             >
               <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
                 {{ b.name.split('—')[1] || b.name }}
@@ -70,7 +70,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jabatan (Position)</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jabatan (Position)</label>
             <input
               v-model="form.position"
               type="text"
@@ -80,7 +80,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Perusahaan</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Perusahaan</label>
             <input
               v-model="form.email"
               type="email"
@@ -91,7 +91,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Avatar Image URL</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Avatar Image URL</label>
           <input
             v-model="form.avatar"
             type="url"
@@ -107,13 +107,13 @@
         <div class="pt-4 flex items-center justify-end gap-3">
           <NuxtLink
             to="/admin/users"
-            class="px-5 py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            class="px-5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             Batal
           </NuxtLink>
           <button
             type="submit"
-            class="px-6 py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer"
+            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer"
           >
             Simpan User Baru
           </button>

@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
           Head Review & Approvals
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
@@ -12,7 +12,7 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <span class="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
           {{ approvalStore.pendingApprovals.length }} Pending Decision
         </span>
       </div>
@@ -23,7 +23,7 @@
       <button
         type="button"
         @click="activeTab = 'PENDING'"
-        class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex-shrink-0 cursor-pointer"
+        class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer"
         :class="[
           activeTab === 'PENDING'
             ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm'
@@ -32,7 +32,7 @@
       >
         <Hourglass class="w-3.5 h-3.5" />
         <span>Pending Review</span>
-        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+        <span class="px-1.5 py-0.2 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
           {{ approvalStore.pendingApprovals.length }}
         </span>
       </button>
@@ -40,7 +40,7 @@
       <button
         type="button"
         @click="activeTab = 'APPROVED'"
-        class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex-shrink-0 cursor-pointer"
+        class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer"
         :class="[
           activeTab === 'APPROVED'
             ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm'
@@ -49,7 +49,7 @@
       >
         <CheckCircle2 class="w-3.5 h-3.5" />
         <span>Approved</span>
-        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+        <span class="px-1.5 py-0.2 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
           {{ approvalStore.approvedItems.length }}
         </span>
       </button>
@@ -57,7 +57,7 @@
       <button
         type="button"
         @click="activeTab = 'REVISION'"
-        class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex-shrink-0 cursor-pointer"
+        class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer"
         :class="[
           activeTab === 'REVISION'
             ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm'
@@ -66,7 +66,7 @@
       >
         <RotateCcw class="w-3.5 h-3.5" />
         <span>Revision Required</span>
-        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
+        <span class="px-1.5 py-0.2 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
           {{ approvalStore.revisionRequiredItems.length }}
         </span>
       </button>

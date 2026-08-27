@@ -10,12 +10,12 @@
           <Star class="w-5 h-5 fill-white" />
         </div>
         <div>
-          <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+          <span class="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
             Gamification Status
           </span>
-          <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
             <span>LEVEL {{ progress.currentLevel }}</span>
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">
+            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
               ({{ progress.currentLevelTitle }})
             </span>
           </h3>
@@ -24,17 +24,17 @@
 
       <!-- Total Star Badge -->
       <div class="self-start sm:self-auto">
-        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 font-black text-xs sm:text-sm shadow-sm">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 font-bold text-xs sm:text-sm shadow-sm">
           <Star class="w-4 h-4 fill-amber-400 text-amber-500" />
           <span>{{ progress.currentStars.toLocaleString() }}</span>
-          <span class="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase">Stars</span>
+          <span class="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase">Stars</span>
         </div>
       </div>
     </div>
 
     <!-- Progress Bar -->
     <div class="mt-3">
-      <div class="flex items-center justify-between text-[11px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+      <div class="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
         <span>Lvl {{ progress.currentLevel }} ({{ progress.levelMinStars }} ⭐)</span>
         <span>
           <span v-if="!progress.isMaxLevel">
@@ -53,9 +53,9 @@
       </div>
 
       <!-- Subtext -->
-      <div class="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-2">
+      <div class="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 text-xs text-slate-500 dark:text-slate-400 mt-2">
         <span>{{ progress.progressPercent }}% to next milestone</span>
-        <span v-if="!progress.isMaxLevel" class="font-bold text-amber-600 dark:text-amber-400">
+        <span v-if="!progress.isMaxLevel" class="font-semibold text-amber-600 dark:text-amber-400">
           {{ progress.starsToNextLevel }} Stars to Level {{ progress.nextLevel }}
         </span>
       </div>

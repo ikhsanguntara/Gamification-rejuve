@@ -17,7 +17,7 @@
           <Target class="w-5 h-5" />
         </div>
         <div>
-          <h2 class="text-xl font-black text-slate-900 dark:text-white">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">
             Buat Misi Operasional Gerai Baru
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">
@@ -28,14 +28,14 @@
 
       <!-- 📋 1-Click Template Preset Selector Callout -->
       <div class="my-4 p-4 rounded-2xl bg-gradient-to-r from-[#963189]/10 via-[#499ec7]/10 to-transparent border border-[#963189]/20 space-y-2">
-        <label class="block text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+        <label class="block text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
           <Sparkles class="w-4 h-4 text-[#963189]" />
           <span>Pilih dari Template Standar Re.juve (Auto-Fill Cepat)</span>
         </label>
         <select
           v-model="selectedTemplateId"
           @change="handleSelectTemplate"
-          class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189] cursor-pointer"
+          class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189] cursor-pointer"
         >
           <option value="">-- Pilih Template untuk Isi Otomatis --</option>
           <optgroup label="Week 1: Setup & Cold Chain Safety">
@@ -54,7 +54,7 @@
             </option>
           </optgroup>
         </select>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
           Memilih template akan <strong>otomatis mengisi</strong> Judul, Kategori, Deskripsi, dan Checklist SOP di bawah.
         </p>
       </div>
@@ -62,11 +62,11 @@
       <form @submit.prevent="handleSubmit" class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Batch Target *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Batch Target *</label>
             <select
               v-model="form.batchId"
               required
-              class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
             >
               <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
                 {{ b.name }}
@@ -75,11 +75,11 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Minggu Operasional *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Minggu Operasional *</label>
             <select
               v-model="form.week"
               required
-              class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
             >
               <option :value="1">Week 1 (Cold Chain Setup)</option>
               <option :value="2">Week 2 (Core Quality - Active Cycle)</option>
@@ -89,7 +89,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Judul Misi SOP *</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Judul Misi SOP *</label>
           <input
             v-model="form.title"
             type="text"
@@ -101,7 +101,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Kode Misi *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Misi *</label>
             <input
               v-model="form.code"
               type="text"
@@ -112,10 +112,10 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Kategori Standar Mutu *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori Standar Mutu *</label>
             <select
               v-model="form.category"
-              class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#963189]"
             >
               <option value="Cold Chain">Cold Chain (2-4°C)</option>
               <option value="Quality Control">Quality Control</option>
@@ -128,7 +128,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Deskripsi Misi</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi Misi</label>
           <textarea
             v-model="form.description"
             rows="3"
@@ -140,13 +140,13 @@
         <!-- Requirements Checklist Builder -->
         <div>
           <div class="flex items-center justify-between mb-1.5">
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
               Spesifikasi Checklist SOP ({{ form.requirements.length }} Poin)
             </label>
             <button
               type="button"
               @click="addRequirement"
-              class="text-[11px] font-bold text-[#963189] dark:text-[#db92d7] hover:underline"
+              class="text-xs font-semibold text-[#963189] dark:text-[#db92d7] hover:underline"
             >
               + Tambah Poin SOP
             </button>
@@ -182,13 +182,13 @@
         <div class="pt-4 flex items-center justify-end gap-3">
           <NuxtLink
             to="/admin/missions"
-            class="px-5 py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            class="px-5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             Batal
           </NuxtLink>
           <button
             type="submit"
-            class="px-6 py-2.5 text-xs font-bold rounded-xl bg-[#963189] hover:bg-[#812474] text-white shadow-md shadow-[#963189]/20 active:scale-95 cursor-pointer"
+            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#963189] hover:bg-[#812474] text-white shadow-md shadow-[#963189]/20 active:scale-95 cursor-pointer"
           >
             Buat Misi Gerai
           </button>

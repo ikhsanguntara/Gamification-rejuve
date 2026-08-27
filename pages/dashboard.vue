@@ -8,25 +8,25 @@
 
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
         <div>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-amber-300 text-[11px] sm:text-xs font-semibold mb-2.5 sm:mb-3 border border-white/15">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-amber-300 text-xs font-semibold mb-2.5 sm:mb-3 border border-white/15">
             <Star class="w-3.5 h-3.5 fill-amber-300" />
             <span class="truncate max-w-[160px] sm:max-w-none">{{ batchStore.currentBatch.name }}</span>
             <span>•</span>
             <span>Week {{ batchStore.selectedWeek }}/3</span>
           </div>
 
-          <h2 class="text-xl sm:text-3xl font-black tracking-tight">
+          <h2 class="text-xl sm:text-3xl font-bold tracking-tight">
             {{ greetingText }}, {{ userStore.currentUser.name.split(' ')[0] }}! 🥤
           </h2>
           <p class="text-slate-200 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
             <span v-if="userStore.isCrew">
-              Re.juve Specialist • Saat ini berada di <strong class="text-amber-300">Level {{ myProgress.currentLevel }} ({{ myProgress.currentLevelTitle }})</strong> dengan <strong>{{ myStars.toLocaleString() }} ⭐ Stars</strong>. Terus selesaikan seluruh misi di {{ batchStore.currentBatch.name }}!
+              Re.juve Specialist • Saat ini berada di <strong class="text-amber-300 font-semibold">Level {{ myProgress.currentLevel }} ({{ myProgress.currentLevelTitle }})</strong> dengan <strong class="font-semibold">{{ myStars.toLocaleString() }} ⭐ Stars</strong>. Terus selesaikan seluruh misi di {{ batchStore.currentBatch.name }}!
             </span>
             <span v-else-if="userStore.isSupervisor">
-              Area Supervisor • Week {{ batchStore.selectedWeek }} aktif dinilai. Terdapat <strong class="text-amber-300">{{ pendingReviewCount }} misi diajukan</strong> dan <strong class="text-rose-300">{{ missionStore.revisionCount }} revisi</strong>.
+              Area Supervisor • Week {{ batchStore.selectedWeek }} aktif dinilai. Terdapat <strong class="text-amber-300 font-semibold">{{ pendingReviewCount }} misi diajukan</strong> dan <strong class="text-rose-300 font-semibold">{{ missionStore.revisionCount }} revisi</strong>.
             </span>
             <span v-else-if="userStore.isHead">
-              Head of Operations & Quality • <strong class="text-amber-300">{{ approvalStore.pendingApprovals.length }} evaluasi Batch</strong> menunggu keputusan (Approve / Revise).
+              Head of Operations & Quality • <strong class="text-amber-300 font-semibold">{{ approvalStore.pendingApprovals.length }} evaluasi Batch</strong> menunggu keputusan (Approve / Revise).
             </span>
             <span v-else>
               System Superadmin • Master Control Console aktif untuk seluruh Batch Re.juve.
@@ -39,7 +39,7 @@
           <NuxtLink
             v-if="userStore.isSupervisor"
             to="/evaluations"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#831843]/30 transition-all active:scale-95 border border-white/20"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white font-semibold text-xs sm:text-sm shadow-lg shadow-[#831843]/30 transition-all active:scale-95 border border-white/20"
           >
             <ClipboardCheck class="w-4 h-4" />
             <span>Evaluate Store Missions</span>
@@ -48,7 +48,7 @@
           <NuxtLink
             v-else-if="userStore.isHead"
             to="/approvals"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#9d174d]/30 transition-all active:scale-95 border border-white/20"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white font-semibold text-xs sm:text-sm shadow-lg shadow-[#9d174d]/30 transition-all active:scale-95 border border-white/20"
           >
             <ShieldCheck class="w-4 h-4" />
             <span>Review Approvals ({{ approvalStore.pendingApprovals.length }})</span>
@@ -57,7 +57,7 @@
           <NuxtLink
             v-else-if="userStore.isSuperadmin"
             to="/admin/users"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-indigo-600/30 transition-all active:scale-95 border border-white/20"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-indigo-600/30 transition-all active:scale-95 border border-white/20"
           >
             <Settings class="w-4 h-4" />
             <span>Administrator Console</span>
@@ -66,7 +66,7 @@
           <NuxtLink
             v-else
             to="/missions"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#831843]/30 transition-all active:scale-95 border border-white/20"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white font-semibold text-xs sm:text-sm shadow-lg shadow-[#831843]/30 transition-all active:scale-95 border border-white/20"
           >
             <Target class="w-4 h-4" />
             <span>Misi Saya</span>
@@ -190,10 +190,10 @@
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h3 class="text-sm sm:text-base font-black tracking-tight">
+            <h3 class="text-sm sm:text-base font-semibold tracking-tight">
               Peta Ekspedisi Gamifikasi 3 Minggu (Star Odyssey)
             </h3>
-            <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">
               INTERAKTIF
             </span>
           </div>
@@ -205,7 +205,7 @@
 
       <NuxtLink
         to="/journey"
-        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-slate-900 font-black text-xs hover:bg-slate-100 transition-all active:scale-95 shadow-md flex-shrink-0 cursor-pointer"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-slate-900 font-semibold text-xs hover:bg-slate-100 transition-all active:scale-95 shadow-md flex-shrink-0 cursor-pointer"
       >
         <span>Buka Peta Ekspedisi</span>
         <ChevronRight class="w-4 h-4 text-[#831843]" />
@@ -226,16 +226,16 @@
         <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-6">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              <h3 class="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
                 Top Star Performers — {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}
               </h3>
-              <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+              <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                 Peringkat Crew Cabang Gerai
               </p>
             </div>
             <NuxtLink
               to="/leaderboard"
-              class="text-xs font-bold text-[#499ec7] dark:text-[#84cded] hover:underline flex items-center gap-1"
+              class="text-xs font-semibold text-[#499ec7] dark:text-[#84cded] hover:underline flex items-center gap-1"
             >
               <span>Lihat Leaderboard Penuh</span>
               <ChevronRight class="w-3.5 h-3.5" />
@@ -259,14 +259,14 @@
               <!-- You Indicator Badge -->
               <span
                 v-if="(crew.crewId || crew.id) === userStore.currentUser.id"
-                class="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-[#499ec7] text-white text-[9px] font-black"
+                class="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-[#499ec7] text-white text-xs font-semibold tracking-wider"
               >
                 ANDA
               </span>
 
               <!-- Rank Medal Badge -->
               <span
-                class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black mb-2 shadow-sm"
+                class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold mb-2 shadow-sm"
                 :class="[
                   index === 0 ? 'bg-amber-400 text-amber-950' : index === 1 ? 'bg-slate-300 text-slate-900' : 'bg-amber-700 text-white'
                 ]"
@@ -280,15 +280,15 @@
                 class="w-12 h-12 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 shadow-md mb-2"
               />
 
-              <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate w-full">
+              <h4 class="text-xs font-semibold text-slate-900 dark:text-white truncate w-full">
                 {{ crew.name }}
               </h4>
-              <span class="text-[11px] text-slate-400 dark:text-slate-500 truncate w-full">
+              <span class="text-xs text-slate-400 dark:text-slate-500 truncate w-full">
                 {{ crew.position }}
               </span>
 
               <!-- Stars Counter -->
-              <div class="mt-2.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-extrabold text-xs">
+              <div class="mt-2.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-semibold text-xs">
                 <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
                 <span>{{ (crew.stars || 0).toLocaleString() }}</span>
               </div>

@@ -81,11 +81,11 @@ const starSizeClass = computed(() => {
 
 const labelSizeClass = computed(() => {
   switch (props.size) {
-    case 'sm': return 'text-xs'
-    case 'md': return 'text-sm'
-    case 'lg': return 'text-base font-extrabold'
-    case 'xl': return 'text-lg font-black'
-    default: return 'text-sm'
+    case 'sm': return 'text-xs font-semibold'
+    case 'md': return 'text-sm font-semibold'
+    case 'lg': return 'text-base font-bold'
+    case 'xl': return 'text-lg font-bold'
+    default: return 'text-sm font-semibold'
   }
 })
 

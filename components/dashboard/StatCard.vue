@@ -19,7 +19,7 @@
     </div>
 
     <div class="flex items-baseline gap-2">
-      <span class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+      <span class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
         {{ value }}
       </span>
       <span v-if="unit" class="text-sm font-medium text-slate-500 dark:text-slate-400">

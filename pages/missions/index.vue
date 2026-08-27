@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
           Store Mission Catalog
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
@@ -12,7 +12,7 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <span class="text-xs font-bold px-3 py-1 rounded-full bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
+        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
           {{ filteredMissions.length }} Missions Listed
         </span>
       </div>
@@ -36,7 +36,7 @@
         <div class="relative">
           <select
             v-model="selectedWeekFilter"
-            class="w-full appearance-none bg-slate-100 dark:bg-slate-800 border-none text-xs font-bold text-slate-800 dark:text-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:ring-2 focus:ring-[#499ec7] cursor-pointer"
+            class="w-full appearance-none bg-slate-100 dark:bg-slate-800 border-none text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:ring-2 focus:ring-[#499ec7] cursor-pointer"
           >
             <option value="ALL">All Weeks (1, 2, 3)</option>
             <option value="1">Week 1 (Completed)</option>
@@ -50,7 +50,7 @@
         <div class="relative">
           <select
             v-model="selectedStatusFilter"
-            class="w-full appearance-none bg-slate-100 dark:bg-slate-800 border-none text-xs font-bold text-slate-800 dark:text-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:ring-2 focus:ring-[#499ec7] cursor-pointer"
+            class="w-full appearance-none bg-slate-100 dark:bg-slate-800 border-none text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:ring-2 focus:ring-[#499ec7] cursor-pointer"
           >
             <option value="ALL">All Statuses</option>
             <option value="PENDING_REVIEW">Pending Review</option>
@@ -67,7 +67,7 @@
         <div class="relative">
           <select
             v-model="selectedCategoryFilter"
-            class="w-full appearance-none bg-slate-100 dark:bg-slate-800 border-none text-xs font-bold text-slate-800 dark:text-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:ring-2 focus:ring-[#499ec7] cursor-pointer"
+            class="w-full appearance-none bg-slate-100 dark:bg-slate-800 border-none text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:ring-2 focus:ring-[#499ec7] cursor-pointer"
           >
             <option value="ALL">All Categories</option>
             <option value="Cold Chain">Cold Chain</option>
@@ -105,7 +105,7 @@
         <button
           type="button"
           @click="resetFilters"
-          class="px-4 py-2 text-xs font-bold rounded-xl bg-[#499ec7] text-white hover:bg-[#24779f] transition-colors"
+          class="px-4 py-2 text-xs font-semibold rounded-xl bg-[#499ec7] text-white hover:bg-[#24779f] transition-colors"
         >
           Reset All Filters
         </button>

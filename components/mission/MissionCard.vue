@@ -10,7 +10,7 @@
     <!-- Top Row: Category & Status Badge -->
     <div>
       <div class="flex items-center justify-between gap-2 mb-3">
-        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#963189]/10 text-[#963189] dark:text-[#db92d7] tracking-wide uppercase">
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-[#963189]/10 text-[#963189] dark:text-[#db92d7] tracking-wide uppercase">
           {{ mission.category || 'Quality SOP' }}
         </span>
         <MissionStatus :status="mission.status" />
@@ -21,10 +21,10 @@
         :to="`/missions/${mission.id}`"
         class="block group"
       >
-        <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1">
+        <p class="text-xs font-medium text-slate-400 dark:text-slate-500 mb-1">
           {{ mission.code }} • Week {{ mission.week }}
         </p>
-        <h4 class="text-base font-bold text-slate-900 dark:text-white group-hover:text-[#499ec7] dark:group-hover:text-[#84cded] transition-colors line-clamp-2">
+        <h4 class="text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-[#499ec7] dark:group-hover:text-[#84cded] transition-colors line-clamp-2">
           {{ mission.title }}
         </h4>
       </NuxtLink>
@@ -39,12 +39,12 @@
     <div class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
       <!-- Assigned Multi-Crew Summary -->
       <div class="flex items-center justify-between text-xs">
-        <div class="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 font-semibold">
+        <div class="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 font-medium">
           <Users class="w-3.5 h-3.5 text-[#499ec7]" />
           <span>{{ assignedCrewList.length }} Store Crew Members</span>
         </div>
 
-        <span class="text-slate-400 dark:text-slate-500 text-[11px] flex items-center gap-1">
+        <span class="text-slate-400 dark:text-slate-500 text-xs flex items-center gap-1">
           <Calendar class="w-3.5 h-3.5" />
           {{ formatDate(mission.deadline) }}
         </span>
@@ -57,7 +57,7 @@
           <div class="flex items-center gap-1.5">
             <span class="text-xs text-slate-500 dark:text-slate-400">Nilai Saya:</span>
             <span
-              class="text-xs font-bold"
+              class="text-xs font-semibold"
               :class="myScore > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400'"
             >
               {{ myScore > 0 ? `${myScore}/100` : 'Menunggu Penilaian' }}
@@ -77,7 +77,7 @@
           <div class="flex items-center gap-1.5">
             <span class="text-xs text-slate-500 dark:text-slate-400">Avg Score:</span>
             <span
-              class="text-xs font-bold"
+              class="text-xs font-semibold"
               :class="mission.averageScore > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400'"
             >
               {{ mission.averageScore > 0 ? `${mission.averageScore}/100` : '—' }}

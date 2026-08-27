@@ -16,18 +16,18 @@
       </div>
 
       <div class="flex items-center justify-center gap-2 mb-1">
-        <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
           Re.juve
         </h1>
-        <span class="text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] border border-[#831843]/30">
+        <span class="text-xs font-semibold uppercase px-2.5 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] border border-[#831843]/30">
           TRUE COLD-PRESSED
         </span>
       </div>
 
-      <p class="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400">
+      <p class="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">
         Mission Management & Store Performance Gamification
       </p>
-      <p class="text-[11px] font-bold text-[#9d174d] dark:text-[#f472b6] mt-0.5">
+      <p class="text-xs font-semibold text-[#9d174d] dark:text-[#f472b6] mt-0.5">
         #CleanLabel • 100% Fresh, Pure & Natural Operations
       </p>
     </div>
@@ -36,7 +36,7 @@
       <div class="bg-white dark:bg-slate-900 py-8 px-6 sm:px-10 shadow-2xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl space-y-6">
         <!-- Quick Select Persona (4 Roles Grid) -->
         <div>
-          <label class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 block mb-3 text-center sm:text-left">
+          <label class="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 block mb-3 text-center sm:text-left">
             Select Role Persona to Login
           </label>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
@@ -56,10 +56,10 @@
                 :alt="mockUsers.CREW.name"
                 class="w-11 h-11 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5 group-hover:scale-105 transition-transform"
               />
-              <span class="text-xs font-black text-slate-900 dark:text-white block truncate w-full">
+              <span class="text-xs font-semibold text-slate-900 dark:text-white block truncate w-full">
                 {{ mockUsers.CREW.name.split(' ')[0] }}
               </span>
-              <span class="text-[9px] font-bold px-1.5 py-0.2 mt-1 rounded-md bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
+              <span class="text-xs font-semibold px-1.5 py-0.2 mt-1 rounded-md bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
                 Store Crew
               </span>
             </button>
@@ -80,10 +80,10 @@
                 :alt="mockUsers.SUPERVISOR.name"
                 class="w-11 h-11 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5 group-hover:scale-105 transition-transform"
               />
-              <span class="text-xs font-black text-slate-900 dark:text-white block truncate w-full">
+              <span class="text-xs font-semibold text-slate-900 dark:text-white block truncate w-full">
                 {{ mockUsers.SUPERVISOR.name.split(' ')[0] }}
               </span>
-              <span class="text-[9px] font-bold px-1.5 py-0.2 mt-1 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+              <span class="text-xs font-semibold px-1.5 py-0.2 mt-1 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
                 Supervisor
               </span>
             </button>
@@ -104,10 +104,10 @@
                 :alt="mockUsers.HEAD.name"
                 class="w-11 h-11 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5 group-hover:scale-105 transition-transform"
               />
-              <span class="text-xs font-black text-slate-900 dark:text-white block truncate w-full">
+              <span class="text-xs font-semibold text-slate-900 dark:text-white block truncate w-full">
                 {{ mockUsers.HEAD.name.split(' ')[0] }}
               </span>
-              <span class="text-[9px] font-bold px-1.5 py-0.2 mt-1 rounded-md bg-[#963189]/10 text-[#963189] dark:text-[#db92d7]">
+              <span class="text-xs font-semibold px-1.5 py-0.2 mt-1 rounded-md bg-[#963189]/10 text-[#963189] dark:text-[#db92d7]">
                 Head Ops
               </span>
             </button>
@@ -128,10 +128,10 @@
                 :alt="mockUsers.SUPERADMIN.name"
                 class="w-11 h-11 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5 group-hover:scale-105 transition-transform"
               />
-              <span class="text-xs font-black text-slate-900 dark:text-white block truncate w-full">
+              <span class="text-xs font-semibold text-slate-900 dark:text-white block truncate w-full">
                 {{ mockUsers.SUPERADMIN.name.split(' ')[0] }}
               </span>
-              <span class="text-[9px] font-bold px-1.5 py-0.2 mt-1 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300">
+              <span class="text-xs font-semibold px-1.5 py-0.2 mt-1 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300">
                 Superadmin
               </span>
             </button>
@@ -141,7 +141,7 @@
         <!-- Login Form -->
         <form @submit.prevent="handleLogin" class="space-y-4 pt-2">
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
               Work Email Address
             </label>
             <div class="relative">
@@ -157,7 +157,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
               Security Pin / Password
             </label>
             <div class="relative">
@@ -173,19 +173,19 @@
 
           <!-- Role Permissions Preview Box -->
           <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 space-y-1">
-            <span class="font-bold text-slate-800 dark:text-slate-200 block">
+            <span class="font-semibold text-slate-800 dark:text-slate-200 block">
               Re.juve Operational Privileges:
             </span>
-            <p v-if="selectedRole === 'CREW'" class="text-[11px] leading-relaxed">
+            <p v-if="selectedRole === 'CREW'" class="text-xs leading-relaxed">
               👤 <strong>Store Crew</strong>: Monitor daily store sanitation, cold chain temperatures (2-4°C), check awarded ⭐ stars, and follow Re.juve store rankings.
             </p>
-            <p v-else-if="selectedRole === 'SUPERVISOR'" class="text-[11px] leading-relaxed">
+            <p v-else-if="selectedRole === 'SUPERVISOR'" class="text-xs leading-relaxed">
               📋 <strong>Area Supervisor</strong>: Conduct weekly store operational audits, evaluate all store Crew, attach photo proof (Chillers, HACCP log, bar cleanliness), and submit to Head.
             </p>
-            <p v-else-if="selectedRole === 'HEAD'" class="text-[11px] leading-relaxed">
+            <p v-else-if="selectedRole === 'HEAD'" class="text-xs leading-relaxed">
               🛡️ <strong>Head of Operations</strong>: Review all store branch evaluations, make final <strong>APPROVE</strong> decisions to award stars, or request <strong>REVISE</strong> with notes.
             </p>
-            <p v-else class="text-[11px] leading-relaxed">
+            <p v-else class="text-xs leading-relaxed">
               👑 <strong>System Superadmin</strong>: Full maintenance control — Create Batches / Gerai, manage Users, assign Crew to Batches, and configure Store Missions.
             </p>
           </div>
@@ -194,7 +194,7 @@
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-xs font-extrabold bg-gradient-to-r from-[#6b133a] via-[#831843] to-[#9d174d] hover:from-[#4a0e28] hover:to-[#6b133a] text-white shadow-lg shadow-[#831843]/30 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+            class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-xs font-semibold bg-gradient-to-r from-[#6b133a] via-[#831843] to-[#9d174d] hover:from-[#4a0e28] hover:to-[#6b133a] text-white shadow-lg shadow-[#831843]/30 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           >
             <span v-if="isLoading" class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
             <LogIn v-else class="w-4 h-4" />

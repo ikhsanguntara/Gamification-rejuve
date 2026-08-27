@@ -6,9 +6,9 @@
         <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-1">
           <span>Administrator</span>
           <span>/</span>
-          <span class="text-indigo-600 dark:text-indigo-400 font-bold">User Management</span>
+          <span class="text-indigo-600 dark:text-indigo-400 font-semibold">User Management</span>
         </div>
-        <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
           Manajemen User & Penugasan Gerai
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
@@ -18,7 +18,7 @@
 
       <NuxtLink
         to="/admin/users/create"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer self-start sm:self-auto"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-all shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer self-start sm:self-auto"
       >
         <Plus class="w-4 h-4" />
         <span>+ Tambah User Baru</span>
@@ -41,7 +41,7 @@
         <!-- Role Filter -->
         <select
           v-model="userRoleFilter"
-          class="text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+          class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
         >
           <option value="ALL">Semua Role</option>
           <option value="CREW">Crew Member (Store Specialist)</option>
@@ -53,7 +53,7 @@
         <!-- Batch Filter -->
         <select
           v-model="userBatchFilter"
-          class="text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+          class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
         >
           <option value="ALL">Semua Batch</option>
           <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
@@ -67,7 +67,7 @@
     <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shadow-sm">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-400 font-bold uppercase border-b border-slate-200/80 dark:border-slate-800">
+          <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-400 font-semibold uppercase border-b border-slate-200/80 dark:border-slate-800">
             <tr>
               <th class="py-3.5 px-4">User</th>
               <th class="py-3.5 px-4">Role & Jabatan</th>
@@ -91,8 +91,8 @@
                     class="w-9 h-9 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
                   />
                   <div>
-                    <h4 class="font-bold text-slate-900 dark:text-white">{{ u.name }}</h4>
-                    <p class="text-[11px] text-slate-400">{{ u.email }}</p>
+                    <h4 class="font-semibold text-slate-900 dark:text-white">{{ u.name }}</h4>
+                    <p class="text-xs text-slate-400">{{ u.email }}</p>
                   </div>
                 </div>
               </td>
@@ -100,7 +100,7 @@
               <!-- Role -->
               <td class="py-3 px-4">
                 <span
-                  class="text-[10px] font-extrabold px-2 py-0.5 rounded-full inline-block mb-0.5"
+                  class="text-xs font-semibold px-2 py-0.5 rounded-full inline-block mb-0.5"
                   :class="[
                     u.role === 'CREW' ? 'bg-[#499ec7]/15 text-[#24779f] dark:text-[#84cded]' :
                     u.role === 'SUPERVISOR' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
@@ -110,7 +110,7 @@
                 >
                   {{ u.role }}
                 </span>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ u.position }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">{{ u.position }}</p>
               </td>
 
               <!-- Assigned Batch & Quick Move Dropdown -->
@@ -119,7 +119,7 @@
                   <select
                     :value="u.batchId"
                     @change="handleReassignBatch(u.id, $event.target.value)"
-                    class="text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-2.5 py-1 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                    class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-2.5 py-1 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                   >
                     <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
                       {{ b.name.split('—')[1] || b.name }}
@@ -133,7 +133,7 @@
 
               <!-- Stars -->
               <td class="py-3 px-4 text-center">
-                <span v-if="u.role === 'CREW'" class="font-extrabold text-amber-500">
+                <span v-if="u.role === 'CREW'" class="font-semibold text-amber-500">
                   ⭐ {{ (u.stars || 0).toLocaleString() }}
                 </span>
                 <span v-else class="text-slate-400">—</span>

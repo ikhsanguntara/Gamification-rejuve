@@ -17,7 +17,7 @@
           <Layers class="w-5 h-5" />
         </div>
         <div>
-          <h2 class="text-xl font-black text-slate-900 dark:text-white">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">
             Tambah Batch Baru
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">
@@ -28,7 +28,7 @@
 
       <form @submit.prevent="handleSubmit" class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Batch *</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Batch *</label>
           <input
             v-model="form.name"
             type="text"
@@ -40,7 +40,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Kode Batch *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Batch *</label>
             <input
               v-model="form.code"
               type="text"
@@ -51,7 +51,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Lokasi Mall / Outlet *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Lokasi Mall / Outlet *</label>
             <input
               v-model="form.storeLocation"
               type="text"
@@ -63,7 +63,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Deskripsi Gerai</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi Gerai</label>
           <textarea
             v-model="form.description"
             rows="2"
@@ -81,11 +81,11 @@
               class="w-4 h-4 mt-0.5 rounded text-[#499ec7] focus:ring-[#499ec7] cursor-pointer"
             />
             <div class="flex-1">
-              <span class="text-xs font-black text-slate-900 dark:text-white block flex items-center gap-1.5">
+              <span class="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span>⚡ Terapkan Paket Misi Standar Re.juve (12 Misi Otomatis)</span>
-                <span class="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Direkomendasikan</span>
+                <span class="text-xs font-semibold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Direkomendasikan</span>
               </span>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                 Sistem akan <strong>otomatis membuat 12 Misi Lengkap</strong> (Cold Chain 2-4°C, Sanitasi Swab Test, Uji Brix Buah, Rasio Jus 100%, Rekonsiliasi Stok, Layanan Barista, Audit HACCP) untuk Week 1, 2, dan 3. Anda <strong>tidak perlu mengetik misi satu per satu</strong>!
               </p>
             </div>
@@ -95,13 +95,13 @@
         <div class="pt-4 flex items-center justify-end gap-3">
           <NuxtLink
             to="/admin/batches"
-            class="px-5 py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            class="px-5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             Batal
           </NuxtLink>
           <button
             type="submit"
-            class="px-6 py-2.5 text-xs font-bold rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white shadow-md shadow-[#499ec7]/20 active:scale-95 cursor-pointer"
+            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white shadow-md shadow-[#499ec7]/20 active:scale-95 cursor-pointer"
           >
             Buat Cabang Gerai
           </button>

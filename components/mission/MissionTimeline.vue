@@ -8,8 +8,8 @@
         </div>
         <div>
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-900 dark:text-white">Mission Assigned & Initiated</span>
-            <span class="text-[10px] text-slate-400">10 Aug 2026</span>
+            <span class="text-xs font-semibold text-slate-900 dark:text-white">Mission Assigned & Initiated</span>
+            <span class="text-xs text-slate-400">10 Aug 2026</span>
           </div>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Mission allocated to {{ crewName || 'Crew' }} for Batch Alpha.
@@ -28,10 +28,10 @@
         </div>
         <div>
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-900 dark:text-white">
+            <span class="text-xs font-semibold text-slate-900 dark:text-white">
               Supervisor Evaluation (Score: {{ evaluation.score }}/100)
             </span>
-            <span class="text-[10px] text-slate-400">{{ formatDate(evaluation.evaluatedAt, true) }}</span>
+            <span class="text-xs text-slate-400">{{ formatDate(evaluation.evaluatedAt, true) }}</span>
           </div>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Evaluated by {{ evaluation.supervisorName }}. Calculated: ⭐ {{ evaluation.calculatedStars }} Stars.
@@ -51,17 +51,17 @@
           </div>
           <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-rose-700 dark:text-rose-300">
+              <span class="text-xs font-semibold text-rose-700 dark:text-rose-300">
                 Revision #{{ rev.revisionNumber }} Requested by {{ rev.requestedBy }}
               </span>
-              <span class="text-[10px] text-rose-500">{{ formatDate(rev.requestedAt, true) }}</span>
+              <span class="text-xs text-rose-500">{{ formatDate(rev.requestedAt, true) }}</span>
             </div>
             <p class="text-xs text-rose-800 dark:text-rose-200 mt-1 italic">
               "{{ rev.note }}"
             </p>
             <span
               v-if="rev.status === 'RESOLVED'"
-              class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-1.5"
+              class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 mt-1.5"
             >
               <CheckCircle2 class="w-3 h-3" /> Resolved & Resubmitted on {{ formatDate(rev.resolvedAt, true) }}
             </span>
@@ -81,10 +81,10 @@
         </div>
         <div>
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-900 dark:text-white">
+            <span class="text-xs font-semibold text-slate-900 dark:text-white">
               {{ isApproved ? 'Head Approved & Stars Awarded' : isRevision ? 'Revision Required by Head' : 'Pending Head Approval' }}
             </span>
-            <span v-if="approvalDate" class="text-[10px] text-slate-400">{{ formatDate(approvalDate, true) }}</span>
+            <span v-if="approvalDate" class="text-xs text-slate-400">{{ formatDate(approvalDate, true) }}</span>
           </div>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             <span v-if="isApproved">

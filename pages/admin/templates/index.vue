@@ -6,9 +6,9 @@
         <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-1">
           <span>Administrator</span>
           <span>/</span>
-          <span class="text-amber-600 dark:text-amber-400 font-bold">Mission Templates</span>
+          <span class="text-amber-600 dark:text-amber-400 font-semibold">Mission Templates</span>
         </div>
-        <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
           Master Template Misi & Paket Gerai
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
@@ -19,7 +19,7 @@
       <button
         type="button"
         @click="openApplyPackageModal"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#499ec7] to-[#24779f] hover:from-[#24779f] hover:to-[#1d5e7f] text-white text-xs font-extrabold transition-all shadow-md shadow-[#499ec7]/25 active:scale-95 cursor-pointer self-start sm:self-auto"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#499ec7] to-[#24779f] hover:from-[#24779f] hover:to-[#1d5e7f] text-white text-xs font-semibold transition-all shadow-md shadow-[#499ec7]/25 active:scale-95 cursor-pointer self-start sm:self-auto"
       >
         <Sparkles class="w-4 h-4" />
         <span>⚡ Terapkan Paket 12 Misi ke Gerai</span>
@@ -32,11 +32,11 @@
 
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-amber-300 text-[10px] font-bold mb-3 border border-white/15">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-amber-300 text-xs font-semibold mb-3 border border-white/15">
             <Sparkles class="w-3.5 h-3.5 fill-amber-300" />
             <span>Master Re.juve SOP Package</span>
           </span>
-          <h3 class="text-xl sm:text-2xl font-black tracking-tight">
+          <h3 class="text-xl sm:text-2xl font-bold tracking-tight">
             Paket Standar Operasional Gerai (12 Misi / 3 Minggu)
           </h3>
           <p class="text-xs sm:text-sm text-slate-200 mt-1.5 max-w-xl leading-relaxed">
@@ -48,7 +48,7 @@
           <button
             type="button"
             @click="openApplyPackageModal"
-            class="px-5 py-3 rounded-2xl bg-white text-slate-900 font-extrabold text-xs shadow-lg hover:bg-slate-100 transition-all active:scale-95 cursor-pointer flex items-center gap-2"
+            class="px-5 py-3 rounded-2xl bg-white text-slate-900 font-semibold text-xs shadow-lg hover:bg-slate-100 transition-all active:scale-95 cursor-pointer flex items-center gap-2"
           >
             <Download class="w-4 h-4 text-[#499ec7]" />
             <span>Terapkan ke Cabang Gerai</span>
@@ -66,7 +66,7 @@
             :key="w"
             type="button"
             @click="activeWeekTab = w"
-            class="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            class="px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
             :class="[
               activeWeekTab === w
                 ? 'bg-white dark:bg-slate-900 text-[#499ec7] dark:text-[#84cded] shadow-sm'
@@ -91,15 +91,15 @@
         >
           <div>
             <div class="flex items-center justify-between gap-2 mb-2">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#499ec7]/10 text-[#24779f] dark:text-[#84cded]">
                 {{ tmpl.codePrefix }} • Week {{ tmpl.week }}
               </span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                 {{ tmpl.category }}
               </span>
             </div>
 
-            <h4 class="text-sm font-black text-slate-900 dark:text-white">
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-white">
               {{ tmpl.title }}
             </h4>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
@@ -108,14 +108,14 @@
 
             <!-- Requirements Preview -->
             <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">
                 Standard SOP Checklist ({{ tmpl.requirements.length }} Poin):
               </span>
               <ul class="space-y-1">
                 <li
                   v-for="(req, idx) in tmpl.requirements"
                   :key="idx"
-                  class="flex items-start gap-2 text-[11px] text-slate-600 dark:text-slate-300"
+                  class="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300"
                 >
                   <Check class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
                   <span>{{ req }}</span>
@@ -138,13 +138,13 @@
     >
       <form @submit.prevent="executeApplyPackage" class="space-y-4 py-2">
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
             Pilih Cabang Gerai Tujuan *
           </label>
           <select
             v-model="targetBatchId"
             required
-            class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
+            class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#499ec7]"
           >
             <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
               {{ b.name.split('—')[1] || b.name }} ({{ b.code }})
@@ -153,13 +153,13 @@
         </div>
 
         <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700 text-xs space-y-1.5">
-          <p class="font-bold text-slate-900 dark:text-white">Yang akan dibuat otomatis:</p>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400">
+          <p class="font-semibold text-slate-900 dark:text-white">Yang akan dibuat otomatis:</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
             • 4 Misi Week 1 (Setup, Cold Chain 2-4°C, Sanitasi Swab Test, K3)<br />
             • 4 Misi Week 2 (Ekstraksi 100% Murni, Sanitasi Bar, Stok, Barista)<br />
             • 4 Misi Week 3 (HACCP Certification, Servis Chiller, Sign-off)
           </p>
-          <p class="text-[11px] text-[#24779f] dark:text-[#84cded] font-semibold pt-1">
+          <p class="text-xs text-[#24779f] dark:text-[#84cded] font-semibold pt-1">
             ✓ Otomatis menugaskan seluruh Crew yang terdaftar di cabang tersebut.
           </p>
         </div>
@@ -168,13 +168,13 @@
           <button
             type="button"
             @click="showApplyModal = false"
-            class="px-5 py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            class="px-5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             Batal
           </button>
           <button
             type="submit"
-            class="px-6 py-2.5 text-xs font-bold rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white shadow-md shadow-[#499ec7]/20 active:scale-95 cursor-pointer"
+            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white shadow-md shadow-[#499ec7]/20 active:scale-95 cursor-pointer"
           >
             Terapkan 12 Misi Sekarang
           </button>

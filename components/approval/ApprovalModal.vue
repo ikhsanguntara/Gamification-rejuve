@@ -17,14 +17,14 @@
       <!-- Store Mission Summary Box -->
       <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
         <div>
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Assessed Store Crew</span>
-          <p class="text-xs font-bold text-slate-900 dark:text-white">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Assessed Store Crew</span>
+          <p class="text-xs font-semibold text-slate-900 dark:text-white">
             {{ item.crewScores?.length || 0 }} Crew Members
           </p>
         </div>
         <div class="text-right">
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Average Score</span>
-          <p class="text-sm font-extrabold text-[#499ec7] dark:text-[#84cded]">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Average Score</span>
+          <p class="text-sm font-bold text-[#499ec7] dark:text-[#84cded]">
             {{ item.averageScore || item.score }}/100
           </p>
         </div>
@@ -32,21 +32,21 @@
 
       <!-- Crew Scores List -->
       <div class="space-y-1.5">
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
           Crew Members & Star Rewards:
         </span>
         <div class="max-h-40 overflow-y-auto space-y-1 p-2 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-xs">
           <div
             v-for="cs in item.crewScores"
             :key="cs.crewId"
-            class="flex items-center justify-between py-1 px-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-[11px]"
+            class="flex items-center justify-between py-1 px-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs"
           >
-            <span class="font-bold text-slate-800 dark:text-slate-200 truncate">
+            <span class="font-medium text-slate-800 dark:text-slate-200 truncate">
               {{ cs.crewName }}
             </span>
             <div class="flex items-center gap-2 flex-shrink-0">
               <span class="font-semibold text-slate-500">{{ cs.score }}/100</span>
-              <span class="text-amber-500 font-extrabold">+{{ cs.calculatedStars }} ⭐</span>
+              <span class="text-amber-500 font-semibold">+{{ cs.calculatedStars }} ⭐</span>
             </div>
           </div>
         </div>
@@ -61,14 +61,14 @@
       <button
         type="button"
         @click="$emit('cancel')"
-        class="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
       >
         Cancel
       </button>
       <button
         type="button"
         @click="$emit('confirm')"
-        class="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-[#499ec7] to-[#24779f] hover:from-[#24779f] hover:to-[#1d5e7f] text-white shadow-md shadow-[#499ec7]/20 transition-all active:scale-95"
+        class="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-[#499ec7] to-[#24779f] hover:from-[#24779f] hover:to-[#1d5e7f] text-white shadow-md shadow-[#499ec7]/20 transition-all active:scale-95"
       >
         <Star class="w-3.5 h-3.5 fill-white" />
         <span>Approve All Crew</span>

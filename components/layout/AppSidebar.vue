@@ -11,10 +11,10 @@
       </div>
       <div>
         <div class="flex items-center gap-1.5">
-          <h1 class="font-black text-base text-slate-900 dark:text-white leading-tight">
+          <h1 class="font-bold text-base text-slate-900 dark:text-white leading-tight">
             Re.juve
           </h1>
-          <span class="text-[9px] font-black px-1.5 py-0.2 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
+          <span class="text-xs font-semibold px-1.5 py-0.2 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
             SOP
           </span>
         </div>
@@ -25,11 +25,11 @@
     <!-- Active Role Indicator Badge -->
     <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 flex-shrink-0">
       <div class="flex items-center justify-between">
-        <span class="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">
+        <span class="text-xs font-semibold tracking-wider uppercase text-slate-400 dark:text-slate-500">
           Current Persona
         </span>
         <span
-          class="text-xs font-bold px-2 py-0.5 rounded-md"
+          class="text-xs font-semibold px-2 py-0.5 rounded-md"
           :class="roleBadgeStyle"
         >
           {{ userStore.currentUser.roleTitle }}
@@ -44,7 +44,7 @@
         <button
           type="button"
           @click="isAdminOpen = !isAdminOpen"
-          class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer"
           :class="[
             isAdminActive
               ? 'bg-[#24779f]/10 text-[#24779f] dark:text-[#84cded] dark:bg-[#499ec7]/15'
@@ -53,7 +53,7 @@
         >
           <div class="flex items-center gap-3">
             <Settings class="w-4 h-4 text-[#499ec7]" />
-            <span class="font-extrabold text-xs">Administrator</span>
+            <span class="font-semibold text-xs">Administrator</span>
           </div>
           <ChevronUp v-if="isAdminOpen" class="w-4 h-4 text-slate-400 transition-transform" />
           <ChevronDown v-else class="w-4 h-4 text-slate-400 transition-transform" />
@@ -75,7 +75,7 @@
               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
               :class="[
                 $route.path.startsWith('/admin/users')
-                  ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-bold'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-semibold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               ]"
             >
@@ -92,7 +92,7 @@
               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
               :class="[
                 $route.path.startsWith('/admin/batches')
-                  ? 'bg-[#499ec7]/15 text-[#24779f] dark:text-[#84cded] font-bold'
+                  ? 'bg-[#499ec7]/15 text-[#24779f] dark:text-[#84cded] font-semibold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               ]"
             >
@@ -109,7 +109,7 @@
               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
               :class="[
                 $route.path.startsWith('/admin/missions')
-                  ? 'bg-[#963189]/15 text-[#963189] dark:text-[#db92d7] font-bold'
+                  ? 'bg-[#963189]/15 text-[#963189] dark:text-[#db92d7] font-semibold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               ]"
             >
@@ -126,7 +126,7 @@
               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
               :class="[
                 $route.path.startsWith('/admin/templates')
-                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold'
+                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               ]"
             >
@@ -145,10 +145,10 @@
         v-for="item in navItems"
         :key="item.path"
         :to="item.path"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all group"
         :class="[
           $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard' && !item.path.startsWith('/admin'))
-            ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] dark:bg-[#831843]/20 font-bold shadow-sm'
+            ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] dark:bg-[#831843]/20 font-semibold shadow-sm'
             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
         ]"
       >
@@ -164,7 +164,7 @@
         <span>{{ item.label }}</span>
         <span
           v-if="item.badge"
-          class="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full"
+          class="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full"
           :class="item.badgeStyle || 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300'"
         >
           {{ item.badge }}
@@ -175,10 +175,10 @@
     <!-- Active Batch & Week Mini Widget -->
     <div class="p-3.5 m-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[130px]">
+        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[130px]">
           {{ batchStore.currentBatch.name }}
         </span>
-        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+        <span class="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
           Week {{ batchStore.selectedWeek }} Active
         </span>
       </div>
@@ -188,9 +188,9 @@
           :style="{ width: `${batchStore.currentBatch.weeks[batchStore.selectedWeek - 1]?.completionRate || 65}%` }"
         ></div>
       </div>
-      <div class="flex items-center justify-between text-[10px] text-slate-400 mt-1.5">
+      <div class="flex items-center justify-between text-xs text-slate-400 mt-1.5">
         <span>Cycle Progress</span>
-        <span class="font-bold">{{ batchStore.currentBatch.weeks[batchStore.selectedWeek - 1]?.completionRate || 65 }}%</span>
+        <span class="font-semibold">{{ batchStore.currentBatch.weeks[batchStore.selectedWeek - 1]?.completionRate || 65 }}%</span>
       </div>
     </div>
 

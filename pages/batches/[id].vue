@@ -15,15 +15,15 @@
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
           <div class="flex items-center gap-2.5 mb-2">
-            <span class="text-xs font-bold text-slate-400 dark:text-slate-500">
+            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500">
               {{ currentBatch.code }}
             </span>
-            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
               {{ currentBatch.status }}
             </span>
           </div>
 
-          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             {{ currentBatch.name }}
           </h1>
           <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
@@ -34,26 +34,26 @@
         <!-- Quick Summary Box -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800">
           <div class="text-center p-2">
-            <span class="text-[11px] font-bold text-slate-400 uppercase">Crew Size</span>
-            <p class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Crew Size</span>
+            <p class="text-base font-bold text-slate-900 dark:text-white mt-0.5">
               {{ currentBatch.totalCrew }} / 20
             </p>
           </div>
           <div class="text-center p-2">
-            <span class="text-[11px] font-bold text-slate-400 uppercase">Avg Score</span>
-            <p class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Avg Score</span>
+            <p class="text-base font-bold text-slate-900 dark:text-white mt-0.5">
               {{ currentBatch.averageScore }}%
             </p>
           </div>
           <div class="text-center p-2">
-            <span class="text-[11px] font-bold text-slate-400 uppercase">Completed</span>
-            <p class="text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Completed</span>
+            <p class="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
               {{ currentBatch.completedMissions }}/{{ currentBatch.totalMissions }}
             </p>
           </div>
           <div class="text-center p-2">
-            <span class="text-[11px] font-bold text-slate-400 uppercase">Total Stars</span>
-            <p class="text-base font-extrabold text-amber-500 mt-0.5 flex items-center justify-center gap-1">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Total Stars</span>
+            <p class="text-base font-bold text-amber-500 mt-0.5 flex items-center justify-center gap-1">
               <Star class="w-4 h-4 fill-amber-400" />
               {{ currentBatch.totalStars.toLocaleString() }}
             </p>
@@ -69,7 +69,7 @@
     <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6">
       <div class="flex items-center justify-between mb-5">
         <div>
-          <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+          <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
             Week {{ batchStore.selectedWeek }} Missions
           </h3>
           <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">

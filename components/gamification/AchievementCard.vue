@@ -26,13 +26,13 @@
         <div class="flex items-center gap-2">
           <span
             v-if="achievement.starRewardBonus"
-            class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex items-center gap-0.5"
+            class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex items-center gap-0.5"
           >
             ⭐ +{{ achievement.starRewardBonus }}
           </span>
 
           <span
-            class="text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
+            class="text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
             :class="[
               achievement.isUnlocked
                 ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
@@ -47,7 +47,7 @@
       </div>
 
       <!-- Title & Description -->
-      <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+      <h4 class="text-sm font-semibold text-slate-900 dark:text-white">
         {{ achievement.title }}
       </h4>
       <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
@@ -60,14 +60,14 @@
       <!-- If Unlocked -->
       <div v-if="achievement.isUnlocked" class="flex items-center justify-between text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
         <span>Completed ✓</span>
-        <span class="text-[11px] text-slate-400">Unlocked {{ achievement.unlockedAt }}</span>
+        <span class="text-xs text-slate-400">Unlocked {{ achievement.unlockedAt }}</span>
       </div>
 
       <!-- If Locked: Progress Bar -->
       <div v-else class="space-y-1.5">
-        <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
           <span>Progress</span>
-          <span class="font-bold text-slate-700 dark:text-slate-300">
+          <span class="font-semibold text-slate-700 dark:text-slate-300">
             {{ achievement.currentValue }} / {{ achievement.targetValue }}
           </span>
         </div>

@@ -13,21 +13,21 @@
               :alt="userStore.currentUser.name"
               class="w-14 h-14 rounded-2xl object-cover ring-4 ring-amber-400 shadow-xl"
             />
-            <span class="absolute -bottom-1.5 -right-1 px-1.5 py-0.2 rounded-full bg-amber-400 text-amber-950 text-[9px] font-black shadow">
+            <span class="absolute -bottom-1.5 -right-1 px-1.5 py-0.2 rounded-full bg-amber-400 text-amber-950 text-xs font-semibold shadow">
               LVL {{ myProgress.currentLevel }}
             </span>
           </div>
 
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 flex items-center gap-1 shadow-sm">
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 flex items-center gap-1 shadow-sm">
                 <span>📍 POS AKTIF: MISI #6</span>
               </span>
-              <span class="text-xs text-amber-200 font-bold">
+              <span class="text-xs text-amber-200 font-medium">
                 {{ batchStore.currentBatch.name }}
               </span>
             </div>
-            <h3 class="text-lg sm:text-2xl font-black tracking-tight mt-0.5">
+            <h3 class="text-lg sm:text-2xl font-bold tracking-tight mt-0.5">
               Ekspedisi Bintang: {{ userStore.currentUser.name }}
             </h3>
             <p class="text-xs text-slate-200 mt-0.5">
@@ -39,20 +39,20 @@
         <!-- Star Vault & Stage Status -->
         <div class="flex items-center gap-3 bg-black/25 backdrop-blur-md p-3 rounded-2xl border border-white/15 self-start md:self-auto">
           <div class="text-center px-2">
-            <span class="text-[10px] text-slate-300 font-bold uppercase block">Pundi Bintang</span>
-            <span class="text-base font-black text-amber-300 flex items-center justify-center gap-1">
+            <span class="text-xs text-slate-300 font-semibold uppercase block">Pundi Bintang</span>
+            <span class="text-base font-bold text-amber-300 flex items-center justify-center gap-1">
               ⭐ {{ myTotalStars.toLocaleString() }}
             </span>
           </div>
           <div class="w-px h-8 bg-white/20"></div>
           <div class="text-center px-2">
-            <span class="text-[10px] text-slate-300 font-bold uppercase block">Peringkat</span>
-            <span class="text-base font-black text-emerald-400">#{{ myRank }}</span>
+            <span class="text-xs text-slate-300 font-semibold uppercase block">Peringkat</span>
+            <span class="text-base font-bold text-emerald-400">#{{ myRank }}</span>
           </div>
           <div class="w-px h-8 bg-white/20"></div>
           <div class="text-center px-2">
-            <span class="text-[10px] text-slate-300 font-bold uppercase block">Progres Misi</span>
-            <span class="text-base font-black text-amber-400">{{ completedMissionsCount }}/12</span>
+            <span class="text-xs text-slate-300 font-semibold uppercase block">Progres Misi</span>
+            <span class="text-base font-bold text-amber-400">{{ completedMissionsCount }}/12</span>
           </div>
         </div>
       </div>
@@ -154,10 +154,10 @@
           </div>
           <div class="absolute -top-4 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white border-2 border-emerald-300 shadow-md">
             <span class="text-xs">🏆</span>
-            <span class="text-[9px] font-black uppercase">PULAU 1 SELESAI</span>
+            <span class="text-xs font-semibold uppercase">PULAU 1 SELESAI</span>
           </div>
           <div class="mt-1 px-2.5 py-0.5 rounded-lg bg-white/95 dark:bg-slate-900/95 text-slate-900 dark:text-white border border-emerald-500/40 shadow-sm text-center">
-            <h4 class="text-[11px] font-black">Pulau Suhu & Sanitasi</h4>
+            <h4 class="text-xs font-semibold">Pulau Suhu & Sanitasi</h4>
           </div>
         </div>
       </div>
@@ -179,12 +179,12 @@
               <span>🍍</span>
             </div>
           </div>
-          <div class="absolute -top-4 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black shadow-md border border-white">
+          <div class="absolute -top-4 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-bold shadow-md border border-white">
             <span class="animate-pulse text-xs">⚡</span>
-            <span class="text-[9px] font-black uppercase">PULAU 2 AKTIF</span>
+            <span class="text-xs font-semibold uppercase">PULAU 2 AKTIF</span>
           </div>
-          <div class="mt-1 px-2.5 py-0.5 rounded-lg bg-amber-400 text-amber-950 font-black shadow-sm text-center">
-            <h4 class="text-[11px] font-black">Pulau Rasa & Layanan</h4>
+          <div class="mt-1 px-2.5 py-0.5 rounded-lg bg-amber-400 text-amber-950 font-semibold shadow-sm text-center">
+            <h4 class="text-xs font-semibold">Pulau Rasa & Layanan</h4>
           </div>
         </div>
       </div>
@@ -208,10 +208,10 @@
           </div>
           <div class="absolute -top-4 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900 text-amber-300 border border-slate-700 shadow-md">
             <Lock class="w-3 h-3 text-amber-400" />
-            <span class="text-[9px] font-black uppercase">PULAU 3 TERKUNCI</span>
+            <span class="text-xs font-semibold uppercase">PULAU 3 TERKUNCI</span>
           </div>
           <div class="mt-1 px-2.5 py-0.5 rounded-lg bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 border border-slate-300 shadow-sm text-center">
-            <h4 class="text-[11px] font-black">Pulau Audit & Stok</h4>
+            <h4 class="text-xs font-semibold">Pulau Audit & Stok</h4>
           </div>
         </div>
       </div>
@@ -228,7 +228,7 @@
       >
         <!-- ⭐ Floating Star Badge Above Dot -->
         <div
-          class="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-2 py-0.5 rounded-full shadow-lg border whitespace-nowrap text-[10px] font-black transition-transform group-hover:-translate-y-1"
+          class="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-2 py-0.5 rounded-full shadow-lg border whitespace-nowrap text-xs font-semibold transition-transform group-hover:-translate-y-1"
           :class="[
             node.status === 'COMPLETED'
               ? 'bg-amber-400 text-amber-950 border-white ring-2 ring-amber-300/60 shadow-amber-400/30'
@@ -250,7 +250,7 @@
           v-if="node.isActive"
           class="absolute -top-16 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center animate-bob-character pointer-events-none"
         >
-          <div class="px-2 py-0.5 rounded-full bg-gradient-to-r from-[#499ec7] to-[#24779f] text-white text-[8px] font-black shadow-lg border border-white flex items-center gap-1 mb-0.5 whitespace-nowrap">
+          <div class="px-2 py-0.5 rounded-full bg-gradient-to-r from-[#499ec7] to-[#24779f] text-white text-xs font-semibold shadow-lg border border-white flex items-center gap-1 mb-0.5 whitespace-nowrap">
             <span class="animate-pulse">📍</span>
             <span>POS ANDA</span>
           </div>
@@ -263,7 +263,7 @@
 
         <!-- Main Waypoint Dot Circle -->
         <div
-          class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-black text-xs shadow-xl border-2 transition-all"
+          class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-bold text-xs shadow-xl border-2 transition-all"
           :class="[
             selectedNode?.id === node.id
               ? 'bg-[#499ec7] text-white ring-4 ring-[#499ec7]/50 scale-110'
@@ -289,10 +289,10 @@
 
         <!-- Tooltip Label on Hover -->
         <div class="absolute top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center pointer-events-none z-50">
-          <div class="px-2.5 py-1 rounded-xl bg-slate-900/95 text-white text-[10px] font-bold shadow-2xl border border-slate-700 whitespace-nowrap text-center backdrop-blur-md">
-            <p class="font-extrabold text-amber-300">{{ node.code }} • Pos {{ idx + 1 }}</p>
+          <div class="px-2.5 py-1 rounded-xl bg-slate-900/95 text-white text-xs font-semibold shadow-2xl border border-slate-700 whitespace-nowrap text-center backdrop-blur-md">
+            <p class="font-semibold text-amber-300">{{ node.code }} • Pos {{ idx + 1 }}</p>
             <p class="text-slate-200 max-w-[150px] truncate">{{ node.title }}</p>
-            <p class="text-[9px] text-emerald-400 font-bold mt-0.5">
+            <p class="text-xs text-emerald-400 font-semibold mt-0.5">
               {{ node.status === 'COMPLETED' ? `Skor: ${node.score}/100` : node.statusLabel }}
             </p>
           </div>
@@ -317,11 +317,11 @@
         <!-- Star Reward Highlight Card -->
         <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent border border-amber-300/60 dark:border-amber-700/60 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-black text-lg shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-bold text-lg shadow-sm">
               ⭐
             </div>
             <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">
                 Reward Bintang Mutu:
               </span>
               <strong class="text-xs text-slate-900 dark:text-white">
@@ -331,7 +331,7 @@
           </div>
 
           <span
-            class="text-[10px] font-black px-2.5 py-1 rounded-full uppercase"
+            class="text-xs font-semibold px-2.5 py-1 rounded-full uppercase"
             :class="[
               selectedNode.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
               selectedNode.status === 'PENDING_REVIEW' ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300' :
@@ -345,7 +345,7 @@
 
         <!-- SOP Checklist -->
         <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 space-y-2">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">
             Checklist Standar SOP Gerai:
           </span>
           <ul class="space-y-1.5">
@@ -364,13 +364,13 @@
           <button
             type="button"
             @click="selectedNode = null"
-            class="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer"
+            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer"
           >
             Tutup
           </button>
           <NuxtLink
             :to="`/missions/${selectedNode.id}`"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white shadow-md shadow-[#499ec7]/20 flex items-center gap-1.5 cursor-pointer"
+            class="px-5 py-2 text-xs font-semibold rounded-xl bg-[#499ec7] hover:bg-[#24779f] text-white shadow-md shadow-[#499ec7]/20 flex items-center gap-1.5 cursor-pointer"
           >
             <span>Buka Detail Misi</span>
             <ChevronRight class="w-3.5 h-3.5" />
@@ -400,7 +400,7 @@
           <div class="flex items-center gap-3">
             <span class="text-3xl">{{ islandMeta.icon }}</span>
             <div>
-              <h4 class="text-sm font-black text-slate-900 dark:text-white">
+              <h4 class="text-sm font-semibold text-slate-900 dark:text-white">
                 {{ islandMeta.title }}
               </h4>
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -409,10 +409,10 @@
             </div>
           </div>
           <span
-            class="text-[10px] font-black px-2.5 py-1 rounded-full uppercase flex-shrink-0"
+            class="text-xs font-semibold px-2.5 py-1 rounded-full uppercase flex-shrink-0"
             :class="[
               islandMeta.week === 1 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300' :
-              islandMeta.week === 2 ? 'bg-amber-400 text-amber-950 font-black' :
+              islandMeta.week === 2 ? 'bg-amber-400 text-amber-950 font-semibold' :
               'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
             ]"
           >
@@ -421,7 +421,7 @@
         </div>
 
         <div class="space-y-2.5">
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">
             Daftar 4 Titik Misi di Pulau Ini:
           </span>
 
@@ -432,7 +432,7 @@
           >
             <div class="flex items-center gap-3 min-w-0">
               <div
-                class="w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs flex-shrink-0"
+                class="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0"
                 :class="[
                   m.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
                   m.status === 'PENDING_REVIEW' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
@@ -445,25 +445,25 @@
 
               <div class="min-w-0">
                 <div class="flex items-center gap-1.5">
-                  <span class="text-[10px] font-bold text-slate-400">{{ m.code }}</span>
-                  <span class="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-[#963189]/10 text-[#963189] dark:text-[#db92d7]">
+                  <span class="text-xs font-semibold text-slate-400">{{ m.code }}</span>
+                  <span class="text-xs font-semibold px-1.5 py-0.2 rounded bg-[#963189]/10 text-[#963189] dark:text-[#db92d7]">
                     {{ m.category }}
                   </span>
                 </div>
-                <h5 class="text-xs font-bold text-slate-900 dark:text-white truncate mt-0.5">
+                <h5 class="text-xs font-semibold text-slate-900 dark:text-white truncate mt-0.5">
                   {{ m.title }}
                 </h5>
               </div>
             </div>
 
             <div class="flex items-center gap-2 flex-shrink-0">
-              <span v-if="userStore.isCrew && getCrewMissionScore(m) > 0" class="text-xs font-bold text-amber-500">
+              <span v-if="userStore.isCrew && getCrewMissionScore(m) > 0" class="text-xs font-semibold text-amber-500">
                 ⭐ {{ getCrewMissionScore(m) }}/100
               </span>
 
               <NuxtLink
                 :to="`/missions/${m.id}`"
-                class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#499ec7] hover:text-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition-all flex items-center gap-1"
+                class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#499ec7] hover:text-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all flex items-center gap-1"
               >
                 <span>Buka</span>
                 <ChevronRight class="w-3 h-3" />
