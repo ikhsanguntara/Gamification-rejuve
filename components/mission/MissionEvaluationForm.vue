@@ -692,6 +692,7 @@ const handleSaveDraft = () => {
   const payload = buildPayload('DRAFT')
   evalStore.saveDraft(payload)
   emit('saved', payload)
+  toast.info('Draft Tersimpan', `Evaluasi ${props.mission.title} berhasil disimpan sebagai draft.`)
 }
 
 const handleSubmitClick = () => {
@@ -701,8 +702,9 @@ const handleSubmitClick = () => {
 const executeSubmit = () => {
   showConfirmModal.value = false
   const payload = buildPayload('PENDING_REVIEW')
-  evalStore.submitEvaluation(payload)
+  evalStore.submitForReview(payload)
   emit('submitted', payload)
+  toast.success('Evaluasi Berhasil Dikirim', `${props.mission.title} telah dikirim ke Head untuk ditinjau & disetujui.`)
 }
 </script>
 

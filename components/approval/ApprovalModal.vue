@@ -68,10 +68,10 @@
       <button
         type="button"
         @click="$emit('confirm')"
-        class="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white shadow-md shadow-[#831843]/20 transition-all active:scale-95 cursor-pointer"
+        class="inline-flex items-center gap-2 px-5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white shadow-md shadow-[#831843]/20 transition-all active:scale-95 cursor-pointer"
       >
         <Star class="w-3.5 h-3.5 fill-white" />
-        <span>Approve All Crew</span>
+        <span>Setujui Seluruh Crew</span>
       </button>
     </template>
   </BaseModal>

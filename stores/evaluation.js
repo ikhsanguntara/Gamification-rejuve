@@ -131,6 +131,10 @@ export const useEvaluationStore = defineStore('evaluation', {
       return evalItem
     },
 
+    submitEvaluation(payload) {
+      return this.submitForReview(payload)
+    },
+
     resubmitEvaluation(evaluationId, { crewScores = [], comment, evidence } = {}) {
       const evalItem = this.evaluations.find(e => e.id === evaluationId)
       if (!evalItem) return null

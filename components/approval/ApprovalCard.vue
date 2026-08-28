@@ -133,10 +133,10 @@
         <button
           type="button"
           @click="$emit('approve', item)"
-          class="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white shadow-md shadow-[#831843]/20 transition-all active:scale-95 cursor-pointer"
+          class="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-black bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white shadow-md shadow-[#831843]/20 transition-all active:scale-95 cursor-pointer"
         >
           <Star class="w-3.5 h-3.5 fill-white" />
-          <span>Approve All ({{ item.crewScores?.length || 0 }})</span>
+          <span>Setujui Seluruh Crew ({{ item.crewScores?.length || 0 }})</span>
         </button>
       </div>
 
