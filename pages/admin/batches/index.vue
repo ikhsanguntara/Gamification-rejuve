@@ -21,7 +21,7 @@
         class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white text-xs font-semibold transition-all shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer self-start sm:self-auto"
       >
         <Plus class="w-4 h-4" />
-        <span>+ Buat Batch Baru</span>
+        <span>Buat Batch Baru</span>
       </NuxtLink>
     </div>
 
@@ -53,18 +53,40 @@
             {{ b.description }}
           </p>
 
-          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span class="text-xs text-slate-400 block">Total Crew:</span>
-              <span class="font-semibold text-slate-800 dark:text-slate-200">
-                {{ gamificationStore.crewsByBatch(b.id).length }} Crew Members
-              </span>
+          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5 text-xs">
+            <!-- Supervisor & Head Routing Badges -->
+            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <span>👔 Evaluator:</span>
+                </span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">
+                  {{ b.assignment?.supervisorName || 'Budi Santoso' }}
+                </span>
+              </div>
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <span>👑 Approver:</span>
+                </span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">
+                  {{ b.assignment?.headName || 'Ahmad Dahlan' }}
+                </span>
+              </div>
             </div>
-            <div>
-              <span class="text-xs text-slate-400 block">Active Cycle:</span>
-              <span class="font-semibold text-[#831843] dark:text-[#f472b6]">
-                Week {{ b.currentWeek }} of {{ b.totalWeeks }}
-              </span>
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Total Roster:</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">
+                  {{ b.assignment?.crewIds?.length || gamificationStore.crewsByBatch(b.id).length }} Crew Members
+                </span>
+              </div>
+              <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Siklus Aktif:</span>
+                <span class="font-bold text-[#831843] dark:text-[#f472b6]">
+                  Week {{ b.currentWeek }} of {{ b.totalWeeks }}
+                </span>
+              </div>
             </div>
           </div>
         </div>

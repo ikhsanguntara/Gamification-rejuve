@@ -21,7 +21,7 @@
         class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#831843] hover:bg-[#701a40] text-white text-xs font-semibold transition-all shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer self-start sm:self-auto"
       >
         <Plus class="w-4 h-4" />
-        <span>+ Tambah User Baru</span>
+        <span>Tambah User Baru</span>
       </NuxtLink>
     </div>
 

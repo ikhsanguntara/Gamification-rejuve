@@ -1,5 +1,5 @@
 /**
- * Mock Data: Batch Misi Re.juve
+ * Mock Data: Batch Misi Re.juve dengan Penugasan Supervisor, Head, dan Roster Crew
  */
 
 export const mockBatches = [
@@ -19,6 +19,19 @@ export const mockBatches = [
     averageScore: 93.0,
     totalStars: 1850,
     status: 'ACTIVE',
+    assignment: {
+      supervisorId: 'spv-001',
+      supervisorName: 'Budi Santoso',
+      headId: 'head-001',
+      headName: 'Ahmad Dahlan',
+      crewIds: ['crew-001', 'crew-002', 'crew-003', 'crew-004', 'crew-005', 'crew-006']
+    },
+    approvalConfig: {
+      minScoreFor5Stars: 90,
+      minEvidenceCount: 1,
+      maxRevisions: 3,
+      requireEvidence: true
+    },
     weeks: [
       {
         weekNumber: 1,
@@ -74,6 +87,19 @@ export const mockBatches = [
     averageScore: 91.5,
     totalStars: 1540,
     status: 'ACTIVE',
+    assignment: {
+      supervisorId: 'spv-001',
+      supervisorName: 'Budi Santoso',
+      headId: 'head-001',
+      headName: 'Ahmad Dahlan',
+      crewIds: ['crew-007', 'crew-008', 'crew-009', 'crew-010', 'crew-011']
+    },
+    approvalConfig: {
+      minScoreFor5Stars: 90,
+      minEvidenceCount: 1,
+      maxRevisions: 3,
+      requireEvidence: true
+    },
     weeks: [
       {
         weekNumber: 1,
@@ -123,12 +149,25 @@ export const mockBatches = [
     endDate: '2026-08-30',
     currentWeek: 2,
     totalWeeks: 3,
-    totalCrew: 5,
+    totalCrew: 0,
     totalMissions: 12,
     completedMissions: 3,
     averageScore: 89.8,
     totalStars: 1420,
     status: 'ACTIVE',
+    assignment: {
+      supervisorId: 'spv-001',
+      supervisorName: 'Budi Santoso',
+      headId: 'head-001',
+      headName: 'Ahmad Dahlan',
+      crewIds: []
+    },
+    approvalConfig: {
+      minScoreFor5Stars: 90,
+      minEvidenceCount: 1,
+      maxRevisions: 3,
+      requireEvidence: true
+    },
     weeks: [
       {
         weekNumber: 1,

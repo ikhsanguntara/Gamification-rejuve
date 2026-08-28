@@ -69,28 +69,42 @@ export const useBatchStore = defineStore('batch', {
       const code = payload.code || `BTH-${String(this.batches.length + 1).padStart(2, '0')}`
       const startDate = payload.startDate || '2026-09-01'
       const endDate = payload.endDate || '2026-09-21'
+      const crewIds = payload.assignment?.crewIds || payload.crewIds || []
 
       // Automatically generate 3-week sequence
       const newBatch = {
         id,
         code,
         name: payload.name,
-        storeLocation: payload.storeLocation || payload.name.split('—')[1] || payload.name,
+        storeLocation: payload.storeLocation || payload.name,
         description: payload.description || `Siklus gamifikasi dan penjaminan mutu gerai ${payload.name}.`,
         currentWeek: 1,
         totalWeeks: 3,
         startDate,
         endDate,
         status: payload.status || 'ACTIVE',
-        totalCrew: Number(payload.totalCrew) || 0,
+        totalCrew: crewIds.length,
         totalMissions: 12,
         completedMissions: 0,
         averageScore: 0,
         totalStars: 0,
+        assignment: {
+          supervisorId: payload.assignment?.supervisorId || payload.supervisorId || 'spv-001',
+          supervisorName: payload.assignment?.supervisorName || payload.supervisorName || 'Budi Santoso',
+          headId: payload.assignment?.headId || payload.headId || 'head-001',
+          headName: payload.assignment?.headName || payload.headName || 'Ahmad Dahlan',
+          crewIds: crewIds
+        },
+        approvalConfig: {
+          minScoreFor5Stars: Number(payload.approvalConfig?.minScoreFor5Stars) || 90,
+          minEvidenceCount: Number(payload.approvalConfig?.minEvidenceCount) || 1,
+          maxRevisions: Number(payload.approvalConfig?.maxRevisions) || 3,
+          requireEvidence: payload.approvalConfig?.requireEvidence !== false
+        },
         weeks: [
           {
             weekNumber: 1,
-            title: 'Cold Chain Setup & Operational Safety',
+            title: 'Minggu 1: Suhu & Sanitasi Dasar',
             startDate: 'Week 1',
             endDate: 'Day 7',
             status: 'ACTIVE',
@@ -100,7 +114,7 @@ export const useBatchStore = defineStore('batch', {
           },
           {
             weekNumber: 2,
-            title: 'Core Quality SOP & Fresh Extraction Audit',
+            title: 'Minggu 2: Kualitas Rasa & Layanan',
             startDate: 'Week 2',
             endDate: 'Day 14',
             status: 'LOCKED',
@@ -110,7 +124,7 @@ export const useBatchStore = defineStore('batch', {
           },
           {
             weekNumber: 3,
-            title: 'HACCP Verification & Customer CleanLabel Service',
+            title: 'Minggu 3: Audit Akhir & Stok',
             startDate: 'Week 3',
             endDate: 'Day 21',
             status: 'LOCKED',
@@ -135,7 +149,28 @@ export const useBatchStore = defineStore('batch', {
     updateBatch(id, payload) {
       const batch = this.batches.find(b => b.id === id)
       if (!batch) return null
-      Object.assign(batch, payload)
+
+      // Deep merge assignments and configs
+      if (payload.assignment) {
+        batch.assignment = { ...batch.assignment, ...payload.assignment }
+        if (payload.assignment.crewIds) {
+          batch.totalCrew = payload.assignment.crewIds.length
+        }
+      }
+      if (payload.approvalConfig) {
+        batch.approvalConfig = { ...batch.approvalConfig, ...payload.approvalConfig }
+      }
+
+      Object.assign(batch, {
+        name: payload.name !== undefined ? payload.name : batch.name,
+        code: payload.code !== undefined ? payload.code : batch.code,
+        storeLocation: payload.storeLocation !== undefined ? payload.storeLocation : batch.storeLocation,
+        description: payload.description !== undefined ? payload.description : batch.description,
+        startDate: payload.startDate !== undefined ? payload.startDate : batch.startDate,
+        endDate: payload.endDate !== undefined ? payload.endDate : batch.endDate,
+        status: payload.status !== undefined ? payload.status : batch.status
+      })
+
       return batch
     },
 
