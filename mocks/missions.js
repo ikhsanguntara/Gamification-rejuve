@@ -170,11 +170,18 @@ export const mockMissions = [
     assignedCrewIds: ['crew-001', 'crew-002', 'crew-003', 'crew-004', 'crew-005', 'crew-006'],
     supervisorId: 'spv-001',
     supervisorName: 'Budi Santoso (Supervisor)',
-    status: 'IN_PROGRESS',
-    averageScore: 0,
-    calculatedStars: null,
+    status: 'REVISION_REQUIRED',
+    averageScore: 82,
+    calculatedStars: 4,
     awardedStars: null,
-    crewEvaluations: []
+    crewEvaluations: [
+      { crewId: 'crew-001', score: 85, calculatedStars: 4, status: 'REVISION_REQUIRED' },
+      { crewId: 'crew-002', score: 82, calculatedStars: 4, status: 'REVISION_REQUIRED' },
+      { crewId: 'crew-003', score: 80, calculatedStars: 4, status: 'REVISION_REQUIRED' },
+      { crewId: 'crew-004', score: 84, calculatedStars: 4, status: 'REVISION_REQUIRED' },
+      { crewId: 'crew-005', score: 80, calculatedStars: 4, status: 'REVISION_REQUIRED' },
+      { crewId: 'crew-006', score: 81, calculatedStars: 4, status: 'REVISION_REQUIRED' }
+    ]
   },
   {
     id: 'msn-w2-003',

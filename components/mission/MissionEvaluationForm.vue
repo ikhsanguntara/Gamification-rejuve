@@ -462,6 +462,7 @@ import { ref, reactive, computed, watch } from 'vue'
 import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { useEvaluationStore } from '~/stores/evaluation.js'
+import { useApprovalStore } from '~/stores/approval.js'
 import { useToast } from '~/composables/useToast.js'
 import { calculateStars } from '~/utils/star.js'
 import { isWeekLocked } from '~/utils/status.js'
@@ -532,9 +533,21 @@ const filteredBatchCrews = computed(() => {
   return list
 })
 
+const approvalStore = useApprovalStore()
+
 const revisionNote = computed(() => {
   if (props.initialEvaluation && props.initialEvaluation.revisionHistory && props.initialEvaluation.revisionHistory.length > 0) {
     return props.initialEvaluation.revisionHistory[props.initialEvaluation.revisionHistory.length - 1].note
+  }
+  if (props.initialEvaluation && props.initialEvaluation.revisionNote) {
+    return props.initialEvaluation.revisionNote
+  }
+  const approval = approvalStore.approvals.find(a => a.missionId === props.mission.id)
+  if (approval && approval.revisionNote) {
+    return approval.revisionNote
+  }
+  if (props.mission && props.mission.revisionNote) {
+    return props.mission.revisionNote
   }
   return null
 })

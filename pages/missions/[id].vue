@@ -372,6 +372,7 @@ const userStore = useUserStore()
 const batchStore = useBatchStore()
 const missionStore = useMissionStore()
 const evalStore = useEvaluationStore()
+const approvalStore = useApprovalStore()
 const gamificationStore = useGamificationStore()
 
 const mission = computed(() => {
@@ -428,7 +429,16 @@ const getCrewStars = (crewId) => {
 }
 
 const latestRevisionNote = computed(() => {
-  if (!evaluation.value?.revisionHistory?.length) return null
-  return evaluation.value.revisionHistory[evaluation.value.revisionHistory.length - 1].note
+  if (evaluation.value?.revisionHistory?.length) {
+    return evaluation.value.revisionHistory[evaluation.value.revisionHistory.length - 1].note
+  }
+  if (evaluation.value?.revisionNote) {
+    return evaluation.value.revisionNote
+  }
+  const approval = approvalStore.approvals.find(a => a.missionId === mission.value?.id)
+  if (approval?.revisionNote) {
+    return approval.revisionNote
+  }
+  return mission.value?.revisionNote || null
 })
 </script>
