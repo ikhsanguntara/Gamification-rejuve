@@ -561,6 +561,15 @@ const formData = reactive({
 // Map of crew scores { crewId: score }
 const crewScoresMap = reactive({})
 
+const handleSliderChange = (crewId, val) => {
+  if (val && val.length > 0) {
+    const num = Number(val[0])
+    if (crewScoresMap[crewId] !== num) {
+      crewScoresMap[crewId] = num
+    }
+  }
+}
+
 // High-contrast slider track style generator
 const getSliderTrackStyle = (score) => {
   const val = Math.min(100, Math.max(0, Number(score) || 0))

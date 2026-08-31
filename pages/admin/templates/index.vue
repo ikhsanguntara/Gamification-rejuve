@@ -130,83 +130,86 @@
             </button>
           </div>
 
-          <!-- Week Tabs -->
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 w-fit">
-              <button
-                v-for="w in [1, 2, 3]"
-                :key="w"
-                type="button"
-                @click="activeWeekTab = w"
-                class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                :class="[
-                  activeWeekTab === w
-                    ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                ]"
-              >
-                Week {{ w }} ({{ currentWeekTemplates.length }})
-              </button>
-            </div>
-
-            <span class="text-xs text-slate-400">
-              Total <strong>{{ activePackage?.templates.length || 0 }} Misi</strong>
-            </span>
-          </div>
-
-          <!-- Missions Simple Clean List -->
-          <div v-if="currentWeekTemplates.length === 0" class="p-8 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-            <p class="text-xs text-slate-500">Belum ada butir misi untuk Week {{ activeWeekTab }}.</p>
-          </div>
-
-          <div v-else class="space-y-3">
-            <div
-              v-for="tmpl in currentWeekTemplates"
-              :key="tmpl.id"
-              class="p-4 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2 relative group"
-            >
-              <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
-                    {{ tmpl.codePrefix }}
-                  </span>
-                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">
-                    {{ tmpl.title }}
-                  </h4>
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-medium px-2 py-0.5 rounded bg-white dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-700">
-                    {{ tmpl.category }}
-                  </span>
-                  <button
-                    type="button"
-                    @click="removeMission(tmpl.id)"
-                    class="opacity-0 group-hover:opacity-100 p-1 text-rose-400 hover:text-rose-600 transition-opacity cursor-pointer"
-                    title="Hapus Misi"
-                  >
-                    <Trash2 class="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                {{ tmpl.description }}
-              </p>
-
-              <!-- SOP Points -->
-              <div class="pt-2 border-t border-slate-200/50 dark:border-slate-700/50 space-y-1">
-                <div
-                  v-for="(req, idx) in tmpl.requirements"
-                  :key="idx"
-                  class="flex items-start gap-1.5 text-[11px] text-slate-600 dark:text-slate-300"
+          <!-- Week Tabs via Reka UI -->
+          <TabsRoot :model-value="String(activeWeekTab)" @update:model-value="activeWeekTab = Number($event)" class="w-full space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <TabsList class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 w-fit">
+                <TabsTrigger
+                  v-for="w in [1, 2, 3]"
+                  :key="w"
+                  :value="String(w)"
+                  class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-[#831843] dark:data-[state=active]:text-[#f472b6] data-[state=active]:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white focus:outline-hidden"
                 >
-                  <Check class="w-3 h-3 text-emerald-500 flex-shrink-0 mt-0.5" />
-                  <span>{{ req }}</span>
+                  Week {{ w }} ({{ templateStore.templatesByWeek(w).length }})
+                </TabsTrigger>
+              </TabsList>
+
+              <span class="text-xs text-slate-400">
+                Total <strong>{{ activePackage?.templates.length || 0 }} Misi</strong>
+              </span>
+            </div>
+
+            <TabsContent
+              v-for="w in [1, 2, 3]"
+              :key="w"
+              :value="String(w)"
+              class="focus:outline-hidden"
+            >
+              <!-- Missions Simple Clean List -->
+              <div v-if="templateStore.templatesByWeek(w).length === 0" class="p-8 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                <p class="text-xs text-slate-500">Belum ada butir misi untuk Week {{ w }}.</p>
+              </div>
+
+              <div v-else class="space-y-3">
+                <div
+                  v-for="tmpl in templateStore.templatesByWeek(w)"
+                  :key="tmpl.id"
+                  class="p-4 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2 relative group"
+                >
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                        {{ tmpl.codePrefix }}
+                      </span>
+                      <h4 class="text-xs font-bold text-slate-900 dark:text-white">
+                        {{ tmpl.title }}
+                      </h4>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                      <span class="text-[10px] font-medium px-2 py-0.5 rounded bg-white dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-700">
+                        {{ tmpl.category }}
+                      </span>
+                      <button
+                        type="button"
+                        @click="removeMission(tmpl.id)"
+                        class="opacity-0 group-hover:opacity-100 p-1 text-rose-400 hover:text-rose-600 transition-opacity cursor-pointer"
+                        title="Hapus Misi"
+                      >
+                        <Trash2 class="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    {{ tmpl.description }}
+                  </p>
+
+                  <!-- SOP Points -->
+                  <div class="pt-2 border-t border-slate-200/50 dark:border-slate-700/50 space-y-1">
+                    <div
+                      v-for="(req, idx) in tmpl.requirements"
+                      :key="idx"
+                      class="text-xs text-slate-600 dark:text-slate-300 flex items-start gap-1.5"
+                    >
+                      <Check class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                      <span>{{ req }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </TabsContent>
+          </TabsRoot>
 
         </div>
       </div>
@@ -407,6 +410,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import {
+  TabsRoot,
+  TabsList,
+  TabsTrigger,
+  TabsContent
+} from 'reka-ui'
 import { useBatchStore } from '~/stores/batch.js'
 import { useTemplateStore } from '~/stores/template.js'
 import { useToast } from '~/composables/useToast.js'

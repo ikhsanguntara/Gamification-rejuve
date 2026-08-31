@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-4xl mx-auto space-y-6">
+  <div class="w-full space-y-6">
     <!-- Breadcrumb & Back -->
     <div class="flex items-center gap-2 text-xs font-semibold text-slate-400">
       <NuxtLink to="/admin/batches" class="hover:text-slate-600 dark:hover:text-slate-200 flex items-center gap-1">

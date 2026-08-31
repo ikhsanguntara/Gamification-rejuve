@@ -31,37 +31,46 @@
       </div>
     </div>
 
-    <!-- Category Filter Tabs -->
-    <div class="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 w-fit max-w-full overflow-x-auto">
-      <button
+    <!-- Category Filter Tabs via Reka UI -->
+    <TabsRoot v-model="selectedCategory" class="w-full space-y-6">
+      <TabsList class="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 w-fit max-w-full overflow-x-auto">
+        <TabsTrigger
+          v-for="cat in categories"
+          :key="cat"
+          :value="cat"
+          class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white focus:outline-hidden"
+        >
+          {{ cat }}
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent
         v-for="cat in categories"
         :key="cat"
-        type="button"
-        @click="selectedCategory = cat"
-        class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer"
-        :class="[
-          selectedCategory === cat
-            ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm'
-            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-        ]"
+        :value="cat"
+        class="focus:outline-hidden"
       >
-        {{ cat }}
-      </button>
-    </div>
-
-    <!-- Achievements Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-      <AchievementCard
-        v-for="ach in filteredAchievements"
-        :key="ach.id"
-        :achievement="ach"
-      />
-    </div>
+        <!-- Achievements Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
+          <AchievementCard
+            v-for="ach in (cat === 'All Badges' ? gamificationStore.allAchievements : gamificationStore.allAchievements.filter(a => a.category === cat))"
+            :key="ach.id"
+            :achievement="ach"
+          />
+        </div>
+      </TabsContent>
+    </TabsRoot>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import {
+  TabsRoot,
+  TabsList,
+  TabsTrigger,
+  TabsContent
+} from 'reka-ui'
 import { useUserStore } from '~/stores/user.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import AchievementCard from '~/components/gamification/AchievementCard.vue'

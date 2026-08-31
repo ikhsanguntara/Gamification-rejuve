@@ -18,81 +18,109 @@
       </div>
     </div>
 
-    <!-- Tabs: Pending Review | Approved | Revision Required -->
-    <div class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 w-fit max-w-full overflow-x-auto">
-      <button
-        type="button"
-        @click="activeTab = 'PENDING'"
-        class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer"
-        :class="[
-          activeTab === 'PENDING'
-            ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm'
-            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-        ]"
-      >
-        <Hourglass class="w-3.5 h-3.5" />
-        <span>Pending Review</span>
-        <span class="px-1.5 py-0.2 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-          {{ approvalStore.pendingApprovals.length }}
-        </span>
-      </button>
+    <!-- Tabs via Reka UI TabsRoot -->
+    <TabsRoot v-model="activeTab" class="w-full space-y-6">
+      <TabsList class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 w-fit max-w-full overflow-x-auto">
+        <TabsTrigger
+          value="PENDING"
+          class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white focus:outline-hidden"
+        >
+          <Hourglass class="w-3.5 h-3.5" />
+          <span>Pending Review</span>
+          <span class="px-1.5 py-0.2 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+            {{ approvalStore.pendingApprovals.length }}
+          </span>
+        </TabsTrigger>
 
-      <button
-        type="button"
-        @click="activeTab = 'APPROVED'"
-        class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer"
-        :class="[
-          activeTab === 'APPROVED'
-            ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm'
-            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-        ]"
-      >
-        <CheckCircle2 class="w-3.5 h-3.5" />
-        <span>Approved</span>
-        <span class="px-1.5 py-0.2 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
-          {{ approvalStore.approvedItems.length }}
-        </span>
-      </button>
+        <TabsTrigger
+          value="APPROVED"
+          class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white focus:outline-hidden"
+        >
+          <CheckCircle2 class="w-3.5 h-3.5" />
+          <span>Approved</span>
+          <span class="px-1.5 py-0.2 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+            {{ approvalStore.approvedItems.length }}
+          </span>
+        </TabsTrigger>
 
-      <button
-        type="button"
-        @click="activeTab = 'REVISION'"
-        class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer"
-        :class="[
-          activeTab === 'REVISION'
-            ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm'
-            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-        ]"
-      >
-        <RotateCcw class="w-3.5 h-3.5" />
-        <span>Revision Required</span>
-        <span class="px-1.5 py-0.2 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
-          {{ approvalStore.revisionRequiredItems.length }}
-        </span>
-      </button>
-    </div>
+        <TabsTrigger
+          value="REVISION"
+          class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0 cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white focus:outline-hidden"
+        >
+          <RotateCcw class="w-3.5 h-3.5" />
+          <span>Revision Required</span>
+          <span class="px-1.5 py-0.2 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
+            {{ approvalStore.revisionRequiredItems.length }}
+          </span>
+        </TabsTrigger>
+      </TabsList>
 
-    <!-- Cards Grid (1 col on mobile, 2 on tablet, 3 on desktop) -->
-    <div
-      v-if="displayedItems.length > 0"
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-    >
-      <ApprovalCard
-        v-for="item in displayedItems"
-        :key="item.id"
-        :item="item"
-        @approve="openApproveModal"
-        @request-revision="openRevisionModal"
-      />
-    </div>
+      <!-- Pending Tab Content -->
+      <TabsContent value="PENDING" class="focus:outline-hidden">
+        <div
+          v-if="approvalStore.pendingApprovals.length > 0"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
+        >
+          <ApprovalCard
+            v-for="item in approvalStore.pendingApprovals"
+            :key="item.id"
+            :item="item"
+            @approve="openApproveModal"
+            @request-revision="openRevisionModal"
+          />
+        </div>
+        <EmptyState
+          v-else
+          title="All Evaluations Reviewed"
+          description="There are no pending supervisor evaluations waiting for approval at this time."
+          icon="CheckCircle2"
+        />
+      </TabsContent>
 
-    <!-- Empty State -->
-    <EmptyState
-      v-else
-      :title="emptyStateTitle"
-      :description="emptyStateDesc"
-      :icon="activeTab === 'PENDING' ? 'CheckCircle2' : activeTab === 'REVISION' ? 'RotateCcw' : 'ClipboardList'"
-    />
+      <!-- Approved Tab Content -->
+      <TabsContent value="APPROVED" class="focus:outline-hidden">
+        <div
+          v-if="approvalStore.approvedItems.length > 0"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
+        >
+          <ApprovalCard
+            v-for="item in approvalStore.approvedItems"
+            :key="item.id"
+            :item="item"
+            @approve="openApproveModal"
+            @request-revision="openRevisionModal"
+          />
+        </div>
+        <EmptyState
+          v-else
+          title="No Approved Missions"
+          description="Approved missions will appear here once you sign off on evaluations."
+          icon="ClipboardList"
+        />
+      </TabsContent>
+
+      <!-- Revision Required Tab Content -->
+      <TabsContent value="REVISION" class="focus:outline-hidden">
+        <div
+          v-if="approvalStore.revisionRequiredItems.length > 0"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
+        >
+          <ApprovalCard
+            v-for="item in approvalStore.revisionRequiredItems"
+            :key="item.id"
+            :item="item"
+            @approve="openApproveModal"
+            @request-revision="openRevisionModal"
+          />
+        </div>
+        <EmptyState
+          v-else
+          title="No Revisions in Progress"
+          description="Any evaluations returned to supervisors with revision notes will be tracked here."
+          icon="RotateCcw"
+        />
+      </TabsContent>
+    </TabsRoot>
 
     <!-- Approve Confirmation Modal -->
     <ApprovalModal
@@ -116,6 +144,12 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import {
+  TabsRoot,
+  TabsList,
+  TabsTrigger,
+  TabsContent
+} from 'reka-ui'
 import { useApprovalStore } from '~/stores/approval.js'
 import { useToast } from '~/composables/useToast.js'
 import { useConfetti } from '~/composables/useConfetti.js'

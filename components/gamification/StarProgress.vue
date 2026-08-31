@@ -44,13 +44,16 @@
         </span>
       </div>
 
-      <!-- Outer Track -->
-      <div class="w-full bg-slate-200 dark:bg-slate-800 h-2.5 sm:h-3 rounded-full overflow-hidden p-0.5 shadow-inner">
-        <div
+      <!-- Outer Track using Reka UI ProgressRoot -->
+      <ProgressRoot
+        :model-value="progress.progressPercent"
+        class="relative w-full bg-slate-200 dark:bg-slate-800 h-2.5 sm:h-3 rounded-full overflow-hidden p-0.5 shadow-inner"
+      >
+        <ProgressIndicator
           class="h-full rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 transition-all duration-700 ease-out shadow-sm"
           :style="{ width: `${progress.progressPercent}%` }"
-        ></div>
-      </div>
+        />
+      </ProgressRoot>
 
       <!-- Subtext -->
       <div class="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 text-xs text-slate-500 dark:text-slate-400 mt-2">
@@ -65,6 +68,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { ProgressRoot, ProgressIndicator } from 'reka-ui'
 import { getStarProgress } from '~/utils/star.js'
 import { Star } from 'lucide-vue-next'
 
