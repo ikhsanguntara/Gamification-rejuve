@@ -220,11 +220,50 @@
           </div>
         </div>
 
-        <!-- 4. Pilih Anggota Crew (Compact Tag Selector) -->
+        <!-- 4. Paket Template SOP Misi -->
         <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              4. Anggota Kru yang Ditugaskan ({{ form.assignment.crewIds.length }} Terpilih)
+              4. Paket Misi Standar SOP
+            </h3>
+            <NuxtLink to="/admin/templates" class="text-xs text-[#831843] dark:text-[#f472b6] font-semibold hover:underline">
+              Kelola Template →
+            </NuxtLink>
+          </div>
+
+          <div class="space-y-2">
+            <select
+              v-model="form.templatePackageId"
+              class="w-full text-xs font-medium rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] cursor-pointer"
+            >
+              <option v-for="pkg in templateStore.allPackages" :key="pkg.id" :value="pkg.id">
+                {{ pkg.name }} ({{ pkg.templates.length }} Misi • {{ pkg.targetType }})
+              </option>
+              <option value="NONE">-- Tidak Mengubah / Menambah Template --</option>
+            </select>
+
+            <div class="flex items-center justify-between p-3 rounded-xl bg-[#831843]/5 border border-[#831843]/15">
+              <div class="text-[11px] text-slate-600 dark:text-slate-400">
+                <span class="font-bold text-slate-900 dark:text-white">Status Misi Batch:</span>
+                {{ batchMissions.length }} Misi terdaftar pada batch ini.
+              </div>
+              <button
+                v-if="form.templatePackageId !== 'NONE'"
+                type="button"
+                @click="applyTemplateNow"
+                class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-[#831843] hover:bg-[#6b133a] text-white shadow-xs transition-all cursor-pointer"
+              >
+                Terapkan Template ke Batch
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Pilih Anggota Crew (Compact Tag Selector) -->
+        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              5. Anggota Kru yang Ditugaskan ({{ form.assignment.crewIds.length }} Terpilih)
             </h3>
             <div class="flex items-center gap-2">
               <button
@@ -291,6 +330,8 @@ import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBatchStore } from '~/stores/batch.js'
 import { useUserStore } from '~/stores/user.js'
+import { useTemplateStore } from '~/stores/template.js'
+import { useMissionStore } from '~/stores/mission.js'
 import { useToast } from '~/composables/useToast.js'
 import { ArrowLeft, Layers, Calendar } from 'lucide-vue-next'
 
@@ -298,10 +339,16 @@ const route = useRoute()
 const router = useRouter()
 const batchStore = useBatchStore()
 const userStore = useUserStore()
+const templateStore = useTemplateStore()
+const missionStore = useMissionStore()
 const toast = useToast()
 
 const batch = computed(() => {
   return batchStore.batchById(route.params.id)
+})
+
+const batchMissions = computed(() => {
+  return missionStore.missionsByBatch(route.params.id)
 })
 
 const availableSupervisors = computed(() => {
@@ -323,6 +370,7 @@ const form = ref({
   startDate: '',
   endDate: '',
   description: '',
+  templatePackageId: 'pkg-sop-standard',
   weeks: [
     { weekNumber: 1, title: 'Minggu 1: Suhu & Sanitasi Dasar', status: 'ACTIVE', isLocked: false },
     { weekNumber: 2, title: 'Minggu 2: Kualitas Rasa & Layanan', status: 'LOCKED', isLocked: true },
@@ -351,6 +399,7 @@ const populateForm = (b) => {
   form.value.startDate = b.startDate || '2026-08-10'
   form.value.endDate = b.endDate || '2026-08-30'
   form.value.description = b.description || ''
+  form.value.templatePackageId = b.templatePackageId || 'pkg-sop-standard'
 
   if (b.weeks && b.weeks.length === 3) {
     form.value.weeks = b.weeks.map(w => ({
@@ -412,6 +461,16 @@ const selectAllCrew = () => {
   form.value.assignment.crewIds = allCrews.value.map(c => c.id)
 }
 
+const applyTemplateNow = () => {
+  if (!form.value.templatePackageId || form.value.templatePackageId === 'NONE') return
+  const created = templateStore.applyPackageToBatch(route.params.id, form.value.templatePackageId)
+  if (created && created.length > 0) {
+    toast.success('Template Diterapkan', `Berhasil menambahkan ${created.length} butir misi baru ke batch ini.`)
+  } else {
+    toast.info('Template Sudah Sesuai', 'Seluruh misi dari paket template ini sudah terdaftar pada batch.')
+  }
+}
+
 const handleUpdate = () => {
   const selectedSpv = availableSupervisors.value.find(s => s.id === form.value.assignment.supervisorId)
   const selectedHead = availableHeads.value.find(h => h.id === form.value.assignment.headId)
@@ -420,6 +479,11 @@ const handleUpdate = () => {
   if (selectedHead) form.value.assignment.headName = selectedHead.name
 
   batchStore.updateBatch(route.params.id, form.value)
+
+  // Apply template if selected
+  if (form.value.templatePackageId && form.value.templatePackageId !== 'NONE') {
+    templateStore.applyPackageToBatch(route.params.id, form.value.templatePackageId)
+  }
 
   // Reassign selected crew members to this batch
   form.value.assignment.crewIds.forEach(cId => {
