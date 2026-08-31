@@ -135,7 +135,7 @@ watch(() => route.params.id, (newId) => {
 })
 
 const currentBatch = computed(() => {
-  return batchStore.allBatches.find(b => b.id === route.params.id) || batchStore.currentBatch
+  return batchStore.accessibleBatches.find(b => b.id === route.params.id) || batchStore.currentBatch
 })
 
 const weekMissions = computed(() => {

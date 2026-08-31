@@ -4,6 +4,7 @@ import { useMissionStore } from './mission.js'
 import { useEvaluationStore } from './evaluation.js'
 import { useGamificationStore } from './gamification.js'
 import { useBatchStore } from './batch.js'
+import { useUserStore } from './user.js'
 
 /**
  * Approval Store: Head Review Workspace (Approve & Request Revision for Store-Wide Multi-Crew Missions)
@@ -47,11 +48,21 @@ export const useApprovalStore = defineStore('approval', {
   }),
 
   getters: {
-    allApprovals: (state) => state.approvals,
+    userApprovals: (state) => {
+      const userStore = useUserStore()
+      if (userStore.isSuperadmin) return state.approvals
+      if (userStore.isHead) {
+        const batchStore = useBatchStore()
+        const myBatchIds = batchStore.accessibleBatches.map(b => b.id)
+        return state.approvals.filter(a => myBatchIds.includes(a.batchId))
+      }
+      return state.approvals
+    },
+    allApprovals: (state) => state.userApprovals,
     allActivities: (state) => state.activities,
-    pendingApprovals: (state) => state.approvals.filter(a => a.status === 'PENDING_REVIEW'),
-    approvedItems: (state) => state.approvals.filter(a => a.status === 'APPROVED'),
-    revisionRequiredItems: (state) => state.approvals.filter(a => a.status === 'REVISION_REQUIRED'),
+    pendingApprovals: (state) => state.userApprovals.filter(a => a.status === 'PENDING_REVIEW'),
+    approvedItems: (state) => state.userApprovals.filter(a => a.status === 'APPROVED'),
+    revisionRequiredItems: (state) => state.userApprovals.filter(a => a.status === 'REVISION_REQUIRED'),
     approvalById: (state) => (id) => state.approvals.find(a => a.id === id)
   },
 

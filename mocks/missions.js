@@ -322,5 +322,108 @@ export const mockMissions = [
     calculatedStars: null,
     awardedStars: null,
     crewEvaluations: []
+  },
+
+  // ===================== BATCH 3 (SPV: Dewi Lestari / Head: Citra Dewi) =====================
+  {
+    id: 'msn-g-w1-001',
+    batchId: 'batch-gamma',
+    week: 1,
+    code: 'M-01',
+    title: 'Cek Suhu Chiller (2–4°C) - PIM',
+    category: 'Suhu Dingin',
+    description: 'Pastikan suhu chiller display dan penyimpanan stabil di 2–4°C di outlet Pondok Indah Mall.',
+    requirements: [
+      'Catat suhu chiller pada logbook pagi dan sore (2–4°C)',
+      'Pastikan pintu chiller tertutup rapat dan tidak ada kebocoran udara dingin'
+    ],
+    deadline: '2026-08-16',
+    maxStars: 5,
+    assignedCrewIds: ['crew-012', 'crew-013', 'crew-014', 'crew-015'],
+    supervisorId: 'spv-002',
+    supervisorName: 'Dewi Lestari (Supervisor)',
+    status: 'COMPLETED',
+    averageScore: 93,
+    awardedStars: 5,
+    crewEvaluations: [
+      { crewId: 'crew-012', score: 94, calculatedStars: 5, awardedStars: 5, status: 'COMPLETED' },
+      { crewId: 'crew-013', score: 92, calculatedStars: 5, awardedStars: 5, status: 'COMPLETED' },
+      { crewId: 'crew-014', score: 93, calculatedStars: 5, awardedStars: 5, status: 'COMPLETED' },
+      { crewId: 'crew-015', score: 93, calculatedStars: 5, awardedStars: 5, status: 'COMPLETED' }
+    ]
+  },
+  {
+    id: 'msn-g-w2-001',
+    batchId: 'batch-gamma',
+    week: 2,
+    code: 'M-05',
+    title: 'Cek Rasa & Kemanisan Alami Buah (PIM)',
+    category: 'Kualitas Buah',
+    description: 'Uji sampel rasa jus apel dan bayam sebelum dikemas ke botol agar rasa 100% segar dan alami.',
+    requirements: [
+      'Cek sampel rasa per batch jus yang diproduksi di outlet PIM',
+      'Pastikan tidak ada penambahan air atau pemanis buatan'
+    ],
+    deadline: '2026-08-23',
+    maxStars: 5,
+    assignedCrewIds: ['crew-012', 'crew-013', 'crew-014', 'crew-015'],
+    supervisorId: 'spv-002',
+    supervisorName: 'Dewi Lestari (Supervisor)',
+    status: 'PENDING_REVIEW',
+    averageScore: 92,
+    calculatedStars: 5,
+    awardedStars: null,
+    crewEvaluations: [
+      { crewId: 'crew-012', score: 94, calculatedStars: 5, awardedStars: 0, status: 'PENDING_REVIEW' },
+      { crewId: 'crew-013', score: 91, calculatedStars: 5, awardedStars: 0, status: 'PENDING_REVIEW' },
+      { crewId: 'crew-014', score: 92, calculatedStars: 5, awardedStars: 0, status: 'PENDING_REVIEW' },
+      { crewId: 'crew-015', score: 91, calculatedStars: 5, awardedStars: 0, status: 'PENDING_REVIEW' }
+    ]
+  },
+  {
+    id: 'msn-g-w2-002',
+    batchId: 'batch-gamma',
+    week: 2,
+    code: 'M-06',
+    title: 'Kecepatan Layanan Barista (< 45 Detik) - PIM',
+    category: 'Pelayanan',
+    description: 'Sambut customer dengan ramah dan siapkan produk pesanan dalam waktu kurang dari 45 detik di counter PIM.',
+    requirements: [
+      'Beri salam ramah kepada setiap customer yang datang',
+      'Serahkan pesanan tepat waktu dan kemas dengan rapi'
+    ],
+    deadline: '2026-08-23',
+    maxStars: 5,
+    assignedCrewIds: ['crew-012', 'crew-013', 'crew-014', 'crew-015'],
+    supervisorId: 'spv-002',
+    supervisorName: 'Dewi Lestari (Supervisor)',
+    status: 'IN_PROGRESS',
+    averageScore: 0,
+    calculatedStars: null,
+    awardedStars: null,
+    crewEvaluations: []
+  },
+  {
+    id: 'msn-g-w3-001',
+    batchId: 'batch-gamma',
+    week: 3,
+    code: 'M-09',
+    title: 'Pembersihan Total Chiller Mingguan - PIM',
+    category: 'Kebersihan',
+    description: 'Kuras dan bersihkan rak chiller display di outlet PIM.',
+    requirements: [
+      'Pindahkan botol jus ke chiller cadangan saat dibersihkan',
+      'Lap rak chiller hingga bersih kering'
+    ],
+    deadline: '2026-08-30',
+    maxStars: 5,
+    assignedCrewIds: ['crew-012', 'crew-013', 'crew-014', 'crew-015'],
+    supervisorId: 'spv-002',
+    supervisorName: 'Dewi Lestari (Supervisor)',
+    status: 'LOCKED',
+    averageScore: 0,
+    calculatedStars: null,
+    awardedStars: null,
+    crewEvaluations: []
   }
 ]

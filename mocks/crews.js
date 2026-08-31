@@ -170,5 +170,67 @@ export const mockCrews = [
     completedMissions: 5,
     averageScore: 88.5,
     status: 'ACTIVE'
+  },
+
+  // ===================== BATCH 3 (4 Crew) =====================
+  {
+    id: 'crew-012',
+    name: 'Lina Marlina',
+    code: 'CRW-B3-01',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+    position: 'Store Leader',
+    department: 'Tim Operasional',
+    storeLocation: 'Batch 3',
+    batchId: 'batch-gamma',
+    stars: 1590,
+    level: 6,
+    completedMissions: 5,
+    averageScore: 91.0,
+    status: 'ACTIVE'
+  },
+  {
+    id: 'crew-013',
+    name: 'Muhammad Ridwan',
+    code: 'CRW-B3-02',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
+    position: 'Senior Barista',
+    department: 'Tim Operasional',
+    storeLocation: 'Batch 3',
+    batchId: 'batch-gamma',
+    stars: 1510,
+    level: 6,
+    completedMissions: 5,
+    averageScore: 90.0,
+    status: 'ACTIVE'
+  },
+  {
+    id: 'crew-014',
+    name: 'Nurul Hidayah',
+    code: 'CRW-B3-03',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=256&q=80',
+    position: 'Barista',
+    department: 'Tim Operasional',
+    storeLocation: 'Batch 3',
+    batchId: 'batch-gamma',
+    stars: 1450,
+    level: 5,
+    completedMissions: 4,
+    averageScore: 89.0,
+    status: 'ACTIVE'
+  },
+  {
+    id: 'crew-015',
+    name: 'Oscar Pratama',
+    code: 'CRW-B3-04',
+    avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=256&q=80',
+    position: 'Kasir',
+    department: 'Tim Operasional',
+    storeLocation: 'Batch 3',
+    batchId: 'batch-gamma',
+    stars: 1390,
+    level: 5,
+    completedMissions: 4,
+    averageScore: 88.0,
+    status: 'ACTIVE'
   }
 ]

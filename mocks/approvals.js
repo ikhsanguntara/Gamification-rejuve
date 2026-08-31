@@ -72,5 +72,36 @@ export const mockApprovals = [
     submittedAt: '2026-08-21T14:30:00Z',
     reviewedAt: '2026-08-21T16:00:00Z',
     revisionNote: 'Mohon evaluasi ulang pembagian tugas barista saat peak hours agar speed of service lebih optimal.'
+  },
+  {
+    id: 'appr-003',
+    evaluationId: 'eval-g-001',
+    missionId: 'msn-g-w2-001',
+    missionCode: 'M-05',
+    missionTitle: 'Cek Rasa & Kemanisan Alami Buah (PIM)',
+    week: 2,
+    batchId: 'batch-gamma',
+    supervisorId: 'spv-002',
+    supervisorName: 'Dewi Lestari',
+    averageScore: 92,
+    calculatedStars: 5,
+    status: 'PENDING_REVIEW',
+    comment: 'Pengujian sampel brix pada batch apel dan bayam di outlet Pondok Indah Mall telah sesuai SOP #CleanLabel.',
+    crewScores: [
+      { crewId: 'crew-012', crewName: 'Lina Marlina', score: 94, calculatedStars: 5 },
+      { crewId: 'crew-013', crewName: 'Muhammad Ridwan', score: 91, calculatedStars: 5 },
+      { crewId: 'crew-014', crewName: 'Nurul Hidayah', score: 92, calculatedStars: 5 },
+      { crewId: 'crew-015', crewName: 'Oscar Pratama', score: 91, calculatedStars: 5 }
+    ],
+    evidenceCount: 1,
+    evidenceList: [
+      {
+        url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80',
+        caption: 'Foto kalibrasi refraktometer brix buah di PIM'
+      }
+    ],
+    submittedAt: '2026-08-22T10:15:00Z',
+    reviewedAt: null,
+    revisionNote: null
   }
 ]

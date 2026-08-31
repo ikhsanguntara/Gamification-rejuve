@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { mockBatches } from '~/mocks/batches.js'
 import { useTemplateStore } from './template.js'
+import { useUserStore } from './user.js'
 
 /**
  * Batch Store: Manage active batch, 3-week lifecycle, aggregated metrics, and Superadmin CRUD
@@ -15,7 +16,34 @@ export const useBatchStore = defineStore('batch', {
 
   getters: {
     allBatches: (state) => state.batches,
-    currentBatch: (state) => state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0],
+    accessibleBatches: (state) => {
+      const userStore = useUserStore()
+      if (userStore.isSuperadmin) return state.batches
+      if (userStore.isSupervisor) {
+        const my = state.batches.filter(b => b.assignment?.supervisorId === userStore.currentUserId)
+        return my.length > 0 ? my : state.batches
+      }
+      if (userStore.isHead) {
+        const my = state.batches.filter(b => b.assignment?.headId === userStore.currentUserId)
+        return my.length > 0 ? my : state.batches
+      }
+      if (userStore.isCrew) {
+        const cBatch = userStore.currentUser?.batchId
+        const my = state.batches.filter(b => b.id === cBatch)
+        return my.length > 0 ? my : state.batches
+      }
+      return state.batches
+    },
+    currentBatch: (state) => {
+      const found = state.batches.find(b => b.id === state.selectedBatchId)
+      if (found) return found
+      const userStore = useUserStore()
+      if (userStore.isSupervisor || userStore.isHead || userStore.isCrew) {
+        const acc = state.accessibleBatches
+        return acc[0] || state.batches[0]
+      }
+      return state.batches[0]
+    },
     batchById: (state) => (id) => state.batches.find(b => b.id === id),
     currentBatchWeeks: (state) => {
       const batch = state.batches.find(b => b.id === state.selectedBatchId)

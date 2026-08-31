@@ -9,10 +9,10 @@
           <span class="text-[#831843] dark:text-[#f472b6] font-semibold">Batch Management</span>
         </div>
         <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-          Manajemen Batch
+          Manajemen Batch Gerai
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          Kelola Batch Re.juve, inisialisasi siklus 3 minggu operasional, dan pantau status aktif.
+          Daftar seluruh batch aktif, lokasi cabang, penanggung jawab, dan progres siklus.
         </p>
       </div>
 
@@ -25,68 +25,46 @@
       </NuxtLink>
     </div>
 
-    <!-- Batches Cards Grid -->
+    <!-- Clean Batches Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div
         v-for="b in batchStore.allBatches"
         :key="b.id"
-        class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between shadow-sm relative group"
+        class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between shadow-sm relative hover:border-slate-300 dark:hover:border-slate-700 transition-all"
       >
         <div>
           <div class="flex items-center justify-between gap-2 mb-2">
-            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
               {{ b.code }}
             </span>
-            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
               {{ b.status }}
             </span>
           </div>
 
-          <h4 class="text-base font-semibold text-slate-900 dark:text-white">
+          <h4 class="text-base font-bold text-slate-900 dark:text-white">
             {{ b.name }}
           </h4>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
             <MapPin class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
             <span>{{ b.storeLocation }}</span>
           </p>
-          <p class="text-xs text-slate-400 dark:text-slate-500 mt-2 line-clamp-2 leading-relaxed">
-            {{ b.description }}
-          </p>
 
-          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5 text-xs">
-            <!-- Supervisor & Head Routing Badges -->
-            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
-              <div class="flex items-center justify-between text-[11px]">
-                <span class="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <span>👔 Evaluator:</span>
-                </span>
-                <span class="font-bold text-slate-800 dark:text-slate-200">
-                  {{ b.assignment?.supervisorName || 'Budi Santoso' }}
-                </span>
-              </div>
-              <div class="flex items-center justify-between text-[11px]">
-                <span class="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <span>👑 Approver:</span>
-                </span>
-                <span class="font-bold text-slate-800 dark:text-slate-200">
-                  {{ b.assignment?.headName || 'Ahmad Dahlan' }}
-                </span>
-              </div>
+          <!-- Clean Info Rows -->
+          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs">
+            <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
+              <span class="text-slate-400">👔 Supervisor:</span>
+              <span class="font-semibold">{{ b.assignment?.supervisorName || 'Budi Santoso' }}</span>
             </div>
-
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <span class="text-slate-400 block text-[10px] uppercase font-bold">Total Roster:</span>
-                <span class="font-bold text-slate-800 dark:text-slate-200">
-                  {{ b.assignment?.crewIds?.length || gamificationStore.crewsByBatch(b.id).length }} Crew Members
-                </span>
-              </div>
-              <div>
-                <span class="text-slate-400 block text-[10px] uppercase font-bold">Siklus Aktif:</span>
-                <span class="font-bold text-[#831843] dark:text-[#f472b6]">
-                  Week {{ b.currentWeek }} of {{ b.totalWeeks }}
-                </span>
-              </div>
+            <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
+              <span class="text-slate-400">👑 Head Approver:</span>
+              <span class="font-semibold">{{ b.assignment?.headName || 'Ahmad Dahlan' }}</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-100 dark:border-slate-800/60">
+              <span class="text-slate-400">👥 Total Kru:</span>
+              <span class="font-bold text-[#831843] dark:text-[#f472b6]">
+                {{ b.assignment?.crewIds?.length || gamificationStore.crewsByBatch(b.id).length }} Anggota
+              </span>
             </div>
           </div>
         </div>
@@ -94,10 +72,10 @@
         <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <NuxtLink
             :to="`/admin/batches/${b.id}`"
-            class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-[#831843] dark:hover:text-[#f472b6] flex items-center gap-1 cursor-pointer"
+            class="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#831843] dark:hover:text-[#f472b6] flex items-center gap-1 cursor-pointer"
           >
             <Edit3 class="w-3.5 h-3.5" />
-            <span>Edit Gerai</span>
+            <span>Pengaturan</span>
           </NuxtLink>
 
           <button

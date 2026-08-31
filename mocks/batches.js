@@ -149,18 +149,18 @@ export const mockBatches = [
     endDate: '2026-08-30',
     currentWeek: 2,
     totalWeeks: 3,
-    totalCrew: 0,
+    totalCrew: 4,
     totalMissions: 12,
     completedMissions: 3,
     averageScore: 89.8,
     totalStars: 1420,
     status: 'ACTIVE',
     assignment: {
-      supervisorId: 'spv-001',
-      supervisorName: 'Budi Santoso',
-      headId: 'head-001',
-      headName: 'Ahmad Dahlan',
-      crewIds: []
+      supervisorId: 'spv-002',
+      supervisorName: 'Dewi Lestari',
+      headId: 'head-002',
+      headName: 'Citra Dewi',
+      crewIds: ['crew-012', 'crew-013', 'crew-014', 'crew-015']
     },
     approvalConfig: {
       minScoreFor5Stars: 90,

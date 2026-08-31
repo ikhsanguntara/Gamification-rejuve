@@ -10,20 +10,20 @@
         <span class="font-bold text-sm text-slate-900 dark:text-white hidden xs:inline">Re.juve</span>
       </NuxtLink>
 
-      <!-- Batch / Gerai Selector: Locked for Crew, Dropdown for Supervisor/Head/Admin -->
+      <!-- Batch / Gerai Selector: Filtered by Accessible Batches -->
       <div class="flex items-center gap-1.5 sm:gap-2">
-        <!-- For CREW: Locked Batch Badge -->
+        <!-- For CREW or Single Batch Supervisor: Simple Pill -->
         <div
-          v-if="userStore.isCrew"
+          v-if="userStore.isCrew || batchStore.accessibleBatches.length <= 1"
           class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 text-xs font-semibold text-slate-800 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60"
         >
           <Layers class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6] flex-shrink-0" />
           <span class="truncate max-w-[140px] xs:max-w-[180px]">
-            {{ batchStore.currentBatch.name }}
+            {{ batchStore.currentBatch?.name || 'Batch 1' }}
           </span>
         </div>
 
-        <!-- For SUPERVISOR/HEAD/SUPERADMIN: Interactive Dropdown -->
+        <!-- For Multi-Batch Users: Interactive Dropdown -->
         <div v-else class="relative max-w-[140px] xs:max-w-[180px] sm:max-w-[240px]">
           <select
             :value="batchStore.selectedBatchId"
@@ -31,11 +31,11 @@
             class="appearance-none w-full bg-slate-100/80 dark:bg-slate-800/80 border-none text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-xl pl-2.5 sm:pl-3 pr-7 py-1.5 focus:ring-2 focus:ring-[#831843] cursor-pointer truncate"
           >
             <option
-              v-for="b in batchStore.allBatches"
+              v-for="b in batchStore.accessibleBatches"
               :key="b.id"
               :value="b.id"
             >
-              {{ b.name }}
+              {{ b.name }} ({{ b.code }})
             </option>
           </select>
           <ChevronDown class="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -58,7 +58,7 @@
           <span class="text-xs font-semibold text-slate-800 dark:text-slate-200 block leading-tight">
             {{ userStore.currentUser.name }}
           </span>
-          <span class="text-xs font-medium text-slate-500 dark:text-slate-400 block leading-none">
+          <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 block leading-none">
             {{ userStore.currentUser.roleTitle }}
           </span>
         </div>
@@ -134,12 +134,12 @@
         </Transition>
       </div>
 
-      <!-- User Menu Dropdown -->
+      <!-- User Menu Dropdown & Fast Persona Switcher -->
       <div class="relative">
         <button
           type="button"
           @click="showUserMenu = !showUserMenu; showNotifications = false"
-          class="flex items-center gap-1.5 p-0.5 rounded-full hover:ring-2 hover:ring-[#831843]/50 transition-all"
+          class="flex items-center gap-1.5 p-0.5 rounded-full hover:ring-2 hover:ring-[#831843]/50 transition-all cursor-pointer"
         >
           <img
             :src="userStore.currentUser.avatar"
@@ -158,19 +158,72 @@
         >
           <div
             v-if="showUserMenu"
-            class="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl py-2 z-50"
+            class="absolute right-0 mt-2 w-72 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl py-2 z-50 divide-y divide-slate-100 dark:divide-slate-800"
           >
             <!-- User Info Header -->
-            <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
-              <p class="text-xs font-semibold text-slate-900 dark:text-white truncate">
+            <div class="px-4 py-2">
+              <p class="text-xs font-bold text-slate-900 dark:text-white truncate">
                 {{ userStore.currentUser.name }}
               </p>
-              <p class="text-xs text-slate-400 truncate">
+              <p class="text-[11px] text-slate-400 truncate">
                 {{ userStore.currentUser.email }}
               </p>
-              <span class="inline-block text-xs font-semibold px-2 py-0.5 mt-1 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
+              <span class="inline-block text-[10px] font-bold px-2 py-0.5 mt-1 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
                 {{ userStore.currentUser.roleTitle }}
               </span>
+            </div>
+
+            <!-- Fast Persona Testing Switcher -->
+            <div class="px-3 py-2 space-y-1.5 bg-slate-50/50 dark:bg-slate-800/30">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1">
+                Ganti Akun Pengujian:
+              </span>
+
+              <div class="grid grid-cols-2 gap-1.5">
+                <!-- SPV 1 -->
+                <button
+                  type="button"
+                  @click="switchAccount('spv-001')"
+                  class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
+                  :class="userStore.currentUserId === 'spv-001' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
+                >
+                  <span>👔 SPV 1: Budi</span>
+                  <span class="block text-[9px] text-slate-400">Batch 1 & 2</span>
+                </button>
+
+                <!-- SPV 2 -->
+                <button
+                  type="button"
+                  @click="switchAccount('spv-002')"
+                  class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
+                  :class="userStore.currentUserId === 'spv-002' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
+                >
+                  <span>👔 SPV 2: Dewi</span>
+                  <span class="block text-[9px] text-slate-400">Batch 3 (PIM)</span>
+                </button>
+
+                <!-- Head 1 -->
+                <button
+                  type="button"
+                  @click="switchAccount('head-001')"
+                  class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
+                  :class="userStore.currentUserId === 'head-001' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
+                >
+                  <span>👑 Head 1: Ahmad</span>
+                  <span class="block text-[9px] text-slate-400">Batch 1 & 2</span>
+                </button>
+
+                <!-- Head 2 -->
+                <button
+                  type="button"
+                  @click="switchAccount('head-002')"
+                  class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
+                  :class="userStore.currentUserId === 'head-002' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
+                >
+                  <span>👑 Head 2: Citra</span>
+                  <span class="block text-[9px] text-slate-400">Batch 3 (PIM)</span>
+                </button>
+              </div>
             </div>
 
             <!-- Links -->
@@ -178,31 +231,31 @@
               <NuxtLink
                 to="/profile"
                 @click="showUserMenu = false"
-                class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                class="flex items-center gap-2.5 px-4 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 <User class="w-3.5 h-3.5" />
-                <span>My Profile</span>
+                <span>Profil Saya</span>
               </NuxtLink>
 
               <NuxtLink
                 to="/settings"
                 @click="showUserMenu = false"
-                class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                class="flex items-center gap-2.5 px-4 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 <Settings class="w-3.5 h-3.5" />
-                <span>Settings</span>
+                <span>Pengaturan & Simulasi</span>
               </NuxtLink>
             </div>
 
             <!-- Logout Action -->
-            <div class="pt-1 border-t border-slate-100 dark:border-slate-800">
+            <div class="pt-1">
               <button
                 type="button"
                 @click="handleLogout"
-                class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-left"
+                class="w-full flex items-center gap-2.5 px-4 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-left cursor-pointer"
               >
                 <LogOut class="w-3.5 h-3.5" />
-                <span>Sign Out</span>
+                <span>Keluar (Sign Out)</span>
               </button>
             </div>
           </div>
@@ -220,16 +273,14 @@ import { useBatchStore } from '~/stores/batch.js'
 import { useTheme } from '~/composables/useTheme.js'
 import { useToast } from '~/composables/useToast.js'
 import {
-  Sparkles,
+  Layers,
   ChevronDown,
   Sun,
   Moon,
   Bell,
   User,
   Settings,
-  LogOut,
-  MapPin,
-  Layers
+  LogOut
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -242,21 +293,35 @@ const showNotifications = ref(false)
 const showUserMenu = ref(false)
 
 const roleDotClass = computed(() => {
-  if (userStore.isCrew) return 'bg-[#831843]'
-  if (userStore.isSupervisor) return 'bg-amber-500'
-  if (userStore.isHead) return 'bg-[#6b133a]'
-  return 'bg-slate-500'
+  switch (userStore.currentRole) {
+    case 'CREW':
+      return 'bg-emerald-500 ring-2 ring-emerald-500/20'
+    case 'SUPERVISOR':
+      return 'bg-amber-500 ring-2 ring-amber-500/20'
+    case 'HEAD':
+      return 'bg-[#831843] ring-2 ring-[#831843]/20'
+    case 'SUPERADMIN':
+      return 'bg-slate-700 dark:bg-slate-300 ring-2 ring-slate-400/20'
+    default:
+      return 'bg-slate-400'
+  }
 })
 
 const handleBatchChange = (batchId) => {
   batchStore.selectBatch(batchId)
-  toast.info('Batch Diubah', `Batch aktif beralih ke ${batchStore.currentBatch.name}`)
+  toast.info('Cabang Berubah', `Melihat data untuk ${batchStore.currentBatch?.name || 'Batch'}`)
+}
+
+const switchAccount = (userId) => {
+  userStore.loginAsUser(userId)
+  showUserMenu.value = false
+  toast.success('Beralih Akun', `Aktif sebagai ${userStore.currentUser.name} (${userStore.currentUser.roleTitle})`)
 }
 
 const handleLogout = () => {
   showUserMenu.value = false
   userStore.logout()
-  toast.info('Logged Out', 'You have been signed out successfully.')
+  toast.info('Keluar', 'Anda telah keluar dari sesi.')
   router.push('/login')
 }
 </script>
