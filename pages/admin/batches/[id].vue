@@ -285,33 +285,36 @@ const form = ref({
   }
 })
 
-onMounted(() => {
-  if (batch.value) {
-    form.value.name = batch.value.name
-    form.value.code = batch.value.code
-    form.value.storeLocation = batch.value.storeLocation || ''
-    form.value.startDate = batch.value.startDate || '2026-08-10'
-    form.value.endDate = batch.value.endDate || '2026-08-30'
-    form.value.description = batch.value.description || ''
+const populateForm = (b) => {
+  if (!b) return
+  form.value.name = b.name || ''
+  form.value.code = b.code || ''
+  form.value.storeLocation = b.storeLocation || ''
+  form.value.startDate = b.startDate || '2026-08-10'
+  form.value.endDate = b.endDate || '2026-08-30'
+  form.value.description = b.description || ''
 
-    if (batch.value.assignment) {
-      form.value.assignment = {
-        supervisorId: batch.value.assignment.supervisorId || 'spv-001',
-        supervisorName: batch.value.assignment.supervisorName || 'Budi Santoso',
-        headId: batch.value.assignment.headId || 'head-001',
-        headName: batch.value.assignment.headName || 'Ahmad Dahlan',
-        crewIds: [...(batch.value.assignment.crewIds || [])]
-      }
-    } else {
-      const currentBatchCrews = allCrews.value.filter(c => c.batchId === batch.value.id).map(c => c.id)
-      form.value.assignment.crewIds = currentBatchCrews
+  if (b.assignment) {
+    form.value.assignment = {
+      supervisorId: b.assignment.supervisorId || 'spv-001',
+      supervisorName: b.assignment.supervisorName || 'Budi Santoso',
+      headId: b.assignment.headId || 'head-001',
+      headName: b.assignment.headName || 'Ahmad Dahlan',
+      crewIds: [...(b.assignment.crewIds || [])]
     }
-
-    if (batch.value.approvalConfig) {
-      form.value.approvalConfig = { ...batch.value.approvalConfig }
-    }
+  } else {
+    const currentBatchCrews = allCrews.value.filter(c => c.batchId === b.id).map(c => c.id)
+    form.value.assignment.crewIds = currentBatchCrews
   }
-})
+
+  if (b.approvalConfig) {
+    form.value.approvalConfig = { ...b.approvalConfig }
+  }
+}
+
+watch(batch, (newB) => {
+  if (newB) populateForm(newB)
+}, { immediate: true })
 
 const toggleCrewSelection = (crewId) => {
   const idx = form.value.assignment.crewIds.indexOf(crewId)
