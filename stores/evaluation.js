@@ -3,6 +3,7 @@ import { mockEvaluations } from '~/mocks/evaluations.js'
 import { calculateStars } from '~/utils/star.js'
 import { useMissionStore } from './mission.js'
 import { useApprovalStore } from './approval.js'
+import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 /**
  * Evaluation Store: Manages Supervisor Evaluations, Drafts, Multi-Crew Scores, Evidence & Comments
@@ -10,7 +11,7 @@ import { useApprovalStore } from './approval.js'
 
 export const useEvaluationStore = defineStore('evaluation', {
   state: () => ({
-    evaluations: JSON.parse(JSON.stringify(mockEvaluations))
+    evaluations: getStoredData('rejuve_evaluations_v2', mockEvaluations)
   }),
 
   getters: {
@@ -61,22 +62,13 @@ export const useEvaluationStore = defineStore('evaluation', {
         this.evaluations.push(evalItem)
       }
 
-      // Update mission status in mission store
-      const missionStore = useMissionStore()
-      missionStore.updateMissionStatus(missionId, {
-        status: 'DRAFT',
-        averageScore: avgScore,
-        calculatedStars: stars,
-        crewScores: formattedCrewScores
-      })
-
+      setStoredData('rejuve_evaluations_v2', this.evaluations)
       return evalItem
     },
 
-    submitForReview(payload) {
+    submitEvaluation(payload) {
       const { missionId, supervisorId, supervisorName, crewScores = [], comment, evidence } = payload
-      const now = new Date().toISOString()
-
+      
       const totalScore = crewScores.reduce((acc, cs) => acc + (Number(cs.score) || 0), 0)
       const avgScore = crewScores.length > 0 ? Math.round(totalScore / crewScores.length) : 0
       const stars = calculateStars(avgScore)
@@ -86,6 +78,8 @@ export const useEvaluationStore = defineStore('evaluation', {
         score: Number(cs.score) || 0,
         calculatedStars: calculateStars(cs.score)
       }))
+
+      const now = new Date().toISOString()
 
       let evalItem = this.evaluations.find(e => e.missionId === missionId)
       if (evalItem) {
@@ -115,7 +109,7 @@ export const useEvaluationStore = defineStore('evaluation', {
         this.evaluations.push(evalItem)
       }
 
-      // Sync with mission store
+      // 1. Update Mission Store
       const missionStore = useMissionStore()
       missionStore.updateMissionStatus(missionId, {
         status: 'PENDING_REVIEW',
@@ -124,49 +118,48 @@ export const useEvaluationStore = defineStore('evaluation', {
         crewScores: formattedCrewScores
       })
 
-      // Sync with approval store queue
+      // 2. Add / Update in Approval Queue
       const approvalStore = useApprovalStore()
       approvalStore.syncEvaluationToQueue(evalItem)
 
+      setStoredData('rejuve_evaluations_v2', this.evaluations)
       return evalItem
     },
 
-    submitEvaluation(payload) {
-      return this.submitForReview(payload)
-    },
+    resubmitEvaluation(evalId, payload) {
+      let evalItem = this.evaluations.find(e => e.id === evalId || e.missionId === evalId)
+      if (!evalItem) {
+        return this.submitEvaluation(payload)
+      }
 
-    resubmitEvaluation(evaluationId, { crewScores = [], comment, evidence } = {}) {
-      const evalItem = this.evaluations.find(e => e.id === evaluationId)
-      if (!evalItem) return null
-
+      const { crewScores = [], comment, evidence } = payload
       const totalScore = crewScores.reduce((acc, cs) => acc + (Number(cs.score) || 0), 0)
-      const avgScore = crewScores.length > 0 ? Math.round(totalScore / crewScores.length) : (evalItem.averageScore || 0)
+      const avgScore = crewScores.length > 0 ? Math.round(totalScore / crewScores.length) : 0
       const stars = calculateStars(avgScore)
+
+      const formattedCrewScores = crewScores.map(cs => ({
+        crewId: cs.crewId,
+        score: Number(cs.score) || 0,
+        calculatedStars: calculateStars(cs.score)
+      }))
+
       const now = new Date().toISOString()
-
-      const formattedCrewScores = crewScores.length > 0
-        ? crewScores.map(cs => ({
-            crewId: cs.crewId,
-            score: Number(cs.score) || 0,
-            calculatedStars: calculateStars(cs.score)
-          }))
-        : evalItem.crewScores
-
       evalItem.averageScore = avgScore
       evalItem.calculatedStars = stars
       evalItem.crewScores = formattedCrewScores
-      evalItem.comment = comment
-      evalItem.evidence = evidence
+      evalItem.comment = comment || evalItem.comment
+      evalItem.evidence = evidence || evalItem.evidence
       evalItem.status = 'PENDING_REVIEW'
       evalItem.submittedAt = now
 
-      // Mark any pending revision as resolved
+      // Mark the latest revision request as resolved by supervisor
       if (evalItem.revisionHistory && evalItem.revisionHistory.length > 0) {
-        evalItem.revisionHistory[evalItem.revisionHistory.length - 1].status = 'RESOLVED'
-        evalItem.revisionHistory[evalItem.revisionHistory.length - 1].resolvedAt = now
+        const lastRev = evalItem.revisionHistory[evalItem.revisionHistory.length - 1]
+        lastRev.status = 'RESOLVED'
+        lastRev.resolvedAt = now
       }
 
-      // Sync with mission store
+      // 1. Update Mission Store
       const missionStore = useMissionStore()
       missionStore.updateMissionStatus(evalItem.missionId, {
         status: 'PENDING_REVIEW',
@@ -175,10 +168,11 @@ export const useEvaluationStore = defineStore('evaluation', {
         crewScores: formattedCrewScores
       })
 
-      // Sync with approval store
+      // 2. Sync to Approval Queue
       const approvalStore = useApprovalStore()
       approvalStore.syncEvaluationToQueue(evalItem)
 
+      setStoredData('rejuve_evaluations_v2', this.evaluations)
       return evalItem
     }
   }

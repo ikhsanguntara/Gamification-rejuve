@@ -173,7 +173,30 @@
       </div>
     </div>
 
-    <!-- 2. Theme Preferences -->
+    <!-- 2. Data Persistence & Reset -->
+    <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-6 space-y-3 shadow-sm">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Manajemen Penyimpanan Data (LocalStorage)
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Semua Batch, User baru, Misi, dan Evaluasi tersimpan permanen di browser Anda.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          @click="handleResetData"
+          class="px-4 py-2 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer flex items-center gap-1.5"
+        >
+          <RotateCcw class="w-3.5 h-3.5" />
+          <span>Reset ke Data Default</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Theme Preferences -->
     <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-6 space-y-4 shadow-sm">
       <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
         Tema Tampilan Aplikasi
@@ -218,7 +241,8 @@
 import { useUserStore, mockUsers } from '~/stores/user.js'
 import { useTheme } from '~/composables/useTheme.js'
 import { useToast } from '~/composables/useToast.js'
-import { Sun, Moon, Laptop } from 'lucide-vue-next'
+import { clearAllStoredData } from '~/utils/storage.js'
+import { Sun, Moon, Laptop, RotateCcw } from 'lucide-vue-next'
 
 const userStore = useUserStore()
 const { theme, setTheme } = useTheme()
@@ -227,5 +251,15 @@ const toast = useToast()
 const switchUser = (userId) => {
   userStore.loginAsUser(userId)
   toast.success('Beralih Pengguna', `Aktif sebagai ${userStore.currentUser.name} (${userStore.currentUser.roleTitle})`)
+}
+
+const handleResetData = () => {
+  if (confirm('Apakah Anda yakin ingin me-reset seluruh data ke data demo awal? Semua perubahan batch/user baru akan dikembalikan ke awal.')) {
+    clearAllStoredData()
+    toast.info('Data Direset', 'Memuat ulang data awal sistem...')
+    setTimeout(() => {
+      window.location.reload()
+    }, 500)
+  }
 }
 </script>

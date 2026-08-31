@@ -131,11 +131,13 @@ const initialDirectory = [
   }))
 ]
 
+import { getStoredData, setStoredData } from '~/utils/storage.js'
+
 export const useUserStore = defineStore('user', {
   state: () => ({
     isAuthenticated: true,
     currentUserId: 'spv-001',
-    userDirectory: JSON.parse(JSON.stringify(initialDirectory)),
+    userDirectory: getStoredData('rejuve_users_v2', initialDirectory),
     notifications: [
       {
         id: 'notif-1',
@@ -257,13 +259,14 @@ export const useUserStore = defineStore('user', {
         avatar: payload.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
         department: payload.department || 'Store Operations',
         position: payload.position || 'Store Specialist',
-        storeLocation: payload.storeLocation || 'Re.juve Store',
-        batchId: payload.batchId || 'batch-alpha',
+        storeLocation: payload.storeLocation || 'Belum Ditugaskan',
+        batchId: payload.batchId || null,
         stars: Number(payload.stars) || 0,
         level: Number(payload.level) || 1
       }
 
       this.userDirectory.push(newUser)
+      setStoredData('rejuve_users_v2', this.userDirectory)
 
       if (newUser.role === 'CREW') {
         const gamificationStore = useGamificationStore()
@@ -275,7 +278,7 @@ export const useUserStore = defineStore('user', {
           position: newUser.position,
           department: newUser.department,
           storeLocation: newUser.storeLocation,
-          batchId: newUser.batchId,
+          batchId: newUser.batchId || null,
           stars: newUser.stars,
           level: newUser.level,
           completedMissions: 0,
@@ -295,6 +298,7 @@ export const useUserStore = defineStore('user', {
         const gamificationStore = useGamificationStore()
         gamificationStore.updateCrew(id, payload)
       }
+      setStoredData('rejuve_users_v2', this.userDirectory)
       return user
     },
 
@@ -306,6 +310,7 @@ export const useUserStore = defineStore('user', {
           const gamificationStore = useGamificationStore()
           gamificationStore.removeCrew(id)
         }
+        setStoredData('rejuve_users_v2', this.userDirectory)
         return true
       }
       return false
@@ -321,6 +326,7 @@ export const useUserStore = defineStore('user', {
       const gamificationStore = useGamificationStore()
       gamificationStore.reassignCrewBatch(userId, newBatchId, storeLocationName)
 
+      setStoredData('rejuve_users_v2', this.userDirectory)
       return true
     }
   }

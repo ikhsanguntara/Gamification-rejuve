@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { mockBatches } from '~/mocks/batches.js'
 import { useTemplateStore } from './template.js'
 import { useUserStore } from './user.js'
+import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 /**
  * Batch Store: Manage active batch, 3-week lifecycle, aggregated metrics, and Superadmin CRUD
@@ -9,7 +10,7 @@ import { useUserStore } from './user.js'
 
 export const useBatchStore = defineStore('batch', {
   state: () => ({
-    batches: JSON.parse(JSON.stringify(mockBatches)),
+    batches: getStoredData('rejuve_batches_v2', mockBatches),
     selectedBatchId: 'batch-alpha',
     selectedWeek: 2 // Active week for Batch Alpha
   }),
@@ -87,6 +88,7 @@ export const useBatchStore = defineStore('batch', {
         if (starsIncrement > 0) {
           batch.totalStars += starsIncrement
         }
+        setStoredData('rejuve_batches_v2', this.batches)
       }
     },
 
@@ -94,12 +96,18 @@ export const useBatchStore = defineStore('batch', {
 
     createBatch(payload) {
       const id = `batch-${Date.now()}`
-      const code = payload.code || `BTH-${String(this.batches.length + 1).padStart(2, '0')}`
+      const existingCodes = this.batches
+        .map(b => b.code)
+        .filter(c => /^BTH-\d+$/i.test(c))
+        .map(c => parseInt(c.replace(/BTH-/i, ''), 10))
+      const maxNum = existingCodes.length > 0 ? Math.max(...existingCodes) : 0
+      const autoCode = `BTH-${String(Math.max(maxNum + 1, this.batches.length + 1)).padStart(2, '0')}`
+      const code = payload.code || autoCode
+
       const startDate = payload.startDate || '2026-09-01'
       const endDate = payload.endDate || '2026-09-21'
       const crewIds = payload.assignment?.crewIds || payload.crewIds || []
 
-      // Automatically generate 3-week sequence
       const newBatch = {
         id,
         code,
@@ -129,10 +137,10 @@ export const useBatchStore = defineStore('batch', {
           maxRevisions: Number(payload.approvalConfig?.maxRevisions) || 3,
           requireEvidence: payload.approvalConfig?.requireEvidence !== false
         },
-        weeks: [
+        weeks: payload.weeks && payload.weeks.length === 3 ? payload.weeks : [
           {
             weekNumber: 1,
-            title: 'Minggu 1: Suhu & Sanitasi Dasar',
+            title: payload.week1Title || 'Minggu 1: Suhu & Sanitasi Dasar',
             startDate: 'Week 1',
             endDate: 'Day 7',
             status: 'ACTIVE',
@@ -142,7 +150,7 @@ export const useBatchStore = defineStore('batch', {
           },
           {
             weekNumber: 2,
-            title: 'Minggu 2: Kualitas Rasa & Layanan',
+            title: payload.week2Title || 'Minggu 2: Kualitas Rasa & Layanan',
             startDate: 'Week 2',
             endDate: 'Day 14',
             status: 'LOCKED',
@@ -152,7 +160,7 @@ export const useBatchStore = defineStore('batch', {
           },
           {
             weekNumber: 3,
-            title: 'Minggu 3: Audit Akhir & Stok',
+            title: payload.week3Title || 'Minggu 3: Audit Akhir & Stok',
             startDate: 'Week 3',
             endDate: 'Day 21',
             status: 'LOCKED',
@@ -164,11 +172,12 @@ export const useBatchStore = defineStore('batch', {
       }
 
       this.batches.push(newBatch)
+      setStoredData('rejuve_batches_v2', this.batches)
 
       // ⚡ Automatically apply template package (12 missions) if enabled!
       if (payload.applyTemplatePackage !== false) {
         const templateStore = useTemplateStore()
-        templateStore.applyPackageToBatch(id, payload.templatePackageId || 'pkg-rejuve-standard')
+        templateStore.applyPackageToBatch(id, payload.templatePackageId || 'pkg-sop-standard')
       }
 
       return newBatch
@@ -189,6 +198,16 @@ export const useBatchStore = defineStore('batch', {
         batch.approvalConfig = { ...batch.approvalConfig, ...payload.approvalConfig }
       }
 
+      if (payload.weeks && Array.isArray(payload.weeks)) {
+        payload.weeks.forEach((pw, idx) => {
+          if (batch.weeks[idx]) {
+            if (pw.title) batch.weeks[idx].title = pw.title
+            if (pw.status) batch.weeks[idx].status = pw.status
+            if (pw.isLocked !== undefined) batch.weeks[idx].isLocked = pw.isLocked
+          }
+        })
+      }
+
       Object.assign(batch, {
         name: payload.name !== undefined ? payload.name : batch.name,
         code: payload.code !== undefined ? payload.code : batch.code,
@@ -199,6 +218,7 @@ export const useBatchStore = defineStore('batch', {
         status: payload.status !== undefined ? payload.status : batch.status
       })
 
+      setStoredData('rejuve_batches_v2', this.batches)
       return batch
     },
 
@@ -209,6 +229,7 @@ export const useBatchStore = defineStore('batch', {
         if (this.selectedBatchId === id) {
           this.selectedBatchId = this.batches[0]?.id || ''
         }
+        setStoredData('rejuve_batches_v2', this.batches)
         return removed
       }
       return null

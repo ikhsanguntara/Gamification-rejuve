@@ -27,21 +27,22 @@
             Pengaturan & Penugasan: {{ batch.name }}
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">
-            Perbarui data gerai, rotasi penanggung jawab, dan sesuaikan anggota kru.
+            Perbarui data gerai, periode pelaksanaan, tema mingguan, penanggung jawab, dan sesuaikan anggota kru.
           </p>
         </div>
       </div>
 
       <form @submit.prevent="handleUpdate" class="space-y-6 pt-6">
         
-        <!-- 1. Informasi Cabang -->
-        <div class="space-y-3">
+        <!-- 1. Informasi Gerai & Periode Pelaksanaan -->
+        <div class="space-y-4">
           <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            1. Informasi Gerai & Cabang
+            1. Informasi Gerai & Periode Pelaksanaan
           </h3>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Nama Batch -->
+            <div class="sm:col-span-2">
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Batch / Cabang *</label>
               <input
                 v-model="form.name"
@@ -51,7 +52,21 @@
               />
             </div>
 
+            <!-- Kode Batch -->
             <div>
+              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Batch</label>
+              <input
+                v-model="form.code"
+                type="text"
+                readonly
+                class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-700 dark:text-slate-300 cursor-not-allowed select-all"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Lokasi Gerai -->
+            <div class="sm:col-span-2">
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Lokasi Mall / Outlet *</label>
               <input
                 v-model="form.storeLocation"
@@ -60,13 +75,116 @@
                 class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
               />
             </div>
+
+            <!-- Min. Skor Bintang 5 -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Min. Skor Bintang 5</label>
+              <input
+                v-model.number="form.approvalConfig.minScoreFor5Stars"
+                type="number"
+                min="50"
+                max="100"
+                required
+                class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+              />
+            </div>
+          </div>
+
+          <!-- Tanggal Mulai & Tanggal Selesai (Auto-Calculate +21 Hari) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-300/40 dark:border-amber-700/40">
+            <div>
+              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
+                <span class="flex items-center gap-1.5">
+                  <Calendar class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
+                  <span>Tanggal Mulai Siklus *</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-medium">Pilih Tanggal Mulai</span>
+              </label>
+              <input
+                v-model="form.startDate"
+                type="date"
+                required
+                class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+              />
+              <p class="text-[11px] text-slate-400 mt-1">Awal pembukaan misi Week 1.</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
+                <span class="flex items-center gap-1.5">
+                  <Calendar class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
+                  <span>Tanggal Selesai Siklus</span>
+                </span>
+                <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded">
+                  ⚡ Auto (+21 Hari)
+                </span>
+              </label>
+              <input
+                v-model="form.endDate"
+                type="date"
+                readonly
+                class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-700 dark:text-slate-300 cursor-not-allowed select-all"
+              />
+              <p class="text-[11px] text-slate-400 mt-1">Dihitung otomatis 3 minggu (21 hari) dari tanggal mulai.</p>
+            </div>
           </div>
         </div>
 
-        <!-- 2. Penanggung Jawab Approval -->
+        <!-- 2. Tema & Judul Siklus Mingguan -->
+        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              2. Tema & Judul Siklus Mingguan
+            </h3>
+            <span class="text-[11px] text-slate-400">Tampil pada kartu urutan Dashboard & Timeline</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+              <label class="block text-[11px] font-bold text-[#831843] dark:text-[#f472b6] mb-1.5">
+                📌 Judul Minggu 1
+              </label>
+              <input
+                v-model="form.weeks[0].title"
+                type="text"
+                required
+                placeholder="Minggu 1: Suhu & Sanitasi Dasar"
+                class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+              />
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+              <label class="block text-[11px] font-bold text-[#831843] dark:text-[#f472b6] mb-1.5">
+                📌 Judul Minggu 2
+              </label>
+              <input
+                v-model="form.weeks[1].title"
+                type="text"
+                required
+                placeholder="Minggu 2: Kualitas Rasa & Layanan"
+                class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+              />
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+              <label class="block text-[11px] font-bold text-[#831843] dark:text-[#f472b6] mb-1.5">
+                📌 Judul Minggu 3
+              </label>
+              <input
+                v-model="form.weeks[2].title"
+                type="text"
+                required
+                placeholder="Minggu 3: Audit Akhir & Stok"
+                class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Penanggung Jawab Approval -->
         <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            2. Penanggung Jawab Evaluasi & Approval
+            3. Penanggung Jawab Evaluasi & Approval
           </h3>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -102,11 +220,11 @@
           </div>
         </div>
 
-        <!-- 3. Pilih Anggota Crew (Compact Tag Selector) -->
+        <!-- 4. Pilih Anggota Crew (Compact Tag Selector) -->
         <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              3. Anggota Kru yang Ditugaskan ({{ form.assignment.crewIds.length }} Terpilih)
+              4. Anggota Kru yang Ditugaskan ({{ form.assignment.crewIds.length }} Terpilih)
             </h3>
             <div class="flex items-center gap-2">
               <button
@@ -148,69 +266,6 @@
           </div>
         </div>
 
-        <!-- 4. Pengaturan Lanjutan (Collapsible Accordion) -->
-        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-          <button
-            type="button"
-            @click="showAdvanced = !showAdvanced"
-            class="flex items-center justify-between w-full text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-          >
-            <span>⚙️ Pengaturan Lanjutan & Tanggal (Opsional)</span>
-            <ChevronDown class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': showAdvanced }" />
-          </button>
-
-          <div v-if="showAdvanced" class="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-3">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Kode Batch</label>
-                <input
-                  v-model="form.code"
-                  type="text"
-                  class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Tanggal Mulai</label>
-                <input
-                  v-model="form.startDate"
-                  type="date"
-                  class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Tanggal Selesai</label>
-                <input
-                  v-model="form.endDate"
-                  type="date"
-                  class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white"
-                />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              <div>
-                <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Min. Skor Bintang 5</label>
-                <input
-                  v-model.number="form.approvalConfig.minScoreFor5Stars"
-                  type="number"
-                  class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Deskripsi Gerai</label>
-                <input
-                  v-model="form.description"
-                  type="text"
-                  class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Action Buttons -->
         <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800">
           <NuxtLink
@@ -232,20 +287,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBatchStore } from '~/stores/batch.js'
 import { useUserStore } from '~/stores/user.js'
 import { useToast } from '~/composables/useToast.js'
-import { ArrowLeft, Layers, ChevronDown } from 'lucide-vue-next'
+import { ArrowLeft, Layers, Calendar } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
 const batchStore = useBatchStore()
 const userStore = useUserStore()
 const toast = useToast()
-
-const showAdvanced = ref(false)
 
 const batch = computed(() => {
   return batchStore.batchById(route.params.id)
@@ -270,6 +323,11 @@ const form = ref({
   startDate: '',
   endDate: '',
   description: '',
+  weeks: [
+    { weekNumber: 1, title: 'Minggu 1: Suhu & Sanitasi Dasar', status: 'ACTIVE', isLocked: false },
+    { weekNumber: 2, title: 'Minggu 2: Kualitas Rasa & Layanan', status: 'LOCKED', isLocked: true },
+    { weekNumber: 3, title: 'Minggu 3: Audit Akhir & Stok', status: 'LOCKED', isLocked: true }
+  ],
   assignment: {
     supervisorId: 'spv-001',
     supervisorName: 'Budi Santoso',
@@ -294,6 +352,15 @@ const populateForm = (b) => {
   form.value.endDate = b.endDate || '2026-08-30'
   form.value.description = b.description || ''
 
+  if (b.weeks && b.weeks.length === 3) {
+    form.value.weeks = b.weeks.map(w => ({
+      weekNumber: w.weekNumber,
+      title: w.title,
+      status: w.status,
+      isLocked: w.isLocked
+    }))
+  }
+
   if (b.assignment) {
     form.value.assignment = {
       supervisorId: b.assignment.supervisorId || 'spv-001',
@@ -315,6 +382,22 @@ const populateForm = (b) => {
 watch(batch, (newB) => {
   if (newB) populateForm(newB)
 }, { immediate: true })
+
+// Automatically calculate End Date (+21 days) whenever Start Date changes
+watch(
+  () => form.value.startDate,
+  (newStart) => {
+    if (newStart) {
+      const parts = newStart.split('-').map(Number)
+      const d = new Date(parts[0], parts[1] - 1, parts[2])
+      d.setDate(d.getDate() + 21)
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      form.value.endDate = `${year}-${month}-${day}`
+    }
+  }
+)
 
 const toggleCrewSelection = (crewId) => {
   const idx = form.value.assignment.crewIds.indexOf(crewId)

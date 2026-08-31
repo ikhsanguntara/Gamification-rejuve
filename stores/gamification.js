@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { mockCrews } from '~/mocks/crews.js'
 import { mockAchievements } from '~/mocks/achievements.js'
 import { calculateStarLevel } from '~/utils/star.js'
+import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 /**
  * Gamification Store: Stars, Levels, Leaderboard & Achievements
@@ -9,8 +10,8 @@ import { calculateStarLevel } from '~/utils/star.js'
 
 export const useGamificationStore = defineStore('gamification', {
   state: () => ({
-    crews: JSON.parse(JSON.stringify(mockCrews)),
-    achievements: JSON.parse(JSON.stringify(mockAchievements))
+    crews: getStoredData('rejuve_crews_v2', mockCrews),
+    achievements: getStoredData('rejuve_achievements_v2', mockAchievements)
   }),
 
   getters: {
@@ -87,7 +88,7 @@ export const useGamificationStore = defineStore('gamification', {
         position: payload.position || 'Store Specialist',
         department: payload.department || 'Store Operations',
         storeLocation: payload.storeLocation || 'Re.juve Store',
-        batchId: payload.batchId || 'batch-alpha',
+        batchId: payload.batchId || null,
         stars: Number(payload.stars) || 0,
         level: calculateStarLevel(Number(payload.stars) || 0),
         completedMissions: Number(payload.completedMissions) || 0,
@@ -96,6 +97,7 @@ export const useGamificationStore = defineStore('gamification', {
       }
 
       this.crews.push(newCrew)
+      setStoredData('rejuve_crews_v2', this.crews)
       return newCrew
     },
 
@@ -106,13 +108,16 @@ export const useGamificationStore = defineStore('gamification', {
       if (payload.stars !== undefined) {
         crew.level = calculateStarLevel(crew.stars)
       }
+      setStoredData('rejuve_crews_v2', this.crews)
       return crew
     },
 
     removeCrew(id) {
       const idx = this.crews.findIndex(c => c.id === id)
       if (idx !== -1) {
-        return this.crews.splice(idx, 1)[0]
+        const removed = this.crews.splice(idx, 1)[0]
+        setStoredData('rejuve_crews_v2', this.crews)
+        return removed
       }
       return null
     },
@@ -122,6 +127,7 @@ export const useGamificationStore = defineStore('gamification', {
       if (crew) {
         crew.batchId = newBatchId
         if (storeLocation) crew.storeLocation = storeLocation
+        setStoredData('rejuve_crews_v2', this.crews)
         return true
       }
       return false
@@ -145,6 +151,7 @@ export const useGamificationStore = defineStore('gamification', {
 
       // Check achievements
       const newlyUnlocked = this.evaluateAchievements(crew, meta)
+      setStoredData('rejuve_crews_v2', this.crews)
 
       return {
         crewId,

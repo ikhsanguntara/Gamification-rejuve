@@ -113,21 +113,21 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400">{{ u.position }}</p>
               </td>
 
-              <!-- Assigned Batch & Quick Move Dropdown -->
+              <!-- Assigned Batch Display (Read Only) -->
               <td class="py-3 px-4">
-                <div v-if="u.role === 'CREW'" class="flex items-center gap-2">
-                  <select
-                    :value="u.batchId"
-                    @change="handleReassignBatch(u.id, $event.target.value)"
-                    class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-2.5 py-1 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#831843] cursor-pointer"
+                <div v-if="u.role === 'CREW'">
+                  <span
+                    v-if="u.batchId"
+                    class="text-xs font-medium text-slate-700 dark:text-slate-300"
                   >
-                    <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
-                      {{ b.name.split('—')[1] || b.name }}
-                    </option>
-                  </select>
+                    {{ getBatchName(u.batchId) }}
+                  </span>
+                  <span v-else class="text-xs text-slate-400 italic">
+                    Belum Ditugaskan
+                  </span>
                 </div>
                 <div v-else class="text-slate-400 text-xs italic">
-                  {{ u.storeLocation || 'All Operations' }}
+                  {{ u.storeLocation || 'Semua Cabang' }}
                 </div>
               </td>
 
@@ -196,16 +196,16 @@ const filteredUsers = computed(() => {
   })
 })
 
+const getBatchName = (batchId) => {
+  if (!batchId) return 'Belum Ditugaskan'
+  const b = batchStore.batchById(batchId)
+  return b ? b.name : 'Belum Ditugaskan'
+}
+
 const confirmDeleteUser = (user) => {
   if (confirm(`Apakah Anda yakin ingin menghapus user ${user.name}?`)) {
     userStore.deleteUser(user.id)
     toast.info('User Dihapus', `${user.name} telah dihapus dari direktori.`)
   }
-}
-
-const handleReassignBatch = (userId, newBatchId) => {
-  const b = batchStore.batchById(newBatchId)
-  userStore.assignUserToBatch(userId, newBatchId, b?.name || '')
-  toast.success('Penugasan Gerai Berhasil', `Crew dipindahkan ke ${b?.name.split('—')[1] || b?.name}.`)
 }
 </script>

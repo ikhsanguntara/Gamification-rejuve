@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { mockMissions } from '~/mocks/missions.js'
 import { calculateStars } from '~/utils/star.js'
 import { useGamificationStore } from './gamification.js'
+import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 /**
  * Mission Store: Manages store-wide missions across batches and weeks, and Superadmin CRUD
@@ -9,7 +10,7 @@ import { useGamificationStore } from './gamification.js'
 
 export const useMissionStore = defineStore('mission', {
   state: () => ({
-    missions: JSON.parse(JSON.stringify(mockMissions)),
+    missions: getStoredData('rejuve_missions_v2', mockMissions),
     searchQuery: '',
     selectedCategory: 'ALL',
     selectedStatus: 'ALL'
@@ -71,6 +72,8 @@ export const useMissionStore = defineStore('mission', {
           }
         })
       }
+
+      setStoredData('rejuve_missions_v2', this.missions)
     },
 
     setFilters({ search, category, status } = {}) {
@@ -118,6 +121,7 @@ export const useMissionStore = defineStore('mission', {
       }
 
       this.missions.push(newMission)
+      setStoredData('rejuve_missions_v2', this.missions)
       return newMission
     },
 
@@ -125,13 +129,16 @@ export const useMissionStore = defineStore('mission', {
       const mission = this.missions.find(m => m.id === id)
       if (!mission) return null
       Object.assign(mission, payload)
+      setStoredData('rejuve_missions_v2', this.missions)
       return mission
     },
 
     deleteMission(id) {
       const idx = this.missions.findIndex(m => m.id === id)
       if (idx !== -1) {
-        return this.missions.splice(idx, 1)[0]
+        const removed = this.missions.splice(idx, 1)[0]
+        setStoredData('rejuve_missions_v2', this.missions)
+        return removed
       }
       return null
     }

@@ -5,6 +5,7 @@ import { useEvaluationStore } from './evaluation.js'
 import { useGamificationStore } from './gamification.js'
 import { useBatchStore } from './batch.js'
 import { useUserStore } from './user.js'
+import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 /**
  * Approval Store: Head Review Workspace (Approve & Request Revision for Store-Wide Multi-Crew Missions)
@@ -12,7 +13,7 @@ import { useUserStore } from './user.js'
 
 export const useApprovalStore = defineStore('approval', {
   state: () => ({
-    approvals: JSON.parse(JSON.stringify(mockApprovals)),
+    approvals: getStoredData('rejuve_approvals_v2', mockApprovals),
     activities: [
       {
         id: 'act-1',
@@ -129,6 +130,7 @@ export const useApprovalStore = defineStore('approval', {
         badge: `+${totalStarsAwardedAll} Total Stars Awarded`
       })
 
+      setStoredData('rejuve_approvals_v2', this.approvals)
       return {
         success: true,
         awardedStars,
@@ -186,6 +188,7 @@ export const useApprovalStore = defineStore('approval', {
         badge: 'Revision Required'
       })
 
+      setStoredData('rejuve_approvals_v2', this.approvals)
       return {
         success: true,
         missionTitle: item.missionTitle
@@ -241,6 +244,8 @@ export const useApprovalStore = defineStore('approval', {
         }
         this.approvals.unshift(item)
       }
+
+      setStoredData('rejuve_approvals_v2', this.approvals)
     }
   }
 })
