@@ -140,6 +140,31 @@ export const useApprovalStore = defineStore('approval', {
       }
     },
 
+    bulkApprove(approvalIds = []) {
+      if (!approvalIds || approvalIds.length === 0) return { success: false, approvedCount: 0 }
+      
+      let approvedCount = 0
+      let totalStarsAwarded = 0
+
+      approvalIds.forEach(id => {
+        const item = this.approvals.find(a => a.id === id && a.status === 'PENDING_REVIEW')
+        if (item) {
+          const res = this.approveMission(item.id)
+          if (res.success) {
+            approvedCount++
+            totalStarsAwarded += res.totalStarsAwardedAll || 0
+          }
+        }
+      })
+
+      setStoredData('rejuve_approvals_v3', this.approvals)
+      return {
+        success: true,
+        approvedCount,
+        totalStarsAwarded
+      }
+    },
+
     requestRevision(approvalId, revisionNote) {
       if (!revisionNote || !revisionNote.trim()) {
         return { success: false, error: 'Revision note is required' }

@@ -24,10 +24,6 @@ export const useEvaluationStore = defineStore('evaluation', {
     saveDraft(payload) {
       const { missionId, supervisorId, supervisorName, crewScores = [], comment, evidence } = payload
       
-      const totalScore = crewScores.reduce((acc, cs) => acc + (Number(cs.score) || 0), 0)
-      const avgScore = crewScores.length > 0 ? Math.round(totalScore / crewScores.length) : 0
-      const stars = calculateStars(avgScore)
-
       const formattedCrewScores = crewScores.map(cs => ({
         crewId: cs.crewId,
         score: Number(cs.score) || 0,
@@ -36,18 +32,35 @@ export const useEvaluationStore = defineStore('evaluation', {
 
       let evalItem = this.evaluations.find(e => e.missionId === missionId)
       if (evalItem) {
+        const mergedCrewScores = [...(evalItem.crewScores || [])]
+        formattedCrewScores.forEach(newCs => {
+          const idx = mergedCrewScores.findIndex(cs => cs.crewId === newCs.crewId)
+          if (idx >= 0) {
+            mergedCrewScores[idx] = newCs
+          } else {
+            mergedCrewScores.push(newCs)
+          }
+        })
+        const totalScore = mergedCrewScores.reduce((acc, cs) => acc + (Number(cs.score) || 0), 0)
+        const avgScore = mergedCrewScores.length > 0 ? Math.round(totalScore / mergedCrewScores.length) : 0
+        const stars = calculateStars(avgScore)
+
         evalItem.averageScore = avgScore
         evalItem.calculatedStars = stars
-        evalItem.crewScores = formattedCrewScores
-        evalItem.comment = comment || ''
-        evalItem.evidence = evidence || []
+        evalItem.crewScores = mergedCrewScores
+        evalItem.comment = comment || evalItem.comment || ''
+        evalItem.evidence = evidence || evalItem.evidence || []
         evalItem.status = 'DRAFT'
         evalItem.evaluatedAt = new Date().toISOString()
       } else {
+        const totalScore = formattedCrewScores.reduce((acc, cs) => acc + (Number(cs.score) || 0), 0)
+        const avgScore = formattedCrewScores.length > 0 ? Math.round(totalScore / formattedCrewScores.length) : 0
+        const stars = calculateStars(avgScore)
+
         evalItem = {
           id: `eval-${Date.now()}`,
           missionId,
-          supervisorId: supervisorId || 'spv-001',
+          supervisorId: supervisorId || 'sl-001',
           supervisorName: supervisorName || 'Budi Santoso',
           averageScore: avgScore,
           calculatedStars: stars,
@@ -66,13 +79,17 @@ export const useEvaluationStore = defineStore('evaluation', {
       return evalItem
     },
 
+    submitForReview(payload) {
+      const existing = this.evaluations.find(e => e.missionId === payload.missionId)
+      if (existing && existing.status === 'REVISION_REQUIRED') {
+        return this.resubmitEvaluation(existing.id, payload)
+      }
+      return this.submitEvaluation(payload)
+    },
+
     submitEvaluation(payload) {
       const { missionId, supervisorId, supervisorName, crewScores = [], comment, evidence } = payload
       
-      const totalScore = crewScores.reduce((acc, cs) => acc + (Number(cs.score) || 0), 0)
-      const avgScore = crewScores.length > 0 ? Math.round(totalScore / crewScores.length) : 0
-      const stars = calculateStars(avgScore)
-
       const formattedCrewScores = crewScores.map(cs => ({
         crewId: cs.crewId,
         score: Number(cs.score) || 0,
@@ -83,18 +100,35 @@ export const useEvaluationStore = defineStore('evaluation', {
 
       let evalItem = this.evaluations.find(e => e.missionId === missionId)
       if (evalItem) {
+        const mergedCrewScores = [...(evalItem.crewScores || [])]
+        formattedCrewScores.forEach(newCs => {
+          const idx = mergedCrewScores.findIndex(cs => cs.crewId === newCs.crewId)
+          if (idx >= 0) {
+            mergedCrewScores[idx] = newCs
+          } else {
+            mergedCrewScores.push(newCs)
+          }
+        })
+        const totalScore = mergedCrewScores.reduce((acc, cs) => acc + (Number(cs.score) || 0), 0)
+        const avgScore = mergedCrewScores.length > 0 ? Math.round(totalScore / mergedCrewScores.length) : 0
+        const stars = calculateStars(avgScore)
+
         evalItem.averageScore = avgScore
         evalItem.calculatedStars = stars
-        evalItem.crewScores = formattedCrewScores
-        evalItem.comment = comment || ''
-        evalItem.evidence = evidence || []
+        evalItem.crewScores = mergedCrewScores
+        evalItem.comment = comment || evalItem.comment || ''
+        evalItem.evidence = evidence || evalItem.evidence || []
         evalItem.status = 'PENDING_REVIEW'
         evalItem.submittedAt = now
       } else {
+        const totalScore = formattedCrewScores.reduce((acc, cs) => acc + (Number(cs.score) || 0), 0)
+        const avgScore = formattedCrewScores.length > 0 ? Math.round(totalScore / formattedCrewScores.length) : 0
+        const stars = calculateStars(avgScore)
+
         evalItem = {
           id: `eval-${Date.now()}`,
           missionId,
-          supervisorId: supervisorId || 'spv-001',
+          supervisorId: supervisorId || 'sl-001',
           supervisorName: supervisorName || 'Budi Santoso',
           averageScore: avgScore,
           calculatedStars: stars,
@@ -113,9 +147,9 @@ export const useEvaluationStore = defineStore('evaluation', {
       const missionStore = useMissionStore()
       missionStore.updateMissionStatus(missionId, {
         status: 'PENDING_REVIEW',
-        averageScore: avgScore,
-        calculatedStars: stars,
-        crewScores: formattedCrewScores
+        averageScore: evalItem.averageScore,
+        calculatedStars: evalItem.calculatedStars,
+        crewScores: evalItem.crewScores
       })
 
       // 2. Add / Update in Approval Queue
@@ -133,20 +167,29 @@ export const useEvaluationStore = defineStore('evaluation', {
       }
 
       const { crewScores = [], comment, evidence } = payload
-      const totalScore = crewScores.reduce((acc, cs) => acc + (Number(cs.score) || 0), 0)
-      const avgScore = crewScores.length > 0 ? Math.round(totalScore / crewScores.length) : 0
-      const stars = calculateStars(avgScore)
-
       const formattedCrewScores = crewScores.map(cs => ({
         crewId: cs.crewId,
         score: Number(cs.score) || 0,
         calculatedStars: calculateStars(cs.score)
       }))
 
+      const mergedCrewScores = [...(evalItem.crewScores || [])]
+      formattedCrewScores.forEach(newCs => {
+        const idx = mergedCrewScores.findIndex(cs => cs.crewId === newCs.crewId)
+        if (idx >= 0) {
+          mergedCrewScores[idx] = newCs
+        } else {
+          mergedCrewScores.push(newCs)
+        }
+      })
+      const totalScore = mergedCrewScores.reduce((acc, cs) => acc + (Number(cs.score) || 0), 0)
+      const avgScore = mergedCrewScores.length > 0 ? Math.round(totalScore / mergedCrewScores.length) : 0
+      const stars = calculateStars(avgScore)
+
       const now = new Date().toISOString()
       evalItem.averageScore = avgScore
       evalItem.calculatedStars = stars
-      evalItem.crewScores = formattedCrewScores
+      evalItem.crewScores = mergedCrewScores
       evalItem.comment = comment || evalItem.comment
       evalItem.evidence = evidence || evalItem.evidence
       evalItem.status = 'PENDING_REVIEW'

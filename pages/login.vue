@@ -40,99 +40,99 @@
             Pilih Akun Persona untuk Masuk (Simulasi Data Terpisah)
           </label>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
-            <!-- SPV 1 -->
+            <!-- SL 1 -->
             <button
               type="button"
-              @click="selectAccount('spv-001')"
+              @click="selectAccount('sl-001')"
               class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
               :class="[
-                selectedUserId === 'spv-001'
+                selectedUserId === 'sl-001'
                   ? 'border-[#831843] ring-2 ring-[#831843] bg-[#831843]/10 dark:bg-[#831843]/20 shadow-md scale-[1.02]'
                   : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40'
               ]"
             >
               <img
-                :src="mockUsers.SUPERVISOR_1.avatar"
-                :alt="mockUsers.SUPERVISOR_1.name"
+                :src="mockUsers.STORE_LEADER_1.avatar"
+                :alt="mockUsers.STORE_LEADER_1.name"
                 class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5"
               />
               <span class="text-xs font-bold text-slate-900 dark:text-white block truncate w-full">
-                {{ mockUsers.SUPERVISOR_1.name }}
+                {{ mockUsers.STORE_LEADER_1.name }}
               </span>
               <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                👔 SPV (Batch 1 & 2)
+                👔 SL 1 (Batch 1 & 2)
               </span>
             </button>
 
-            <!-- SPV 2 -->
+            <!-- SL 2 -->
             <button
               type="button"
-              @click="selectAccount('spv-002')"
+              @click="selectAccount('sl-002')"
               class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
               :class="[
-                selectedUserId === 'spv-002'
+                selectedUserId === 'sl-002'
                   ? 'border-[#831843] ring-2 ring-[#831843] bg-[#831843]/10 dark:bg-[#831843]/20 shadow-md scale-[1.02]'
                   : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40'
               ]"
             >
               <img
-                :src="mockUsers.SUPERVISOR_2.avatar"
-                :alt="mockUsers.SUPERVISOR_2.name"
+                :src="mockUsers.STORE_LEADER_2.avatar"
+                :alt="mockUsers.STORE_LEADER_2.name"
                 class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5"
               />
               <span class="text-xs font-bold text-slate-900 dark:text-white block truncate w-full">
-                {{ mockUsers.SUPERVISOR_2.name }}
+                {{ mockUsers.STORE_LEADER_2.name }}
               </span>
               <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                👔 SPV (Batch 3 PIM)
+                👔 SL 2 (Batch 3 PIM)
               </span>
             </button>
 
-            <!-- Head 1 -->
+            <!-- DM 1 -->
             <button
               type="button"
-              @click="selectAccount('head-001')"
+              @click="selectAccount('dm-001')"
               class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
               :class="[
-                selectedUserId === 'head-001'
-                  ? 'border-[#831843] ring-2 ring-[#831843] bg-[#831843]/10 dark:bg-[#831843]/20 shadow-md scale-[1.02]'
+                selectedUserId === 'dm-001'
+                  ? 'border-purple-600 ring-2 ring-purple-600 bg-purple-50 dark:bg-purple-950/40 shadow-md scale-[1.02]'
                   : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40'
               ]"
             >
               <img
-                :src="mockUsers.HEAD_1.avatar"
-                :alt="mockUsers.HEAD_1.name"
+                :src="mockUsers.DISTRICT_MANAGER_1.avatar"
+                :alt="mockUsers.DISTRICT_MANAGER_1.name"
                 class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5"
               />
               <span class="text-xs font-bold text-slate-900 dark:text-white block truncate w-full">
-                {{ mockUsers.HEAD_1.name }}
+                {{ mockUsers.DISTRICT_MANAGER_1.name }}
               </span>
-              <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
-                👑 Head (Batch 1 & 2)
+              <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
+                👑 DM (Pusat B1 & 2)
               </span>
             </button>
 
-            <!-- Head 2 -->
+            <!-- DM 2 -->
             <button
               type="button"
-              @click="selectAccount('head-002')"
+              @click="selectAccount('dm-002')"
               class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
               :class="[
-                selectedUserId === 'head-002'
-                  ? 'border-[#831843] ring-2 ring-[#831843] bg-[#831843]/10 dark:bg-[#831843]/20 shadow-md scale-[1.02]'
+                selectedUserId === 'dm-002'
+                  ? 'border-purple-600 ring-2 ring-purple-600 bg-purple-50 dark:bg-purple-950/40 shadow-md scale-[1.02]'
                   : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40'
               ]"
             >
               <img
-                :src="mockUsers.HEAD_2.avatar"
-                :alt="mockUsers.HEAD_2.name"
+                :src="mockUsers.DISTRICT_MANAGER_2.avatar"
+                :alt="mockUsers.DISTRICT_MANAGER_2.name"
                 class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5"
               />
               <span class="text-xs font-bold text-slate-900 dark:text-white block truncate w-full">
-                {{ mockUsers.HEAD_2.name }}
+                {{ mockUsers.DISTRICT_MANAGER_2.name }}
               </span>
-              <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
-                👑 Head (Batch 3 PIM)
+              <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
+                👑 DM (Selatan B3)
               </span>
             </button>
 
@@ -209,17 +209,17 @@
             <span class="font-bold text-slate-800 dark:text-slate-200 block">
               Ringkasan Hak Akses & Penugasan:
             </span>
-            <p v-if="selectedUserId === 'spv-001'" class="text-xs leading-relaxed">
-              👔 <strong>Budi Santoso (Supervisor)</strong>: Bertanggung jawab mengevaluasi <strong>Batch 1 (Grand Indonesia)</strong> dan <strong>Batch 2 (Senayan City)</strong>. Tidak dapat menilai Batch 3.
+            <p v-if="selectedUserId === 'sl-001' || selectedUserId === 'spv-001'" class="text-xs leading-relaxed">
+              👔 <strong>Budi Santoso (Store Leader)</strong>: Bertanggung jawab mengevaluasi <strong>Batch 1 (Grand Indonesia)</strong> dan <strong>Batch 2 (Senayan City)</strong> per kru.
             </p>
-            <p v-else-if="selectedUserId === 'spv-002'" class="text-xs leading-relaxed">
-              👔 <strong>Dewi Lestari (Supervisor)</strong>: Bertanggung jawab mengevaluasi <strong>Batch 3 (Pondok Indah Mall)</strong>. Data evaluasi terpisah dari Batch 1 & 2.
+            <p v-else-if="selectedUserId === 'sl-002' || selectedUserId === 'spv-002'" class="text-xs leading-relaxed">
+              👔 <strong>Dewi Lestari (Store Leader)</strong>: Bertanggung jawab mengevaluasi <strong>Batch 3 (Pondok Indah Mall)</strong> per kru.
             </p>
-            <p v-else-if="selectedUserId === 'head-001'" class="text-xs leading-relaxed">
-              👑 <strong>Ahmad Dahlan (Head of Ops)</strong>: Menerima antrean review persetujuan untuk <strong>Batch 1 & 2</strong>.
+            <p v-else-if="selectedUserId === 'dm-001' || selectedUserId === 'head-001'" class="text-xs leading-relaxed">
+              👑 <strong>Ahmad Dahlan (District Manager)</strong>: Menerima antrean review persetujuan (Bulk Approve) untuk <strong>Batch 1 & 2</strong> serta dapat menilai kru langsung.
             </p>
-            <p v-else-if="selectedUserId === 'head-002'" class="text-xs leading-relaxed">
-              👑 <strong>Citra Dewi (Head of Ops)</strong>: Menerima antrean review persetujuan khusus untuk <strong>Batch 3 (PIM)</strong>.
+            <p v-else-if="selectedUserId === 'dm-002' || selectedUserId === 'head-002'" class="text-xs leading-relaxed">
+              👑 <strong>Citra Dewi (District Manager)</strong>: Menerima antrean review persetujuan (Bulk Approve) khusus untuk <strong>Batch 3 (PIM)</strong>.
             </p>
             <p v-else-if="selectedUserId === 'crew-001'" class="text-xs leading-relaxed">
               👤 <strong>Andi Pratama (Store Crew)</strong>: Anggota tim <strong>Batch 1</strong>.
@@ -246,7 +246,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore, mockUsers } from '~/stores/user.js'
 import { useToast } from '~/composables/useToast.js'
@@ -260,13 +260,19 @@ const router = useRouter()
 const userStore = useUserStore()
 const toast = useToast()
 
-const selectedUserId = ref('spv-001')
-const email = ref(mockUsers.SUPERVISOR_1.email)
+const selectedUserId = ref('sl-001')
+const email = ref(mockUsers.STORE_LEADER_1.email)
 const isLoading = ref(false)
 
 const selectAccount = (userId) => {
   selectedUserId.value = userId
-  const found = userStore.userDirectory.find(u => u.id === userId)
+  let targetId = userId
+  if (userId === 'spv-001') targetId = 'sl-001'
+  else if (userId === 'spv-002') targetId = 'sl-002'
+  else if (userId === 'head-001') targetId = 'dm-001'
+  else if (userId === 'head-002') targetId = 'dm-002'
+
+  const found = userStore.userDirectory.find(u => u.id === targetId || u.id === userId)
   if (found) {
     email.value = found.email
   }

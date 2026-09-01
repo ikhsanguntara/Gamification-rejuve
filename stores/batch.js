@@ -101,12 +101,22 @@ export const useBatchStore = defineStore('batch', {
     accessibleBatches: (state) => {
       const userStore = useUserStore()
       if (userStore.isSuperadmin) return state.batches
-      if (userStore.isSupervisor) {
-        const my = state.batches.filter(b => b.assignment?.supervisorId === userStore.currentUserId)
+      if (userStore.isStoreLeader) {
+        const my = state.batches.filter(b => 
+          b.assignment?.storeLeaderId === userStore.currentUserId ||
+          b.assignment?.supervisorId === userStore.currentUserId ||
+          (userStore.currentUserId === 'sl-001' && (b.id === 'batch-alpha' || b.id === 'batch-beta')) ||
+          (userStore.currentUserId === 'sl-002' && b.id === 'batch-gamma')
+        )
         return my.length > 0 ? my : state.batches
       }
-      if (userStore.isHead) {
-        const my = state.batches.filter(b => b.assignment?.headId === userStore.currentUserId)
+      if (userStore.isDistrictManager) {
+        const my = state.batches.filter(b => 
+          b.assignment?.districtManagerId === userStore.currentUserId ||
+          b.assignment?.headId === userStore.currentUserId ||
+          (userStore.currentUserId === 'dm-001' && (b.id === 'batch-alpha' || b.id === 'batch-beta')) ||
+          (userStore.currentUserId === 'dm-002' && b.id === 'batch-gamma')
+        )
         return my.length > 0 ? my : state.batches
       }
       if (userStore.isCrew) {
@@ -120,7 +130,7 @@ export const useBatchStore = defineStore('batch', {
       const found = state.batches.find(b => b.id === state.selectedBatchId)
       if (found) return found
       const userStore = useUserStore()
-      if (userStore.isSupervisor || userStore.isHead || userStore.isCrew) {
+      if (userStore.isStoreLeader || userStore.isDistrictManager || userStore.isCrew) {
         const acc = state.accessibleBatches
         return acc[0] || state.batches[0]
       }
@@ -225,10 +235,15 @@ export const useBatchStore = defineStore('batch', {
         averageScore: 0,
         totalStars: 0,
         assignment: {
-          supervisorId: payload.assignment?.supervisorId || payload.supervisorId || 'spv-001',
-          supervisorName: payload.assignment?.supervisorName || payload.supervisorName || 'Budi Santoso',
-          headId: payload.assignment?.headId || payload.headId || 'head-001',
-          headName: payload.assignment?.headName || payload.headName || 'Ahmad Dahlan',
+          storeLeaderId: payload.assignment?.storeLeaderId || payload.storeLeaderId || payload.assignment?.supervisorId || payload.supervisorId || 'sl-001',
+          storeLeaderName: payload.assignment?.storeLeaderName || payload.storeLeaderName || payload.assignment?.supervisorName || payload.supervisorName || 'Budi Santoso',
+          districtManagerId: payload.assignment?.districtManagerId || payload.districtManagerId || payload.assignment?.headId || payload.headId || 'dm-001',
+          districtManagerName: payload.assignment?.districtManagerName || payload.districtManagerName || payload.assignment?.headName || payload.headName || 'Ahmad Dahlan',
+          // Backwards compatibility alias
+          supervisorId: payload.assignment?.storeLeaderId || payload.storeLeaderId || payload.assignment?.supervisorId || payload.supervisorId || 'sl-001',
+          supervisorName: payload.assignment?.storeLeaderName || payload.storeLeaderName || payload.assignment?.supervisorName || payload.supervisorName || 'Budi Santoso',
+          headId: payload.assignment?.districtManagerId || payload.districtManagerId || payload.assignment?.headId || payload.headId || 'dm-001',
+          headName: payload.assignment?.districtManagerName || payload.districtManagerName || payload.assignment?.headName || payload.headName || 'Ahmad Dahlan',
           crewIds: crewIds
         },
         approvalConfig: {

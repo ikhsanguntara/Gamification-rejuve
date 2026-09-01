@@ -79,6 +79,10 @@ export const useGamificationStore = defineStore('gamification', {
 
   actions: {
     // ==================== SUPERADMIN ACTIONS ====================
+    addNewCrew(payload) {
+      return this.addCrew(payload)
+    },
+
     addCrew(payload) {
       const newCrew = {
         id: payload.id || `crew-${Date.now()}`,

@@ -47,9 +47,9 @@
               required
               class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             >
-              <option value="CREW">Crew Member (Store Specialist)</option>
-              <option value="SUPERVISOR">Area Store Supervisor</option>
-              <option value="HEAD">Head of Operations & Quality</option>
+              <option value="CREW">Crew (Store Specialist)</option>
+              <option value="STORE_LEADER">Store Leader (SL)</option>
+              <option value="DISTRICT_MANAGER">District Manager (DM)</option>
               <option value="SUPERADMIN">System Superadmin</option>
             </select>
           </div>

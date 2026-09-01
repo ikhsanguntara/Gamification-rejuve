@@ -177,27 +177,13 @@ console.log('')
 // ==========================================
 // TEST SUITE 5: SUPERVISOR EVALUATION & HEAD APPROVAL WORKFLOW
 // ==========================================
-console.log('📌 5. Menguji Alur Evaluasi Supervisor & Approval Head:')
+console.log('📌 5. Menguji Alur Evaluasi Store Leader & Approval District Manager:')
 
-// 5.1 SAVE EVALUATION DRAFT
+// 5.1 SUBMIT EVALUATION PER MISI KE DISTRICT MANAGER
 const targetMission = missionStore.missions[0]
-const draftResult = evalStore.saveDraft({
+const submitResult = evalStore.submitForReview({
   missionId: targetMission.id,
-  supervisorId: 'spv-001',
-  supervisorName: 'Budi Santoso',
-  crewScores: [
-    { crewId: 'crew-001', score: 95 },
-    { crewId: 'crew-002', score: 92 }
-  ],
-  comment: 'Suhu chiller stabil di 3.1°C.',
-  evidence: ['https://images.unsplash.com/photo-chiller.jpg']
-})
-assert(draftResult !== null, 'Save Draft Evaluation: Supervisor berhasil menyimpan draft evaluasi')
-
-// 5.2 SUBMIT EVALUATION TO HEAD
-const submitResult = evalStore.submitEvaluation({
-  missionId: targetMission.id,
-  supervisorId: 'spv-001',
+  supervisorId: 'sl-001',
   supervisorName: 'Budi Santoso',
   crewScores: [
     { crewId: 'crew-001', score: 95 },
@@ -206,33 +192,25 @@ const submitResult = evalStore.submitEvaluation({
   comment: 'Seluruh kru mematuhi SOP cold chain.',
   evidence: ['https://images.unsplash.com/photo-chiller.jpg']
 })
-assert(submitResult !== null && targetMission.status === 'PENDING_REVIEW', 'Submit Evaluation: Status misi berubah menjadi PENDING_REVIEW')
+assert(submitResult !== null && targetMission.status === 'PENDING_REVIEW', 'Submit Evaluation per Misi: Status misi langsung berubah menjadi PENDING_REVIEW di DM')
 
-// 5.3 HEAD REQUEST REVISION
+// 5.2 DISTRICT MANAGER BULK APPROVE & PENCAIRAN BINTANG
 const pendingApproval = approvalStore.approvals.find(a => a.missionId === targetMission.id)
 if (pendingApproval) {
-  approvalStore.requestRevision(pendingApproval.id, 'Mohon sertakan foto logbook suhu bagian sore hari.')
-  assert(targetMission.status === 'REVISION_REQUIRED', 'Head Request Revision: Status misi berubah menjadi REVISION_REQUIRED')
-  
-  // 5.4 SUPERVISOR RESUBMIT REVISION
-  evalStore.resubmitEvaluation(submitResult.id, {
-    crewScores: [
-      { crewId: 'crew-001', score: 95 },
-      { crewId: 'crew-002', score: 92 }
-    ],
-    comment: 'Foto logbook sore telah dilampirkan.',
-    evidence: ['https://images.unsplash.com/photo-chiller.jpg', 'https://images.unsplash.com/photo-logbook.jpg']
-  })
-  assert(targetMission.status === 'PENDING_REVIEW', 'Resubmit Revision: Supervisor berhasil mengirim ulang evaluasi revisi')
-
-  // 5.5 HEAD APPROVE EVALUATION & MINT STARS
   const initialStarsCrew1 = gamificationStore.crewById('crew-001')?.stars || 0
-  const approveResult = approvalStore.approveMission(pendingApproval.id)
-  assert(approveResult.success === true && targetMission.status === 'COMPLETED', 'Head Approve: Status misi berubah menjadi COMPLETED')
+  const bulkResult = approvalStore.bulkApprove([pendingApproval.id])
+  assert(bulkResult.success === true && bulkResult.approvedCount >= 1 && targetMission.status === 'COMPLETED', 'District Manager Bulk Approve: Berhasil menyetujui misi secara massal')
   
   const finalStarsCrew1 = gamificationStore.crewById('crew-001')?.stars || 0
-  assert(finalStarsCrew1 >= initialStarsCrew1, 'Gamification Minting: Reward bintang otomatis dicairkan ke saldo kru')
+  assert(finalStarsCrew1 >= initialStarsCrew1, 'Gamification Minting: Reward bintang otomatis dicairkan ke saldo seluruh kru')
 }
+
+// 5.6 ROLE SYSTEM VALIDATION
+userStore.loginAsUser('sl-001')
+assert(userStore.isStoreLeader === true && userStore.currentRole === 'STORE_LEADER', 'Role Validation: Akun SL-001 teridentifikasi sebagai Store Leader')
+
+userStore.loginAsUser('dm-001')
+assert(userStore.isDistrictManager === true && userStore.currentRole === 'DISTRICT_MANAGER', 'Role Validation: Akun DM-001 teridentifikasi sebagai District Manager')
 
 console.log('')
 console.log(`==========================================`)

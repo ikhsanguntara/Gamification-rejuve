@@ -46,7 +46,7 @@ export const mockEvaluations = [
     supervisorName: 'Budi Santoso',
     averageScore: 82,
     calculatedStars: 4,
-    status: 'REVISION_REQUIRED',
+    status: 'PENDING_REVIEW',
     comment: 'Layanan ramah, namun waktu pembuatan pesanan masih di atas 45 detik saat jam sibuk siang.',
     crewScores: [
       { crewId: 'crew-001', score: 85, calculatedStars: 4 },

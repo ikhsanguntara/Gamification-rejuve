@@ -285,10 +285,12 @@ const roleBadgeStyle = computed(() => {
   switch (userStore.currentRole) {
     case 'CREW':
       return 'bg-[#831843]/15 text-[#831843] dark:text-[#f472b6]'
+    case 'STORE_LEADER':
     case 'SUPERVISOR':
       return 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+    case 'DISTRICT_MANAGER':
     case 'HEAD':
-      return 'bg-[#6b133a]/15 text-[#831843] dark:text-[#fbcfe8]'
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
     case 'SUPERADMIN':
       return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
     default:
@@ -305,14 +307,14 @@ const navItems = computed(() => {
       { label: 'Batch Misi', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
-        label: 'Evaluations',
+        label: 'Penilaian Kru',
         path: '/evaluations',
         icon: ClipboardCheck,
         badge: missionStore.revisionCount > 0 ? `${missionStore.revisionCount} Rev` : null,
         badgeStyle: 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
       },
       {
-        label: 'Approvals',
+        label: 'Approvals (DM)',
         path: '/approvals',
         icon: ShieldCheck,
         badge: approvalStore.pendingApprovals.length > 0 ? `${approvalStore.pendingApprovals.length}` : null,
@@ -334,13 +336,13 @@ const navItems = computed(() => {
     ]
   }
 
-  if (role === 'SUPERVISOR') {
+  if (role === 'STORE_LEADER' || role === 'SUPERVISOR') {
     return [
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
       { label: 'Batch Misi', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
-        label: 'Evaluations',
+        label: 'Penilaian Kru',
         path: '/evaluations',
         icon: ClipboardCheck,
         badge: missionStore.revisionCount > 0 ? `${missionStore.revisionCount} Rev` : null,
@@ -351,17 +353,23 @@ const navItems = computed(() => {
     ]
   }
 
-  // HEAD Role
+  // DISTRICT_MANAGER / HEAD Role (has both Approvals and Direct Evaluation!)
   return [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Batch Misi', path: '/batches', icon: Layers },
     {
-      label: 'Approvals',
+      label: 'Approvals (DM)',
       path: '/approvals',
       icon: ShieldCheck,
       badge: approvalStore.pendingApprovals.length > 0 ? `${approvalStore.pendingApprovals.length}` : null,
       badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
     },
+    {
+      label: 'Penilaian Kru',
+      path: '/evaluations',
+      icon: ClipboardCheck
+    },
+    { label: 'Missions', path: '/missions', icon: Target },
     { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
     { label: 'Achievements', path: '/achievements', icon: Trophy }
   ]

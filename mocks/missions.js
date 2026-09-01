@@ -167,10 +167,10 @@ const batch1Missions = standardMissionTemplates.map((tpl, idx) => {
       calculatedStars = 5
       crewEvals = batch1Crews.map(cId => ({ crewId: cId, score: 95, calculatedStars: 5, awardedStars: 0, status: 'PENDING_REVIEW' }))
     } else if (mNum === 6) {
-      status = 'REVISION_REQUIRED'
+      status = 'PENDING_REVIEW'
       avgScore = 82
       calculatedStars = 4
-      crewEvals = batch1Crews.map(cId => ({ crewId: cId, score: 82, calculatedStars: 4, awardedStars: 0, status: 'REVISION_REQUIRED' }))
+      crewEvals = batch1Crews.map(cId => ({ crewId: cId, score: 82, calculatedStars: 4, awardedStars: 0, status: 'PENDING_REVIEW' }))
     } else {
       status = 'IN_PROGRESS'
       avgScore = 0

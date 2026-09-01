@@ -190,7 +190,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                👔 Supervisor Penilai (Evaluator) *
+                👔 Store Leader (SL) - Penilai Kru *
               </label>
               <select
                 v-model="form.assignment.supervisorId"
@@ -205,7 +205,7 @@
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                👑 Head of Operations (Approver) *
+                👑 District Manager (DM) - Approver *
               </label>
               <select
                 v-model="form.assignment.headId"

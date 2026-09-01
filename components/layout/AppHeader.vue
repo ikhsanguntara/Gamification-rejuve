@@ -71,10 +71,10 @@
         <span class="w-2 h-2 rounded-full" :class="roleDotClass"></span>
         <div class="text-left">
           <span class="text-xs font-semibold text-slate-800 dark:text-slate-200 block leading-tight">
-            {{ userStore.currentUser.name }}
+            {{ userStore.currentUser?.name || 'Store Leader' }}
           </span>
           <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 block leading-none">
-            {{ userStore.currentUser.roleTitle }}
+            {{ userStore.currentUser?.roleTitle || 'Store Leader (SL)' }}
           </span>
         </div>
       </div>
@@ -99,56 +99,55 @@
         >
           <Bell class="w-4 h-4" />
           <span
-            v-if="userStore.unreadNotificationsCount > 0"
+            v-if="userStore.unreadNotificationCount > 0"
             class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900"
           ></span>
         </PopoverTrigger>
 
         <PopoverPortal>
           <PopoverContent
-            class="w-72 sm:w-80 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl py-3 z-50 focus:outline-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
-            :side-offset="6"
+            class="w-80 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-4 z-50 focus:outline-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            :side-offset="8"
             align="end"
           >
-            <div class="flex items-center justify-between px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
-              <span class="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Notifications</span>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <span class="text-xs font-bold text-slate-900 dark:text-white">Notifikasi</span>
               <button
                 type="button"
                 @click="userStore.markNotificationsAsRead"
-                class="text-xs text-[#831843] dark:text-[#f472b6] hover:underline font-semibold cursor-pointer"
+                class="text-[11px] text-[#831843] dark:text-[#f472b6] font-semibold hover:underline cursor-pointer"
               >
-                Mark all as read
+                Tandai dibaca
               </button>
             </div>
-            <div class="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+
+            <div class="py-2 space-y-2 max-h-64 overflow-y-auto">
               <div
-                v-for="n in userStore.notifications"
-                :key="n.id"
-                class="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                v-for="notif in userStore.notifications"
+                :key="notif.id"
+                class="p-2.5 rounded-xl transition-colors text-xs space-y-0.5"
+                :class="notif.isRead ? 'bg-slate-50 dark:bg-slate-800/40 text-slate-500' : 'bg-[#831843]/5 dark:bg-[#831843]/10 text-slate-900 dark:text-white font-medium'"
               >
-                <div class="flex items-start gap-2.5">
-                  <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" :class="n.isRead ? 'bg-slate-300 dark:bg-slate-600' : 'bg-[#831843]'"></div>
-                  <div>
-                    <p class="text-xs font-semibold text-slate-900 dark:text-white">{{ n.title }}</p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ n.message }}</p>
-                    <span class="text-xs text-slate-400 mt-1 block">{{ n.time }}</span>
-                  </div>
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-[11px]">{{ notif.title }}</span>
+                  <span class="text-[10px] text-slate-400">{{ notif.time }}</span>
                 </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">{{ notif.message }}</p>
               </div>
             </div>
           </PopoverContent>
         </PopoverPortal>
       </PopoverRoot>
 
-      <!-- User Menu Dropdown using Reka UI DropdownMenu -->
+      <!-- User Profile & Fast Persona Switcher Dropdown -->
       <DropdownMenuRoot>
         <DropdownMenuTrigger
-          class="flex items-center gap-1.5 p-0.5 rounded-full hover:ring-2 hover:ring-[#831843]/50 transition-all cursor-pointer focus:outline-hidden"
-          aria-label="User profile menu"
+          class="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-[#831843]/30 transition-all cursor-pointer focus:outline-hidden"
+          aria-label="User Account Menu"
         >
           <img
-            :src="userStore.currentUser.avatar"
-            :alt="userStore.currentUser.name"
+            :src="userStore.currentUser?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80'"
+            :alt="userStore.currentUser?.name || 'User'"
             class="w-8 h-8 rounded-full object-cover ring-2 ring-[#831843]/30"
           />
         </DropdownMenuTrigger>
@@ -162,13 +161,13 @@
             <!-- User Info Header -->
             <div class="px-4 py-2">
               <p class="text-xs font-bold text-slate-900 dark:text-white truncate">
-                {{ userStore.currentUser.name }}
+                {{ userStore.currentUser?.name }}
               </p>
               <p class="text-[11px] text-slate-400 truncate">
-                {{ userStore.currentUser.email }}
+                {{ userStore.currentUser?.email }}
               </p>
               <span class="inline-block text-[10px] font-bold px-2 py-0.5 mt-1 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
-                {{ userStore.currentUser.roleTitle }}
+                {{ userStore.currentUser?.roleTitle }}
               </span>
             </div>
 
@@ -181,42 +180,42 @@
               <div class="grid grid-cols-2 gap-1.5">
                 <button
                   type="button"
-                  @click="switchAccount('spv-001')"
+                  @click="switchAccount('sl-001')"
                   class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
-                  :class="userStore.currentUserId === 'spv-001' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
+                  :class="userStore.currentUserId === 'sl-001' || userStore.currentUserId === 'spv-001' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
                 >
-                  <span>👔 SPV 1: Budi</span>
+                  <span>👔 SL 1: Budi</span>
                   <span class="block text-[9px] text-slate-400">Batch 1 & 2</span>
                 </button>
 
                 <button
                   type="button"
-                  @click="switchAccount('spv-002')"
+                  @click="switchAccount('sl-002')"
                   class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
-                  :class="userStore.currentUserId === 'spv-002' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
+                  :class="userStore.currentUserId === 'sl-002' || userStore.currentUserId === 'spv-002' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
                 >
-                  <span>👔 SPV 2: Dewi</span>
+                  <span>👔 SL 2: Dewi</span>
                   <span class="block text-[9px] text-slate-400">Batch 3 (PIM)</span>
                 </button>
 
                 <button
                   type="button"
-                  @click="switchAccount('head-001')"
+                  @click="switchAccount('dm-001')"
                   class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
-                  :class="userStore.currentUserId === 'head-001' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
+                  :class="userStore.currentUserId === 'dm-001' || userStore.currentUserId === 'head-001' ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
                 >
-                  <span>👑 Head 1: Ahmad</span>
-                  <span class="block text-[9px] text-slate-400">Batch 1 & 2</span>
+                  <span>👑 DM 1: Ahmad</span>
+                  <span class="block text-[9px] text-slate-400">Pusat (B1 & B2)</span>
                 </button>
 
                 <button
                   type="button"
-                  @click="switchAccount('head-002')"
+                  @click="switchAccount('dm-002')"
                   class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
-                  :class="userStore.currentUserId === 'head-002' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
+                  :class="userStore.currentUserId === 'dm-002' || userStore.currentUserId === 'head-002' ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
                 >
-                  <span>👑 Head 2: Citra</span>
-                  <span class="block text-[9px] text-slate-400">Batch 3 (PIM)</span>
+                  <span>👑 DM 2: Citra</span>
+                  <span class="block text-[9px] text-slate-400">Selatan (B3 PIM)</span>
                 </button>
 
                 <button

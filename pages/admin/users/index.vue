@@ -44,9 +44,9 @@
           class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#831843] cursor-pointer"
         >
           <option value="ALL">Semua Role</option>
-          <option value="CREW">Crew Member (Store Specialist)</option>
-          <option value="SUPERVISOR">Area Supervisor</option>
-          <option value="HEAD">Head of Operations</option>
+          <option value="CREW">Crew (Store Specialist)</option>
+          <option value="STORE_LEADER">Store Leader (SL)</option>
+          <option value="DISTRICT_MANAGER">District Manager (DM)</option>
           <option value="SUPERADMIN">Superadmin</option>
         </select>
 
@@ -103,12 +103,12 @@
                   class="text-xs font-semibold px-2 py-0.5 rounded-full inline-block mb-0.5"
                   :class="[
                     u.role === 'CREW' ? 'bg-[#831843]/15 text-[#831843] dark:text-[#f472b6]' :
-                    u.role === 'SUPERVISOR' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
-                    u.role === 'HEAD' ? 'bg-[#6b133a]/15 text-[#831843] dark:text-[#fbcfe8]' :
+                    u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
+                    u.role === 'DISTRICT_MANAGER' || u.role === 'HEAD' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' :
                     'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
                   ]"
                 >
-                  {{ u.role }}
+                  {{ u.role === 'STORE_LEADER' ? 'Store Leader' : u.role === 'DISTRICT_MANAGER' ? 'District Manager' : u.role }}
                 </span>
                 <p class="text-xs text-slate-500 dark:text-slate-400">{{ u.position }}</p>
               </td>
