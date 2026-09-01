@@ -34,12 +34,109 @@
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl px-4 relative z-10">
       <div class="bg-white dark:bg-slate-900 py-8 px-6 sm:px-10 shadow-2xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl space-y-6">
-        <!-- Quick Select Persona (6 Accounts) -->
+        <!-- Quick Select Persona (8 Accounts) -->
         <div>
           <label class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 block mb-3 text-center sm:text-left">
             Pilih Akun Persona untuk Masuk (Simulasi Data Terpisah)
           </label>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            
+            <!-- Crew 1 (Batch 1 - 3W) -->
+            <button
+              type="button"
+              @click="selectAccount('crew-001')"
+              class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
+              :class="[
+                selectedUserId === 'crew-001'
+                  ? 'border-emerald-600 ring-2 ring-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 shadow-md scale-[1.02]'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40'
+              ]"
+            >
+              <img
+                :src="mockUsers.CREW_1.avatar"
+                :alt="mockUsers.CREW_1.name"
+                class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5"
+              />
+              <span class="text-xs font-bold text-slate-900 dark:text-white block truncate w-full">
+                {{ mockUsers.CREW_1.name }}
+              </span>
+              <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                👤 Kru B1 (3 Minggu)
+              </span>
+            </button>
+
+            <!-- Crew 2 (Batch 2 - 4W) -->
+            <button
+              type="button"
+              @click="selectAccount('crew-008')"
+              class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
+              :class="[
+                selectedUserId === 'crew-008'
+                  ? 'border-emerald-600 ring-2 ring-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 shadow-md scale-[1.02]'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40'
+              ]"
+            >
+              <img
+                :src="mockUsers.CREW_2.avatar"
+                :alt="mockUsers.CREW_2.name"
+                class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5"
+              />
+              <span class="text-xs font-bold text-slate-900 dark:text-white block truncate w-full">
+                {{ mockUsers.CREW_2.name }}
+              </span>
+              <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                👤 Kru B2 (4 Minggu)
+              </span>
+            </button>
+
+            <!-- Crew 3 (Batch 3 - 5W) -->
+            <button
+              type="button"
+              @click="selectAccount('crew-013')"
+              class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
+              :class="[
+                selectedUserId === 'crew-013'
+                  ? 'border-emerald-600 ring-2 ring-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 shadow-md scale-[1.02]'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40'
+              ]"
+            >
+              <img
+                :src="mockUsers.CREW_3.avatar"
+                :alt="mockUsers.CREW_3.name"
+                class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5"
+              />
+              <span class="text-xs font-bold text-slate-900 dark:text-white block truncate w-full">
+                {{ mockUsers.CREW_3.name }}
+              </span>
+              <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                👤 Kru B3 (5 Minggu)
+              </span>
+            </button>
+
+            <!-- Superadmin -->
+            <button
+              type="button"
+              @click="selectAccount('admin-001')"
+              class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
+              :class="[
+                selectedUserId === 'admin-001'
+                  ? 'border-slate-700 dark:border-slate-300 ring-2 ring-slate-700 dark:ring-slate-300 bg-slate-100 dark:bg-slate-800 shadow-md scale-[1.02]'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40'
+              ]"
+            >
+              <img
+                :src="mockUsers.SUPERADMIN.avatar"
+                :alt="mockUsers.SUPERADMIN.name"
+                class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5"
+              />
+              <span class="text-xs font-bold text-slate-900 dark:text-white block truncate w-full">
+                {{ mockUsers.SUPERADMIN.name.split(' ')[0] }}
+              </span>
+              <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                ⚙️ Superadmin
+              </span>
+            </button>
+
             <!-- SL 1 -->
             <button
               type="button"
@@ -60,7 +157,7 @@
                 {{ mockUsers.STORE_LEADER_1.name }}
               </span>
               <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                👔 SL 1 (Batch 1 & 2)
+                👔 SL 1 (B1 & B2)
               </span>
             </button>
 
@@ -84,7 +181,7 @@
                 {{ mockUsers.STORE_LEADER_2.name }}
               </span>
               <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                👔 SL 2 (Batch 3 PIM)
+                👔 SL 2 (B3 PIM)
               </span>
             </button>
 
@@ -136,53 +233,6 @@
               </span>
             </button>
 
-            <!-- Crew 1 -->
-            <button
-              type="button"
-              @click="selectAccount('crew-001')"
-              class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
-              :class="[
-                selectedUserId === 'crew-001'
-                  ? 'border-[#831843] ring-2 ring-[#831843] bg-[#831843]/10 dark:bg-[#831843]/20 shadow-md scale-[1.02]'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40'
-              ]"
-            >
-              <img
-                :src="mockUsers.CREW_1.avatar"
-                :alt="mockUsers.CREW_1.name"
-                class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5"
-              />
-              <span class="text-xs font-bold text-slate-900 dark:text-white block truncate w-full">
-                {{ mockUsers.CREW_1.name }}
-              </span>
-              <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                👤 Kru (Batch 1)
-              </span>
-            </button>
-
-            <!-- Superadmin -->
-            <button
-              type="button"
-              @click="selectAccount('admin-001')"
-              class="p-3 rounded-2xl border text-left transition-all relative flex flex-col items-center text-center group cursor-pointer"
-              :class="[
-                selectedUserId === 'admin-001'
-                  ? 'border-slate-700 dark:border-slate-300 ring-2 ring-slate-700 dark:ring-slate-300 bg-slate-100 dark:bg-slate-800 shadow-md scale-[1.02]'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40'
-              ]"
-            >
-              <img
-                :src="mockUsers.SUPERADMIN.avatar"
-                :alt="mockUsers.SUPERADMIN.name"
-                class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700 mb-1.5"
-              />
-              <span class="text-xs font-bold text-slate-900 dark:text-white block truncate w-full">
-                {{ mockUsers.SUPERADMIN.name.split(' ')[0] }}
-              </span>
-              <span class="text-[10px] font-bold px-1.5 py-0.2 mt-0.5 rounded bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-                ⚙️ Superadmin
-              </span>
-            </button>
           </div>
         </div>
 
@@ -209,7 +259,16 @@
             <span class="font-bold text-slate-800 dark:text-slate-200 block">
               Ringkasan Hak Akses & Penugasan:
             </span>
-            <p v-if="selectedUserId === 'sl-001' || selectedUserId === 'spv-001'" class="text-xs leading-relaxed">
+            <p v-if="selectedUserId === 'crew-001'" class="text-xs leading-relaxed">
+              👤 <strong>Andi Pratama (Kru Gerai)</strong>: Kru aktif <strong>Batch 1 (Grand Indonesia)</strong> dengan siklus program <strong>3 Minggu (12 Misi)</strong>.
+            </p>
+            <p v-else-if="selectedUserId === 'crew-008'" class="text-xs leading-relaxed">
+              👤 <strong>Hadi Saputra (Kru Gerai)</strong>: Kru aktif <strong>Batch 2 (Senayan City)</strong> dengan siklus program <strong>4 Minggu (16 Misi)</strong>.
+            </p>
+            <p v-else-if="selectedUserId === 'crew-013'" class="text-xs leading-relaxed">
+              👤 <strong>Muhammad Ridwan (Kru Gerai)</strong>: Kru aktif <strong>Batch 3 (Pondok Indah Mall)</strong> dengan siklus program <strong>5 Minggu (20 Misi)</strong>.
+            </p>
+            <p v-else-if="selectedUserId === 'sl-001' || selectedUserId === 'spv-001'" class="text-xs leading-relaxed">
               👔 <strong>Budi Santoso (Store Leader)</strong>: Bertanggung jawab mengevaluasi <strong>Batch 1 (Grand Indonesia)</strong> dan <strong>Batch 2 (Senayan City)</strong> per kru.
             </p>
             <p v-else-if="selectedUserId === 'sl-002' || selectedUserId === 'spv-002'" class="text-xs leading-relaxed">
@@ -220,9 +279,6 @@
             </p>
             <p v-else-if="selectedUserId === 'dm-002' || selectedUserId === 'head-002'" class="text-xs leading-relaxed">
               👑 <strong>Citra Dewi (District Manager)</strong>: Menerima antrean review persetujuan (Bulk Approve) khusus untuk <strong>Batch 3 (PIM)</strong>.
-            </p>
-            <p v-else-if="selectedUserId === 'crew-001'" class="text-xs leading-relaxed">
-              👤 <strong>Andi Pratama (Store Crew)</strong>: Anggota tim <strong>Batch 1</strong>.
             </p>
             <p v-else class="text-xs leading-relaxed">
               ⚙️ <strong>Siti Rahmawati (Superadmin)</strong>: Akses penuh ke seluruh batch dan pengaturan master console.
