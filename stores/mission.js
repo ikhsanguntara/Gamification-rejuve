@@ -10,7 +10,7 @@ import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 export const useMissionStore = defineStore('mission', {
   state: () => ({
-    missions: getStoredData('rejuve_missions_v2', mockMissions),
+    missions: getStoredData('rejuve_missions_v3', mockMissions),
     searchQuery: '',
     selectedCategory: 'ALL',
     selectedStatus: 'ALL'
@@ -73,7 +73,7 @@ export const useMissionStore = defineStore('mission', {
         })
       }
 
-      setStoredData('rejuve_missions_v2', this.missions)
+      setStoredData('rejuve_missions_v3', this.missions)
     },
 
     setFilters({ search, category, status } = {}) {
@@ -121,7 +121,7 @@ export const useMissionStore = defineStore('mission', {
       }
 
       this.missions.push(newMission)
-      setStoredData('rejuve_missions_v2', this.missions)
+      setStoredData('rejuve_missions_v3', this.missions)
       return newMission
     },
 
@@ -129,7 +129,7 @@ export const useMissionStore = defineStore('mission', {
       const mission = this.missions.find(m => m.id === id)
       if (!mission) return null
       Object.assign(mission, payload)
-      setStoredData('rejuve_missions_v2', this.missions)
+      setStoredData('rejuve_missions_v3', this.missions)
       return mission
     },
 
@@ -137,7 +137,7 @@ export const useMissionStore = defineStore('mission', {
       const idx = this.missions.findIndex(m => m.id === id)
       if (idx !== -1) {
         const removed = this.missions.splice(idx, 1)[0]
-        setStoredData('rejuve_missions_v2', this.missions)
+        setStoredData('rejuve_missions_v3', this.missions)
         return removed
       }
       return null

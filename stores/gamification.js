@@ -10,8 +10,8 @@ import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 export const useGamificationStore = defineStore('gamification', {
   state: () => ({
-    crews: getStoredData('rejuve_crews_v2', mockCrews),
-    achievements: getStoredData('rejuve_achievements_v2', mockAchievements)
+    crews: getStoredData('rejuve_crews_v3', mockCrews),
+    achievements: getStoredData('rejuve_achievements_v3', mockAchievements)
   }),
 
   getters: {
@@ -97,7 +97,7 @@ export const useGamificationStore = defineStore('gamification', {
       }
 
       this.crews.push(newCrew)
-      setStoredData('rejuve_crews_v2', this.crews)
+      setStoredData('rejuve_crews_v3', this.crews)
       return newCrew
     },
 
@@ -108,7 +108,7 @@ export const useGamificationStore = defineStore('gamification', {
       if (payload.stars !== undefined) {
         crew.level = calculateStarLevel(crew.stars)
       }
-      setStoredData('rejuve_crews_v2', this.crews)
+      setStoredData('rejuve_crews_v3', this.crews)
       return crew
     },
 
@@ -116,7 +116,7 @@ export const useGamificationStore = defineStore('gamification', {
       const idx = this.crews.findIndex(c => c.id === id)
       if (idx !== -1) {
         const removed = this.crews.splice(idx, 1)[0]
-        setStoredData('rejuve_crews_v2', this.crews)
+        setStoredData('rejuve_crews_v3', this.crews)
         return removed
       }
       return null
@@ -127,7 +127,7 @@ export const useGamificationStore = defineStore('gamification', {
       if (crew) {
         crew.batchId = newBatchId
         if (storeLocation) crew.storeLocation = storeLocation
-        setStoredData('rejuve_crews_v2', this.crews)
+        setStoredData('rejuve_crews_v3', this.crews)
         return true
       }
       return false
@@ -151,7 +151,7 @@ export const useGamificationStore = defineStore('gamification', {
 
       // Check achievements
       const newlyUnlocked = this.evaluateAchievements(crew, meta)
-      setStoredData('rejuve_crews_v2', this.crews)
+      setStoredData('rejuve_crews_v3', this.crews)
 
       return {
         crewId,

@@ -137,7 +137,7 @@ export const useUserStore = defineStore('user', {
   state: () => ({
     isAuthenticated: true,
     currentUserId: 'spv-001',
-    userDirectory: getStoredData('rejuve_users_v2', initialDirectory),
+    userDirectory: getStoredData('rejuve_users_v3', initialDirectory),
     notifications: [
       {
         id: 'notif-1',
@@ -266,7 +266,7 @@ export const useUserStore = defineStore('user', {
       }
 
       this.userDirectory.push(newUser)
-      setStoredData('rejuve_users_v2', this.userDirectory)
+      setStoredData('rejuve_users_v3', this.userDirectory)
 
       if (newUser.role === 'CREW') {
         const gamificationStore = useGamificationStore()
@@ -298,7 +298,7 @@ export const useUserStore = defineStore('user', {
         const gamificationStore = useGamificationStore()
         gamificationStore.updateCrew(id, payload)
       }
-      setStoredData('rejuve_users_v2', this.userDirectory)
+      setStoredData('rejuve_users_v3', this.userDirectory)
       return user
     },
 
@@ -310,7 +310,7 @@ export const useUserStore = defineStore('user', {
           const gamificationStore = useGamificationStore()
           gamificationStore.removeCrew(id)
         }
-        setStoredData('rejuve_users_v2', this.userDirectory)
+        setStoredData('rejuve_users_v3', this.userDirectory)
         return true
       }
       return false
@@ -326,7 +326,7 @@ export const useUserStore = defineStore('user', {
       const gamificationStore = useGamificationStore()
       gamificationStore.reassignCrewBatch(userId, newBatchId, storeLocationName)
 
-      setStoredData('rejuve_users_v2', this.userDirectory)
+      setStoredData('rejuve_users_v3', this.userDirectory)
       return true
     }
   }

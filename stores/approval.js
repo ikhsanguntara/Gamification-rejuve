@@ -13,7 +13,7 @@ import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 export const useApprovalStore = defineStore('approval', {
   state: () => ({
-    approvals: getStoredData('rejuve_approvals_v2', mockApprovals),
+    approvals: getStoredData('rejuve_approvals_v3', mockApprovals),
     activities: [
       {
         id: 'act-1',
@@ -130,7 +130,7 @@ export const useApprovalStore = defineStore('approval', {
         badge: `+${totalStarsAwardedAll} Total Stars Awarded`
       })
 
-      setStoredData('rejuve_approvals_v2', this.approvals)
+      setStoredData('rejuve_approvals_v3', this.approvals)
       return {
         success: true,
         awardedStars,
@@ -188,7 +188,7 @@ export const useApprovalStore = defineStore('approval', {
         badge: 'Revision Required'
       })
 
-      setStoredData('rejuve_approvals_v2', this.approvals)
+      setStoredData('rejuve_approvals_v3', this.approvals)
       return {
         success: true,
         missionTitle: item.missionTitle
@@ -245,7 +245,7 @@ export const useApprovalStore = defineStore('approval', {
         this.approvals.unshift(item)
       }
 
-      setStoredData('rejuve_approvals_v2', this.approvals)
+      setStoredData('rejuve_approvals_v3', this.approvals)
     }
   }
 })

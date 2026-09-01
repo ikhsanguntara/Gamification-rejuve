@@ -11,7 +11,7 @@ import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 export const useEvaluationStore = defineStore('evaluation', {
   state: () => ({
-    evaluations: getStoredData('rejuve_evaluations_v2', mockEvaluations)
+    evaluations: getStoredData('rejuve_evaluations_v3', mockEvaluations)
   }),
 
   getters: {
@@ -62,7 +62,7 @@ export const useEvaluationStore = defineStore('evaluation', {
         this.evaluations.push(evalItem)
       }
 
-      setStoredData('rejuve_evaluations_v2', this.evaluations)
+      setStoredData('rejuve_evaluations_v3', this.evaluations)
       return evalItem
     },
 
@@ -122,7 +122,7 @@ export const useEvaluationStore = defineStore('evaluation', {
       const approvalStore = useApprovalStore()
       approvalStore.syncEvaluationToQueue(evalItem)
 
-      setStoredData('rejuve_evaluations_v2', this.evaluations)
+      setStoredData('rejuve_evaluations_v3', this.evaluations)
       return evalItem
     },
 
@@ -172,7 +172,7 @@ export const useEvaluationStore = defineStore('evaluation', {
       const approvalStore = useApprovalStore()
       approvalStore.syncEvaluationToQueue(evalItem)
 
-      setStoredData('rejuve_evaluations_v2', this.evaluations)
+      setStoredData('rejuve_evaluations_v3', this.evaluations)
       return evalItem
     }
   }

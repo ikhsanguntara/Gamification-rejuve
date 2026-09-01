@@ -29,13 +29,13 @@ export function setStoredData(key, data) {
 export function clearAllStoredData() {
   if (typeof window !== 'undefined' && window.localStorage) {
     const keys = [
-      'rejuve_batches_v2',
-      'rejuve_users_v2',
-      'rejuve_missions_v2',
-      'rejuve_templates_v2',
-      'rejuve_crews_v2',
-      'rejuve_evaluations_v2',
-      'rejuve_approvals_v2'
+      'rejuve_batches_v3',
+      'rejuve_users_v3',
+      'rejuve_missions_v3',
+      'rejuve_templates_v3',
+      'rejuve_crews_v3',
+      'rejuve_evaluations_v3',
+      'rejuve_approvals_v3'
     ]
     keys.forEach(k => localStorage.removeItem(k))
   }

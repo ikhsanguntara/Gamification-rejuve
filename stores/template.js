@@ -11,7 +11,7 @@ import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 export const useTemplateStore = defineStore('template', {
   state: () => ({
-    packages: getStoredData('rejuve_templates_v2', mockTemplatePackages),
+    packages: getStoredData('rejuve_templates_v3', mockTemplatePackages),
     selectedPackageId: 'pkg-sop-standard'
   }),
 
@@ -145,7 +145,7 @@ export const useTemplateStore = defineStore('template', {
 
       this.packages.push(duplicated)
       this.selectedPackageId = id
-      setStoredData('rejuve_templates_v2', this.packages)
+      setStoredData('rejuve_templates_v3', this.packages)
       return duplicated
     },
 
@@ -156,7 +156,7 @@ export const useTemplateStore = defineStore('template', {
       const pkg = this.packages.find(p => p.id === id)
       if (!pkg) return null
       Object.assign(pkg, payload)
-      setStoredData('rejuve_templates_v2', this.packages)
+      setStoredData('rejuve_templates_v3', this.packages)
       return pkg
     },
 
@@ -170,7 +170,7 @@ export const useTemplateStore = defineStore('template', {
         if (this.selectedPackageId === id) {
           this.selectedPackageId = this.packages[0]?.id || ''
         }
-        setStoredData('rejuve_templates_v2', this.packages)
+        setStoredData('rejuve_templates_v3', this.packages)
         return removed
       }
       return null
@@ -197,7 +197,7 @@ export const useTemplateStore = defineStore('template', {
 
       pkg.templates.push(newTmpl)
       pkg.totalMissions = pkg.templates.length
-      setStoredData('rejuve_templates_v2', this.packages)
+      setStoredData('rejuve_templates_v3', this.packages)
       return newTmpl
     },
 
@@ -212,7 +212,7 @@ export const useTemplateStore = defineStore('template', {
       if (idx !== -1) {
         pkg.templates.splice(idx, 1)
         pkg.totalMissions = pkg.templates.length
-        setStoredData('rejuve_templates_v2', this.packages)
+        setStoredData('rejuve_templates_v3', this.packages)
         return true
       }
       return false

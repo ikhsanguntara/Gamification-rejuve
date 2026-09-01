@@ -5,14 +5,95 @@ import { useUserStore } from './user.js'
 import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 /**
+ * Helper: Format date to short readable string e.g. "01 Sep"
+ */
+export function formatShortDate(dateObj) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+  const d = String(dateObj.getDate()).padStart(2, '0')
+  const m = months[dateObj.getMonth()]
+  return `${d} ${m}`
+}
+
+/**
+ * Helper: Calculate which week is active (1, 2, or 3) based on batch startDate and today's date
+ */
+export function calculateActiveWeek(batch) {
+  if (!batch || !batch.startDate) return batch?.currentWeek || 1
+  
+  try {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    const parts = batch.startDate.split('-').map(Number)
+    const start = new Date(parts[0], parts[1] - 1, parts[2])
+    start.setHours(0, 0, 0, 0)
+
+    const diffTime = today.getTime() - start.getTime()
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays < 0) return 1
+    if (diffDays < 7) return 1
+    if (diffDays < 14) return 2
+    return 3
+  } catch {
+    return batch?.currentWeek || 1
+  }
+}
+
+/**
+ * Helper: Compute 3 weeks calendar dates and status dynamically
+ */
+export function computeWeeksLifecycle(startDateStr, customWeeks = []) {
+  const defaultStartDate = startDateStr || new Date().toISOString().split('T')[0]
+  const parts = defaultStartDate.split('-').map(Number)
+  const baseStart = new Date(parts[0], parts[1] - 1, parts[2])
+
+  const defaultTitles = [
+    'Minggu 1: Suhu & Sanitasi Dasar',
+    'Minggu 2: Kualitas Rasa & Layanan',
+    'Minggu 3: Audit Akhir & Stok'
+  ]
+
+  const activeWeek = calculateActiveWeek({ startDate: defaultStartDate })
+
+  return [1, 2, 3].map(wNum => {
+    const custom = customWeeks[wNum - 1] || {}
+    const wStart = new Date(baseStart.getTime() + (wNum - 1) * 7 * 24 * 60 * 60 * 1000)
+    const wEnd = new Date(wStart.getTime() + 6 * 24 * 60 * 60 * 1000)
+    const title = custom.title || defaultTitles[wNum - 1]
+
+    let status = 'LOCKED'
+    let isLocked = true
+    if (wNum < activeWeek) {
+      status = 'COMPLETED'
+      isLocked = false
+    } else if (wNum === activeWeek) {
+      status = 'ACTIVE'
+      isLocked = false
+    }
+
+    return {
+      weekNumber: wNum,
+      title,
+      startDate: formatShortDate(wStart),
+      endDate: formatShortDate(wEnd),
+      status: custom.status || status,
+      isLocked: custom.isLocked !== undefined ? custom.isLocked : isLocked,
+      missionCount: 4,
+      completionRate: custom.completionRate !== undefined ? custom.completionRate : (wNum < activeWeek ? 100 : 0)
+    }
+  })
+}
+
+/**
  * Batch Store: Manage active batch, 3-week lifecycle, aggregated metrics, and Superadmin CRUD
  */
 
 export const useBatchStore = defineStore('batch', {
   state: () => ({
-    batches: getStoredData('rejuve_batches_v2', mockBatches),
+    batches: getStoredData('rejuve_batches_v3', mockBatches),
     selectedBatchId: 'batch-alpha',
-    selectedWeek: 2 // Active week for Batch Alpha
+    customSelectedWeek: null // Follows batch's active week if not manually clicked
   }),
 
   getters: {
@@ -46,23 +127,33 @@ export const useBatchStore = defineStore('batch', {
       return state.batches[0]
     },
     batchById: (state) => (id) => state.batches.find(b => b.id === id),
-    currentBatchWeeks: (state) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId)
-      return batch ? batch.weeks : []
-    },
     activeWeekNumber: (state) => {
       const batch = state.batches.find(b => b.id === state.selectedBatchId)
-      return batch ? batch.currentWeek : 2
+      return calculateActiveWeek(batch)
+    },
+    selectedWeek: (state) => {
+      if (state.customSelectedWeek !== null) {
+        return state.customSelectedWeek
+      }
+      const batch = state.batches.find(b => b.id === state.selectedBatchId)
+      return calculateActiveWeek(batch)
+    },
+    currentBatchWeeks: (state) => {
+      const batch = state.batches.find(b => b.id === state.selectedBatchId)
+      if (!batch) return []
+      return computeWeeksLifecycle(batch.startDate, batch.weeks || [])
     },
     isWeekSelectedLocked: (state) => {
       const batch = state.batches.find(b => b.id === state.selectedBatchId)
       if (!batch) return false
-      return state.selectedWeek !== batch.currentWeek
+      const activeW = calculateActiveWeek(batch)
+      const selW = state.customSelectedWeek !== null ? state.customSelectedWeek : activeW
+      return selW !== activeW
     },
     isWeekLocked: (state) => (weekNumber) => {
       const batch = state.batches.find(b => b.id === state.selectedBatchId)
       if (!batch) return false
-      return Number(weekNumber) !== Number(batch.currentWeek)
+      return Number(weekNumber) !== calculateActiveWeek(batch)
     }
   },
 
@@ -71,12 +162,12 @@ export const useBatchStore = defineStore('batch', {
       const batch = this.batches.find(b => b.id === batchId)
       if (batch) {
         this.selectedBatchId = batchId
-        this.selectedWeek = batch.currentWeek
+        this.customSelectedWeek = calculateActiveWeek(batch)
       }
     },
 
     selectWeek(weekNumber) {
-      this.selectedWeek = Number(weekNumber)
+      this.customSelectedWeek = Number(weekNumber)
     },
 
     updateBatchMetrics({ completedIncrement = 0, starsIncrement = 0 } = {}) {
@@ -88,7 +179,7 @@ export const useBatchStore = defineStore('batch', {
         if (starsIncrement > 0) {
           batch.totalStars += starsIncrement
         }
-        setStoredData('rejuve_batches_v2', this.batches)
+        setStoredData('rejuve_batches_v3', this.batches)
       }
     },
 
@@ -104,9 +195,18 @@ export const useBatchStore = defineStore('batch', {
       const autoCode = `BTH-${String(Math.max(maxNum + 1, this.batches.length + 1)).padStart(2, '0')}`
       const code = payload.code || autoCode
 
-      const startDate = payload.startDate || '2026-09-01'
-      const endDate = payload.endDate || '2026-09-21'
+      const startDate = payload.startDate || new Date().toISOString().split('T')[0]
+      const endDate = payload.endDate || new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       const crewIds = payload.assignment?.crewIds || payload.crewIds || []
+
+      const customWeeks = payload.weeks && payload.weeks.length === 3 ? payload.weeks : [
+        { weekNumber: 1, title: payload.week1Title || 'Minggu 1: Suhu & Sanitasi Dasar' },
+        { weekNumber: 2, title: payload.week2Title || 'Minggu 2: Kualitas Rasa & Layanan' },
+        { weekNumber: 3, title: payload.week3Title || 'Minggu 3: Audit Akhir & Stok' }
+      ]
+
+      const computedWeeks = computeWeeksLifecycle(startDate, customWeeks)
+      const currentActiveWeek = calculateActiveWeek({ startDate })
 
       const newBatch = {
         id,
@@ -114,7 +214,7 @@ export const useBatchStore = defineStore('batch', {
         name: payload.name,
         storeLocation: payload.storeLocation || payload.name,
         description: payload.description || `Siklus gamifikasi dan penjaminan mutu gerai ${payload.name}.`,
-        currentWeek: 1,
+        currentWeek: currentActiveWeek,
         totalWeeks: 3,
         startDate,
         endDate,
@@ -137,42 +237,13 @@ export const useBatchStore = defineStore('batch', {
           maxRevisions: Number(payload.approvalConfig?.maxRevisions) || 3,
           requireEvidence: payload.approvalConfig?.requireEvidence !== false
         },
-        weeks: payload.weeks && payload.weeks.length === 3 ? payload.weeks : [
-          {
-            weekNumber: 1,
-            title: payload.week1Title || 'Minggu 1: Suhu & Sanitasi Dasar',
-            startDate: 'Week 1',
-            endDate: 'Day 7',
-            status: 'ACTIVE',
-            isLocked: false,
-            missionCount: 4,
-            completionRate: 0
-          },
-          {
-            weekNumber: 2,
-            title: payload.week2Title || 'Minggu 2: Kualitas Rasa & Layanan',
-            startDate: 'Week 2',
-            endDate: 'Day 14',
-            status: 'LOCKED',
-            isLocked: true,
-            missionCount: 4,
-            completionRate: 0
-          },
-          {
-            weekNumber: 3,
-            title: payload.week3Title || 'Minggu 3: Audit Akhir & Stok',
-            startDate: 'Week 3',
-            endDate: 'Day 21',
-            status: 'LOCKED',
-            isLocked: true,
-            missionCount: 4,
-            completionRate: 0
-          }
-        ]
+        weeks: computedWeeks
       }
 
       this.batches.push(newBatch)
-      setStoredData('rejuve_batches_v2', this.batches)
+      this.selectedBatchId = newBatch.id
+      this.customSelectedWeek = currentActiveWeek
+      setStoredData('rejuve_batches_v3', this.batches)
 
       // ⚡ Automatically apply template package (12 missions) if enabled!
       if (payload.applyTemplatePackage !== false) {
@@ -198,15 +269,14 @@ export const useBatchStore = defineStore('batch', {
         batch.approvalConfig = { ...batch.approvalConfig, ...payload.approvalConfig }
       }
 
+      const startDate = payload.startDate || batch.startDate
       if (payload.weeks && Array.isArray(payload.weeks)) {
-        payload.weeks.forEach((pw, idx) => {
-          if (batch.weeks[idx]) {
-            if (pw.title) batch.weeks[idx].title = pw.title
-            if (pw.status) batch.weeks[idx].status = pw.status
-            if (pw.isLocked !== undefined) batch.weeks[idx].isLocked = pw.isLocked
-          }
-        })
+        batch.weeks = computeWeeksLifecycle(startDate, payload.weeks)
+      } else if (payload.startDate && payload.startDate !== batch.startDate) {
+        batch.weeks = computeWeeksLifecycle(payload.startDate, batch.weeks)
       }
+
+      batch.currentWeek = calculateActiveWeek({ startDate })
 
       Object.assign(batch, {
         name: payload.name !== undefined ? payload.name : batch.name,
@@ -218,7 +288,7 @@ export const useBatchStore = defineStore('batch', {
         status: payload.status !== undefined ? payload.status : batch.status
       })
 
-      setStoredData('rejuve_batches_v2', this.batches)
+      setStoredData('rejuve_batches_v3', this.batches)
       return batch
     },
 
@@ -228,8 +298,9 @@ export const useBatchStore = defineStore('batch', {
         const removed = this.batches.splice(idx, 1)[0]
         if (this.selectedBatchId === id) {
           this.selectedBatchId = this.batches[0]?.id || ''
+          this.customSelectedWeek = null
         }
-        setStoredData('rejuve_batches_v2', this.batches)
+        setStoredData('rejuve_batches_v3', this.batches)
         return removed
       }
       return null
