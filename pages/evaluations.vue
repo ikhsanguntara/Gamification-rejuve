@@ -33,125 +33,127 @@
     <!-- 3-Week Progression Selector -->
     <WeekSelector />
 
-    <!-- 2-Column Main Workspace: Crew Selector Sidebar (4 Cols) & Weekly Missions Evaluation for Selected Crew (8 Cols) -->
+    <!-- 2-Column Main Workspace: Crew Selector Sidebar (4 Cols, Sticky Frozen) & Weekly Missions Evaluation for Selected Crew (8 Cols) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      <!-- Left Column: Crew Roster Selector (4 Cols, Sticky) -->
-      <div class="lg:col-span-4 space-y-3 lg:sticky lg:top-20">
-        <div class="flex items-center justify-between gap-2 px-1">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-            <Users class="w-4 h-4 text-[#831843] dark:text-[#f472b6]" />
-            <span>Daftar Crew Gerai ({{ filteredCrewList.length }})</span>
-          </h3>
-          <span class="text-xs text-slate-400">Pilih kru untuk menilai</span>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="relative">
-          <input
-            v-model="crewSearchQuery"
-            type="text"
-            placeholder="Cari nama atau jabatan kru..."
-            class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 pl-8 pr-3 py-2 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#831843] shadow-sm"
-          />
-          <Search class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-        </div>
-
-        <!-- Filter Tabs: Semua / Belum Selesai / Sudah Diajukan -->
-        <div class="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 overflow-x-auto text-xs">
-          <button
-            v-for="tab in crewFilterTabs"
-            :key="tab.key"
-            type="button"
-            @click="activeCrewFilter = tab.key"
-            class="px-2.5 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all cursor-pointer text-xs"
-            :class="[
-              activeCrewFilter === tab.key
-                ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-sm'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-            ]"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
-
-        <!-- Crew Cards List -->
-        <div class="space-y-2.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
-          <div
-            v-for="crew in filteredCrewList"
-            :key="crew.id"
-            @click="selectedCrewId = crew.id"
-            class="p-3.5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-3 relative overflow-hidden"
-            :class="[
-              selectedCrewId === crew.id
-                ? 'ring-2 ring-[#831843] bg-[#831843]/5 dark:bg-[#831843]/15 border-[#831843]/60 shadow-md'
-                : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
-            ]"
-          >
-            <div class="flex items-center gap-3 min-w-0">
-              <img
-                :src="crew.avatar"
-                :alt="crew.name"
-                class="w-10 h-10 rounded-xl object-cover ring-1 ring-slate-200 dark:ring-slate-700 flex-shrink-0"
-              />
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5">
-                  <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">
-                    {{ crew.name }}
-                  </h4>
-                  <span class="text-xs px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold">
-                    Lv.{{ crew.level || 1 }}
-                  </span>
-                </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 flex items-center gap-1">
-                  <span>{{ crew.position || 'Crew Specialist' }}</span>
-                  <span>•</span>
-                  <span class="font-semibold text-slate-700 dark:text-slate-300">🏪 {{ crew.storeLocation || 'Standby' }}</span>
-                </p>
-              </div>
-            </div>
-
-            <!-- Crew Week Progress Badge -->
-            <div class="text-right flex-shrink-0">
-              <span
-                class="text-xs font-semibold px-2 py-0.5 rounded-full"
-                :class="getCrewWeekBadgeClass(crew.id)"
-              >
-                {{ getCrewWeekProgressLabel(crew.id) }}
-              </span>
-              <div class="text-xs text-slate-400 mt-1 flex items-center justify-end gap-1 font-semibold">
-                <Star class="w-3 h-3 fill-amber-400 text-amber-400" />
-                <span>{{ getCrewWeekAvgScore(crew.id) }}%</span>
-              </div>
-            </div>
+      <!-- Left Column: Crew Roster Selector (4 Cols, Sticky Frozen Container) -->
+      <div class="lg:col-span-4 lg:sticky lg:top-20 lg:self-start">
+        <div class="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex flex-col max-h-[calc(100vh-6rem)]">
+          <div class="flex items-center justify-between gap-2 px-1 mb-2.5 flex-shrink-0">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Users class="w-4 h-4 text-[#831843] dark:text-[#f472b6]" />
+              <span>Daftar Crew Gerai ({{ filteredCrewList.length }})</span>
+            </h3>
+            <span class="text-[10px] font-semibold text-slate-400">Pilih kru</span>
           </div>
 
-          <div
-            v-if="filteredCrewList.length === 0"
-            class="py-12 text-center text-slate-400 text-xs bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800"
-          >
-            Tidak ada crew yang sesuai dengan filter.
+          <!-- Search Bar -->
+          <div class="relative flex-shrink-0 mb-2">
+            <input
+              v-model="crewSearchQuery"
+              type="text"
+              placeholder="Cari nama atau jabatan kru..."
+              class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-8 pr-3 py-2 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#831843]"
+            />
+            <Search class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          </div>
+
+          <!-- Filter Tabs: Semua / Belum Selesai / Sudah Diajukan -->
+          <div class="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 overflow-x-auto text-xs flex-shrink-0 mb-3">
+            <button
+              v-for="tab in crewFilterTabs"
+              :key="tab.key"
+              type="button"
+              @click="activeCrewFilter = tab.key"
+              class="px-2.5 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all cursor-pointer text-xs"
+              :class="[
+                activeCrewFilter === tab.key
+                  ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              ]"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
+
+          <!-- Scrollable Crew Cards List inside Frozen Sidebar -->
+          <div class="space-y-2 overflow-y-auto pr-1 flex-1 min-h-0">
+            <div
+              v-for="crew in filteredCrewList"
+              :key="crew.id"
+              @click="selectedCrewId = crew.id"
+              class="p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-2.5 relative overflow-hidden"
+              :class="[
+                selectedCrewId === crew.id
+                  ? 'ring-2 ring-[#831843] bg-[#831843]/5 dark:bg-[#831843]/15 border-[#831843]/60 shadow-md'
+                  : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700'
+              ]"
+            >
+              <div class="flex items-center gap-2.5 min-w-0">
+                <img
+                  :src="crew.avatar"
+                  :alt="crew.name"
+                  class="w-9 h-9 rounded-xl object-cover ring-1 ring-slate-200 dark:ring-slate-700 flex-shrink-0"
+                />
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      {{ crew.name }}
+                    </h4>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold">
+                      Lv.{{ crew.level || 1 }}
+                    </span>
+                  </div>
+                  <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5 flex items-center gap-1">
+                    <span>{{ crew.position || 'Crew Specialist' }}</span>
+                    <span>•</span>
+                    <span class="font-semibold text-slate-700 dark:text-slate-300">🏪 {{ crew.storeLocation || 'Standby' }}</span>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Crew Week Progress Badge -->
+              <div class="text-right flex-shrink-0">
+                <span
+                  class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                  :class="getCrewWeekBadgeClass(crew.id)"
+                >
+                  {{ getCrewWeekProgressLabel(crew.id) }}
+                </span>
+                <div class="text-[11px] text-slate-400 mt-0.5 flex items-center justify-end gap-1 font-semibold">
+                  <Star class="w-3 h-3 fill-amber-400 text-amber-400" />
+                  <span>{{ getCrewWeekAvgScore(crew.id) }}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div
+              v-if="filteredCrewList.length === 0"
+              class="py-12 text-center text-slate-400 text-xs bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800"
+            >
+              Tidak ada crew yang sesuai dengan filter.
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Right Column: 1 Week All Missions for Selected Crew (8 Cols) -->
-      <div class="lg:col-span-8 space-y-6">
+      <div class="lg:col-span-8 space-y-4">
         <template v-if="selectedCrew">
-          <!-- Active Crew Profile & Week Summary Banner -->
-          <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6 shadow-sm">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div class="flex items-center gap-4">
+          <!-- Active Crew Profile & Week Summary Banner (Sticky Frozen Top) -->
+          <div class="sticky top-20 z-20 rounded-3xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 shadow-sm transition-all">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3.5">
                 <img
                   :src="selectedCrew.avatar"
                   :alt="selectedCrew.name"
-                  class="w-14 h-14 rounded-2xl object-cover ring-2 ring-[#831843]/30 shadow-sm"
+                  class="w-12 h-12 rounded-2xl object-cover ring-2 ring-[#831843]/30 shadow-sm"
                 />
                 <div>
-                  <div class="flex items-center gap-2 mb-1">
-                    <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                       {{ selectedCrew.name }}
                     </h3>
-                    <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
                       {{ selectedCrew.code || 'CRW-01' }}
                     </span>
                   </div>
@@ -162,25 +164,25 @@
               </div>
 
               <!-- Quick Week KPI Stats Box for this Crew -->
-              <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-700">
+              <div class="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-2xl border border-slate-200/60 dark:border-slate-700">
                 <div class="text-center px-2">
-                  <span class="text-xs font-semibold text-slate-400 uppercase">Rata-Rata</span>
-                  <p class="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+                  <span class="text-[10px] font-semibold text-slate-400 uppercase">Rata-Rata</span>
+                  <p class="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
                     {{ currentCrewWeekAvgScore }}%
                   </p>
                 </div>
-                <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+                <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
                 <div class="text-center px-2">
-                  <span class="text-xs font-semibold text-slate-400 uppercase">Bintang Week</span>
-                  <p class="text-base font-bold text-amber-500 mt-0.5 flex items-center justify-center gap-1">
-                    <Star class="w-4 h-4 fill-amber-400" />
+                  <span class="text-[10px] font-semibold text-slate-400 uppercase">Bintang Week</span>
+                  <p class="text-sm font-bold text-amber-500 mt-0.5 flex items-center justify-center gap-1">
+                    <Star class="w-3.5 h-3.5 fill-amber-400" />
                     {{ currentCrewWeekTotalStars }}
                   </p>
                 </div>
-                <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+                <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
                 <div class="text-center px-2">
-                  <span class="text-xs font-semibold text-slate-400 uppercase">Misi Dinilai</span>
-                  <p class="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                  <span class="text-[10px] font-semibold text-slate-400 uppercase">Misi Dinilai</span>
+                  <p class="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
                     {{ currentCrewEvaluatedMissionsCount }} / {{ currentWeekMissions.length }}
                   </p>
                 </div>
@@ -446,14 +448,14 @@
             </div>
           </div>
 
-          <!-- Bottom Floating Action Bar for Selected Crew -->
-          <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-md flex items-center justify-between gap-3 sticky bottom-4 z-10">
+          <!-- Bottom Floating Action Bar for Selected Crew (Sticky Frozen Bottom) -->
+          <div class="p-3 sm:p-3.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-lg flex items-center justify-between gap-3 sticky bottom-4 z-20">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Ringkasan Week {{ batchStore.selectedWeek }}:
               </span>
               <span class="text-xs font-bold text-slate-900 dark:text-white">
-                Avg {{ currentCrewWeekAvgScore }}% • {{ currentCrewWeekTotalStars }} Bintang ({{ currentCrewEvaluatedMissionsCount }}/{{ currentWeekMissions.length }} Misi Selesai Dinilai)
+                Avg {{ currentCrewWeekAvgScore }}% • {{ currentCrewWeekTotalStars }} ⭐ ({{ currentCrewEvaluatedMissionsCount }}/{{ currentWeekMissions.length }} Misi Selesai)
               </span>
             </div>
 
@@ -461,7 +463,7 @@
               <button
                 type="button"
                 @click="goToNextCrew"
-                class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
+                class="px-4 py-2 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-[#831843]/20 active:scale-95"
               >
                 <span>Kru Berikutnya</span>
                 <ChevronRight class="w-3.5 h-3.5" />
