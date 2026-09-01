@@ -71,7 +71,7 @@
             <tr>
               <th class="py-3.5 px-4">User</th>
               <th class="py-3.5 px-4">Role & Jabatan</th>
-              <th class="py-3.5 px-4">Batch Assignment</th>
+              <th class="py-3.5 px-4">Gerai & Batch</th>
               <th class="py-3.5 px-4 text-center">⭐ Stars</th>
               <th class="py-3.5 px-4 text-right">Aksi</th>
             </tr>
@@ -113,20 +113,21 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400">{{ u.position }}</p>
               </td>
 
-              <!-- Assigned Batch Display (Read Only) -->
+              <!-- Assigned Store & Batch Display -->
               <td class="py-3 px-4">
-                <div v-if="u.role === 'CREW'">
+                <div v-if="u.role === 'CREW'" class="space-y-0.5">
+                  <div class="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white">
+                    <Store class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6] flex-shrink-0" />
+                    <span class="truncate max-w-[150px]">{{ getStoreName(u.storeId) || u.storeLocation || 'Belum Ditugaskan' }}</span>
+                  </div>
                   <span
                     v-if="u.batchId"
-                    class="text-xs font-medium text-slate-700 dark:text-slate-300"
+                    class="text-[11px] text-slate-500 dark:text-slate-400 block"
                   >
                     {{ getBatchName(u.batchId) }}
                   </span>
-                  <span v-else class="text-xs text-slate-400 italic">
-                    Belum Ditugaskan
-                  </span>
                 </div>
-                <div v-else class="text-slate-400 text-xs italic">
+                <div v-else class="text-slate-500 dark:text-slate-400 text-xs">
                   {{ u.storeLocation || 'Semua Cabang' }}
                 </div>
               </td>
@@ -171,11 +172,13 @@
 import { ref, computed } from 'vue'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
+import { useStoreStore } from '~/stores/store.js'
 import { useToast } from '~/composables/useToast.js'
-import { Plus, Edit3, Trash2, Search } from 'lucide-vue-next'
+import { Plus, Edit3, Trash2, Search, Store } from 'lucide-vue-next'
 
 const userStore = useUserStore()
 const batchStore = useBatchStore()
+const storeStore = useStoreStore()
 const toast = useToast()
 
 const searchQuery = ref('')
@@ -195,6 +198,12 @@ const filteredUsers = computed(() => {
     return true
   })
 })
+
+const getStoreName = (storeId) => {
+  if (!storeId) return null
+  const s = storeStore.storeById(storeId)
+  return s ? s.name : null
+}
 
 const getBatchName = (batchId) => {
   if (!batchId) return 'Belum Ditugaskan'

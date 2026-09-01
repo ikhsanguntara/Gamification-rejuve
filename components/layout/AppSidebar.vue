@@ -86,6 +86,23 @@
               <span>User</span>
             </NuxtLink>
 
+            <!-- Store Submenu -->
+            <NuxtLink
+              to="/admin/stores"
+              class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
+              :class="[
+                $route.path.startsWith('/admin/stores')
+                  ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-semibold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              ]"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full transition-colors"
+                :class="$route.path.startsWith('/admin/stores') ? 'bg-[#831843] dark:bg-[#f472b6]' : 'bg-slate-400 dark:bg-slate-600'"
+              ></span>
+              <span>Store</span>
+            </NuxtLink>
+
             <!-- Batch Submenu -->
             <NuxtLink
               to="/admin/batches"

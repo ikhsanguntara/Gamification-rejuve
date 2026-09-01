@@ -90,6 +90,50 @@
           </div>
         </div>
 
+        <!-- Store Assignment for CREW -->
+        <div v-if="form.role === 'CREW'" class="p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-300/40 dark:border-amber-700/40 space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-amber-800 dark:text-amber-300">
+              🏪 Penugasan Gerai (Store Outlet) *
+            </label>
+            <span class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
+              Khusus Role Crew
+            </span>
+          </div>
+
+          <select
+            v-model="form.storeId"
+            @change="handleStoreChange"
+            class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 shadow-xs"
+          >
+            <option :value="null">Belum Ditugaskan (Standby / Cadangan)</option>
+            <option
+              v-for="st in storeStore.allStores"
+              :key="st.id"
+              :value="st.id"
+            >
+              {{ st.name }} ({{ st.code }}) — {{ st.region }}
+            </option>
+          </select>
+
+          <!-- Preview Selected Store Info -->
+          <div v-if="selectedStore" class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-amber-200/60 dark:border-amber-800/60 text-xs space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-900 dark:text-white">{{ selectedStore.name }}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-bold">
+                {{ selectedStore.batch ? selectedStore.batch.name : 'Standby Batch' }}
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              📍 {{ selectedStore.address || selectedStore.mallName }}
+            </p>
+            <div class="flex items-center gap-3 pt-1 text-[11px] text-slate-600 dark:text-slate-300">
+              <span>👔 SL: <strong>{{ selectedStore.storeLeader ? selectedStore.storeLeader.name : '-' }}</strong></span>
+              <span>🛡️ DM: <strong>{{ selectedStore.districtManager ? selectedStore.districtManager.name : '-' }}</strong></span>
+            </div>
+          </div>
+        </div>
+
         <div class="pt-4 flex items-center justify-end gap-3">
           <NuxtLink
             to="/admin/users"
@@ -113,12 +157,14 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
+import { useStoreStore } from '~/stores/store.js'
 import { useToast } from '~/composables/useToast.js'
 import { ArrowLeft } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const storeStore = useStoreStore()
 const toast = useToast()
 
 const user = computed(() => {
@@ -130,8 +176,23 @@ const form = ref({
   role: 'CREW',
   position: '',
   email: '',
+  storeId: null,
   avatar: ''
 })
+
+const selectedStore = computed(() => {
+  if (!form.value.storeId) return null
+  return storeStore.storeById(form.value.storeId)
+})
+
+const handleStoreChange = () => {
+  if (selectedStore.value) {
+    form.value.storeLocation = selectedStore.value.name
+    if (selectedStore.value.batchId) {
+      form.value.batchId = selectedStore.value.batchId
+    }
+  }
+}
 
 watch(
   user,
@@ -142,6 +203,9 @@ watch(
         role: u.role || 'CREW',
         position: u.position || '',
         email: u.email || '',
+        storeId: u.storeId || (u.batchId === 'batch-alpha' ? 'store-001' : u.batchId === 'batch-beta' ? 'store-002' : u.batchId === 'batch-gamma' ? 'store-003' : null),
+        storeLocation: u.storeLocation || '',
+        batchId: u.batchId || null,
         avatar: u.avatar || ''
       }
     }
@@ -151,6 +215,10 @@ watch(
 
 const handleUpdate = () => {
   if (!user.value) return
+  if (selectedStore.value) {
+    form.value.storeLocation = selectedStore.value.name
+    form.value.batchId = selectedStore.value.batchId || null
+  }
   userStore.updateUser(user.value.id, form.value)
   toast.success('User Diperbarui', `Data ${form.value.name} telah berhasil disimpan.`)
   router.push('/admin/users')

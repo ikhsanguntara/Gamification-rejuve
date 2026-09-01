@@ -48,6 +48,10 @@
                 {{ item.crewRole || 'Barista' }}
               </span>
               <span class="text-slate-300 dark:text-slate-700">•</span>
+              <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                🏪 {{ item.storeLocation || item.storeName || 'Re.juve Store' }}
+              </span>
+              <span class="text-slate-300 dark:text-slate-700">•</span>
               <span class="text-[11px] text-slate-500 dark:text-slate-400">
                 Week {{ item.week }}
               </span>

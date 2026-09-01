@@ -118,12 +118,20 @@ import('./mocks/batches.js').then(batches => {
     console.log(`  ✅ [PASS Mock Approvals] ${apps.mockApprovals.length} antrean approval terdaftar`)
   }
 
+  return import('./mocks/stores.js')
+}).then(stores => {
+  totalChecks++
+  if (stores.mockStores && stores.mockStores.length >= 3) {
+    passedChecks++
+    console.log(`  ✅ [PASS Mock Stores] ${stores.mockStores.length} gerai terkonfigurasi di Master Store`)
+  }
+
   console.log('\n==========================================')
   console.log(`🏁 HASIL AUDIT HALAMAN & KOMPONEN: ${passedChecks}/${totalChecks} CHECK BERHASIL`)
   if (issues.length > 0) {
     console.log(`⚠️ Ditemukan isu:\n${issues.join('\n')}`)
   } else {
-    console.log(`🎉 SELURUH 25 HALAMAN & KOMPONEN 100% BEBAS DARI ERROR!`)
+    console.log(`🎉 SELURUH HALAMAN & KOMPONEN 100% BEBAS DARI ERROR!`)
   }
   console.log('==========================================\n')
 })

@@ -13,6 +13,11 @@ export const mockTemplatePackages = [
     description: 'Paket standar 12 misi operasional 3 minggu: Suhu Chiller, Sanitasi Bar, Uji Kemanisan Buah, Speed Layanan Barista, dan Stok Opname.',
     totalMissions: 12,
     totalWeeks: 3,
+    weeks: [
+      { weekNumber: 1, title: 'Minggu 1: Suhu & Sanitasi Dasar' },
+      { weekNumber: 2, title: 'Minggu 2: Kualitas Rasa & Layanan' },
+      { weekNumber: 3, title: 'Minggu 3: Audit Akhir & Stok' }
+    ],
     templates: [
       // Week 1
       {
@@ -184,6 +189,11 @@ export const mockTemplatePackages = [
     description: 'Format ringkas 6 misi prioritas untuk format gerai island/kiosk: Fokus pada speed layanan kilat, chiller grab-and-go, dan kasir cashless.',
     totalMissions: 6,
     totalWeeks: 3,
+    weeks: [
+      { weekNumber: 1, title: 'Minggu 1: Kecepatan Layanan & Kasir' },
+      { weekNumber: 2, title: 'Minggu 2: Suhu Display & Stok Grab-and-Go' },
+      { weekNumber: 3, title: 'Minggu 3: Closing Kiosk & Opname' }
+    ],
     templates: [
       {
         id: 'tmpl-kio-01',
@@ -256,6 +266,11 @@ export const mockTemplatePackages = [
     description: 'Kurikulum misi 3 minggu untuk orientasi kru baru: Pengenalan standar #CleanLabel, kalibrasi indra rasa jus, dan etika pelayanan prima.',
     totalMissions: 6,
     totalWeeks: 3,
+    weeks: [
+      { weekNumber: 1, title: 'Minggu 1: Edukasi Standar & Cold Chain' },
+      { weekNumber: 2, title: 'Minggu 2: Kalibrasi Rasa & Pelayanan Prima' },
+      { weekNumber: 3, title: 'Minggu 3: POS Kasir & Graduation Milestone' }
+    ],
     templates: [
       {
         id: 'tmpl-tr-01',

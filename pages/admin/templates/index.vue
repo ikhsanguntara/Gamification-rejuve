@@ -12,15 +12,15 @@
           Master Template SOP Misi
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          Katalog paket SOP operasional siap pakai untuk langsung diterapkan ke gerai.
+          Katalog paket SOP operasional dengan struktur mingguan dinamis siap diterapkan ke gerai.
         </p>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
         <button
           type="button"
           @click="openCreatePackageModal"
-          class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm cursor-pointer"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-xs cursor-pointer"
         >
           <Plus class="w-4 h-4 text-[#831843] dark:text-[#f472b6]" />
           <span>Buat Paket Master Baru</span>
@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <!-- 2-Column Clean Workspace -->
+    <!-- 2-Column Workspace -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
       <!-- KOLOM KIRI: DAFTAR PAKET MASTER (4/12) -->
@@ -50,11 +50,11 @@
           <div
             v-for="pkg in templateStore.allPackages"
             :key="pkg.id"
-            @click="templateStore.selectPackage(pkg.id)"
+            @click="selectPackageTab(pkg.id)"
             class="p-4 rounded-2xl border transition-all cursor-pointer relative"
             :class="[
               templateStore.selectedPackageId === pkg.id
-                ? 'border-[#831843] bg-white dark:bg-slate-900 ring-2 ring-[#831843]/40 shadow-sm'
+                ? 'border-[#831843] bg-white dark:bg-slate-900 ring-2 ring-[#831843]/40 shadow-xs'
                 : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-slate-300'
             ]"
           >
@@ -62,9 +62,11 @@
               <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
                 {{ pkg.code }}
               </span>
-              <span class="text-[10px] text-slate-400 font-semibold">
-                {{ pkg.templates.length }} Misi
-              </span>
+              <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-semibold">
+                <span>{{ (pkg.weeks || []).length || pkg.totalWeeks || 3 }} Minggu</span>
+                <span>•</span>
+                <span>{{ pkg.templates.length }} Misi</span>
+              </div>
             </div>
 
             <h4 class="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
@@ -80,7 +82,7 @@
                 <button
                   type="button"
                   @click.stop="duplicatePackage(pkg.id)"
-                  title="Duplikat"
+                  title="Duplikat Paket"
                   class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
                 >
                   <Copy class="w-3 h-3" />
@@ -89,7 +91,7 @@
                   v-if="templateStore.allPackages.length > 1"
                   type="button"
                   @click.stop="confirmDeletePackage(pkg)"
-                  title="Hapus"
+                  title="Hapus Paket"
                   class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"
                 >
                   <Trash2 class="w-3 h-3" />
@@ -100,9 +102,9 @@
         </div>
       </div>
 
-      <!-- KOLOM KANAN: DETAIL BUTIR MISI PAKET (8/12) -->
+      <!-- KOLOM KANAN: DETAIL PAKET & TABS MINGGUAN (8/12) -->
       <div class="lg:col-span-8">
-        <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-5">
+        <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
           
           <!-- Package Header Summary -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
@@ -123,48 +125,123 @@
             <button
               type="button"
               @click="openAddMissionModal"
-              class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+              class="px-3.5 py-2 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
             >
               <Plus class="w-3.5 h-3.5" />
               <span>Tambah Butir SOP</span>
             </button>
           </div>
 
-          <!-- Week Tabs via Reka UI -->
+          <!-- Week Tabs via Reka UI dengan Dukungan Lebih dari 3 Week & Judul Week -->
           <TabsRoot :model-value="String(activeWeekTab)" @update:model-value="activeWeekTab = Number($event)" class="w-full space-y-4">
-            <div class="flex items-center justify-between gap-2">
-              <TabsList class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 w-fit">
-                <TabsTrigger
-                  v-for="w in [1, 2, 3]"
-                  :key="w"
-                  :value="String(w)"
-                  class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-[#831843] dark:data-[state=active]:text-[#f472b6] data-[state=active]:shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white focus:outline-hidden"
+            
+            <!-- Week Selector Navigation & Add Week Button -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
+              <div class="flex items-center gap-2 flex-wrap">
+                <TabsList class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 w-fit max-w-full overflow-x-auto">
+                  <TabsTrigger
+                    v-for="w in activePackageWeeks"
+                    :key="w.weekNumber"
+                    :value="String(w.weekNumber)"
+                    class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex-shrink-0 cursor-pointer data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-[#831843] dark:data-[state=active]:text-[#f472b6] data-[state=active]:shadow-2xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white focus:outline-hidden"
+                  >
+                    Week {{ w.weekNumber }} ({{ templateStore.templatesByWeek(w.weekNumber).length }})
+                  </TabsTrigger>
+                </TabsList>
+
+                <!-- Tombol Tambah Week Baru (Bisa lebih dari 3 week) -->
+                <button
+                  type="button"
+                  @click="handleAddNewWeek"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-dashed border-[#831843]/40 hover:border-[#831843] bg-[#831843]/5 hover:bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] text-xs font-bold transition-all cursor-pointer active:scale-95"
+                  title="Tambah Minggu Baru (Week 4, Week 5, dst)"
                 >
-                  Week {{ w }} ({{ templateStore.templatesByWeek(w).length }})
-                </TabsTrigger>
-              </TabsList>
-
-              <span class="text-xs text-slate-400">
-                Total <strong>{{ activePackage?.templates.length || 0 }} Misi</strong>
-              </span>
-            </div>
-
-            <TabsContent
-              v-for="w in [1, 2, 3]"
-              :key="w"
-              :value="String(w)"
-              class="focus:outline-hidden"
-            >
-              <!-- Missions Simple Clean List -->
-              <div v-if="templateStore.templatesByWeek(w).length === 0" class="p-8 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-                <p class="text-xs text-slate-500">Belum ada butir misi untuk Week {{ w }}.</p>
+                  <Plus class="w-3.5 h-3.5" />
+                  <span>Tambah Week</span>
+                </button>
               </div>
 
+              <div class="flex items-center gap-2 text-xs text-slate-400">
+                <span>{{ activePackageWeeks.length }} Minggu</span>
+                <span>•</span>
+                <span>Total <strong>{{ activePackage?.templates.length || 0 }} Misi</strong></span>
+              </div>
+            </div>
+
+            <!-- Banner Judul Tema Week yang Aktif (Bisa Diedit) -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                <div class="w-8 h-8 rounded-xl bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] flex items-center justify-center font-bold flex-shrink-0">
+                  <Bookmark class="w-4 h-4" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                    Judul Tema Week {{ activeWeekTab }}
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <input
+                      v-model="currentWeekTitle"
+                      @blur="saveCurrentWeekTitle"
+                      @keyup.enter="saveCurrentWeekTitle"
+                      type="text"
+                      placeholder="Contoh: Minggu 1: Suhu & Sanitasi Dasar"
+                      class="w-full text-xs font-bold rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+                    />
+                    <button
+                      type="button"
+                      @click="saveCurrentWeekTitle"
+                      class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 cursor-pointer flex-shrink-0"
+                    >
+                      Simpan
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tombol Hapus Week Ini jika lebih dari 1 week -->
+              <button
+                v-if="activePackageWeeks.length > 1"
+                type="button"
+                @click="handleRemoveCurrentWeek"
+                class="text-xs text-rose-500 hover:text-rose-700 font-semibold px-2.5 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors flex items-center gap-1 self-end sm:self-center cursor-pointer"
+                title="Hapus minggu ini beserta misinya"
+              >
+                <Trash2 class="w-3.5 h-3.5" />
+                <span>Hapus Week {{ activeWeekTab }}</span>
+              </button>
+            </div>
+
+            <!-- Tabs Content List Misi per-Week -->
+            <TabsContent
+              v-for="w in activePackageWeeks"
+              :key="w.weekNumber"
+              :value="String(w.weekNumber)"
+              class="focus:outline-hidden space-y-3"
+            >
+              <!-- Empty State jika belum ada misi di week ini -->
+              <div
+                v-if="templateStore.templatesByWeek(w.weekNumber).length === 0"
+                class="p-8 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-2"
+              >
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                  Belum ada butir SOP misi yang ditambahkan untuk <strong>Week {{ w.weekNumber }} ({{ w.title }})</strong>.
+                </p>
+                <button
+                  type="button"
+                  @click="openAddMissionModal"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white text-xs font-bold shadow-xs cursor-pointer"
+                >
+                  <Plus class="w-3.5 h-3.5" />
+                  <span>Tambah Misi Pertama di Week Ini</span>
+                </button>
+              </div>
+
+              <!-- List Kartu Butir Misi SOP -->
               <div v-else class="space-y-3">
                 <div
-                  v-for="tmpl in templateStore.templatesByWeek(w)"
+                  v-for="tmpl in templateStore.templatesByWeek(w.weekNumber)"
                   :key="tmpl.id"
-                  class="p-4 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2 relative group"
+                  class="p-4 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2 relative group hover:border-[#831843]/30 transition-all"
                 >
                   <div class="flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2">
@@ -195,7 +272,7 @@
                     {{ tmpl.description }}
                   </p>
 
-                  <!-- SOP Points -->
+                  <!-- SOP Points / Checklist -->
                   <div class="pt-2 border-t border-slate-200/50 dark:border-slate-700/50 space-y-1">
                     <div
                       v-for="(req, idx) in tmpl.requirements"
@@ -220,7 +297,7 @@
     <BaseModal
       :modelValue="showCreatePackageModal"
       title="Buat Master Paket Baru"
-      subtitle="Definisikan nama dan format gerai untuk paket template ini"
+      subtitle="Definisikan nama, jumlah minggu, dan format gerai untuk paket template ini"
       max-width="sm"
       @update:modelValue="showCreatePackageModal = $event"
       @close="showCreatePackageModal = false"
@@ -232,28 +309,52 @@
             v-model="newPkgForm.name"
             type="text"
             required
-            placeholder="Contoh: Standar Gerai Bandara"
+            placeholder="Contoh: Standar Gerai Bandara & Kiosk"
             class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           />
         </div>
 
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Target Format Gerai</label>
+            <input
+              v-model="newPkgForm.targetType"
+              type="text"
+              placeholder="Kiosk / Mall / Standalone"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jumlah Minggu (Week)</label>
+            <input
+              v-model.number="newPkgForm.totalWeeks"
+              type="number"
+              min="1"
+              max="12"
+              required
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+            />
+          </div>
+        </div>
+
         <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Target Format Gerai</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori</label>
           <input
-            v-model="newPkgForm.targetType"
+            v-model="newPkgForm.category"
             type="text"
-            placeholder="Kiosk / Bandara / Mall"
+            placeholder="Standar Operasional / Onboarding"
             class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           />
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi Singkat</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi Paket</label>
           <textarea
             v-model="newPkgForm.description"
             rows="2"
-            placeholder="Deskripsi target penggunaan..."
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none p-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+            placeholder="Penjelasan ringkas fokus kurikulum paket..."
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           ></textarea>
         </div>
 
@@ -261,13 +362,13 @@
           <button
             type="button"
             @click="showCreatePackageModal = false"
-            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
           >
             Batal
           </button>
           <button
             type="submit"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
+            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
           >
             Simpan Paket
           </button>
@@ -275,36 +376,44 @@
       </form>
     </BaseModal>
 
-    <!-- MODAL 2: TAMBAH BUTIR MISI SOP KE PAKET -->
+    <!-- MODAL 2: TAMBAH BUTIR SOP MISI BARU -->
     <BaseModal
       :modelValue="showAddMissionModal"
-      title="Tambah Butir SOP"
-      :subtitle="`Ke dalam ${activePackage?.name}`"
-      max-width="sm"
+      title="Tambah Butir SOP Misi"
+      :subtitle="`Tambahkan misi standar baru ke paket ${activePackage?.name}`"
+      max-width="md"
       @update:modelValue="showAddMissionModal = $event"
       @close="showAddMissionModal = false"
     >
       <form @submit.prevent="executeAddMission" class="space-y-3 py-2">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Minggu (Week) *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Pilih Minggu (Week) *
+            </label>
             <select
-              v-model.number="newMissionForm.week"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] cursor-pointer"
+              v-model="newMissionForm.week"
+              required
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] cursor-pointer"
             >
-              <option :value="1">Week 1</option>
-              <option :value="2">Week 2</option>
-              <option :value="3">Week 3</option>
+              <option
+                v-for="w in activePackageWeeks"
+                :key="w.weekNumber"
+                :value="w.weekNumber"
+              >
+                Week {{ w.weekNumber }} — {{ w.title }}
+              </option>
             </select>
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori Misi</label>
             <input
               v-model="newMissionForm.category"
               type="text"
-              placeholder="Sanitasi / Pelayanan"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+              required
+              placeholder="Contoh: Suhu Dingin, Kebersihan, Pelayanan"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
         </div>
@@ -315,28 +424,30 @@
             v-model="newMissionForm.title"
             type="text"
             required
-            placeholder="Contoh: Kalibrasi Timbangan Buah"
+            placeholder="Contoh: Cek Kalibrasi Sensorik Rasa Jus"
             class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           />
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi Ringkas</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi & Tujuan Misi</label>
           <textarea
             v-model="newMissionForm.description"
             rows="2"
-            placeholder="Instruksi SOP singkat..."
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none p-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+            placeholder="Instruksi singkat bagi kru dalam menjalankan SOP ini..."
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           ></textarea>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Poin Checklist SOP (1 baris per poin)</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Daftar Checklist / Poin SOP (1 baris per poin)
+          </label>
           <textarea
             v-model="newMissionForm.requirementsText"
-            rows="2"
-            placeholder="Poin 1&#10;Poin 2"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none p-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+            rows="3"
+            placeholder="Cek temperatur chiller di 2-4°C&#10;Catat di logbook fisik dan submit foto"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           ></textarea>
         </div>
 
@@ -344,38 +455,38 @@
           <button
             type="button"
             @click="showAddMissionModal = false"
-            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
           >
             Batal
           </button>
           <button
             type="submit"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
+            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
           >
-            Tambah Misi
+            Simpan Misi
           </button>
         </div>
       </form>
     </BaseModal>
 
-    <!-- MODAL 3: TERAPKAN PAKET KE BATCH GERAI -->
+    <!-- MODAL 3: TERAPKAN PAKET KE GERAI / BATCH -->
     <BaseModal
       :modelValue="showApplyModal"
-      title="Terapkan Paket SOP ke Gerai"
-      :subtitle="`Paket: ${activePackage?.name}`"
+      title="Terapkan Paket Template ke Gerai / Batch"
+      :subtitle="`Menerapkan seluruh butir misi dari ${activePackage?.name} ke Batch gerai aktif`"
       max-width="sm"
       @update:modelValue="showApplyModal = $event"
       @close="showApplyModal = false"
     >
-      <form @submit.prevent="executeApplyPackage" class="space-y-3 py-2">
+      <form @submit.prevent="executeApplyPackage" class="space-y-4 py-2">
         <div>
           <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            Pilih Batch Gerai Tujuan *
+            Pilih Target Batch Gerai *
           </label>
           <select
             v-model="targetBatchId"
             required
-            class="w-full text-xs font-medium rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] cursor-pointer"
           >
             <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
               {{ b.name }} — {{ b.storeLocation }}
@@ -384,20 +495,20 @@
         </div>
 
         <p class="text-[11px] text-slate-500">
-          Seluruh {{ activePackage?.templates.length }} butir misi SOP akan otomatis dibuat untuk batch yang dipilih.
+          Seluruh {{ activePackage?.templates.length }} butir misi SOP dan {{ activePackageWeeks.length }} tema mingguan akan otomatis diterapkan untuk batch yang dipilih.
         </p>
 
         <div class="pt-3 flex items-center justify-end gap-3">
           <button
             type="button"
             @click="showApplyModal = false"
-            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
           >
             Batal
           </button>
           <button
             type="submit"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#701a40] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
+            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
           >
             Terapkan Sekarang
           </button>
@@ -408,7 +519,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   TabsRoot,
@@ -420,7 +531,14 @@ import { useBatchStore } from '~/stores/batch.js'
 import { useTemplateStore } from '~/stores/template.js'
 import { useToast } from '~/composables/useToast.js'
 import BaseModal from '~/components/ui/BaseModal.vue'
-import { Sparkles, Check, Plus, Copy, Trash2 } from 'lucide-vue-next'
+import {
+  Sparkles,
+  Check,
+  Plus,
+  Copy,
+  Trash2,
+  Bookmark
+} from 'lucide-vue-next'
 
 const router = useRouter()
 const batchStore = useBatchStore()
@@ -428,6 +546,7 @@ const templateStore = useTemplateStore()
 const toast = useToast()
 
 const activeWeekTab = ref(1)
+const currentWeekTitle = ref('')
 const showApplyModal = ref(false)
 const showCreatePackageModal = ref(false)
 const showAddMissionModal = ref(false)
@@ -436,15 +555,60 @@ const targetBatchId = ref(batchStore.selectedBatchId || 'batch-alpha')
 
 const activePackage = computed(() => templateStore.currentPackage)
 
-const currentWeekTemplates = computed(() => {
-  return templateStore.templatesByWeek(activeWeekTab.value)
+const activePackageWeeks = computed(() => {
+  return templateStore.packageWeeks(activePackage.value?.id)
 })
+
+// Sync week title when activeWeekTab or activePackage changes
+const syncWeekTitle = () => {
+  const currentWeekObj = activePackageWeeks.value.find(w => w.weekNumber === Number(activeWeekTab.value))
+  currentWeekTitle.value = currentWeekObj ? currentWeekObj.title : `Minggu ${activeWeekTab.value}: Tema SOP`
+}
+
+watch([activeWeekTab, activePackage], () => {
+  syncWeekTitle()
+}, { immediate: true })
+
+const selectPackageTab = (pkgId) => {
+  templateStore.selectPackage(pkgId)
+  activeWeekTab.value = 1
+  syncWeekTitle()
+}
+
+const saveCurrentWeekTitle = () => {
+  if (!currentWeekTitle.value.trim() || !activePackage.value) return
+  templateStore.updateWeekTitle(activePackage.value.id, activeWeekTab.value, currentWeekTitle.value.trim())
+  toast.success('Judul Week Disimpan', `Judul Week ${activeWeekTab.value} berhasil diperbarui.`)
+}
+
+const handleAddNewWeek = () => {
+  if (!activePackage.value) return
+  const created = templateStore.addWeekToPackage(activePackage.value.id)
+  if (created) {
+    activeWeekTab.value = created.weekNumber
+    syncWeekTitle()
+    toast.success('Week Ditambahkan', `Week ${created.weekNumber} siap ditambahkan butir SOP.`)
+  }
+}
+
+const handleRemoveCurrentWeek = () => {
+  if (!activePackage.value) return
+  if (confirm(`Hapus Week ${activeWeekTab.value} beserta seluruh misi di dalamnya?`)) {
+    const success = templateStore.removeWeekFromPackage(activePackage.value.id, activeWeekTab.value)
+    if (success) {
+      activeWeekTab.value = 1
+      syncWeekTitle()
+      toast.info('Week Dihapus', 'Minggu beserta seluruh butir SOP di dalamnya telah dihapus.')
+    }
+  }
+}
 
 // Package Creation Form
 const newPkgForm = ref({
   name: '',
   category: 'Standar Operasional',
   targetType: 'Gerai Flagship',
+  totalWeeks: 3,
   description: ''
 })
 
@@ -462,6 +626,7 @@ const openCreatePackageModal = () => {
     name: '',
     category: 'Standar Operasional',
     targetType: 'Gerai Flagship',
+    totalWeeks: 3,
     description: ''
   }
   showCreatePackageModal.value = true
@@ -473,7 +638,9 @@ const executeCreatePackage = () => {
     code: `PKG-0${templateStore.allPackages.length + 1}`
   })
   showCreatePackageModal.value = false
-  toast.success('Paket Dibuat', `Paket "${created.name}" siap digunakan.`)
+  activeWeekTab.value = 1
+  syncWeekTitle()
+  toast.success('Paket Dibuat', `Paket "${created.name}" dengan ${created.totalWeeks} minggu siap digunakan.`)
 }
 
 const duplicatePackage = (pkgId) => {

@@ -102,8 +102,10 @@
                     Lv.{{ crew.level || 1 }}
                   </span>
                 </div>
-                <p class="text-xs text-slate-400 truncate mt-0.5">
-                  {{ crew.position || 'Crew Specialist' }}
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 flex items-center gap-1">
+                  <span>{{ crew.position || 'Crew Specialist' }}</span>
+                  <span>•</span>
+                  <span class="font-semibold text-slate-700 dark:text-slate-300">🏪 {{ crew.storeLocation || 'Standby' }}</span>
                 </p>
               </div>
             </div>

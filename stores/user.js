@@ -173,20 +173,28 @@ const initialDirectory = [
   { ...mockUsers.DISTRICT_MANAGER_2 },
   { ...mockUsers.STORE_LEADER_1 },
   { ...mockUsers.STORE_LEADER_2 },
-  ...mockCrews.map(c => ({
-    id: c.id,
-    name: c.name,
-    role: 'CREW',
-    roleTitle: 'Store Specialist',
-    email: `${c.name.toLowerCase().replace(/[^a-z]/g, '.')}@rejuve.co.id`,
-    avatar: c.avatar,
-    department: c.department,
-    position: c.position,
-    storeLocation: c.storeLocation,
-    batchId: c.batchId,
-    stars: c.stars,
-    level: c.level
-  }))
+  ...mockCrews.map(c => {
+    let storeId = c.storeId || 'store-001'
+    if (!c.storeId) {
+      if (c.batchId === 'batch-beta') storeId = 'store-002'
+      else if (c.batchId === 'batch-gamma') storeId = 'store-003'
+    }
+    return {
+      id: c.id,
+      name: c.name,
+      role: 'CREW',
+      roleTitle: 'Store Specialist',
+      email: `${c.name.toLowerCase().replace(/[^a-z]/g, '.')}@rejuve.co.id`,
+      avatar: c.avatar,
+      department: c.department,
+      position: c.position,
+      storeId,
+      storeLocation: c.storeLocation,
+      batchId: c.batchId || null,
+      stars: c.stars || 0,
+      level: c.level || 1
+    }
+  })
 ]
 
 import { getStoredData, setStoredData } from '~/utils/storage.js'
@@ -361,6 +369,10 @@ export const useUserStore = defineStore('user', {
       else if (payload.role === 'DISTRICT_MANAGER' || payload.role === 'HEAD') roleTitle = 'District Manager'
       else if (payload.role === 'SUPERADMIN') roleTitle = 'System Superadmin'
 
+      let storeLocation = payload.storeLocation || 'Belum Ditugaskan'
+      let batchId = payload.batchId || null
+      let storeId = payload.storeId || null
+
       const newUser = {
         id,
         name: payload.name,
@@ -370,8 +382,9 @@ export const useUserStore = defineStore('user', {
         avatar: payload.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
         department: payload.department || (payload.role === 'CREW' ? 'Store Operations' : 'Management'),
         position: payload.position || roleTitle,
-        storeLocation: 'Belum Ditugaskan',
-        batchId: null,
+        storeId,
+        storeLocation,
+        batchId,
         stars: 0,
         level: 1
       }

@@ -35,7 +35,8 @@ export function clearAllStoredData() {
       'rejuve_templates_v3',
       'rejuve_crews_v3',
       'rejuve_evaluations_v3',
-      'rejuve_approvals_v3'
+      'rejuve_approvals_v3',
+      'rejuve_stores_v1'
     ]
     keys.forEach(k => localStorage.removeItem(k))
   }

@@ -6,6 +6,7 @@ import { useTemplateStore } from './stores/template.js'
 import { useEvaluationStore } from './stores/evaluation.js'
 import { useApprovalStore } from './stores/approval.js'
 import { useGamificationStore } from './stores/gamification.js'
+import { useStoreStore } from './stores/store.js'
 
 console.log('🚀 MEMULAI AUDIT & PENGUJIAN SEMUA FITUR CRUD SISTEM RE.JUVE...\n')
 
@@ -20,6 +21,7 @@ const templateStore = useTemplateStore()
 const evalStore = useEvaluationStore()
 const approvalStore = useApprovalStore()
 const gamificationStore = useGamificationStore()
+const storeStore = useStoreStore()
 
 let totalTests = 0
 let passedTests = 0
@@ -221,6 +223,47 @@ assert(userStore.isStoreLeader === true && userStore.currentRole === 'STORE_LEAD
 
 userStore.loginAsUser('dm-001')
 assert(userStore.isDistrictManager === true && userStore.currentRole === 'DISTRICT_MANAGER', 'Role Validation: Akun DM-001 teridentifikasi sebagai District Manager')
+
+console.log('')
+
+// ==========================================
+// TEST SUITE 6: MASTER STORE CRUD & STAFF ASSIGNMENTS
+// ==========================================
+console.log('📌 6. Menguji CRUD Master Gerai & Penugasan Manajer:')
+
+// 6.1 CREATE STORE
+const initialStoreCount = storeStore.totalStoreCount
+const newStore = storeStore.createStore({
+  name: 'Re.juve Kota Kasablanka',
+  region: 'Jakarta Selatan',
+  mallName: 'Kota Kasablanka Mall',
+  address: 'Lantai LG Unit #LG-23, Jl. Casablanca Raya',
+  phone: '021-29465000',
+  storeLeaderId: 'sl-001',
+  districtManagerId: 'dm-001',
+  batchId: 'batch-alpha',
+  status: 'ACTIVE'
+})
+assert(newStore && newStore.id && storeStore.totalStoreCount === initialStoreCount + 1, 'Create Store: Berhasil mendaftarkan gerai baru')
+assert(newStore.code && newStore.code.startsWith('STR-'), 'Create Store: Kode gerai ter-generate secara otomatis')
+
+// 6.2 READ STORE & RESOLVE SL/DM PROFILES
+const readStore = storeStore.storeById(newStore.id)
+assert(readStore && readStore.storeLeader && readStore.storeLeader.name === 'Budi Santoso', 'Read Store: Berhasil menghubungkan data profil Store Leader')
+assert(readStore && readStore.districtManager && readStore.districtManager.name === 'Ahmad Dahlan', 'Read Store: Berhasil menghubungkan data profil District Manager')
+
+// 6.3 UPDATE STORE
+storeStore.updateStore(newStore.id, {
+  name: 'Re.juve Kota Kasablanka Extension',
+  storeLeaderId: 'sl-002',
+  districtManagerId: 'dm-002'
+})
+const updatedStore = storeStore.storeById(newStore.id)
+assert(updatedStore.name === 'Re.juve Kota Kasablanka Extension' && updatedStore.storeLeader?.name === 'Dewi Lestari' && updatedStore.districtManager?.name === 'Citra Dewi', 'Update Store: Berhasil memperbarui detail gerai dan alokasi manajer')
+
+// 6.4 DELETE STORE
+storeStore.deleteStore(newStore.id)
+assert(storeStore.storeById(newStore.id) === null, 'Delete Store: Berhasil menghapus gerai dari Master Store')
 
 console.log('')
 console.log(`==========================================`)
