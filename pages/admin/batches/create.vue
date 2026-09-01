@@ -21,17 +21,17 @@
             Buat Siklus Batch Baru
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">
-            Pilih paket kurikulum SOP, tentukan tanggal mulai, dan sistem akan mengonfigurasi durasi minggu serta tema mingguan secara otomatis.
+            Konfigurasi tanggal mulai, pilih template pendampingan Buddy 3 hari pra-batch, tentukan kurikulum SOP mingguan, dan tugaskan kru baru.
           </p>
         </div>
       </div>
 
       <form @submit.prevent="handleSubmit" class="space-y-6 pt-6">
         
-        <!-- 1. Informasi Siklus Batch & Paket Template Kurikulum SOP -->
+        <!-- 1. Informasi Siklus Batch & Tanggal Mulai -->
         <div class="space-y-4">
           <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            1. Informasi Siklus Batch & Kurikulum SOP
+            1. Informasi Siklus Batch & Periode Pelaksanaan
           </h3>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -44,7 +44,7 @@
                 v-model="form.name"
                 type="text"
                 required
-                :placeholder="`Contoh: Batch ${nextBatchNumber} — Program Pelatihan Q3`"
+                :placeholder="`Contoh: Batch ${nextBatchNumber} — Program Pelatihan Multi-Gerai`"
                 class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
               />
             </div>
@@ -66,35 +66,8 @@
             </div>
           </div>
 
-          <!-- Pilihan Paket Template SOP Misi (Menentukan Durasi Minggu & Tema) -->
-          <div class="p-4 rounded-2xl bg-[#831843]/5 border border-[#831843]/15 space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                📦 Paket Master Template SOP Misi *
-              </label>
-              <NuxtLink to="/admin/templates" class="text-[11px] text-[#831843] dark:text-[#f472b6] font-semibold hover:underline">
-                Kelola Template Master →
-              </NuxtLink>
-            </div>
-
-            <select
-              v-model="form.templatePackageId"
-              @change="onTemplatePackageChange"
-              class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] cursor-pointer shadow-2xs"
-            >
-              <option v-for="pkg in templateStore.allPackages" :key="pkg.id" :value="pkg.id">
-                {{ pkg.name }} ({{ (pkg.weeks || []).length || pkg.totalWeeks || 3 }} Minggu • {{ pkg.templates.length }} Misi • {{ pkg.targetType }})
-              </option>
-              <option value="NONE">-- Mulai dengan Misi & Durasi Kosong --</option>
-            </select>
-
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">
-              💡 <em>Durasi siklus minggu dan tema mingguan batch akan otomatis menyesuaikan struktur paket template ini.</em>
-            </p>
-          </div>
-
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <!-- Deskripsi / Cakupan Batch -->
+            <!-- Deskripsi / Catatan Batch -->
             <div class="sm:col-span-2">
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Deskripsi / Catatan Batch
@@ -121,101 +94,192 @@
             </div>
           </div>
 
-          <!-- Tanggal Mulai & Tanggal Selesai (Otomatis Mengikuti Total Minggu Template) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-300/40 dark:border-amber-700/40">
-            <div>
-              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
-                <span class="flex items-center gap-1.5">
-                  <Calendar class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
-                  <span>Tanggal Mulai Siklus *</span>
-                </span>
-                <span class="text-[10px] text-slate-400 font-medium">Input Tanggal Mulai</span>
-              </label>
-              <input
-                v-model="form.startDate"
-                type="date"
-                required
-                class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-              />
-              <p class="text-[11px] text-slate-400 mt-1">Awal pembukaan misi Week 1.</p>
-            </div>
+          <!-- Input Tanggal Mulai Siklus (Dasar Perhitungan Pre-Batch Buddy & Selesai Batch) -->
+          <div class="p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-300/40 dark:border-amber-700/40">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
+                  <span class="flex items-center gap-1.5">
+                    <Calendar class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
+                    <span>Tanggal Mulai Siklus Batch *</span>
+                  </span>
+                  <span class="text-[10px] text-[#831843] font-bold">Input Tanggal Mulai</span>
+                </label>
+                <input
+                  v-model="form.startDate"
+                  type="date"
+                  required
+                  class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+                />
+                <p class="text-[11px] text-slate-400 mt-1">Titik awal pembukaan misi resmi Week 1.</p>
+              </div>
 
-            <div>
-              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
-                <span class="flex items-center gap-1.5">
-                  <Calendar class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
-                  <span>Tanggal Selesai Siklus</span>
-                </span>
-                <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded">
-                  ⚡ Auto (+{{ templateDurationDays }} Hari / {{ templateTotalWeeks }} Minggu)
-                </span>
-              </label>
-              <input
-                :value="form.endDate"
-                type="date"
-                readonly
-                class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-700 dark:text-slate-300 cursor-not-allowed"
-              />
-              <p class="text-[11px] text-slate-400 mt-1">
-                Dihitung otomatis {{ templateTotalWeeks }} minggu ({{ templateDurationDays }} hari) dari tanggal mulai.
-              </p>
+              <div>
+                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
+                  <span class="flex items-center gap-1.5">
+                    <Calendar class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
+                    <span>Tanggal Selesai Siklus</span>
+                  </span>
+                  <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded">
+                    ⚡ Auto (+{{ templateDurationDays }} Hari / {{ templateTotalWeeks }} Minggu)
+                  </span>
+                </label>
+                <input
+                  :value="form.endDate"
+                  type="date"
+                  readonly
+                  class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-700 dark:text-slate-300 cursor-not-allowed"
+                />
+                <p class="text-[11px] text-slate-400 mt-1">
+                  Otomatis {{ templateTotalWeeks }} minggu ({{ templateDurationDays }} hari) dari tanggal mulai.
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- 2. Tema & Judul Siklus Mingguan (Dinamis Sesuai Template Misi) -->
+        <!-- 2. Pilihan Paket Template Misi Buddy (3 Hari Pre-Batch Khusus Store Leader) -->
         <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div class="flex items-center justify-between flex-wrap gap-2">
             <div>
               <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                2. Tema & Judul Siklus {{ form.weeks.length }} Mingguan
+                2. Pilihan Paket Template Misi Buddy (Pre-Batch 3 Hari)
               </h3>
               <p class="text-[11px] text-slate-400">
-                Otomatis disinkronkan dari paket template: <strong>{{ selectedTemplatePackage?.name || 'Kustom' }}</strong>
+                Program orientasi & pendampingan oleh <strong>Store Leader (SL)</strong> sebelum kru memulai batch resmi.
               </p>
             </div>
-            <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full">
-              ✨ {{ form.weeks.length }} Minggu Dikonfigurasi
+            <span v-if="form.buddyPackageId !== 'NONE'" class="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 px-2.5 py-0.5 rounded-full">
+              🤝 Periode Buddy: {{ buddyDateRangeText }}
             </span>
           </div>
 
-          <div
-            class="grid gap-3"
-            :class="[
-              form.weeks.length <= 2 ? 'grid-cols-1 sm:grid-cols-2' :
-              form.weeks.length === 3 ? 'grid-cols-1 sm:grid-cols-3' :
-              'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
-            ]"
-          >
-            <div
-              v-for="w in form.weeks"
-              :key="w.weekNumber"
-              class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1.5"
-            >
-              <div class="flex items-center justify-between">
-                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                  📌 Judul Minggu {{ w.weekNumber }}
-                </label>
-                <span class="text-[10px] font-bold text-slate-400 bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.2 rounded">
-                  🔒 Template
-                </span>
+          <div class="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40 space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                Pilih Kurikulum Template Misi Buddy *
+              </label>
+              <select
+                v-model="form.buddyPackageId"
+                class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 cursor-pointer shadow-2xs"
+              >
+                <option v-for="bpkg in buddyStore.allPackages" :key="bpkg.id" :value="bpkg.id">
+                  {{ bpkg.name }} ({{ bpkg.totalDays }} Hari Pra-Batch • {{ bpkg.code }})
+                </option>
+                <option value="NONE">-- Lewati / Tanpa Program Buddy --</option>
+              </select>
+            </div>
+
+            <!-- Pratinjau 3 Hari Misi Buddy -->
+            <div v-if="selectedBuddyPackage" class="pt-2 border-t border-purple-200/60 dark:border-purple-800/40">
+              <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-2">
+                📋 Pratinjau Modul Pendampingan ({{ selectedBuddyPackage.days.length }} Hari):
               </div>
-              <input
-                :value="w.title"
-                type="text"
-                readonly
-                disabled
-                class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-700 dark:text-slate-300 cursor-not-allowed select-all"
-              />
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div
+                  v-for="bday in selectedBuddyPackage.days"
+                  :key="bday.dayNumber"
+                  class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/60 text-xs space-y-1"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-purple-700 dark:text-purple-300">Hari {{ bday.dayNumber }} (H-{{ bday.offsetDays }})</span>
+                    <span class="text-[10px] text-slate-400 font-semibold">{{ bday.missions.length }} Butir SOP</span>
+                  </div>
+                  <p class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 line-clamp-2">
+                    {{ bday.title }}
+                  </p>
+                  <span class="inline-block text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    Fokus: {{ bday.focus }}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- 3. Penanggung Jawab Evaluasi & Approval (Otomatis Mengikuti Master Store Masing-Masing Kru) -->
+        <!-- 3. Pilihan Paket Master Template SOP Misi (Siklus 2, 3, 4, 5 Minggu) -->
+        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                3. Pilihan Paket Template Misi Reguler SOP
+              </h3>
+              <p class="text-[11px] text-slate-400">
+                Pilih kurikulum kompetisi mingguan yang akan dijalani kru di seluruh gerai.
+              </p>
+            </div>
+            <NuxtLink to="/admin/templates" class="text-[11px] text-[#831843] dark:text-[#f472b6] font-semibold hover:underline">
+              Kelola Master Template →
+            </NuxtLink>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-[#831843]/5 border border-[#831843]/15 space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                Pilih Paket Master Template SOP *
+              </label>
+              <select
+                v-model="form.templatePackageId"
+                @change="onTemplatePackageChange"
+                class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] cursor-pointer shadow-2xs"
+              >
+                <option v-for="pkg in templateStore.allPackages" :key="pkg.id" :value="pkg.id">
+                  {{ pkg.name }} ({{ (pkg.weeks || []).length || pkg.totalWeeks || 3 }} Minggu • {{ pkg.templates.length }} Misi • {{ pkg.targetType }})
+                </option>
+                <option value="NONE">-- Mulai dengan Misi & Durasi Kosong --</option>
+              </select>
+            </div>
+
+            <!-- Tema & Judul Siklus Mingguan Dinamis (Terkunci dari Template) -->
+            <div class="pt-2 border-t border-[#831843]/15 space-y-2">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="font-bold text-slate-700 dark:text-slate-300">
+                  📌 Struktur {{ form.weeks.length }} Mingguan (Otomatis dari Template):
+                </span>
+                <span class="text-emerald-600 dark:text-emerald-400 font-bold">
+                  ✨ {{ form.weeks.length }} Minggu Dikonfigurasi
+                </span>
+              </div>
+
+              <div
+                class="grid gap-2.5"
+                :class="[
+                  form.weeks.length <= 2 ? 'grid-cols-1 sm:grid-cols-2' :
+                  form.weeks.length === 3 ? 'grid-cols-1 sm:grid-cols-3' :
+                  'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                ]"
+              >
+                <div
+                  v-for="w in form.weeks"
+                  :key="w.weekNumber"
+                  class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1"
+                >
+                  <div class="flex items-center justify-between">
+                    <label class="block text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                      Judul Minggu {{ w.weekNumber }}
+                    </label>
+                    <span class="text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded">
+                      🔒 Template
+                    </span>
+                  </div>
+                  <input
+                    :value="w.title"
+                    type="text"
+                    readonly
+                    disabled
+                    class="w-full text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-slate-700 dark:text-slate-300 cursor-not-allowed select-all"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Desentralisasi Penanggung Jawab Evaluasi & Approval (Otomatis Mengikuti Master Store Masing-Masing Kru) -->
         <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              3. Desentralisasi Penanggung Jawab Evaluasi & Approval
+              4. Desentralisasi Penanggung Jawab Evaluasi & Approval
             </h3>
             <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full">
               ⚡ Otomatis per-Store Penugasan Kru
@@ -224,7 +288,7 @@
 
           <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700 space-y-3">
             <p class="text-xs text-slate-600 dark:text-slate-300">
-              ℹ️ Seluruh penilaian misi dan persetujuan (approval) untuk kru di dalam batch ini <strong>tidak dikunci ke 1 orang manajer</strong>, melainkan <strong>otomatis mengikuti Store Leader (SL) dan District Manager (DM) dari Store tempat masing-masing kru bertugas</strong>.
+              ℹ️ Seluruh penilaian misi reguler dan pendampingan Buddy untuk kru di dalam batch ini <strong>tidak dikunci ke 1 orang manajer</strong>, melainkan <strong>otomatis mengikuti Store Leader (SL) dan District Manager (DM) dari Store tempat masing-masing kru bertugas</strong>.
             </p>
 
             <!-- Breakdown Gerai yang Terlibat Berdasarkan Kru Terpilih -->
@@ -254,19 +318,19 @@
           </div>
         </div>
 
-        <!-- 4. Pilih Anggota Crew (Disaring: Belum Pernah Ikut Batch & per-Gerai) -->
+        <!-- 5. Pilih Anggota Crew (Disaring: Belum Pernah Ikut Batch & per-Gerai) -->
         <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <div class="flex items-center gap-2">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  4. Anggota Kru yang Ditugaskan ({{ form.assignment.crewIds.length }} Terpilih)
+                  5. Anggota Kru yang Ditugaskan ({{ form.assignment.crewIds.length }} Terpilih)
                 </h3>
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
                   ✨ {{ unassignedCrews.length }} Kru Belum Pernah Ikut
                 </span>
               </div>
-              <p class="text-[11px] text-slate-400">Pilih kru baru/standby yang belum pernah mengikuti siklus batch sebelumnya.</p>
+              <p class="text-[11px] text-slate-400">Pilih kru baru/standby yang akan mengikuti program Buddy dan siklus batch.</p>
             </div>
             
             <div class="flex items-center gap-2 flex-wrap">
@@ -383,6 +447,7 @@ import { useBatchStore } from '~/stores/batch.js'
 import { useUserStore } from '~/stores/user.js'
 import { useStoreStore } from '~/stores/store.js'
 import { useTemplateStore } from '~/stores/template.js'
+import { useBuddyStore } from '~/stores/buddy.js'
 import { useToast } from '~/composables/useToast.js'
 import {
   Layers,
@@ -396,6 +461,7 @@ const batchStore = useBatchStore()
 const userStore = useUserStore()
 const storeStore = useStoreStore()
 const templateStore = useTemplateStore()
+const buddyStore = useBuddyStore()
 const toast = useToast()
 
 const crewFilterMode = ref('UNASSIGNED')
@@ -440,6 +506,7 @@ const form = ref({
   startDate: defaultStartDate,
   endDate: '',
   description: 'Siklus gamifikasi dan pelatihan standar operasional multi-gerai.',
+  buddyPackageId: 'pkg-buddy-standard',
   templatePackageId: templateStore.allPackages[0]?.id || 'pkg-sop-standard',
   weeks: [],
   assignment: {
@@ -451,6 +518,27 @@ const form = ref({
     maxRevisions: 3,
     requireEvidence: true
   }
+})
+
+const selectedBuddyPackage = computed(() => {
+  if (form.value.buddyPackageId === 'NONE') return null
+  return buddyStore.packageById(form.value.buddyPackageId) || buddyStore.defaultPackage
+})
+
+// Pre-batch Buddy date calculation: (startDate - totalDays) to (startDate - 1 day)
+const buddyDateRangeText = computed(() => {
+  if (!form.value.startDate || !selectedBuddyPackage.value) return '-'
+  const totalDays = selectedBuddyPackage.value.totalDays || 3
+  const parts = form.value.startDate.split('-').map(Number)
+  const dStart = new Date(parts[0], parts[1] - 1, parts[2])
+  
+  const bStart = new Date(dStart.getTime() - (totalDays * 24 * 60 * 60 * 1000))
+  const bEnd = new Date(dStart.getTime() - (1 * 24 * 60 * 60 * 1000))
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+  const startStr = `${String(bStart.getDate()).padStart(2, '0')} ${months[bStart.getMonth()]}`
+  const endStr = `${String(bEnd.getDate()).padStart(2, '0')} ${months[bEnd.getMonth()]}`
+  return `${startStr} s/d ${endStr} (${totalDays} Hari Pra-Batch)`
 })
 
 const selectedTemplatePackage = computed(() => {
@@ -565,6 +653,7 @@ const handleSubmit = () => {
   const newB = batchStore.createBatch({
     ...form.value,
     code: computedBatchCode.value,
+    buddyPackageId: form.value.buddyPackageId,
     applyTemplatePackage: applyTemplate,
     templatePackageId: form.value.templatePackageId
   })
@@ -577,7 +666,7 @@ const handleSubmit = () => {
 
   toast.success(
     'Batch Berhasil Dibuat!',
-    `Batch ${newB.name} (${newB.code}) aktif selama ${templateTotalWeeks.value} minggu dengan ${form.value.assignment.crewIds.length} kru dari ${participatingStores.value.length} gerai.`
+    `Batch ${newB.name} (${newB.code}) aktif dengan program Buddy (${selectedBuddyPackage.value?.name || 'Tanpa Buddy'}) dan kurikulum ${templateTotalWeeks.value} minggu.`
   )
   router.push('/admin/batches')
 }

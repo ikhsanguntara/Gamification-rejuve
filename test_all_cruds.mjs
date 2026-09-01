@@ -266,6 +266,107 @@ storeStore.deleteStore(newStore.id)
 assert(storeStore.storeById(newStore.id) === null, 'Delete Store: Berhasil menghapus gerai dari Master Store')
 
 console.log('')
+
+// ==========================================
+// TEST SUITE 7: BUDDY TEMPLATE & EVALUATION CRUD
+// ==========================================
+console.log('📌 7. Menguji CRUD Program Misi Buddy (Pre-Batch 3 Hari):')
+
+import { useBuddyStore } from './stores/buddy.js'
+const buddyStore = useBuddyStore()
+
+// 7.1 READ BUDDY TEMPLATES
+const defaultBuddy = buddyStore.defaultPackage
+assert(defaultBuddy && defaultBuddy.totalDays === 3 && defaultBuddy.days.length === 3, 'Read Buddy Template: Berhasil memuat paket master Buddy 3 Hari')
+
+// 7.2 CREATE BUDDY EVALUATION (STORE LEADER MENTORING)
+const initialBuddyEval = buddyStore.saveDayEvaluation({
+  batchId: 'batch-alpha',
+  crewId: 'crew-005',
+  dayNumber: 1,
+  score: 95,
+  note: 'Orientasi #CleanLabel dan grooming sangat rapi',
+  checklistResults: { 'bm-d1-01': true, 'bm-d1-02': true, 'bm-d1-03': true },
+  evaluatorId: 'sl-001',
+  evaluatorName: 'Budi Santoso (Store Leader)'
+})
+assert(initialBuddyEval && initialBuddyEval.dayEvaluations[1]?.score === 95, 'Create Buddy Eval: Store Leader berhasil menyimpan evaluasi Hari 1')
+
+// 7.3 UPDATE & RECOMMEND CREW
+buddyStore.updateCrewRecommendation('batch-alpha', 'crew-005', {
+  status: 'RECOMMENDED',
+  recommendationNote: 'Kru sangat kompeten dan siap masuk Batch 1.'
+})
+const updatedBuddyRecord = buddyStore.evaluationForCrew('batch-alpha', 'crew-005')
+assert(updatedBuddyRecord && updatedBuddyRecord.status === 'RECOMMENDED', 'Update Buddy Recommendation: Kru berhasil direkomendasikan masuk Batch')
+
+// 7.4 CREATE BUDDY PACKAGE
+const newBuddyPkg = buddyStore.createBuddyPackage({
+  name: 'Paket Buddy Flagship Intensif (3 Hari)',
+  totalDays: 3,
+  description: 'Program akselerasi pendampingan 3 hari untuk gerai flagship.'
+})
+assert(newBuddyPkg && newBuddyPkg.id && buddyStore.packageById(newBuddyPkg.id) !== undefined, 'Create Buddy Package: Berhasil membuat paket template Buddy baru')
+
+// 7.5 DELETE BUDDY PACKAGE
+buddyStore.deleteBuddyPackage(newBuddyPkg.id)
+assert(buddyStore.packageById(newBuddyPkg.id) === undefined, 'Delete Buddy Package: Berhasil menghapus paket template Buddy')
+
+console.log('')
+
+// ==========================================
+// TEST SUITE 8: FEEDBACK SURVEY & RAPOR NEW HIRE CRUD
+// ==========================================
+console.log('📌 8. Menguji CRUD Master Template Feedback & Rapor New Hire:')
+
+import { useFeedbackStore } from './stores/feedback.js'
+const feedbackStore = useFeedbackStore()
+
+// 8.1 READ TEMPLATES
+assert(feedbackStore.surveyQuestions.length >= 17, 'Read Feedback Template: Berhasil memuat 17 butir pertanyaan survei onboarding')
+assert(feedbackStore.raporCompetencies.length === 7, 'Read Rapor Template: Berhasil memuat 7 pilar kompetensi standar Re.juve')
+
+// 8.2 SUBMIT CREW FEEDBACK
+const submittedFB = feedbackStore.submitCrewFeedback({
+  crewId: 'crew-002',
+  crewName: 'Bambang Sudirgo',
+  storeLocation: 'Pondok Indah Mall',
+  buddyName: 'Dewi Lestari',
+  ratings: { 'q-01': 10, 'q-02': 9, 'q-03': 10, 'q-04': 10 },
+  essayAnswer: 'Orientasi sangat menyenangkan dan instruksinya jelas.'
+})
+assert(submittedFB && submittedFB.crewId === 'crew-002' && submittedFB.avgScore > 0, 'Create Feedback: Kru berhasil mengirimkan survei pengalaman onboarding')
+
+// 8.3 STORE LEADER: SAVE RAPOR NEW HIRE (7 KOMPETENSI)
+const savedRapor = feedbackStore.saveNewHireReport({
+  crewId: 'crew-002',
+  crewName: 'Bambang Sudirgo',
+  storeLocation: 'Pondok Indah Mall',
+  storeCaptain: 'Dewi Lestari',
+  indicatorsRating: {
+    'ind-01-01': 'KOMPETEN',
+    'ind-02-01': 'KOMPETEN',
+    'ind-03-01': 'KOMPETEN',
+    'ind-04-01': 'KOMPETEN'
+  },
+  notes: 'Bambang sangat cepat beradaptasi di area bar dan kasir.',
+  status: 'LULUS_KOMPETEN'
+})
+assert(savedRapor && savedRapor.status === 'LULUS_KOMPETEN', 'Create Rapor: Store Leader berhasil menyimpan penilaian 7 kompetensi New Hire')
+
+// 8.4 ADMIN CRUD: ADD & DELETE SURVEY QUESTION
+const newQ = feedbackStore.addSurveyQuestion({
+  text: 'Apakah fasilitas dan perlengkapan kerja di store sudah memadai?',
+  category: 'Fasilitas Store',
+  type: 'SCALE_0_10'
+})
+assert(newQ && newQ.id, 'Create Question: Admin berhasil menambah butir kuesioner baru')
+
+feedbackStore.deleteSurveyQuestion(newQ.id)
+assert(feedbackStore.surveyQuestions.find(q => q.id === newQ.id) === undefined, 'Delete Question: Admin berhasil menghapus butir kuesioner')
+
+console.log('')
 console.log(`==========================================`)
 console.log(`🏁 HASIL AUDIT PENGUJIAN CRUD: ${passedTests}/${totalTests} TESTS BERHASIL (100% PASS)`)
 console.log(`==========================================\n`)
+

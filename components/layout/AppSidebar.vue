@@ -269,7 +269,9 @@ import {
   LogOut,
   ChevronDown,
   ChevronUp,
-  Compass
+  Compass,
+  Handshake,
+  MessageSquareText
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -324,6 +326,11 @@ const navItems = computed(() => {
       { label: 'Batch Misi', path: '/batches', icon: Layers },
       { label: 'Missions', path: '/missions', icon: Target },
       {
+        label: 'Penilaian Buddy',
+        path: '/buddy',
+        icon: Handshake
+      },
+      {
         label: 'Penilaian Kru',
         path: '/evaluations',
         icon: ClipboardCheck,
@@ -337,6 +344,7 @@ const navItems = computed(() => {
         badge: approvalStore.pendingApprovals.length > 0 ? `${approvalStore.pendingApprovals.length}` : null,
         badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
       },
+      { label: 'Feedback Onboarding', path: '/feedback', icon: MessageSquareText },
       { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
       { label: 'Achievements', path: '/achievements', icon: Trophy }
     ]
@@ -347,6 +355,7 @@ const navItems = computed(() => {
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
       { label: 'Journey Map', path: '/journey', icon: Compass },
       { label: 'Missions', path: '/missions', icon: Target },
+      { label: 'Feedback Onboarding', path: '/feedback', icon: MessageSquareText },
       { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
       { label: 'Achievements', path: '/achievements', icon: Trophy },
       { label: 'My Profile', path: '/profile', icon: User }
@@ -357,7 +366,11 @@ const navItems = computed(() => {
     return [
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
       { label: 'Batch Misi', path: '/batches', icon: Layers },
-      { label: 'Missions', path: '/missions', icon: Target },
+      {
+        label: 'Penilaian Buddy',
+        path: '/buddy',
+        icon: Handshake
+      },
       {
         label: 'Penilaian Kru',
         path: '/evaluations',
@@ -365,6 +378,7 @@ const navItems = computed(() => {
         badge: missionStore.revisionCount > 0 ? `${missionStore.revisionCount} Rev` : null,
         badgeStyle: 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
       },
+      { label: 'Missions', path: '/missions', icon: Target },
       { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
       { label: 'Achievements', path: '/achievements', icon: Trophy }
     ]
@@ -380,6 +394,11 @@ const navItems = computed(() => {
       icon: ShieldCheck,
       badge: approvalStore.pendingApprovals.length > 0 ? `${approvalStore.pendingApprovals.length}` : null,
       badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+    },
+    {
+      label: 'Penilaian Buddy',
+      path: '/buddy',
+      icon: Handshake
     },
     {
       label: 'Penilaian Kru',
