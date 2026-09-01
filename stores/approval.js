@@ -5,10 +5,11 @@ import { useEvaluationStore } from './evaluation.js'
 import { useGamificationStore } from './gamification.js'
 import { useBatchStore } from './batch.js'
 import { useUserStore } from './user.js'
+import { calculateStars } from '~/utils/star.js'
 import { getStoredData, setStoredData } from '~/utils/storage.js'
 
 /**
- * Approval Store: Head Review Workspace (Approve & Request Revision for Store-Wide Multi-Crew Missions)
+ * Approval Store: District Manager Review Workspace (Approve with Option to Adjust Score)
  */
 
 export const useApprovalStore = defineStore('approval', {
@@ -17,33 +18,13 @@ export const useApprovalStore = defineStore('approval', {
     activities: [
       {
         id: 'act-1',
-        actor: 'Ahmad Dahlan (Head)',
+        actor: 'District Manager',
         action: 'approved store evaluation for',
-        target: 'Cold Storage Chiller Temp & Sensor Audit (2-4°C)',
-        details: 'Audit suhu chiller display dan walk-in cold room stabil sempurna.',
+        target: 'Andi Pratama - Cek Suhu Chiller (2-4°C)',
+        details: 'Audit suhu chiller stabil sempurna.',
         time: 'Just now',
         type: 'award',
-        badge: '+Stars Awarded to 6 Crew Members'
-      },
-      {
-        id: 'act-2',
-        actor: 'Budi Santoso (Supervisor)',
-        action: 'submitted store evaluation for',
-        target: 'Cold-Pressed Extraction Ratio & Pure Recipe Quality Audit',
-        details: 'Avg Score: 92/100 • 5 Stars Calculated for 6 Crew',
-        time: '4 hours ago',
-        type: 'submit',
-        badge: 'Pending Review'
-      },
-      {
-        id: 'act-3',
-        actor: 'Ahmad Dahlan (Head)',
-        action: 'requested revision on',
-        target: 'Store Front Cleanroom Sanitation & Glass Polish Standards',
-        details: 'Mohon lengkapi bukti foto swab test ATP di area prep counter juice.',
-        time: '1 day ago',
-        type: 'revision',
-        badge: 'Revision Required'
+        badge: '+5 Stars Awarded'
       }
     ]
   }),
@@ -52,7 +33,7 @@ export const useApprovalStore = defineStore('approval', {
     userApprovals: (state) => {
       const userStore = useUserStore()
       if (userStore.isSuperadmin) return state.approvals
-      if (userStore.isHead) {
+      if (userStore.isHead || userStore.isDistrictManager) {
         const batchStore = useBatchStore()
         const myBatchIds = batchStore.accessibleBatches.map(b => b.id)
         return state.approvals.filter(a => myBatchIds.includes(a.batchId))
@@ -68,22 +49,49 @@ export const useApprovalStore = defineStore('approval', {
   },
 
   actions: {
-    approveMission(approvalId) {
+    approveMission(approvalId, overridePayload = {}) {
       const item = this.approvals.find(a => a.id === approvalId)
       if (!item) return { success: false, error: 'Approval item not found' }
 
       const now = new Date().toISOString()
+
+      // Calculate Final Score: (Nilai SL + Nilai DM) / 2
+      const slScore = Number(item.slScore ?? item.originalScore ?? item.score ?? item.averageScore ?? 90)
+      let dmScore = slScore
+
+      if (overridePayload.dmScore !== undefined && overridePayload.dmScore !== null) {
+        dmScore = Math.min(100, Math.max(0, Number(overridePayload.dmScore)))
+      } else if (overridePayload.score !== undefined && overridePayload.score !== null) {
+        dmScore = Math.min(100, Math.max(0, Number(overridePayload.score)))
+      }
+
+      // Rumus: (SL + DM) / 2
+      const finalScore = Math.round((slScore + dmScore) / 2)
+      const finalStars = calculateStars(finalScore)
+
+      item.slScore = slScore
+      item.dmScore = dmScore
+      item.originalScore = slScore
+      item.score = finalScore
+      item.averageScore = finalScore
+      item.calculatedStars = finalStars
+      item.isAdjustedByDm = dmScore !== slScore
+
+      if (overridePayload.dmNote !== undefined) {
+        item.dmNote = overridePayload.dmNote
+      }
+
       item.status = 'APPROVED'
       item.reviewedAt = now
 
-      const awardedStars = item.calculatedStars || 5
+      const awardedStars = finalStars
 
       // 1. Update Mission
       const missionStore = useMissionStore()
       missionStore.updateMissionStatus(item.missionId, {
         status: 'COMPLETED',
         awardedStars,
-        crewScores: item.crewScores
+        crewScores: item.crewId ? [{ crewId: item.crewId, score: finalScore }] : item.crewScores
       })
 
       // 2. Update Evaluation
@@ -92,14 +100,25 @@ export const useApprovalStore = defineStore('approval', {
       if (evalItem) {
         evalItem.status = 'APPROVED'
         evalItem.reviewedAt = now
+        evalItem.averageScore = finalScore
+        evalItem.calculatedStars = finalStars
+        if (item.dmNote) evalItem.dmNote = item.dmNote
       }
 
-      // 3. Award Stars to ALL Crew in this Mission
+      // 3. Award Stars to specific Crew Member
       const gamificationStore = useGamificationStore()
       let totalStarsAwardedAll = 0
       const awardedCrewDetails = []
 
-      if (item.crewScores && item.crewScores.length > 0) {
+      if (item.crewId) {
+        const result = gamificationStore.awardStarsToCrew(item.crewId, awardedStars, {
+          score: finalScore,
+          missionId: item.missionId,
+          missionTitle: item.missionTitle
+        })
+        totalStarsAwardedAll = awardedStars
+        if (result) awardedCrewDetails.push(result)
+      } else if (item.crewScores && item.crewScores.length > 0) {
         item.crewScores.forEach(cs => {
           const crewStars = cs.calculatedStars || awardedStars
           const result = gamificationStore.awardStarsToCrew(cs.crewId, crewStars, {
@@ -119,15 +138,16 @@ export const useApprovalStore = defineStore('approval', {
       })
 
       // 5. Prepend to Live Activity Feed
+      const adjustInfo = item.isAdjustedByDm ? ` (Rata-rata SL: ${slScore} + DM: ${dmScore} / 2 = ${finalScore})` : ` (Skor: ${finalScore})`
       this.activities.unshift({
         id: `act-${Date.now()}`,
-        actor: 'Ahmad Dahlan (Head)',
-        action: 'approved store evaluation for',
-        target: item.missionTitle,
-        details: `Avg Score: ${item.averageScore || item.score}/100 • Awarded Stars to ${item.crewScores?.length || 1} Crew Members`,
-        time: 'Just now',
+        actor: 'District Manager',
+        action: 'approved evaluation for',
+        target: `${item.crewName || 'Crew'} - ${item.missionTitle}`,
+        details: `Skor Akhir: ${finalScore}/100${adjustInfo} • +${totalStarsAwardedAll} ⭐ Bintang dicairkan`,
+        time: 'Baru saja',
         type: 'award',
-        badge: `+${totalStarsAwardedAll} Total Stars Awarded`
+        badge: `+${totalStarsAwardedAll} Bintang`
       })
 
       setStoredData('rejuve_approvals_v3', this.approvals)
@@ -135,7 +155,13 @@ export const useApprovalStore = defineStore('approval', {
         success: true,
         awardedStars,
         totalStarsAwardedAll,
-        crewCount: item.crewScores?.length || 0,
+        crewName: item.crewName || 'Crew',
+        isAdjustedByDm: item.isAdjustedByDm,
+        slScore,
+        dmScore,
+        finalScore,
+        score: finalScore,
+        crewCount: item.crewId ? 1 : (item.crewScores?.length || 0),
         awardedCrewDetails
       }
     },
@@ -221,54 +247,64 @@ export const useApprovalStore = defineStore('approval', {
     },
 
     syncEvaluationToQueue(evalItem) {
-      let item = this.approvals.find(a => a.evaluationId === evalItem.id || a.missionId === evalItem.missionId)
       const missionStore = useMissionStore()
       const mission = missionStore.missionById(evalItem.missionId)
       const gamificationStore = useGamificationStore()
+      const batchStore = useBatchStore()
+      const targetBatch = batchStore.batchById(mission ? mission.batchId : 'batch-alpha')
 
-      const populatedCrewScores = (evalItem.crewScores || []).map(cs => {
+      const crewScores = evalItem.crewScores && evalItem.crewScores.length > 0 
+        ? evalItem.crewScores 
+        : [{ crewId: evalItem.crewId, score: evalItem.averageScore || 90, calculatedStars: evalItem.calculatedStars || 5 }]
+
+      crewScores.forEach(cs => {
         const crew = gamificationStore.crewById(cs.crewId)
-        return {
-          crewId: cs.crewId,
-          crewName: crew ? crew.name : 'Crew Member',
-          score: cs.score,
-          calculatedStars: cs.calculatedStars
+        let item = this.approvals.find(a => 
+          (a.missionId === evalItem.missionId && a.crewId === cs.crewId) ||
+          (a.evaluationId === evalItem.id && a.crewId === cs.crewId)
+        )
+
+        if (item) {
+          item.score = cs.score
+          item.averageScore = cs.score
+          item.calculatedStars = cs.calculatedStars || 5
+          item.comment = evalItem.comment
+          item.evidenceList = evalItem.evidence || []
+          item.evidenceCount = (evalItem.evidence || []).length
+          item.status = 'PENDING_REVIEW'
+          item.supervisorName = evalItem.supervisorName || 'Store Leader'
+          item.submittedAt = evalItem.submittedAt || new Date().toISOString()
+        } else {
+          item = {
+            id: `appr-${evalItem.missionId}-${cs.crewId}`,
+            evaluationId: evalItem.id,
+            missionId: evalItem.missionId,
+            missionCode: mission ? mission.code : 'MSN-00',
+            missionTitle: mission ? mission.title : 'Misi Operasional',
+            missionCategory: mission ? mission.category : 'SOP Gerai',
+            week: mission ? mission.week : 1,
+            batchId: mission ? mission.batchId : 'batch-alpha',
+            batchName: targetBatch ? targetBatch.name : 'Batch Gerai',
+            supervisorId: evalItem.supervisorId,
+            supervisorName: evalItem.supervisorName || 'Store Leader',
+            crewId: cs.crewId,
+            crewName: crew ? crew.name : (cs.crewName || 'Crew Member'),
+            crewAvatar: crew ? crew.avatar : '',
+            crewRole: crew ? crew.position : 'Barista',
+            score: cs.score,
+            averageScore: cs.score,
+            calculatedStars: cs.calculatedStars || 5,
+            crewScores: [cs],
+            status: 'PENDING_REVIEW',
+            comment: evalItem.comment,
+            evidenceCount: (evalItem.evidence || []).length,
+            evidenceList: evalItem.evidence || [],
+            submittedAt: evalItem.submittedAt || new Date().toISOString(),
+            reviewedAt: null
+          }
+          this.approvals.unshift(item)
         }
       })
-
-      if (item) {
-        item.averageScore = evalItem.averageScore
-        item.calculatedStars = evalItem.calculatedStars
-        item.crewScores = populatedCrewScores
-        item.comment = evalItem.comment
-        item.evidenceList = evalItem.evidence || []
-        item.evidenceCount = (evalItem.evidence || []).length
-        item.status = 'PENDING_REVIEW'
-        item.submittedAt = evalItem.submittedAt || new Date().toISOString()
-      } else {
-        item = {
-          id: `appr-${Date.now()}`,
-          evaluationId: evalItem.id,
-          missionId: evalItem.missionId,
-          missionCode: mission ? mission.code : 'MSN-00',
-          missionTitle: mission ? mission.title : 'Store Mission',
-          week: mission ? mission.week : 2,
-          batchId: mission ? mission.batchId : 'batch-alpha',
-          supervisorId: evalItem.supervisorId,
-          supervisorName: evalItem.supervisorName,
-          averageScore: evalItem.averageScore,
-          calculatedStars: evalItem.calculatedStars,
-          crewScores: populatedCrewScores,
-          status: 'PENDING_REVIEW',
-          comment: evalItem.comment,
-          evidenceCount: (evalItem.evidence || []).length,
-          evidenceList: evalItem.evidence || [],
-          submittedAt: evalItem.submittedAt || new Date().toISOString(),
-          reviewedAt: null,
-          revisionNote: null
-        }
-        this.approvals.unshift(item)
-      }
 
       setStoredData('rejuve_approvals_v3', this.approvals)
     }

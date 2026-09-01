@@ -216,19 +216,28 @@ function handleBulkApprove() {
   const res = approvalStore.bulkApprove(selectedIds.value)
   selectedIds.value = []
 
-  toast.success('Bulk Approve Berhasil', `${res.approvedCount || count} Misi telah disetujui sekaligus. Bintang otomatis dicairkan ke seluruh kru.`)
+  toast.success('Bulk Approve Berhasil', `${res.approvedCount || count} evaluasi misi kru telah disetujui sekaligus. Bintang otomatis dicairkan! 🚀`)
 }
 
-const openApproveModal = (item) => {
-  selectedItem.value = item
+const openApproveModal = (payload) => {
+  if (payload && payload.item) {
+    selectedItem.value = {
+      ...payload.item,
+      adjustedScore: payload.adjustedScore,
+      dmNote: payload.dmNote
+    }
+  } else {
+    selectedItem.value = payload
+  }
   isApproveModalOpen.value = true
 }
 
-const handleApprove = () => {
+const handleApprove = (overrideData = {}) => {
   if (selectedItem.value) {
-    const result = approvalStore.approveMission(selectedItem.value.id)
+    const result = approvalStore.approveMission(selectedItem.value.id, overrideData)
     isApproveModalOpen.value = false
-    toast.success('Misi Disetujui', `Bintang telah dibagikan ke seluruh anggota kru.`)
+    const adjustNote = result.isAdjustedByDm ? ` (Skor Akhir: ${result.score}/100)` : ''
+    toast.success('Evaluasi Disetujui', `+${result.awardedStars || 5} ⭐ Bintang telah dicairkan ke akun ${result.crewName || 'kru'}${adjustNote}. 🎉`)
   }
 }
 </script>

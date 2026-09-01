@@ -205,7 +205,17 @@ if (pendingApproval) {
   assert(finalStarsCrew1 >= initialStarsCrew1, 'Gamification Minting: Reward bintang otomatis dicairkan ke saldo seluruh kru')
 }
 
-// 5.6 ROLE SYSTEM VALIDATION
+// 5.3 DISTRICT MANAGER (SL + DM) / 2 FORMULA TEST
+const itemToAdjust = approvalStore.approvals.find(a => a.status === 'PENDING_REVIEW')
+if (itemToAdjust) {
+  const initialSLScore = itemToAdjust.score || itemToAdjust.averageScore || 90
+  const dmScoreInput = 80
+  const expectedFinal = Math.round((initialSLScore + dmScoreInput) / 2)
+  const adjustResult = approvalStore.approveMission(itemToAdjust.id, { dmScore: dmScoreInput, dmNote: 'Penyesuaian kecepatan bar' })
+  assert(adjustResult.success === true && itemToAdjust.score === expectedFinal && itemToAdjust.slScore === initialSLScore && itemToAdjust.dmScore === dmScoreInput, 'District Manager Average Calculation: Nilai akhir dihitung dari (SL + DM) / 2 secara akurat')
+}
+
+// 5.4 ROLE SYSTEM VALIDATION
 userStore.loginAsUser('sl-001')
 assert(userStore.isStoreLeader === true && userStore.currentRole === 'STORE_LEADER', 'Role Validation: Akun SL-001 teridentifikasi sebagai Store Leader')
 

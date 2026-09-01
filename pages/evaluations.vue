@@ -184,36 +184,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- Quick Bulk Helpers for this Crew -->
-            <div class="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-              <span class="text-slate-500 dark:text-slate-400 font-medium">
-                ⚡ Set Cepat Semua Misi Kru Ini (Week {{ batchStore.selectedWeek }}):
-              </span>
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <button
-                  type="button"
-                  @click="applyBulkScoreToCrew(95)"
-                  class="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-600 hover:text-white text-emerald-800 dark:text-emerald-300 font-bold transition-all border border-emerald-200 dark:border-emerald-800 cursor-pointer"
-                >
-                  95 (⭐⭐⭐⭐⭐)
-                </button>
-                <button
-                  type="button"
-                  @click="applyBulkScoreToCrew(90)"
-                  class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-600 hover:text-white text-blue-800 dark:text-blue-300 font-bold transition-all border border-blue-200 dark:border-blue-800 cursor-pointer"
-                >
-                  90 (⭐⭐⭐⭐⭐)
-                </button>
-                <button
-                  type="button"
-                  @click="applyBulkScoreToCrew(85)"
-                  class="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-600 hover:text-white text-amber-800 dark:text-amber-300 font-bold transition-all border border-amber-200 dark:border-amber-800 cursor-pointer"
-                >
-                  85 (⭐⭐⭐⭐)
-                </button>
-              </div>
-            </div>
           </div>
 
           <!-- All 4 Missions in 1 Week (Evaluated 1 by 1) -->
@@ -227,190 +197,269 @@
             </div>
 
             <!-- Single Mission Evaluation Card (1 per 1) -->
+            <!-- Single Mission Evaluation Card (Compact, Neat & Sleek) -->
             <div
               v-for="(mission, mIdx) in currentWeekMissions"
               :key="mission.id"
-              class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-sm space-y-4 transition-all"
+              class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-4 shadow-xs space-y-3 transition-all"
               :class="[
                 getMissionCardBorderClass(mission.id)
               ]"
             >
               <!-- Mission Title Header & Badge -->
-              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-                <div class="space-y-1 min-w-0 flex-1">
-                  <div class="flex items-center gap-2 flex-wrap mb-1">
-                    <span class="text-xs font-bold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                <div class="space-y-0.5 min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                       {{ mission.code }}
                     </span>
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded-lg bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
+                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
                       {{ mission.category }}
                     </span>
                     <MissionStatus :status="mission.status" />
                   </div>
-                  <h4 class="text-base font-bold text-slate-900 dark:text-white">
+                  <h4 class="text-sm font-bold text-slate-900 dark:text-white pt-0.5">
                     {{ mIdx + 1 }}. {{ mission.title }}
                   </h4>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                     {{ mission.description }}
                   </p>
                 </div>
 
                 <!-- Individual Score Display for this Mission -->
-                <div class="p-2.5 px-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 flex flex-col items-center justify-center min-w-[140px] text-center">
-                  <span class="text-xs font-semibold uppercase text-slate-400">Hasil Bintang</span>
-                  <div class="my-0.5">
-                    <StarReward
-                      :stars="calculateMissionStars(missionScores[mission.id])"
-                      size="sm"
-                      :show-label="false"
-                    />
+                <div class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 flex-shrink-0">
+                  <StarReward
+                    :stars="calculateMissionStars(missionScores[mission.id])"
+                    size="sm"
+                    :show-label="false"
+                  />
+                  <div class="text-right border-l border-slate-200 dark:border-slate-700 pl-2">
+                    <span class="text-xs font-bold text-slate-900 dark:text-white">
+                      {{ missionScores[mission.id] || 0 }}
+                    </span>
+                    <span class="text-[10px] text-slate-400">/100</span>
                   </div>
-                  <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {{ missionScores[mission.id] || 0 }} / 100
-                  </span>
                 </div>
               </div>
 
-              <!-- Checklist SOP Standar -->
-              <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 text-xs">
-                <span class="font-bold text-slate-700 dark:text-slate-300 block mb-1.5 uppercase text-xs flex items-center gap-1.5">
-                  <CheckSquare class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
-                  <span>Checklist Standar SOP:</span>
-                </span>
-                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-slate-600 dark:text-slate-400 text-xs">
-                  <li
+              <!-- Checklist SOP Standar (Compact Horizontal Pills) -->
+              <div class="p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-700/50 text-[11px]">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-slate-600 dark:text-slate-400">
+                  <div
                     v-for="(req, rIdx) in mission.requirements"
                     :key="rIdx"
-                    class="flex items-start gap-2 bg-white dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200/40 dark:border-slate-800"
+                    class="flex items-center gap-1.5 truncate"
                   >
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#831843] mt-1.5 flex-shrink-0"></span>
-                    <span>{{ req }}</span>
-                  </li>
-                </ul>
+                    <CheckSquare class="w-3 h-3 text-[#831843] dark:text-[#f472b6] flex-shrink-0" />
+                    <span class="truncate">{{ req }}</span>
+                  </div>
+                </div>
               </div>
 
-              <!-- Input Nilai 1 per 1 dengan Slider & Number Box -->
-              <div class="space-y-2 pt-1">
-                <div class="flex items-center justify-between">
-                  <label class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                    Beri Nilai untuk {{ selectedCrew.name }}:
-                  </label>
-                  <div class="flex items-center gap-2">
+              <!-- JIKA MISI SUDAH SELESAI (COMPLETED / APPROVED): Tampilkan Ringkasan Read-Only (Tanpa Slider & Tombol Update) -->
+              <template v-if="getMissionStatus(mission.id) === 'COMPLETED' || getMissionStatus(mission.id) === 'APPROVED'">
+                <!-- Catatan Evaluator & Foto Bukti (Read-Only) -->
+                <div class="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-2.5 text-xs">
+                  <!-- Catatan Evaluator -->
+                  <div class="flex items-start gap-2">
+                    <MessageSquare class="w-4 h-4 text-[#831843] dark:text-[#f472b6] mt-0.5 flex-shrink-0" />
+                    <div class="space-y-0.5">
+                      <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">
+                        Catatan Evaluator:
+                      </span>
+                      <p class="text-slate-700 dark:text-slate-300 italic leading-relaxed">
+                        "{{ getMissionComment(mission.id) }}"
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Foto Bukti Lapangan -->
+                  <div v-if="(missionEvidences[mission.id] || []).length > 0" class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center gap-2">
+                    <span class="text-[11px] font-bold text-slate-500 flex items-center gap-1 flex-shrink-0">
+                      <Camera class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
+                      <span>Foto Bukti ({{ (missionEvidences[mission.id] || []).length }}):</span>
+                    </span>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <div
+                        v-for="(ev, evIdx) in missionEvidences[mission.id]"
+                        :key="evIdx"
+                        @click="previewImage = ev"
+                        class="relative w-8 h-8 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 group bg-slate-100 dark:bg-slate-800 flex-shrink-0 cursor-pointer shadow-2xs hover:ring-2 hover:ring-[#831843] transition-all"
+                        title="Klik untuk melihat foto lebih besar"
+                      >
+                        <img :src="ev.url" :alt="ev.caption || 'Bukti'" class="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Eye class="w-3 h-3 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- JIKA MISI BELUM SELESAI: Tampilkan Form Input Slider, Catatan, Upload Foto, dan Tombol Kirim -->
+              <template v-else>
+                <!-- Input Nilai (Slider & Box Inline) -->
+                <div class="p-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 space-y-1.5">
+                  <div class="flex items-center justify-between gap-3">
+                    <label class="text-xs font-bold text-slate-800 dark:text-slate-200 flex-shrink-0">
+                      Nilai {{ selectedCrew.name }}:
+                    </label>
+                    
+                    <!-- Range Slider in Center -->
                     <input
                       v-model.number="missionScores[mission.id]"
-                      type="number"
+                      type="range"
                       min="0"
                       max="100"
-                      class="w-16 text-center text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none py-1.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+                      class="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#831843]"
                     />
-                    <span class="text-xs text-slate-400 font-semibold">/ 100</span>
+
+                    <!-- Number Input Box -->
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                      <input
+                        v-model.number="missionScores[mission.id]"
+                        type="number"
+                        min="0"
+                        max="100"
+                        class="w-14 text-center text-xs font-bold rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 py-1 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#831843]"
+                      />
+                      <span class="text-[11px] text-slate-400 font-semibold">/100</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between text-[10px] text-slate-400 px-0.5">
+                    <span>0 (Gagal)</span>
+                    <span>50 (⭐1)</span>
+                    <span>80 (⭐4)</span>
+                    <span>90 (⭐5)</span>
+                    <span>100</span>
                   </div>
                 </div>
 
-                <!-- Range Slider -->
-                <input
-                  v-model.number="missionScores[mission.id]"
-                  type="range"
-                  min="0"
-                  max="100"
-                  class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#831843]"
-                />
-                <div class="flex items-center justify-between text-xs text-slate-400 px-0.5">
-                  <span>0 (Gagal)</span>
-                  <span>50 (⭐ 1)</span>
-                  <span>80 (⭐ 4)</span>
-                  <span>90 (⭐ 5)</span>
-                  <span>100</span>
+                <!-- Catatan Evaluator & Upload Foto (Compact 2-Column Grid) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
+                  <!-- Catatan Evaluator -->
+                  <div class="space-y-1">
+                    <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block">
+                      Catatan Evaluator (Opsional):
+                    </label>
+                    <textarea
+                      v-model="missionComments[mission.id]"
+                      rows="2"
+                      placeholder="Tuliskan catatan kepatuhan SOP atau temuan lapangan..."
+                      class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-2 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-1 focus:ring-[#831843] resize-none"
+                    ></textarea>
+                  </div>
+
+                  <!-- Upload Foto Bukti SOP -->
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                      <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                        <Camera class="w-3 h-3 text-[#831843] dark:text-[#f472b6]" />
+                        <span>Foto Bukti (Opsional):</span>
+                      </label>
+                      <span v-if="(missionEvidences[mission.id] || []).length > 0" class="text-[10px] text-slate-400 font-medium">
+                        {{ (missionEvidences[mission.id] || []).length }} Foto
+                      </span>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <!-- Tombol Upload File -->
+                      <label class="h-8 px-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-[#831843] bg-slate-50 dark:bg-slate-800 hover:bg-[#831843]/5 flex items-center gap-1.5 cursor-pointer transition-all text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          class="hidden"
+                          @change="handleFileUpload($event, mission.id)"
+                        />
+                        <Plus class="w-3 h-3 text-[#831843] dark:text-[#f472b6]" />
+                        <span class="text-[11px]">+ Foto</span>
+                      </label>
+
+                      <!-- Preview Thumbnail Foto yang Diupload (Klik untuk memperbesar) -->
+                      <div
+                        v-for="(ev, evIdx) in (missionEvidences[mission.id] || [])"
+                        :key="evIdx"
+                        @click="previewImage = ev"
+                        class="relative w-8 h-8 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 group bg-slate-100 dark:bg-slate-800 flex-shrink-0 cursor-pointer shadow-2xs hover:ring-2 hover:ring-[#831843] transition-all"
+                        title="Klik untuk melihat foto lebih besar"
+                      >
+                        <img :src="ev.url" :alt="ev.caption || 'Bukti'" class="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                        
+                        <!-- Hover Zoom Icon -->
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Eye class="w-3 h-3 text-white" />
+                        </div>
+
+                        <!-- Tombol Hapus Foto -->
+                        <button
+                          type="button"
+                          @click.stop="removeEvidence(mission.id, evIdx)"
+                          class="absolute top-0 right-0 w-3.5 h-3.5 bg-rose-600 hover:bg-rose-700 text-white rounded-bl flex items-center justify-center cursor-pointer shadow-xs z-10"
+                          title="Hapus foto ini"
+                        >
+                          <X class="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Catatan & Temuan Lapangan untuk Misi Ini -->
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Catatan & Temuan Evaluator (Opsional):
-                </label>
-                <textarea
-                  v-model="missionComments[mission.id]"
-                  rows="2"
-                  placeholder="Tuliskan catatan kepatuhan SOP atau saran perbaikan untuk kru pada misi ini..."
-                  class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#831843]"
-                ></textarea>
-              </div>
+                <!-- Action Bar Per-Misi (Compact Footer) -->
+                <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                  <!-- Status Indikator Misi -->
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW'"
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[11px] font-bold"
+                    >
+                      <Clock class="w-3 h-3 text-amber-600 animate-pulse" />
+                      <span>⏳ Menunggu Review DM</span>
+                    </span>
 
-              <!-- Action Bar Per-Misi (Nilai 1 Misi & Langsung Ajukan Approval ke DM) -->
-              <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <!-- Status Indikator Misi -->
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span
-                    v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW'"
-                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-xs font-bold"
-                  >
-                    <Clock class="w-3.5 h-3.5 text-amber-600 animate-pulse" />
-                    <span>⏳ Menunggu Review DM</span>
-                  </span>
+                    <span v-else class="text-[11px] text-slate-400 font-medium">
+                      ⚡ Siap dinilai & diajukan
+                    </span>
+                  </div>
 
-                  <span
-                    v-else-if="getMissionStatus(mission.id) === 'COMPLETED' || getMissionStatus(mission.id) === 'APPROVED'"
-                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold"
-                  >
-                    <CheckCircle2 class="w-3.5 h-3.5 text-emerald-600" />
-                    <span>✅ Disetujui DM (Bintang Diberikan)</span>
-                  </span>
-
-                  <span v-else class="text-xs text-slate-400 font-medium">
-                    ⚡ Misi siap dinilai & diajukan approval
-                  </span>
-                </div>
-
-                <!-- Tombol Aksi Mandiri Per-Misi -->
-                <div class="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+                  <!-- Tombol Aksi Mandiri Per-Misi -->
                   <button
                     type="button"
                     @click="submitSingleMission(mission.id)"
-                    class="px-4 py-2 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
                     :class="[
                       getMissionStatus(mission.id) === 'PENDING_REVIEW'
                         ? 'bg-amber-600 hover:bg-amber-700'
-                        : getMissionStatus(mission.id) === 'COMPLETED'
-                        ? 'bg-emerald-600 hover:bg-emerald-700'
                         : 'bg-[#831843] hover:bg-[#6b133a]'
                     ]"
                   >
-                    <Send class="w-3.5 h-3.5" />
+                    <Send class="w-3 h-3" />
                     <span v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW'">Perbarui Nilai di DM</span>
-                    <span v-else-if="getMissionStatus(mission.id) === 'COMPLETED'">Update Nilai Disetujui</span>
                     <span v-else>Kirim Misi Ini ke DM</span>
                   </button>
                 </div>
-              </div>
+              </template>
             </div>
           </div>
 
           <!-- Bottom Floating Action Bar for Selected Crew -->
-          <div class="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 sticky bottom-4 z-10">
-            <div class="flex items-center gap-2">
+          <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-md flex items-center justify-between gap-3 sticky bottom-4 z-10">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Total 4 Misi:
+                Ringkasan Week {{ batchStore.selectedWeek }}:
               </span>
               <span class="text-xs font-bold text-slate-900 dark:text-white">
-                Avg {{ currentCrewWeekAvgScore }}% • {{ currentCrewWeekTotalStars }} Bintang
+                Avg {{ currentCrewWeekAvgScore }}% • {{ currentCrewWeekTotalStars }} Bintang ({{ currentCrewEvaluatedMissionsCount }}/{{ currentWeekMissions.length }} Misi Selesai Dinilai)
               </span>
             </div>
 
-            <div class="flex items-center gap-2.5 flex-wrap">
-              <button
-                type="button"
-                @click="submitCrewEvaluations"
-                class="px-5 py-2.5 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <Send class="w-3.5 h-3.5" />
-                <span>Kirim Nilai {{ selectedCrew.name }} ke DM</span>
-              </button>
-
+            <div>
               <button
                 type="button"
                 @click="goToNextCrew"
-                class="px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
               >
                 <span>Kru Berikutnya</span>
                 <ChevronRight class="w-3.5 h-3.5" />
@@ -427,6 +476,49 @@
         />
       </div>
     </div>
+
+    <!-- Image Preview Lightbox Modal -->
+    <BaseModal
+      :model-value="!!previewImage"
+      :title="previewImage?.caption || 'Lihat Foto Bukti Misi'"
+      max-width="2xl"
+      @update:model-value="previewImage = null"
+      @close="previewImage = null"
+    >
+      <template #icon>
+        <div class="w-9 h-9 rounded-xl bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] flex items-center justify-center">
+          <Camera class="w-5 h-5" />
+        </div>
+      </template>
+
+      <div v-if="previewImage" class="space-y-3 py-2">
+        <div class="rounded-2xl overflow-hidden bg-slate-950/5 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center p-2">
+          <img
+            :src="previewImage.url"
+            :alt="previewImage.caption"
+            class="max-h-[60vh] w-auto max-w-full object-contain rounded-xl shadow-md"
+          />
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
+          <span class="font-semibold text-slate-800 dark:text-slate-200">
+            📄 {{ previewImage.caption || 'Foto Bukti Kepatuhan SOP' }}
+          </span>
+          <span class="text-slate-400 text-[11px]">
+            Format: Gambar
+          </span>
+        </div>
+      </div>
+
+      <template #footer>
+        <button
+          type="button"
+          @click="previewImage = null"
+          class="px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white shadow-xs transition-all cursor-pointer"
+        >
+          Tutup
+        </button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -444,6 +536,7 @@ import { useToast } from '~/composables/useToast.js'
 import WeekSelector from '~/components/batch/WeekSelector.vue'
 import MissionStatus from '~/components/mission/MissionStatus.vue'
 import StarReward from '~/components/gamification/StarReward.vue'
+import BaseModal from '~/components/ui/BaseModal.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
 import {
   Users,
@@ -455,7 +548,12 @@ import {
   ChevronRight,
   Clock,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Camera,
+  Plus,
+  X,
+  Eye,
+  Image as ImageIcon
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -466,6 +564,8 @@ const approvalStore = useApprovalStore()
 const gamificationStore = useGamificationStore()
 const userStore = useUserStore()
 const toast = useToast()
+
+const previewImage = ref(null)
 
 const crewSearchQuery = ref('')
 const activeCrewFilter = ref('ALL')
@@ -513,13 +613,14 @@ const currentWeekMissions = computed(() => {
 // Mission scores map for selected crew: { [missionId]: score }
 const missionScores = reactive({})
 const missionComments = reactive({})
+const missionEvidences = reactive({})
 
-// Initialize or reload scores when selected crew or week changes
+// Initialize or reload scores & evidence when selected crew or week changes
 const loadCrewScores = () => {
   if (!selectedCrew.value) return
 
   currentWeekMissions.value.forEach(m => {
-    // Check if crew score already exists in mission or evaluations
+    // 1. Score
     const crewEval = missionStore.crewEvaluationForMission(m.id, selectedCrew.value.id)
     if (crewEval && crewEval.score > 0) {
       missionScores[m.id] = crewEval.score
@@ -532,10 +633,68 @@ const loadCrewScores = () => {
       }
     }
 
-    if (missionComments[m.id] === undefined) {
+    // 2. Comments
+    const existingApproval = approvalStore.approvals.find(a => a.missionId === m.id && (a.crewId === selectedCrew.value.id || !a.crewId))
+    const existingEval = evalStore.evaluations.find(e => e.missionId === m.id && (e.crewId === selectedCrew.value.id || (e.crewScores && e.crewScores.some(cs => cs.crewId === selectedCrew.value.id))))
+
+    if (existingApproval && existingApproval.comment) {
+      missionComments[m.id] = existingApproval.comment
+    } else if (existingEval && existingEval.comment) {
+      missionComments[m.id] = existingEval.comment
+    } else if (crewEval && crewEval.comment) {
+      missionComments[m.id] = crewEval.comment
+    } else if (m.comment) {
+      missionComments[m.id] = m.comment
+    } else if (missionComments[m.id] === undefined) {
       missionComments[m.id] = ''
     }
+
+    // 3. Evidence
+    if (existingApproval && existingApproval.evidenceList && existingApproval.evidenceList.length > 0) {
+      missionEvidences[m.id] = [...existingApproval.evidenceList]
+    } else if (existingEval && existingEval.evidence && existingEval.evidence.length > 0) {
+      missionEvidences[m.id] = [...existingEval.evidence]
+    } else if (!missionEvidences[m.id]) {
+      missionEvidences[m.id] = []
+    }
   })
+}
+
+function handleFileUpload(event, missionId) {
+  const files = event.target.files
+  if (!files || files.length === 0) return
+
+  if (!missionEvidences[missionId]) {
+    missionEvidences[missionId] = []
+  }
+
+  Array.from(files).forEach((file, idx) => {
+    if (!file.type.startsWith('image/')) {
+      toast.warning('Format Tidak Didukung', 'Hanya file gambar (JPG, PNG, WebP) yang dapat diupload.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      missionEvidences[missionId].push({
+        id: `ev-${Date.now()}-${idx}`,
+        url: e.target.result,
+        caption: file.name.replace(/\.[^/.]+$/, ''),
+        uploadedAt: new Date().toISOString()
+      })
+      toast.success('Foto Berhasil Dilampirkan', `${file.name} telah ditambahkan ke bukti misi.`)
+    }
+    reader.readAsDataURL(file)
+  })
+
+  event.target.value = ''
+}
+
+function removeEvidence(missionId, index) {
+  if (missionEvidences[missionId]) {
+    missionEvidences[missionId].splice(index, 1)
+    toast.info('Foto Dihapus', 'Lampiran foto bukti telah dihapus.')
+  }
 }
 
 watch([selectedCrewId, () => batchStore.selectedWeek, () => batchStore.selectedBatchId], () => {
@@ -616,13 +775,6 @@ function getMissionCardBorderClass(missionId) {
   return 'hover:border-slate-300 dark:hover:border-slate-700'
 }
 
-function applyBulkScoreToCrew(score) {
-  currentWeekMissions.value.forEach(m => {
-    missionScores[m.id] = score
-  })
-  toast.info('Nilai Massal Kru', `Semua 4 misi untuk ${selectedCrew.value?.name || 'kru'} diatur ke nilai ${score}`)
-}
-
 function getMissionStatus(missionId) {
   const mission = missionStore.missionById(missionId)
   if (!mission) return 'UNGRADED'
@@ -631,6 +783,41 @@ function getMissionStatus(missionId) {
     if (ce && ce.status) return ce.status
   }
   return mission.status || 'UNGRADED'
+}
+
+function getMissionComment(missionId) {
+  if (missionComments[missionId] && missionComments[missionId].trim()) {
+    return missionComments[missionId]
+  }
+
+  if (selectedCrew.value) {
+    const existingApproval = approvalStore.approvals.find(a => a.missionId === missionId && (a.crewId === selectedCrew.value.id || !a.crewId))
+    if (existingApproval?.comment && existingApproval.comment.trim()) {
+      return existingApproval.comment
+    }
+
+    const existingEval = evalStore.evaluations.find(e => e.missionId === missionId && (e.crewId === selectedCrew.value.id || (e.crewScores && e.crewScores.some(cs => cs.crewId === selectedCrew.value.id))))
+    if (existingEval?.comment && existingEval.comment.trim()) {
+      return existingEval.comment
+    }
+
+    const crewEval = missionStore.crewEvaluationForMission(missionId, selectedCrew.value.id)
+    if (crewEval?.comment && crewEval.comment.trim()) {
+      return crewEval.comment
+    }
+  }
+
+  const mission = missionStore.missionById(missionId)
+  if (mission?.comment && mission.comment.trim()) {
+    return mission.comment
+  }
+
+  const status = getMissionStatus(missionId)
+  if (status === 'COMPLETED' || status === 'APPROVED') {
+    return 'Pemeriksaan kepatuhan SOP operasional telah memenuhi standar kualitas Re.juve.'
+  }
+
+  return 'Catatan evaluasi belum diisi.'
 }
 
 function submitSingleMission(missionId) {
@@ -643,27 +830,11 @@ function submitSingleMission(missionId) {
     supervisorId: userStore.currentUserId,
     supervisorName: userStore.currentUser?.name || 'Store Leader',
     crewScores: [{ crewId: selectedCrew.value.id, score }],
-    comment: missionComments[missionId] || `Evaluasi misi ${targetMission?.code || ''} untuk ${selectedCrew.value.name}`
+    comment: missionComments[missionId] || `Evaluasi misi ${targetMission?.code || ''} untuk ${selectedCrew.value.name}`,
+    evidence: missionEvidences[missionId] || []
   })
 
   toast.success('Misi Berhasil Dikirim ke DM', `Misi "${targetMission?.title || missionId}" untuk ${selectedCrew.value.name} telah diajukan ke DM untuk persetujuan! 🚀`)
-}
-
-function submitCrewEvaluations() {
-  if (!selectedCrew.value) return
-
-  currentWeekMissions.value.forEach(m => {
-    const score = Number(missionScores[m.id]) || 90
-    evalStore.submitForReview({
-      missionId: m.id,
-      supervisorId: userStore.currentUserId,
-      supervisorName: userStore.currentUser.name,
-      crewScores: [{ crewId: selectedCrew.value.id, score }],
-      comment: missionComments[m.id] || `Evaluasi kinerja kru ${selectedCrew.value.name}`
-    })
-  })
-
-  toast.success('Evaluasi Berhasil Dikirim', `Seluruh 4 misi untuk ${selectedCrew.value.name} telah dikirim ke District Manager untuk disetujui.`)
 }
 
 function goToNextCrew() {
