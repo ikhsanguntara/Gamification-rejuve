@@ -8,7 +8,7 @@
             Weekly Progression Cycle
           </h4>
           <p class="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
-            3-Week Store Operational Sequence
+            {{ weeks.length }}-Week Store Operational Sequence
           </p>
         </div>
         <div class="flex items-center gap-2">
@@ -18,8 +18,16 @@
         </div>
       </div>
 
-      <!-- Step Cards Grid (1 col on mobile, 3 cols on tablet/desktop) -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 relative">
+      <!-- Step Cards Grid (Dynamic responsive grid based on weeks count) -->
+      <div
+        class="grid gap-3 relative"
+        :class="[
+          weeks.length <= 2 ? 'grid-cols-1 sm:grid-cols-2' :
+          weeks.length === 3 ? 'grid-cols-1 sm:grid-cols-3' :
+          weeks.length === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
+          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+        ]"
+      >
         <button
           v-for="week in weeks"
           :key="week.weekNumber"

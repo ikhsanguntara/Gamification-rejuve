@@ -30,9 +30,12 @@ export function clearAllStoredData() {
   if (typeof window !== 'undefined' && window.localStorage) {
     const keys = [
       'rejuve_batches_v3',
+      'rejuve_batches_v4',
       'rejuve_users_v3',
       'rejuve_missions_v3',
+      'rejuve_missions_v4',
       'rejuve_templates_v3',
+      'rejuve_templates_v4',
       'rejuve_crews_v3',
       'rejuve_evaluations_v3',
       'rejuve_approvals_v3',

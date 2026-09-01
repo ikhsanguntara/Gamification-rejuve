@@ -59,7 +59,7 @@
         <!-- Week Indicator Pill -->
         <span class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 text-xs font-medium text-slate-600 dark:text-slate-400">
           <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-          <span>Week {{ batchStore.selectedWeek }}/3</span>
+          <span>Week {{ batchStore.selectedWeek }}/{{ currentBatchTotalWeeks }}</span>
         </span>
       </div>
     </div>
@@ -318,6 +318,10 @@ const userStore = useUserStore()
 const batchStore = useBatchStore()
 const { isDark, toggleTheme } = useTheme()
 const toast = useToast()
+
+const currentBatchTotalWeeks = computed(() => {
+  return batchStore.currentBatch?.weeks?.length || batchStore.currentBatch?.totalWeeks || 3
+})
 
 const roleDotClass = computed(() => {
   switch (userStore.currentRole) {

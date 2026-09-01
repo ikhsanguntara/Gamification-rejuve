@@ -20,7 +20,7 @@ function normalizePackage(pkg) {
   return pkg
 }
 
-const rawPackages = getStoredData('rejuve_templates_v3', mockTemplatePackages)
+const rawPackages = getStoredData('rejuve_templates_v4', mockTemplatePackages)
 const initialPackages = rawPackages.map(normalizePackage)
 
 /**
@@ -163,7 +163,7 @@ export const useTemplateStore = defineStore('template', {
 
       this.packages.push(newPkg)
       this.selectedPackageId = id
-      setStoredData('rejuve_templates_v3', this.packages)
+      setStoredData('rejuve_templates_v4', this.packages)
       return newPkg
     },
 
@@ -183,7 +183,7 @@ export const useTemplateStore = defineStore('template', {
 
       pkg.weeks.push(newWeek)
       pkg.totalWeeks = pkg.weeks.length
-      setStoredData('rejuve_templates_v3', this.packages)
+      setStoredData('rejuve_templates_v4', this.packages)
       return newWeek
     },
 
@@ -197,7 +197,7 @@ export const useTemplateStore = defineStore('template', {
       const target = pkg.weeks.find(w => w.weekNumber === Number(weekNumber))
       if (target) {
         target.title = title
-        setStoredData('rejuve_templates_v3', this.packages)
+        setStoredData('rejuve_templates_v4', this.packages)
         return true
       }
       return false
@@ -235,7 +235,7 @@ export const useTemplateStore = defineStore('template', {
 
       pkg.totalWeeks = pkg.weeks.length
       pkg.totalMissions = pkg.templates.length
-      setStoredData('rejuve_templates_v3', this.packages)
+      setStoredData('rejuve_templates_v4', this.packages)
       return true
     },
 
@@ -265,7 +265,7 @@ export const useTemplateStore = defineStore('template', {
 
       this.packages.push(duplicated)
       this.selectedPackageId = id
-      setStoredData('rejuve_templates_v3', this.packages)
+      setStoredData('rejuve_templates_v4', this.packages)
       return duplicated
     },
 
@@ -276,7 +276,7 @@ export const useTemplateStore = defineStore('template', {
       const pkg = this.packages.find(p => p.id === id)
       if (!pkg) return null
       Object.assign(pkg, payload)
-      setStoredData('rejuve_templates_v3', this.packages)
+      setStoredData('rejuve_templates_v4', this.packages)
       return pkg
     },
 
@@ -290,7 +290,7 @@ export const useTemplateStore = defineStore('template', {
         if (this.selectedPackageId === id) {
           this.selectedPackageId = this.packages[0]?.id || ''
         }
-        setStoredData('rejuve_templates_v3', this.packages)
+        setStoredData('rejuve_templates_v4', this.packages)
         return removed
       }
       return null
@@ -317,7 +317,7 @@ export const useTemplateStore = defineStore('template', {
 
       pkg.templates.push(newTmpl)
       pkg.totalMissions = pkg.templates.length
-      setStoredData('rejuve_templates_v3', this.packages)
+      setStoredData('rejuve_templates_v4', this.packages)
       return newTmpl
     },
 
@@ -332,7 +332,7 @@ export const useTemplateStore = defineStore('template', {
       if (idx !== -1) {
         pkg.templates.splice(idx, 1)
         pkg.totalMissions = pkg.templates.length
-        setStoredData('rejuve_templates_v3', this.packages)
+        setStoredData('rejuve_templates_v4', this.packages)
         return true
       }
       return false

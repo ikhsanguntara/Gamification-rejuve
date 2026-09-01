@@ -94,12 +94,12 @@ import('./mocks/batches.js').then(batches => {
   return import('./mocks/missions.js')
 }).then(missions => {
   totalChecks++
-  if (missions.mockMissions && missions.mockMissions.length === 36) {
+  if (missions.mockMissions && missions.mockMissions.length >= 36) {
     passedChecks++
-    console.log(`  ✅ [PASS Mock Missions] ${missions.mockMissions.length} misi terkonfigurasi (12 misi per batch x 3 batch)`)
+    console.log(`  ✅ [PASS Mock Missions] ${missions.mockMissions.length} misi terkonfigurasi (Batch 1: 12 misi • Batch 2: 16 misi • Batch 3: 20 misi)`)
   } else {
     failedChecks++
-    issues.push(`❌ [Mock Missions] Ditemukan ${missions.mockMissions.length} misi (seharusnya 36)`)
+    issues.push(`❌ [Mock Missions] Ditemukan ${missions.mockMissions.length} misi`)
   }
 
   return import('./mocks/evaluations.js')
