@@ -1,48 +1,73 @@
-# 🎮 Gamification Mission Management System
+# 🌿 Re.juve Gamification & Onboarding Platform (Monorepo)
 
-> **Frontend-Only Prototype**: Nuxt 4 + Vue 3 + Tailwind CSS + Pinia + Pure JavaScript
-
-Sistem pengelolaan **Batch (20 Crew), Siklus 3-Minggu, Evaluasi Supervisor, Head Review (Approve / Revise), Gamifikasi Bintang (⭐ Stars & Levels 1-10), Realtime Leaderboard, dan Badges Achievement**.
+Aplikasi Web Gamifikasi dan Manajemen Onboarding Kru Barista Re.juve Indonesia. Platform ini mengintegrasikan petualangan gamifikasi (Adventure Map RPG), evaluasi SOP harian oleh Store Leader (SL), persetujuan dan verifikasi nilai oleh Duty Manager (DM), evaluasi Buddy Pre-Batch 3 Hari, feedback onboarding kru, dan Master Data Gerai.
 
 ---
 
-## 📚 Dokumentasi & Aturan Project (Project Docs)
+## 📁 Struktur Monorepo
 
-Seluruh aturan kerja, arsitektur data, dan rencana implementasi didokumentasikan secara persisten di folder [`docs/`](file:///Users/ikhsan/Documents/dev/Gamification/docs):
-
-1. 📜 **[docs/RULES.md](file:///Users/ikhsan/Documents/dev/Gamification/docs/RULES.md)**
-   - Aturan teknis wajib (*Strict JavaScript, Pure Frontend, Zero TypeScript, No Backend/API*).
-   - Rumus kalkulasi bintang (*Score to Stars*), level progression (*Level 1 - 10*), dan aturan keputusan Head (*Approve / Revise*).
-2. 📋 **[docs/IMPLEMENTATION_PLAN.md](file:///Users/ikhsan/Documents/dev/Gamification/docs/IMPLEMENTATION_PLAN.md)**
-   - Struktur direktori modular dan daftar checklist implementasi 22 Fase (Phase 0 hingga Phase 22).
-3. 🚀 **[docs/WALKTHROUGH.md](file:///Users/ikhsan/Documents/dev/Gamification/docs/WALKTHROUGH.md)**
-   - Panduan modul lengkap dan 5 skenario pengujian alur interaktif (*End-to-End Demo Flow*).
+```
+rejuve-gamification/
+├── frontend/                     # Nuxt.js 3 + Vue 3 + Tailwind CSS + Pinia
+│   ├── components/               # Komponen UI (Adventure Map, Modals, Forms, dsb.)
+│   ├── pages/                    # Halaman aplikasi (Journey, Evaluations, Approvals, Buddy, Feedback, Admin)
+│   ├── stores/                   # State management Pinia (Auth, Missions, Evaluations, Approvals, Stores)
+│   ├── composables/              # Helper & utilities composables
+│   ├── mocks/                    # Mock data state & template
+│   ├── public/                   # Asset statis, gambar lanskap petualangan, avatar
+│   └── package.json              # Dependency frontend
+├── backend/                      # Service Backend REST API (Node.js / Express / Go / dsb.)
+│   └── README.md                 # Petunjuk pengembangan backend
+├── docs/                         # Dokumentasi teknis & spesifikasi REST API
+│   ├── backend_api_specification.md  # Spesifikasi 9 modul REST API JSON
+│   └── *.docx                    # Dokumen alur & spesifikasi resmi
+└── README.md                     # Dokumentasi utama proyek
+```
 
 ---
 
-## ⚡ Quick Start
+## 🚀 Panduan Menjalankan Frontend
 
-### 1. Instalasi Dependensi
+### 1. Masuk ke direktori frontend
+```bash
+cd frontend
+```
+
+### 2. Install dependencies
 ```bash
 npm install
 ```
 
-### 2. Menjalankan Development Server
+### 3. Jalankan development server
 ```bash
 npm run dev
 ```
-Buka browser di: `http://localhost:3000`
+Akses di browser: `http://localhost:3000`
 
-### 3. Build & Preview Produksi
+### 4. Build untuk produksi
 ```bash
 npm run build
-npm run preview
 ```
+
+### 5. Deploy ke Firebase Hosting (Live Staging)
+```bash
+npm run deploy
+```
+Live URL: [https://gamification-dde4b.web.app](https://gamification-dde4b.web.app)
 
 ---
 
-## 🎭 Simulasi Role (Tanpa Otentikasi Server)
-Gunakan role switcher di header atau halaman `/settings` untuk beralih instan:
-- **👤 Crew (Andi Pratama)**: Meninjau misi, level bintang, leaderboard, dan badges (Read-Only).
-- **📋 Supervisor (Budi Santoso)**: Input nilai (0-100), kalkulasi bintang instan, unggah bukti gambar, simpan draft, kirim ke review, dan perbaikan revisi.
-- **🛡️ Head (Ahmad Dahlan)**: Mengambil keputusan **Approve** (resmi memberikan bintang) atau **Request Revision** (wajib menyertakan catatan revisi).
+## 👥 Role Pengguna & Akses Halaman
+
+| Role | Kredensial Demo | Akses Halaman |
+|---|---|---|
+| **CREW** | `budi@rejuve.co.id` / `crew123` | `/journey`, `/leaderboard`, `/profile`, `/feedback` |
+| **STORE LEADER (SL)** | `sl.senayan@rejuve.co.id` / `sl123` | `/evaluations`, `/buddy`, `/dashboard` |
+| **DUTY MANAGER (DM)** | `dm.jakarta@rejuve.co.id` / `dm123` | `/approvals`, `/dashboard`, `/admin/stores` |
+| **ADMIN / HR** | `admin@rejuve.co.id` / `admin123` | `/admin/*`, `/admin/stores`, `/admin/missions` |
+
+---
+
+## 📖 Spesifikasi API Backend
+Spesifikasi lengkap untuk tim Backend dapat dilihat di file:
+👉 **[`docs/backend_api_specification.md`](./docs/backend_api_specification.md)**
