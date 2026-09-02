@@ -225,37 +225,116 @@ const weekZones = computed(() => {
   })
 })
 
-// Node positions: winding snake path from left-bottom to right-top
+// ── Waypoints berdasarkan titik merah PERSIS di jalan tanah gambar ──
+// Rute: Jalan tanah coklat kiri (y~82-84%) → Batu pijakan (y~84%) → Jembatan sungai (y~80-81%)
+// → Jalan tanah kanan (y~74-78%) → Titian kayu naik di lereng kanan (y~56-73%)
+const TRAIL_WAYPOINTS_3W = [
+  // START — ujung kiri jalan tanah
+  { x: 1.5,  y: 82.5 },
+  // Week 1 — BASE CAMP (Jalan tanah kiri & dekat pohon)
+  { x: 6.0,  y: 82.0 },
+  { x: 11.5, y: 82.5 },
+  { x: 18.0, y: 83.5 },
+  { x: 25.0, y: 84.0 },
+  { x: 31.0, y: 84.5 },
+  // Week 2 — RIVER (Batu loncatan & menyeberangi jembatan sungai)
+  { x: 37.5, y: 84.0 },
+  { x: 44.0, y: 83.0 },
+  { x: 51.5, y: 81.5 }, // jembatan kayu sungai
+  { x: 57.5, y: 80.0 },
+  { x: 64.0, y: 77.5 },
+  // Week 3 — CANOPY (Jalan tanah kanan & naik titian kayu)
+  { x: 70.0, y: 74.5 },
+  { x: 76.5, y: 76.5 },
+  { x: 80.5, y: 72.0 },
+  { x: 81.5, y: 65.0 },
+  // FINISH — puncak titian kayu di lereng kanan
+  { x: 81.0, y: 56.0 },
+]
+
+// Waypoints untuk 4 minggu
+const TRAIL_WAYPOINTS_4W = [
+  { x: 1.5,  y: 82.5 },
+  { x: 5.0,  y: 82.0 },
+  { x: 9.5,  y: 82.0 },
+  { x: 14.5, y: 83.0 },
+  { x: 20.0, y: 83.5 },
+  { x: 25.5, y: 84.0 },
+  { x: 31.0, y: 84.5 },
+  { x: 36.5, y: 84.0 },
+  { x: 42.0, y: 83.5 },
+  { x: 47.5, y: 82.5 },
+  { x: 53.0, y: 81.0 }, // jembatan kayu sungai
+  { x: 58.5, y: 79.5 },
+  { x: 64.0, y: 77.5 },
+  { x: 69.5, y: 74.5 },
+  { x: 75.0, y: 76.5 },
+  { x: 79.5, y: 74.0 },
+  { x: 81.0, y: 68.0 },
+  { x: 81.5, y: 62.0 },
+  { x: 81.0, y: 56.0 },
+]
+
+// Waypoints untuk 5 minggu
+const TRAIL_WAYPOINTS_5W = [
+  { x: 1.5,  y: 82.5 },
+  { x: 4.5,  y: 82.0 },
+  { x: 8.5,  y: 82.0 },
+  { x: 12.5, y: 82.5 },
+  { x: 17.0, y: 83.0 },
+  { x: 21.5, y: 83.5 },
+  { x: 26.0, y: 84.0 },
+  { x: 30.5, y: 84.5 },
+  { x: 35.0, y: 84.0 },
+  { x: 39.5, y: 83.5 },
+  { x: 44.0, y: 83.0 },
+  { x: 48.5, y: 82.0 },
+  { x: 53.0, y: 81.0 }, // jembatan sungai
+  { x: 57.5, y: 80.0 },
+  { x: 62.0, y: 78.5 },
+  { x: 66.5, y: 76.5 },
+  { x: 71.0, y: 74.5 },
+  { x: 75.5, y: 76.5 },
+  { x: 79.0, y: 74.5 },
+  { x: 80.5, y: 70.0 },
+  { x: 81.5, y: 65.0 },
+  { x: 82.0, y: 60.5 },
+  { x: 81.0, y: 56.0 },
+]
+
+// Pilih waypoints sesuai totalWeeks, lalu distribusikan ke jumlah misi dinamis
 const nodePositions = computed(() => {
   const total = props.missions.length
   if (total === 0) return []
 
+  // Pilih template waypoints sesuai jumlah minggu
+  let baseWaypoints
+  if (props.totalWeeks <= 3) baseWaypoints = TRAIL_WAYPOINTS_3W
+  else if (props.totalWeeks === 4) baseWaypoints = TRAIL_WAYPOINTS_4W
+  else baseWaypoints = TRAIL_WAYPOINTS_5W
+
+  // Interpolasi linear: distribusikan posisi misi ke sepanjang waypoints
+  // (tidak termasuk titik START [0] dan FINISH [terakhir] yang bukan misi)
+  const trackPoints = baseWaypoints.slice(1, baseWaypoints.length - 1)
   const positions = []
-  const totalWeeks = props.totalWeeks
 
-  props.missions.forEach((m, idx) => {
-    const weekIdx = m.week - 1
-    const weeksTotal = totalWeeks
-
-    // X: progress through the week zone
-    const missionsInWeek = props.missions.filter(ms => ms.week === m.week)
-    const posInWeek = missionsInWeek.findIndex(ms => ms.id === m.id)
-    const totalInWeek = missionsInWeek.length
-
-    const zoneStart = weekIdx / weeksTotal
-    const zoneEnd = (weekIdx + 1) / weeksTotal
-    const zoneWidth = zoneEnd - zoneStart
-    const xFraction = posInWeek / Math.max(totalInWeek - 1, 1)
-    const x = zoneStart + xFraction * zoneWidth * 0.85 + zoneWidth * 0.07
-
-    // Y: zigzag pattern — alternating high/low within each week
-    const baseY = 0.75 - (weekIdx / (weeksTotal - 1)) * 0.45 // Rises from 75% to 30% bottom
-    const zigzag = (posInWeek % 2 === 0) ? 0.07 : -0.07
-    const y = Math.max(0.12, Math.min(0.80, baseY + zigzag + (idx % 3 === 0 ? 0.05 : -0.03)))
-
+  props.missions.forEach((_, idx) => {
+    if (trackPoints.length === 0) {
+      positions.push({ x: '50%', y: '50%' })
+      return
+    }
+    // Distribusikan secara merata di sepanjang track points
+    const t = total === 1 ? 0.5 : idx / (total - 1)
+    const segF = t * (trackPoints.length - 1)
+    const segIdx = Math.min(Math.floor(segF), trackPoints.length - 2)
+    const segT = segF - segIdx
+    const a = trackPoints[segIdx]
+    const b = trackPoints[Math.min(segIdx + 1, trackPoints.length - 1)]
+    const x = a.x + (b.x - a.x) * segT
+    const y = a.y + (b.y - a.y) * segT
     positions.push({
-      x: `${(x * 100).toFixed(1)}%`,
-      y: `${(y * 100).toFixed(1)}%`
+      x: `${x.toFixed(1)}%`,
+      y: `${y.toFixed(1)}%`
     })
   })
 
@@ -287,7 +366,7 @@ const missionNodes = computed(() => {
   })
 })
 
-// SVG trail path: winding bezier from node to node
+// SVG trail path: kurva halus dari node ke node mengikuti jalan tanah
 const trailPath = computed(() => {
   const positions = nodePositions.value
   if (positions.length < 2) return ''
@@ -301,17 +380,20 @@ const trailPath = computed(() => {
 
   const pts = positions.map(toSVG)
 
-  // Add start and finish points
-  const startPt = { x: 50, y: SVG_H - 30 }
-  const allPts = [startPt, ...pts, { x: SVG_W - 50, y: 30 }]
+  // START: ujung kiri jalan tanah (X ~ 1.5%, Y ~ 82.5%)
+  const startPt = { x: SVG_W * 0.015, y: SVG_H * 0.825 }
+  // FINISH: puncak titian kayu (X ~ 81.0%, Y ~ 56.0%)
+  const finishPt = { x: SVG_W * 0.81, y: SVG_H * 0.56 }
+  const allPts = [startPt, ...pts, finishPt]
 
   let d = `M ${allPts[0].x} ${allPts[0].y}`
   for (let i = 0; i < allPts.length - 1; i++) {
     const curr = allPts[i]
     const next = allPts[i + 1]
-    const mx = (curr.x + next.x) / 2
-    const my = (curr.y + next.y) / 2 + (i % 2 === 0 ? -20 : 20)
-    d += ` Q ${mx} ${my} ${next.x} ${next.y}`
+    // Kurva Bezier halus langsung menghubungkan waypoint
+    const cpX = (curr.x + next.x) / 2
+    const cpY = (curr.y + next.y) / 2
+    d += ` Q ${cpX} ${cpY} ${next.x} ${next.y}`
   }
   return d
 })
@@ -329,7 +411,7 @@ const completedTrailPath = computed(() => {
     y: parseFloat(pos.y) / 100 * SVG_H
   })
 
-  const startPt = { x: 50, y: SVG_H - 30 }
+  const startPt = { x: SVG_W * 0.015, y: SVG_H * 0.825 }
   const pts = [startPt, ...positions.map(toSVG)]
 
   let d = `M ${pts[0].x} ${pts[0].y}`
@@ -337,14 +419,14 @@ const completedTrailPath = computed(() => {
     const curr = pts[i]
     const next = pts[i + 1]
     const mx = (curr.x + next.x) / 2
-    const my = (curr.y + next.y) / 2 + (i % 2 === 0 ? -20 : 20)
+    const my = (curr.y + next.y) / 2
     d += ` Q ${mx} ${my} ${next.x} ${next.y}`
   }
   return d
 })
 
-const startPosition = computed(() => ({ x: '2%', y: '82%' }))
-const finishPosition = computed(() => ({ x: '92%', y: '8%' }))
+const startPosition = computed(() => ({ x: '1.5%', y: '75%' }))
+const finishPosition = computed(() => ({ x: '81.0%', y: '48%' }))
 
 const journeyComplete = computed(() => {
   return props.missions.length > 0 &&
@@ -395,7 +477,7 @@ onUnmounted(() => {
 
 .map-canvas {
   position: relative;
-  height: 480px;
+  height: 520px;
   border-radius: 24px;
   overflow: hidden;
 }
