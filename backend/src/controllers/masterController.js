@@ -1,5 +1,10 @@
 'use strict';
 
+/**
+ * @file masterController.js
+ * @description Handles CRUD untuk Master Data: Departments, Users, dan Roles.
+ */
+
 const bcrypt = require('bcryptjs');
 const prisma = require('../config/db');
 const { sendSuccess, sendError, sendPaginated } = require('../utils/responseWrapper');
@@ -8,40 +13,68 @@ const { pushToLynx } = require('../utils/lynxSync');
 
 // =============================================================================
 // DEPARTMENTS
+// (Department disinkronisasikan dari Lynx, Gamification menyediakan CRUD lokal tanpa webhook keluar)
 // =============================================================================
 
 const getDepartments = async (req, res, next) => {
   try {
-    const filterOptions = parsePrismaQuery(req.query);
-    const page = req.query.page ? parseInt(req.query.page) : 1;
-    const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
     const skip = (page - 1) * limit;
+
+    const queryClone = { ...req.query };
+    delete queryClone.page;
+    delete queryClone.limit;
+
+    const where = parsePrismaQuery(queryClone);
 
     const [data, total] = await Promise.all([
       prisma.department.findMany({
-        where: filterOptions, skip, take: limit
+        where,
+        skip,
+        take: limit,
+        orderBy: { departmentCode: 'asc' }
       }),
-      prisma.department.count({ where: filterOptions })
+      prisma.department.count({ where })
     ]);
 
-    return sendPaginated(res, { message: 'Departments retrieved', data, total, page, limit });
-  } catch (error) { next(error); }
+    return sendPaginated(res, {
+      message: 'Daftar departemen berhasil diambil.',
+      data,
+      total,
+      page,
+      limit
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const getDepartmentById = async (req, res, next) => {
   try {
+    const { id } = req.params;
     const data = await prisma.department.findUnique({
-      where: { departmentId: req.params.id }
+      where: { departmentId: id }
     });
-    if (!data) return sendError(res, { statusCode: 404, message: 'Department not found' });
-    return sendSuccess(res, { data });
-  } catch (error) { next(error); }
+
+    if (!data) {
+      return sendError(res, { statusCode: 404, message: 'Departemen tidak ditemukan.' });
+    }
+
+    return sendSuccess(res, {
+      message: 'Detail departemen berhasil diambil.',
+      data
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-const createDepartment = async (req, res) => {
+const createDepartment = async (req, res, next) => {
   try {
     const { departmentCode, departmentName, regionCode, isActive, userSlId, userDmId } = req.body;
-    
+    const creatorId = req.user?.id || req.user?.userId || null;
+
     const department = await prisma.department.create({
       data: {
         departmentCode,
@@ -50,24 +83,29 @@ const createDepartment = async (req, res) => {
         isActive: isActive !== undefined ? isActive : true,
         userSlId: userSlId || null,
         userDmId: userDmId || null,
-        createdBy: req.user.id
+        createdBy: creatorId
       }
     });
 
-    await pushToLynx('/departments', [department]);
-
-    return sendSuccess(res, { statusCode: 201, message: 'Department created', data: department });
+    return sendSuccess(res, {
+      statusCode: 201,
+      message: 'Departemen berhasil dibuat.',
+      data: department
+    });
   } catch (error) {
-    if (error.code === 'P2002') return sendError(res, { statusCode: 409, message: 'Department code exists' });
-    return sendError(res, { statusCode: 500, message: 'Failed to create department', data: error.message });
+    if (error.code === 'P2002') {
+      return sendError(res, { statusCode: 409, message: `Kode departemen "${req.body.departmentCode}" sudah digunakan.` });
+    }
+    next(error);
   }
 };
 
-const updateDepartment = async (req, res) => {
+const updateDepartment = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { departmentCode, departmentName, regionCode, isActive, userSlId, userDmId } = req.body;
-    
+    const updaterId = req.user?.id || req.user?.userId || null;
+
     const department = await prisma.department.update({
       where: { departmentId: id },
       data: {
@@ -77,125 +115,197 @@ const updateDepartment = async (req, res) => {
         isActive,
         userSlId,
         userDmId,
-        updatedBy: req.user.id
+        updatedBy: updaterId
       }
     });
 
-    await pushToLynx('/departments', [department]);
-
-    return sendSuccess(res, { statusCode: 200, message: 'Department updated', data: department });
+    return sendSuccess(res, {
+      statusCode: 200,
+      message: 'Departemen berhasil diperbarui.',
+      data: department
+    });
   } catch (error) {
-    return sendError(res, { statusCode: 500, message: 'Failed to update department', data: error.message });
+    if (error.code === 'P2002') {
+      return sendError(res, { statusCode: 409, message: `Kode departemen "${req.body.departmentCode}" sudah digunakan.` });
+    }
+    next(error);
   }
 };
 
-const deleteDepartment = async (req, res) => {
+const deleteDepartment = async (req, res, next) => {
   try {
     const { id } = req.params;
-    
-    const dept = await prisma.department.findUnique({ where: { departmentId: id }});
     await prisma.department.delete({ where: { departmentId: id } });
 
-    if (dept) {
-      await pushToLynx('/departments/delete', { departmentId: id });
-    }
-
-    return sendSuccess(res, { statusCode: 200, message: 'Department deleted' });
+    return sendSuccess(res, { statusCode: 200, message: 'Departemen berhasil dihapus.' });
   } catch (error) {
-    return sendError(res, { statusCode: 500, message: 'Failed to delete department', data: error.message });
+    next(error);
   }
 };
 
 // =============================================================================
 // USERS CRUD
+// (User disinkronkan ke Lynx saat mutasi create/update/delete)
 // =============================================================================
 
-const getUsers = async (req, res) => {
+const getUsers = async (req, res, next) => {
   try {
-    const page = req.query.page ? parseInt(req.query.page) : 1;
-    const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
     const skip = (page - 1) * limit;
 
-    const filterOptions = parsePrismaQuery(req.query);
+    const queryClone = { ...req.query };
+    delete queryClone.page;
+    delete queryClone.limit;
+
+    const where = parsePrismaQuery(queryClone);
+
+    // Alias convenience: ?role=CREW atau ?roleCode=CREW dipetakan otomatis ke { role: { roleCode: ... } }
+    if (where.role && typeof where.role === 'string') {
+      where.role = { roleCode: where.role };
+    }
+    if (where.roleCode) {
+      where.role = where.role || {};
+      where.role.roleCode = where.roleCode;
+      delete where.roleCode;
+    }
 
     const [data, total] = await Promise.all([
       prisma.user.findMany({
-        where: filterOptions,
+        where,
         skip,
         take: limit,
         select: {
-          userId: true, name: true, email: true, roleId: true, isActive: true, 
-          stars: true, level: true, isBuddy: true, userBuddyId: true, departmentId: true,
-          batchId: true, createdAt: true, updatedAt: true, role: true
+          userId: true,
+          name: true,
+          email: true,
+          roleId: true,
+          role: true,
+          isActive: true,
+          stars: true,
+          level: true,
+          isBuddy: true,
+          userBuddyId: true,
+          departmentId: true,
+          department: true,
+          batchId: true,
+          createdAt: true,
+          updatedAt: true
         },
         orderBy: { createdAt: 'desc' }
       }),
-      prisma.user.count({ where: filterOptions })
+      prisma.user.count({ where })
     ]);
 
-    return sendPaginated(res, { message: 'Users retrieved', data, total, page, limit });
+    return sendPaginated(res, {
+      message: 'Daftar user berhasil diambil.',
+      data,
+      total,
+      page,
+      limit
+    });
   } catch (error) {
-    return sendError(res, { statusCode: 500, message: 'Failed to retrieve users', data: error.message });
+    next(error);
   }
 };
 
-const getUserById = async (req, res) => {
+const getUserById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const user = await prisma.user.findUnique({
       where: { userId: id },
       select: {
-        userId: true, name: true, email: true, roleId: true, isActive: true, 
-        stars: true, level: true, isBuddy: true, userBuddyId: true, departmentId: true,
-        batchId: true, createdAt: true, updatedAt: true, role: true
+        userId: true,
+        name: true,
+        email: true,
+        roleId: true,
+        role: true,
+        isActive: true,
+        stars: true,
+        level: true,
+        isBuddy: true,
+        userBuddyId: true,
+        departmentId: true,
+        department: true,
+        batchId: true,
+        createdAt: true,
+        updatedAt: true
       }
     });
 
-    if (!user) return sendError(res, { statusCode: 404, message: 'User not found' });
-    return sendSuccess(res, { statusCode: 200, message: 'User found', data: user });
+    if (!user) {
+      return sendError(res, { statusCode: 404, message: 'User tidak ditemukan.' });
+    }
+
+    return sendSuccess(res, {
+      statusCode: 200,
+      message: 'Detail user berhasil diambil.',
+      data: user
+    });
   } catch (error) {
-    return sendError(res, { statusCode: 500, message: 'Failed to retrieve user', data: error.message });
+    next(error);
   }
 };
 
-const createUser = async (req, res) => {
+const createUser = async (req, res, next) => {
   try {
     const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive } = req.body;
+    const creatorId = req.user?.id || req.user?.userId || null;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password || 'password123', 10);
 
     const user = await prisma.user.create({
       data: {
-        name, email, password: hashedPassword, roleId,
+        name,
+        email,
+        password: hashedPassword,
+        roleId,
         departmentId: departmentId || null,
         isBuddy: isBuddy || false,
         userBuddyId: userBuddyId || null,
         batchId: batchId || null,
         isActive: isActive !== undefined ? isActive : true,
-        createdBy: req.user.id
-      }
+        createdBy: creatorId
+      },
+      include: { role: true, department: true }
     });
 
-    await pushToLynx('/users', [user]);
+    // Sinkronkan mutasi user ke Lynx
+    await pushToLynx('/gamification/webhook/users', [user], 'POST');
 
     const userResponse = { ...user };
     delete userResponse.password;
-    return sendSuccess(res, { statusCode: 201, message: 'User created', data: userResponse });
+
+    return sendSuccess(res, {
+      statusCode: 201,
+      message: 'User berhasil dibuat.',
+      data: userResponse
+    });
   } catch (error) {
-    if (error.code === 'P2002') return sendError(res, { statusCode: 409, message: 'Email exists' });
-    return sendError(res, { statusCode: 500, message: 'Failed to create user', data: error.message });
+    if (error.code === 'P2002') {
+      return sendError(res, { statusCode: 409, message: `Email "${req.body.email}" sudah digunakan.` });
+    }
+    next(error);
   }
 };
 
-const updateUser = async (req, res) => {
+const updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive } = req.body;
+    const updaterId = req.user?.id || req.user?.userId || null;
 
     const data = {
-      name, email, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive,
-      updatedBy: req.user.id
+      updatedBy: updaterId
     };
+    if (name !== undefined) data.name = name;
+    if (email !== undefined) data.email = email;
+    if (roleId !== undefined) data.roleId = roleId;
+    if (departmentId !== undefined) data.departmentId = departmentId;
+    if (isBuddy !== undefined) data.isBuddy = isBuddy;
+    if (userBuddyId !== undefined) data.userBuddyId = userBuddyId;
+    if (batchId !== undefined) data.batchId = batchId;
+    if (isActive !== undefined) data.isActive = isActive;
 
     if (password) {
       data.password = await bcrypt.hash(password, 10);
@@ -203,30 +313,191 @@ const updateUser = async (req, res) => {
 
     const user = await prisma.user.update({
       where: { userId: id },
-      data
+      data,
+      include: { role: true, department: true }
     });
 
-    await pushToLynx('/users', [user]);
+    // Sinkronkan mutasi user ke Lynx (Upsert via POST)
+    await pushToLynx('/gamification/webhook/users', [user], 'POST');
 
     const userResponse = { ...user };
     delete userResponse.password;
-    return sendSuccess(res, { statusCode: 200, message: 'User updated', data: userResponse });
+
+    return sendSuccess(res, {
+      statusCode: 200,
+      message: 'User berhasil diperbarui.',
+      data: userResponse
+    });
   } catch (error) {
-    return sendError(res, { statusCode: 500, message: 'Failed to update user', data: error.message });
+    if (error.code === 'P2002') {
+      return sendError(res, { statusCode: 409, message: `Email "${req.body.email}" sudah digunakan.` });
+    }
+    next(error);
   }
 };
 
 const deleteUser = async (req, res, next) => {
   try {
-    const data = await prisma.user.delete({ where: { userId: req.params.id } });
-    
-    pushToLynx('/users/delete', { userId: data.userId });
+    const { id } = req.params;
+    const data = await prisma.user.delete({ where: { userId: id } });
 
-    return sendSuccess(res, { message: 'User deleted' });
-  } catch (error) { next(error); }
+    // Sinkronkan delete user ke Lynx
+    await pushToLynx('/gamification/webhook/users/delete', { userId: data.userId }, 'POST');
+
+    return sendSuccess(res, { statusCode: 200, message: 'User berhasil dihapus.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// =============================================================================
+// ROLES CRUD (m_roles)
+// =============================================================================
+
+const getRoles = async (req, res, next) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
+    const skip = (page - 1) * limit;
+
+    const queryClone = { ...req.query };
+    delete queryClone.page;
+    delete queryClone.limit;
+
+    const where = parsePrismaQuery(queryClone);
+
+    const [data, total] = await Promise.all([
+      prisma.role.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          _count: { select: { users: true } }
+        },
+        orderBy: { roleCode: 'asc' }
+      }),
+      prisma.role.count({ where })
+    ]);
+
+    return sendPaginated(res, {
+      message: 'Daftar role berhasil diambil.',
+      data,
+      total,
+      page,
+      limit
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRoleById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const role = await prisma.role.findUnique({
+      where: { roleId: id },
+      include: {
+        _count: { select: { users: true } }
+      }
+    });
+
+    if (!role) {
+      return sendError(res, { statusCode: 404, message: 'Role tidak ditemukan.' });
+    }
+
+    return sendSuccess(res, {
+      statusCode: 200,
+      message: 'Detail role berhasil diambil.',
+      data: role
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createRole = async (req, res, next) => {
+  try {
+    const { roleCode, roleName } = req.body;
+    const creatorId = req.user?.id || req.user?.userId || null;
+
+    if (!roleCode || !roleName) {
+      return sendError(res, { statusCode: 400, message: 'Field "roleCode" dan "roleName" wajib diisi.' });
+    }
+
+    const role = await prisma.role.create({
+      data: {
+        roleCode: roleCode.toUpperCase(),
+        roleName,
+        createdBy: creatorId
+      }
+    });
+
+    return sendSuccess(res, {
+      statusCode: 201,
+      message: 'Role berhasil dibuat.',
+      data: role
+    });
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return sendError(res, { statusCode: 409, message: `Kode role "${req.body.roleCode}" sudah digunakan.` });
+    }
+    next(error);
+  }
+};
+
+const updateRole = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { roleCode, roleName } = req.body;
+    const updaterId = req.user?.id || req.user?.userId || null;
+
+    const data = { updatedBy: updaterId };
+    if (roleCode !== undefined) data.roleCode = roleCode.toUpperCase();
+    if (roleName !== undefined) data.roleName = roleName;
+
+    const role = await prisma.role.update({
+      where: { roleId: id },
+      data
+    });
+
+    return sendSuccess(res, {
+      statusCode: 200,
+      message: 'Role berhasil diperbarui.',
+      data: role
+    });
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return sendError(res, { statusCode: 409, message: `Kode role "${req.body.roleCode}" sudah digunakan.` });
+    }
+    next(error);
+  }
+};
+
+const deleteRole = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.role.delete({ where: { roleId: id } });
+
+    return sendSuccess(res, { statusCode: 200, message: 'Role berhasil dihapus.' });
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = {
-  getDepartments, getDepartmentById, createDepartment, updateDepartment, deleteDepartment,
-  getUsers, getUserById, createUser, updateUser, deleteUser
+  getDepartments,
+  getDepartmentById,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment,
+  getUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+  getRoles,
+  getRoleById,
+  createRole,
+  updateRole,
+  deleteRole
 };

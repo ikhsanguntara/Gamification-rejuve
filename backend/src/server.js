@@ -40,6 +40,7 @@ app.get('/health', (req, res) => {
 
 // ─── API Routes ──────────────────────────────────────────────────────────────
 app.use('/api/v1', require('./routes/index'));
+app.use('/api', require('./routes/index'));
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 // Harus dipasang SETELAH semua route agar bisa menangkap next(error)
@@ -67,10 +68,12 @@ const httpServer = http.createServer(app);
 // ─── Start Server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
-httpServer.listen(PORT, () => {
-  console.log(`\n🚀 Gamification API running on port ${PORT}`);
-  console.log(`📌 Environment : ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/health\n`);
-});
+if (require.main === module) {
+  httpServer.listen(PORT, () => {
+    console.log(`\n🚀 Gamification API running on port ${PORT}`);
+    console.log(`📌 Environment : ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🏥 Health check: http://localhost:${PORT}/health\n`);
+  });
+}
 
 module.exports = { app, httpServer };

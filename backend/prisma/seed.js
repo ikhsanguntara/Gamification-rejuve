@@ -2,7 +2,7 @@
 
 /**
  * @file seed.js
- * @description Database seeder untuk data awal Gamification API (Phase 1 & 2).
+ * @description Database seeder untuk data awal Gamification API (m_roles, m_departments, m_users).
  */
 
 require('dotenv').config();
@@ -24,7 +24,50 @@ async function main() {
 
   const hashedPassword = await bcrypt.hash(DEFAULT_PASS, SALT_ROUNDS);
 
-  // 1. Department
+  // 1. Roles (Master Role UUID)
+  const roleSuperAdmin = await prisma.role.upsert({
+    where: { roleCode: 'SUPERADMIN' },
+    update: {},
+    create: {
+      roleCode: 'SUPERADMIN',
+      roleName: 'Super Administrator',
+      createdBy: 'seeder'
+    }
+  });
+
+  const roleDM = await prisma.role.upsert({
+    where: { roleCode: 'DISTRICT_MANAGER' },
+    update: {},
+    create: {
+      roleCode: 'DISTRICT_MANAGER',
+      roleName: 'District Manager / Head',
+      createdBy: 'seeder'
+    }
+  });
+
+  const roleSL = await prisma.role.upsert({
+    where: { roleCode: 'STORE_LEADER' },
+    update: {},
+    create: {
+      roleCode: 'STORE_LEADER',
+      roleName: 'Store Leader / Supervisor',
+      createdBy: 'seeder'
+    }
+  });
+
+  const roleCrew = await prisma.role.upsert({
+    where: { roleCode: 'CREW' },
+    update: {},
+    create: {
+      roleCode: 'CREW',
+      roleName: 'Store Crew',
+      createdBy: 'seeder'
+    }
+  });
+
+  console.log('✅ Roles seeded: SUPERADMIN, DISTRICT_MANAGER, STORE_LEADER, CREW');
+
+  // 2. Department
   const department = await prisma.department.upsert({
     where:  { departmentCode: 'BKI1' },
     update: {},
@@ -37,7 +80,7 @@ async function main() {
   });
   console.log(`✅ Department : ${department.departmentName} (${department.departmentCode})`);
 
-  // 2. User SUPERADMIN
+  // 3. User SUPERADMIN
   const superadmin = await prisma.user.upsert({
     where:  { email: 'superadmin@example.com' },
     update: {},
@@ -45,27 +88,83 @@ async function main() {
       name:         'Super Admin',
       email:        'superadmin@example.com',
       password:     hashedPassword,
-      role:         'SUPERADMIN',
+      roleId:       roleSuperAdmin.roleId,
       departmentId: department.departmentId,
       createdBy:    'seeder',
     },
   });
   console.log(`✅ SUPERADMIN : ${superadmin.name} <${superadmin.email}>`);
+
+  // 4. User DISTRICT_MANAGER (DM)
+  const dm = await prisma.user.upsert({
+    where: { email: 'dm@example.com' },
+    update: {},
+    create: {
+      name: 'District Manager Area 1',
+      email: 'dm@example.com',
+      password: hashedPassword,
+      roleId: roleDM.roleId,
+      departmentId: department.departmentId,
+      createdBy: 'seeder'
+    }
+  });
+  console.log(`✅ DISTRICT_MANAGER : ${dm.name} <${dm.email}>`);
   
-  // 3. User STORE_LEADER
+  // 5. User STORE_LEADER (SL)
   const sl = await prisma.user.upsert({
     where:  { email: 'sl@example.com' },
     update: {},
     create: {
-      name:         'Store Leader',
+      name:         'Store Leader BKI1',
       email:        'sl@example.com',
       password:     hashedPassword,
-      role:         'STORE_LEADER',
+      roleId:       roleSL.roleId,
       departmentId: department.departmentId,
       createdBy:    'seeder',
     },
   });
   console.log(`✅ STORE_LEADER : ${sl.name} <${sl.email}>`);
+
+  // Hubungkan SL dan DM ke department
+  await prisma.department.update({
+    where: { departmentId: department.departmentId },
+    data: {
+      userSlId: sl.userId,
+      userDmId: dm.userId
+    }
+  });
+
+  // 6. User Buddy (Mentor Crew)
+  const buddy = await prisma.user.upsert({
+    where: { email: 'buddy@example.com' },
+    update: {},
+    create: {
+      name: 'Senior Barista (Buddy)',
+      email: 'buddy@example.com',
+      password: hashedPassword,
+      roleId: roleCrew.roleId,
+      isBuddy: true,
+      departmentId: department.departmentId,
+      createdBy: 'seeder'
+    }
+  });
+  console.log(`✅ BUDDY : ${buddy.name} <${buddy.email}>`);
+
+  // 7. User Crew Mentee
+  const crew = await prisma.user.upsert({
+    where: { email: 'crew@example.com' },
+    update: {},
+    create: {
+      name: 'Budi Santoso (Crew)',
+      email: 'crew@example.com',
+      password: hashedPassword,
+      roleId: roleCrew.roleId,
+      userBuddyId: buddy.userId,
+      departmentId: department.departmentId,
+      createdBy: 'seeder'
+    }
+  });
+  console.log(`✅ CREW : ${crew.name} <${crew.email}>`);
 
   console.log('\n──────────────────────────────────────────────────');
   console.log('🎉 Seeding selesai! Data siap digunakan.\n');

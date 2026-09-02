@@ -2,12 +2,19 @@
 
 /**
  * @file queryParser.js
- * @description Utility to parse Express req.query into Prisma valid `where` object.
+ * @description Utility to parse Express req.query into a valid Prisma `where` object.
  * Supports:
  * - Exact match: ?status=ACTIVE
  * - Operators: ?stars[gte]=10, ?name[contains]=budi, ?role[in]=HEAD,CREW
- * - Global search: ?search=keyword (must be handled separately by the controller if needed, but parser skips it).
+ * - Dot notation for relations: ?role.roleCode=CREW, ?department.departmentCode[contains]=BKI
+ * - Nested objects from qs: ?role[roleCode]=CREW, ?role[roleCode][contains]=CREW
+ * - Global search: ?search=keyword (skipped, handled by controllers)
  */
+
+const VALID_OPERATORS = [
+  'gte', 'gt', 'lte', 'lt', 'contains', 'in', 'notIn',
+  'startsWith', 'endsWith', 'equals', 'not'
+];
 
 // Helper: Auto-inference type casting
 const castValue = (value) => {
@@ -19,92 +26,122 @@ const castValue = (value) => {
   if (trimmed.toLowerCase() === 'true') return true;
   if (trimmed.toLowerCase() === 'false') return false;
 
-  // Number (if it's purely a number and not an empty string)
+  // Number
   if (!isNaN(trimmed) && trimmed !== '') {
-    // Check if it has a decimal
     if (trimmed.includes('.')) return parseFloat(trimmed);
     return parseInt(trimmed, 10);
   }
 
-  // Date (basic check for YYYY-MM-DD or ISO 8601 string)
-  // Ensures it doesn't accidentally cast regular strings that look like dates but aren't intended as such.
+  // Date
   const dateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(.\d{3})?Z?)?$/;
   if (dateRegex.test(trimmed)) {
     const d = new Date(trimmed);
     if (!isNaN(d.getTime())) return d;
   }
 
-  // Handle arrays for 'in' operator (e.g. "HEAD,CREW")
+  // Comma separated list for array operators
   if (trimmed.includes(',')) {
     return trimmed.split(',').map(item => castValue(item));
   }
 
-  return value; // string fallback
+  return value;
 };
 
-const processOperator = (whereObj, field, operator, rawVal) => {
-  const validOperators = ['gte', 'gt', 'lte', 'lt', 'contains', 'in', 'notIn', 'startsWith', 'endsWith', 'equals', 'not'];
-  if (validOperators.includes(operator)) {
-    let castedVal = castValue(rawVal);
-    
-    // Khusus 'in' dan 'notIn' WAJIB berupa array untuk Prisma
-    if ((operator === 'in' || operator === 'notIn') && !Array.isArray(castedVal)) {
-      castedVal = [castedVal];
+// Helper: Set nested value given a dot-delimited path or array of keys
+const setDeepValue = (targetObj, pathKeys, value) => {
+  let current = targetObj;
+  for (let i = 0; i < pathKeys.length - 1; i++) {
+    const key = pathKeys[i];
+    if (!current[key] || typeof current[key] !== 'object' || Array.isArray(current[key])) {
+      current[key] = {};
     }
+    current = current[key];
+  }
+  const lastKey = pathKeys[pathKeys.length - 1];
 
-    // Inisialisasi object jika belum ada
-    if (!whereObj[field] || typeof whereObj[field] !== 'object' || Array.isArray(whereObj[field])) {
-      whereObj[field] = {};
-    }
-    
-    whereObj[field][operator] = castedVal;
-    
-    // Khusus contains tambahkan mode insensitive (hanya untuk PostgreSQL)
-    if (operator === 'contains') {
-      whereObj[field].mode = 'insensitive';
-    }
+  // If value is an operator object (e.g. { contains: 'abc' }) and current[lastKey] already exists
+  if (typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date)) {
+    current[lastKey] = Object.assign(current[lastKey] || {}, value);
+  } else {
+    current[lastKey] = value;
   }
 };
 
+// Recursive parser for nested objects
+const parseValueTree = (val) => {
+  if (typeof val !== 'object' || val === null || Array.isArray(val)) {
+    return castValue(val);
+  }
+
+  const result = {};
+  for (const [subKey, subVal] of Object.entries(val)) {
+    if (VALID_OPERATORS.includes(subKey)) {
+      let casted = castValue(subVal);
+      if ((subKey === 'in' || subKey === 'notIn') && !Array.isArray(casted)) {
+        casted = [casted];
+      }
+      result[subKey] = casted;
+      if (subKey === 'contains') {
+        result.mode = 'insensitive';
+      }
+    } else {
+      result[subKey] = parseValueTree(subVal);
+    }
+  }
+  return result;
+};
+
 /**
- * Menerima object req.query dan memparsingnya menjadi objek `where` Prisma.
- * Mengabaikan parameter `page`, `limit`, dan `search`.
+ * Menerima object req.query dan memparsingnya menjadi objek `where` Prisma yang valid.
  * 
  * @param {Object} query - req.query dari Express
- * @returns {Object} prismaWhere - Objek filter yang bisa dilempar ke Prisma
+ * @returns {Object} prismaWhere - Objek filter Prisma
  */
-const parsePrismaQuery = (query) => {
+const parsePrismaQuery = (query = {}) => {
   const skipFields = ['page', 'limit', 'search'];
   const prismaWhere = {};
 
   for (const [key, value] of Object.entries(query)) {
-    // Abaikan parameter paginasi/global search
     if (skipFields.includes(key)) continue;
 
-    let field = key;
-    let operatorStr = null;
+    // 1. Cek regex dot notation atau bracket notation:
+    // e.g. "role.roleCode", "role.roleCode[contains]", "name[contains]"
+    const bracketMatch = key.match(/^([^\[]+)\[([^\]]+)\]$/);
+    if (bracketMatch) {
+      const fieldPath = bracketMatch[1];
+      const operatorOrSub = bracketMatch[2];
 
-    // 1. Cek jika key dalam bentuk "field[operator]" (fallback jika express tidak pakai extended query parser)
-    const match = key.match(/^([^\[]+)\[([^\]]+)\]$/);
-    if (match) {
-      field = match[1];
-      operatorStr = match[2];
-    }
-
-    // 2. Jika value berupa object (karena di-parse sukses oleh Express 'qs')
-    if (typeof value === 'object' && !Array.isArray(value)) {
-      for (const [op, rawVal] of Object.entries(value)) {
-        processOperator(prismaWhere, field, op, rawVal);
+      if (VALID_OPERATORS.includes(operatorOrSub)) {
+        let casted = castValue(value);
+        if ((operatorOrSub === 'in' || operatorOrSub === 'notIn') && !Array.isArray(casted)) {
+          casted = [casted];
+        }
+        const opObj = { [operatorOrSub]: casted };
+        if (operatorOrSub === 'contains') opObj.mode = 'insensitive';
+        setDeepValue(prismaWhere, fieldPath.split('.'), opObj);
+      } else {
+        // e.g. role[roleCode] = CREW
+        const combinedPath = `${fieldPath}.${operatorOrSub}`.split('.');
+        setDeepValue(prismaWhere, combinedPath, parseValueTree(value));
       }
-    } 
-    // 3. Jika fallback regex menemukan operator
-    else if (operatorStr) {
-      processOperator(prismaWhere, field, operatorStr, value);
+      continue;
     }
-    // 4. Exact match biasa
-    else {
-      prismaWhere[field] = castValue(value);
+
+    // 2. Dot notation: e.g. "role.roleCode" = "CREW"
+    if (key.includes('.')) {
+      const pathParts = key.split('.');
+      setDeepValue(prismaWhere, pathParts, parseValueTree(value));
+      continue;
     }
+
+    // 3. Nested object from qs parser: e.g. { role: { roleCode: 'CREW' } }
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      prismaWhere[key] = parseValueTree(value);
+      continue;
+    }
+
+    // 4. Exact match biasa: e.g. status = 'ACTIVE'
+    prismaWhere[key] = castValue(value);
   }
 
   return prismaWhere;

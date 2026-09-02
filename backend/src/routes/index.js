@@ -19,6 +19,7 @@ const syncRoutes = require('./syncRoutes');
 const paramRoutes = require('./paramRoutes');
 const templateRoutes = require('./templateRoutes');
 const settingRoutes = require('./settingRoutes');
+const evaluationRoutes = require('./evaluationRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/masters', masterRoutes);
@@ -28,10 +29,7 @@ router.use('/sync', syncRoutes);
 router.use('/params', paramRoutes);
 router.use('/templates', templateRoutes);
 router.use('/administration', settingRoutes);
-
-// Phase 4.3 – 4.5 (akan diaktifkan bertahap):
-// router.use('/missions',    require('./missionRoutes'));
-// router.use('/evaluations', require('./evaluationRoutes'));
-// router.use('/approvals',   require('./approvalRoutes'));
+router.use('/admin', settingRoutes);
+router.use('/evaluations', evaluationRoutes);
 
 module.exports = router;

@@ -1,83 +1,247 @@
 'use strict';
+
+/**
+ * @file settingController.js
+ * @description Handles CRUD untuk Administration: Settings dan User Policies.
+ */
+
 const prisma = require('../config/db');
 const { sendSuccess, sendError, sendPaginated } = require('../utils/responseWrapper');
 const { parsePrismaQuery } = require('../utils/queryParser');
 
 // =============================================================================
-// SETTINGS
+// SETTINGS CRUD
 // =============================================================================
 
-const getSettings = async (req, res) => {
+const getSettings = async (req, res, next) => {
   try {
-    const filterOptions = parsePrismaQuery(req.query);
-    const data = await prisma.setting.findMany({
-      where: filterOptions,
-      orderBy: { createdAt: 'desc' }
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
+    const skip = (page - 1) * limit;
+
+    const queryClone = { ...req.query };
+    delete queryClone.page;
+    delete queryClone.limit;
+
+    const where = parsePrismaQuery(queryClone);
+
+    const [data, total] = await Promise.all([
+      prisma.setting.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.setting.count({ where })
+    ]);
+
+    return sendPaginated(res, {
+      message: 'Daftar settings berhasil diambil.',
+      data,
+      total,
+      page,
+      limit
     });
-    return sendSuccess(res, { statusCode: 200, message: 'Settings retrieved', data });
   } catch (error) {
-    return sendError(res, { statusCode: 500, message: 'Failed to retrieve settings', data: error.message });
+    next(error);
   }
 };
 
-const createSetting = async (req, res) => {
+const getSettingById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const data = await prisma.setting.findUnique({
+      where: { settingId: id }
+    });
+
+    if (!data) return sendError(res, { statusCode: 404, message: 'Setting tidak ditemukan' });
+    return sendSuccess(res, { data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createSetting = async (req, res, next) => {
   try {
     const { settingName, settingValue, objectCode, companyId } = req.body;
+    const creatorId = req.user?.id || req.user?.userId || null;
+
     const setting = await prisma.setting.create({
       data: {
         settingName,
         settingValue,
         objectCode: objectCode || 'SETTING',
         companyId: companyId || null,
-        createdBy: req.user.id
+        createdBy: creatorId
       }
     });
-    return sendSuccess(res, { statusCode: 201, message: 'Setting created', data: setting });
+    return sendSuccess(res, { statusCode: 201, message: 'Setting berhasil dibuat', data: setting });
   } catch (error) {
-    return sendError(res, { statusCode: 500, message: 'Failed to create setting', data: error.message });
+    next(error);
   }
 };
 
-// =============================================================================
-// USER POLICIES
-// =============================================================================
-
-const getUserPolicies = async (req, res) => {
+const updateSetting = async (req, res, next) => {
   try {
-    const filterOptions = parsePrismaQuery(req.query);
-    const data = await prisma.userPolicy.findMany({
-      where: filterOptions,
-      orderBy: { displayOrder: 'asc' }
+    const { id } = req.params;
+    const { settingName, settingValue, objectCode, companyId } = req.body;
+    const updaterId = req.user?.id || req.user?.userId || null;
+
+    const setting = await prisma.setting.update({
+      where: { settingId: id },
+      data: {
+        settingName,
+        settingValue,
+        objectCode,
+        companyId,
+        updatedBy: updaterId
+      }
     });
-    return sendSuccess(res, { statusCode: 200, message: 'User policies retrieved', data });
+
+    return sendSuccess(res, { message: 'Setting berhasil diperbarui', data: setting });
   } catch (error) {
-    return sendError(res, { statusCode: 500, message: 'Failed to retrieve user policies', data: error.message });
+    next(error);
   }
 };
 
-const createUserPolicy = async (req, res) => {
+const deleteSetting = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.setting.delete({ where: { settingId: id } });
+    return sendSuccess(res, { message: 'Setting berhasil dihapus' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// =============================================================================
+// USER POLICIES CRUD
+// =============================================================================
+
+const getUserPolicies = async (req, res, next) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
+    const skip = (page - 1) * limit;
+
+    const queryClone = { ...req.query };
+    delete queryClone.page;
+    delete queryClone.limit;
+
+    const where = parsePrismaQuery(queryClone);
+
+    const [data, total] = await Promise.all([
+      prisma.userPolicy.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { displayOrder: 'asc' }
+      }),
+      prisma.userPolicy.count({ where })
+    ]);
+
+    return sendPaginated(res, {
+      message: 'Daftar user policy berhasil diambil.',
+      data,
+      total,
+      page,
+      limit
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getUserPolicyById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const data = await prisma.userPolicy.findUnique({
+      where: { userpolicyId: id }
+    });
+
+    if (!data) return sendError(res, { statusCode: 404, message: 'User policy tidak ditemukan' });
+    return sendSuccess(res, { data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const parseBoolean = (val, defaultValue = false) => {
+  if (val === undefined || val === null) return defaultValue;
+  if (typeof val === 'boolean') return val;
+  if (typeof val === 'string') {
+    const s = val.trim().toLowerCase();
+    return s === 'true' || s === 'y' || s === '1';
+  }
+  return Boolean(val);
+};
+
+const createUserPolicy = async (req, res, next) => {
   try {
     const { userpolicyCode, userpolicyValue, informationRemark, isRules, displayOrder, objectCode } = req.body;
+    const creatorId = req.user?.id || req.user?.userId || null;
+
     const policy = await prisma.userPolicy.create({
       data: {
         userpolicyCode,
         userpolicyValue,
         informationRemark,
-        isRules: isRules || 'N',
-        displayOrder,
+        isRules: parseBoolean(isRules, false),
+        displayOrder: Number(displayOrder) || 1,
         objectCode: objectCode || 'USERPOLICY',
-        createdBy: req.user.id
+        createdBy: creatorId
       }
     });
-    return sendSuccess(res, { statusCode: 201, message: 'User policy created', data: policy });
+    return sendSuccess(res, { statusCode: 201, message: 'User policy berhasil dibuat', data: policy });
   } catch (error) {
-    return sendError(res, { statusCode: 500, message: 'Failed to create user policy', data: error.message });
+    next(error);
+  }
+};
+
+const updateUserPolicy = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { userpolicyCode, userpolicyValue, informationRemark, isRules, displayOrder, objectCode } = req.body;
+    const updaterId = req.user?.id || req.user?.userId || null;
+
+    const data = { updatedBy: updaterId };
+    if (userpolicyCode !== undefined) data.userpolicyCode = userpolicyCode;
+    if (userpolicyValue !== undefined) data.userpolicyValue = userpolicyValue;
+    if (informationRemark !== undefined) data.informationRemark = informationRemark;
+    if (isRules !== undefined) data.isRules = parseBoolean(isRules, false);
+    if (displayOrder !== undefined) data.displayOrder = Number(displayOrder);
+    if (objectCode !== undefined) data.objectCode = objectCode;
+
+    const policy = await prisma.userPolicy.update({
+      where: { userpolicyId: id },
+      data
+    });
+
+    return sendSuccess(res, { message: 'User policy berhasil diperbarui', data: policy });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteUserPolicy = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.userPolicy.delete({ where: { userpolicyId: id } });
+    return sendSuccess(res, { message: 'User policy berhasil dihapus' });
+  } catch (error) {
+    next(error);
   }
 };
 
 module.exports = {
   getSettings,
+  getSettingById,
   createSetting,
+  updateSetting,
+  deleteSetting,
   getUserPolicies,
-  createUserPolicy
+  getUserPolicyById,
+  createUserPolicy,
+  updateUserPolicy,
+  deleteUserPolicy
 };

@@ -1,23 +1,32 @@
 'use strict';
+
+/**
+ * @file paramRoutes.js
+ * @description Routes untuk Bisnis Parameter (Param Group & Param).
+ */
+
 const router = require('express').Router();
 const paramController = require('../controllers/paramController');
-const { authenticate, authorize } = require('../middlewares/auth');
+const { authenticate } = require('../middlewares/auth');
+const { authorizeRole } = require('../middlewares/role');
 
 router.use(authenticate);
-router.use(authorize('SUPERADMIN'));
 
-// Param Groups
+// ─── Public/Authenticated Read Options ────────────────────────────────────────
+// Dropdown options endpoint dapat diakses seluruh user yang telah login
+router.get('/group-code/:groupCode', paramController.getParamsByGroupCode);
 router.get('/groups', paramController.getParamGroups);
 router.get('/groups/:id', paramController.getParamGroupById);
-router.post('/groups', paramController.createParamGroup);
-router.put('/groups/:id', paramController.updateParamGroup);
-router.delete('/groups/:id', paramController.deleteParamGroup);
-
-// Params
 router.get('/', paramController.getParams);
 router.get('/:id', paramController.getParamById);
-router.post('/', paramController.createParam);
-router.put('/:id', paramController.updateParam);
-router.delete('/:id', paramController.deleteParam);
+
+// ─── Superadmin Mutations ─────────────────────────────────────────────────────
+router.post('/groups', authorizeRole(['SUPERADMIN']), paramController.createParamGroup);
+router.put('/groups/:id', authorizeRole(['SUPERADMIN']), paramController.updateParamGroup);
+router.delete('/groups/:id', authorizeRole(['SUPERADMIN']), paramController.deleteParamGroup);
+
+router.post('/', authorizeRole(['SUPERADMIN']), paramController.createParam);
+router.put('/:id', authorizeRole(['SUPERADMIN']), paramController.updateParam);
+router.delete('/:id', authorizeRole(['SUPERADMIN']), paramController.deleteParam);
 
 module.exports = router;

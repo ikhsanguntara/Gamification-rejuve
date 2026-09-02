@@ -1,8 +1,65 @@
 'use strict';
+
+/**
+ * @file syncController.js
+ * @description Controller untuk sinkronisasi data Master Departments dan Users dengan sistem Lynx.
+ */
+
+const axios = require('axios');
 const prisma = require('../config/db');
 const { sendSuccess, sendError } = require('../utils/responseWrapper');
 
-// POST /sync/departments
+/**
+ * Helper internal untuk memetakan role dari payload Lynx ke roleId UUID di Gamification.
+ */
+const resolveUserRoleId = async (user, roleMapByCode, roleMapById, defaultCrewRoleId, tx) => {
+  // 1. Jika Lynx mengirimkan roleId langsung yang cocok dengan UUID m_roles
+  if (user.roleId && roleMapById[user.roleId]) {
+    return user.roleId;
+  }
+
+  // 2. Normalisasi string role / roleCode / usergroup dari Lynx
+  const rawRole = String(user.roleCode || user.role || user.usergroup || '').trim().toUpperCase();
+
+  if (rawRole && roleMapByCode[rawRole]) {
+    return roleMapByCode[rawRole];
+  }
+
+  // 3. Mapping alias umum antara Lynx dan Gamification
+  if (['CREW_STORE', 'BARISTA', 'STORE_CREW', 'CREW'].includes(rawRole)) {
+    return roleMapByCode['CREW'] || defaultCrewRoleId;
+  }
+  if (['SUPERVISOR', 'STORE_LEADER', 'SL', 'STORE_LEADER_SUPERVISOR'].includes(rawRole)) {
+    return roleMapByCode['STORE_LEADER'] || defaultCrewRoleId;
+  }
+  if (['HEAD', 'DISTRICT_MANAGER', 'DM', 'DISTRICT_MANAGER_HEAD'].includes(rawRole)) {
+    return roleMapByCode['DISTRICT_MANAGER'] || defaultCrewRoleId;
+  }
+  if (['SUPERADMIN', 'ADMIN', 'SUPER_ADMIN'].includes(rawRole)) {
+    return roleMapByCode['SUPERADMIN'] || defaultCrewRoleId;
+  }
+
+  // 4. Jika role belum ada sama sekali di Gamification, auto-create agar sinkronisasi tidak gagal
+  if (rawRole && tx) {
+    const createdRole = await tx.role.create({
+      data: {
+        roleCode: rawRole,
+        roleName: rawRole.replace(/_/g, ' ')
+      }
+    });
+    roleMapByCode[rawRole] = createdRole.roleId;
+    roleMapById[createdRole.roleId] = createdRole.roleId;
+    return createdRole.roleId;
+  }
+
+  return defaultCrewRoleId;
+};
+
+// =============================================================================
+// DEPARTMENTS SYNC
+// =============================================================================
+
+// POST /sync/departments (Webhook penerima dari Lynx)
 const syncDepartments = async (req, res) => {
   try {
     const departments = req.body;
@@ -20,8 +77,8 @@ const syncDepartments = async (req, res) => {
           update: {
             departmentCode: dept.departmentCode,
             departmentName: dept.departmentName,
+            regionCode: dept.regionCode || null,
             isActive: dept.isActive !== undefined ? dept.isActive : true,
-            isBuddy: dept.isBuddy !== undefined ? dept.isBuddy : false,
             userSlId: dept.userSlId || null,
             userDmId: dept.userDmId || null,
           },
@@ -29,8 +86,8 @@ const syncDepartments = async (req, res) => {
             departmentId: dept.departmentId,
             departmentCode: dept.departmentCode,
             departmentName: dept.departmentName,
+            regionCode: dept.regionCode || null,
             isActive: dept.isActive !== undefined ? dept.isActive : true,
-            isBuddy: dept.isBuddy !== undefined ? dept.isBuddy : false,
             userSlId: dept.userSlId || null,
             userDmId: dept.userDmId || null,
           }
@@ -44,7 +101,6 @@ const syncDepartments = async (req, res) => {
       message: `${results.length} departments synced successfully`,
       data: results
     });
-
   } catch (error) {
     return sendError(res, {
       statusCode: 500,
@@ -54,7 +110,83 @@ const syncDepartments = async (req, res) => {
   }
 };
 
-// POST /sync/users
+// POST /sync/departments/pull-all (Tarik seluruh departemen dari Lynx)
+const pullAllDepartments = async (req, res) => {
+  try {
+    const lynxBaseUrl = process.env.LYNX_API_URL;
+    const lynxToken = process.env.LYNX_API_TOKEN;
+
+    if (!lynxBaseUrl) return sendError(res, { statusCode: 500, message: 'LYNX_API_URL is not set' });
+
+    const response = await axios.get(`${lynxBaseUrl}/gamification/departments`, {
+      headers: { 'Authorization': `Bearer ${lynxToken}` }
+    });
+
+    const departments = response.data;
+    if (!Array.isArray(departments)) return sendError(res, { statusCode: 500, message: 'Invalid data format from Lynx' });
+
+    const results = [];
+    const lynxDeptIds = departments.map(d => d.departmentId).filter(Boolean);
+
+    await prisma.$transaction(async (tx) => {
+      // Soft-deactivate: Ubah status departemen lokal menjadi isActive: false jika tidak ada di respons Lynx
+      // Ini menjaga integritas referensi User & histori audit agar tidak menjadi orphan/null
+      if (lynxDeptIds.length > 0) {
+        await tx.department.updateMany({
+          where: {
+            departmentId: { notIn: lynxDeptIds },
+            isActive: true
+          },
+          data: {
+            isActive: false
+          }
+        });
+      }
+
+      for (const dept of departments) {
+        const result = await tx.department.upsert({
+          where: { departmentId: dept.departmentId },
+          update: {
+            departmentCode: dept.departmentCode,
+            departmentName: dept.departmentName,
+            regionCode: dept.regionCode || null,
+            isActive: dept.isActive !== undefined ? dept.isActive : true,
+            userSlId: dept.userSlId || null,
+            userDmId: dept.userDmId || null,
+          },
+          create: {
+            departmentId: dept.departmentId,
+            departmentCode: dept.departmentCode,
+            departmentName: dept.departmentName,
+            regionCode: dept.regionCode || null,
+            isActive: dept.isActive !== undefined ? dept.isActive : true,
+            userSlId: dept.userSlId || null,
+            userDmId: dept.userDmId || null,
+          }
+        });
+        results.push(result.departmentId);
+      }
+    });
+
+    return sendSuccess(res, {
+      statusCode: 200,
+      message: `Successfully pulled and upserted ${results.length} departments`,
+      data: results
+    });
+  } catch (error) {
+    return sendError(res, {
+      statusCode: 500,
+      message: 'Failed to pull departments from Lynx',
+      data: error.message
+    });
+  }
+};
+
+// =============================================================================
+// USERS SYNC
+// =============================================================================
+
+// POST /sync/users (Webhook penerima dari Lynx)
 const syncUsers = async (req, res) => {
   try {
     const users = req.body;
@@ -63,31 +195,50 @@ const syncUsers = async (req, res) => {
       return sendError(res, { statusCode: 400, message: 'Payload must be an array' });
     }
 
+    // Pre-load master roles untuk pencocokan role UUID
+    const roles = await prisma.role.findMany();
+    const roleMapByCode = {};
+    const roleMapById = {};
+    for (const r of roles) {
+      roleMapByCode[r.roleCode.toUpperCase()] = r.roleId;
+      roleMapById[r.roleId] = r.roleId;
+    }
+    const defaultCrewRoleId = roleMapByCode['CREW'] || (roles[0] ? roles[0].roleId : null);
+
+    // Pre-load departments untuk memvalidasi foreign key
+    const existingDepts = await prisma.department.findMany({ select: { departmentId: true } });
+    const validDeptIds = new Set(existingDepts.map(d => d.departmentId));
+
     const results = [];
     
     await prisma.$transaction(async (tx) => {
       for (const user of users) {
+        const roleId = await resolveUserRoleId(user, roleMapByCode, roleMapById, defaultCrewRoleId, tx);
+        const departmentId = (user.departmentId && validDeptIds.has(user.departmentId)) ? user.departmentId : null;
+
         const result = await tx.user.upsert({
           where: { userId: user.userId },
           update: {
             name: user.name,
             email: user.email,
-            password: user.password,
-            role: user.role,
+            password: user.password || '$2y$12$defaultHashedPasswordFallback',
+            roleId,
             isActive: user.isActive !== undefined ? user.isActive : true,
-            departmentBuddyId: user.departmentBuddyId || null,
-            departmentId: user.departmentId || null,
+            departmentId,
+            isBuddy: user.isBuddy !== undefined ? user.isBuddy : false,
+            userBuddyId: user.userBuddyId || null,
             batchId: user.batchId || null,
           },
           create: {
             userId: user.userId,
             name: user.name,
             email: user.email,
-            password: user.password, 
-            role: user.role,
+            password: user.password || '$2y$12$defaultHashedPasswordFallback', 
+            roleId,
             isActive: user.isActive !== undefined ? user.isActive : true,
-            departmentBuddyId: user.departmentBuddyId || null,
-            departmentId: user.departmentId || null,
+            departmentId,
+            isBuddy: user.isBuddy !== undefined ? user.isBuddy : false,
+            userBuddyId: user.userBuddyId || null,
             batchId: user.batchId || null,
           }
         });
@@ -110,58 +261,7 @@ const syncUsers = async (req, res) => {
   }
 };
 
-const axios = require('axios');
-
-// POST /sync/departments/pull-all
-const pullAllDepartments = async (req, res) => {
-  try {
-    const lynxBaseUrl = process.env.LYNX_API_URL;
-    const lynxToken = process.env.LYNX_API_TOKEN;
-
-    if (!lynxBaseUrl) return sendError(res, { statusCode: 500, message: 'LYNX_API_URL is not set' });
-
-    const response = await axios.get(`${lynxBaseUrl}/gamification/departments`, {
-      headers: { 'Authorization': `Bearer ${lynxToken}` }
-    });
-
-    const departments = response.data;
-    if (!Array.isArray(departments)) return sendError(res, { statusCode: 500, message: 'Invalid data format from Lynx' });
-
-    const results = [];
-    await prisma.$transaction(async (tx) => {
-      for (const dept of departments) {
-        // Map Lynx array back to Prisma format, fallbacks for safety
-        const result = await tx.department.upsert({
-          where: { departmentId: dept.departmentId },
-          update: {
-            departmentCode: dept.departmentCode,
-            departmentName: dept.departmentName,
-            isActive: dept.isActive !== undefined ? dept.isActive : true,
-            isBuddy: dept.isBuddy !== undefined ? dept.isBuddy : false,
-            userSlId: dept.userSlId || null,
-            userDmId: dept.userDmId || null,
-          },
-          create: {
-            departmentId: dept.departmentId,
-            departmentCode: dept.departmentCode,
-            departmentName: dept.departmentName,
-            isActive: dept.isActive !== undefined ? dept.isActive : true,
-            isBuddy: dept.isBuddy !== undefined ? dept.isBuddy : false,
-            userSlId: dept.userSlId || null,
-            userDmId: dept.userDmId || null,
-          }
-        });
-        results.push(result.departmentId);
-      }
-    });
-
-    return sendSuccess(res, { statusCode: 200, message: `Successfully pulled and upserted ${results.length} departments`, data: results });
-  } catch (error) {
-    return sendError(res, { statusCode: 500, message: 'Failed to pull departments from Lynx', data: error.message });
-  }
-};
-
-// POST /sync/users/pull-all
+// POST /sync/users/pull-all (Tarik seluruh user dari Lynx)
 const pullAllUsers = async (req, res) => {
   try {
     const lynxBaseUrl = process.env.LYNX_API_URL;
@@ -176,36 +276,49 @@ const pullAllUsers = async (req, res) => {
     const users = response.data;
     if (!Array.isArray(users)) return sendError(res, { statusCode: 500, message: 'Invalid data format from Lynx' });
 
+    // Pre-load master roles untuk pencocokan role UUID
+    const roles = await prisma.role.findMany();
+    const roleMapByCode = {};
+    const roleMapById = {};
+    for (const r of roles) {
+      roleMapByCode[r.roleCode.toUpperCase()] = r.roleId;
+      roleMapById[r.roleId] = r.roleId;
+    }
+    const defaultCrewRoleId = roleMapByCode['CREW'] || (roles[0] ? roles[0].roleId : null);
+
+    // Pre-load departments untuk memvalidasi foreign key
+    const existingDepts = await prisma.department.findMany({ select: { departmentId: true } });
+    const validDeptIds = new Set(existingDepts.map(d => d.departmentId));
+
     const results = [];
     await prisma.$transaction(async (tx) => {
       for (const user of users) {
-        // Mapping role jika berbeda antara Lynx dan Gamification
-        let mappedRole = user.role;
-        if (mappedRole === 'CREW_STORE') mappedRole = 'CREW'; 
-        // pastikan role ada di enum (SUPERADMIN, HEAD, SUPERVISOR, CREW)
-        if (!['SUPERADMIN', 'HEAD', 'SUPERVISOR', 'CREW'].includes(mappedRole)) mappedRole = 'CREW';
+        const roleId = await resolveUserRoleId(user, roleMapByCode, roleMapById, defaultCrewRoleId, tx);
+        const departmentId = (user.departmentId && validDeptIds.has(user.departmentId)) ? user.departmentId : null;
 
         const result = await tx.user.upsert({
           where: { userId: user.userId },
           update: {
             name: user.name,
             email: user.email,
-            password: user.password || 'no-pass',
-            role: mappedRole,
+            password: user.password || '$2y$12$defaultHashedPasswordFallback',
+            roleId,
             isActive: user.isActive !== undefined ? user.isActive : true,
-            departmentBuddyId: user.departmentBuddyId || null,
-            departmentId: user.departmentId || null,
+            departmentId,
+            isBuddy: user.isBuddy !== undefined ? user.isBuddy : false,
+            userBuddyId: user.userBuddyId || null,
             batchId: user.batchId || null,
           },
           create: {
             userId: user.userId,
             name: user.name,
             email: user.email,
-            password: user.password || 'no-pass', 
-            role: mappedRole,
+            password: user.password || '$2y$12$defaultHashedPasswordFallback', 
+            roleId,
             isActive: user.isActive !== undefined ? user.isActive : true,
-            departmentBuddyId: user.departmentBuddyId || null,
-            departmentId: user.departmentId || null,
+            departmentId,
+            isBuddy: user.isBuddy !== undefined ? user.isBuddy : false,
+            userBuddyId: user.userBuddyId || null,
             batchId: user.batchId || null,
           }
         });
@@ -213,9 +326,17 @@ const pullAllUsers = async (req, res) => {
       }
     });
 
-    return sendSuccess(res, { statusCode: 200, message: `Successfully pulled and upserted ${results.length} users`, data: results });
+    return sendSuccess(res, {
+      statusCode: 200,
+      message: `Successfully pulled and upserted ${results.length} users`,
+      data: results
+    });
   } catch (error) {
-    return sendError(res, { statusCode: 500, message: 'Failed to pull users from Lynx', data: error.message });
+    return sendError(res, {
+      statusCode: 500,
+      message: 'Failed to pull users from Lynx',
+      data: error.message
+    });
   }
 };
 
