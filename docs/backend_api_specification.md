@@ -515,44 +515,141 @@ $$\text{Final Score} = \text{Math.round}\left(\frac{\text{Skor SL} + \text{Skor 
 
 ---
 
-### 🤝 MODUL 8: PROGRAM BUDDY PRE-BATCH (3 HARI) (`/buddy`)
+### 🤝 MODUL 8: RAPOR NEW HIRE RE.JUVE (3 HARI PRE-BATCH) (`/buddy`)
 
-#### 8.1. Get Checklist Template Buddy
+Formulir resmi evaluasi pendampingan selama 3 hari pra-batch untuk New Hire oleh Store Captain / Store Leader mencakup 7 pilar kompetensi dan 22 indikator standar SOP Re.juve.
+
+#### 8.1. Get Master Template Rapor New Hire
 * **Method & URL**: `GET /api/v1/buddy/templates`
+* **Response (200 OK)**:
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "data": [
+    {
+      "id": "pkg-buddy-standard",
+      "name": "Rapor Pendampingan New Hire (3 Hari Pra-Batch)",
+      "code": "BUDDY-STD-03",
+      "durationDays": 3,
+      "competencies": [
+        {
+          "id": "comp-pk",
+          "name": "Product Knowledge",
+          "indicators": [
+            { "id": "ind-pk-01", "name": "Menjelaskan produk & ingredients*", "isStar": true },
+            { "id": "ind-pk-02", "name": "Menjelaskan manfaat produk", "isStar": false },
+            { "id": "ind-pk-03", "name": "Memberikan rekomendasi sesuai kebutuhan customer", "isStar": false }
+          ]
+        },
+        {
+          "id": "comp-cs",
+          "name": "Customer Service",
+          "indicators": [
+            { "id": "ind-cs-01", "name": "Menyapa customer sesuai standard", "isStar": false },
+            { "id": "ind-cs-02", "name": "Menggali kebutuhan customer", "isStar": false },
+            { "id": "ind-cs-03", "name": "Memberikan pelayanan sesuai Service Standard Re.juve", "isStar": false }
+          ]
+        },
+        {
+          "id": "comp-su",
+          "name": "Sales & Upselling",
+          "indicators": [
+            { "id": "ind-su-01", "name": "Melakukan upselling paket juice/qty juice", "isStar": false },
+            { "id": "ind-su-02", "name": "Melakukan cross-selling produk food", "isStar": false },
+            { "id": "ind-su-03", "name": "Menawarkan membership secara konsisten", "isStar": false }
+          ]
+        },
+        {
+          "id": "comp-co",
+          "name": "Cashier Operation",
+          "indicators": [
+            { "id": "ind-co-01", "name": "Melakukan transaksi di EDC dengan benar", "isStar": false },
+            { "id": "ind-co-02", "name": "Melakukan repeat order & payment dengan benar", "isStar": false },
+            { "id": "ind-co-03", "name": "Melakukan proses pembayaran di cashier tanpa kesalahan", "isStar": false }
+          ]
+        },
+        {
+          "id": "comp-so",
+          "name": "Store Operation",
+          "indicators": [
+            { "id": "ind-so-01", "name": "Memahami proses opening & closing sesuai SOP*", "isStar": true },
+            { "id": "ind-so-02", "name": "Melakukan cleaning & refill produk sesuai standard", "isStar": false },
+            { "id": "ind-so-03", "name": "Melakukan penerimaan kedatangan barang dengan baik*", "isStar": true },
+            { "id": "ind-so-04", "name": "Menjaga area kerja sesuai standard", "isStar": false }
+          ]
+        },
+        {
+          "id": "comp-fsq",
+          "name": "Food Safety & Quality",
+          "indicators": [
+            { "id": "ind-fsq-01", "name": "Menjalankan standard hygiene", "isStar": false },
+            { "id": "ind-fsq-02", "name": "Melakukan handling produk dengan benar", "isStar": false },
+            { "id": "ind-fsq-03", "name": "Menjalankan FIFO/FEFO", "isStar": false }
+          ]
+        },
+        {
+          "id": "comp-ta",
+          "name": "Teamwork & Attitude",
+          "indicators": [
+            { "id": "ind-ta-01", "name": "Menunjukkan sikap positif & disiplin", "isStar": false },
+            { "id": "ind-ta-02", "name": "Berkomunikasi dengan baik", "isStar": false },
+            { "id": "ind-ta-03", "name": "Mengikuti arahan atasan", "isStar": false }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
 
-#### 8.2. Simpan Evaluasi Harian & Rekomendasi Kru
+#### 8.2. Simpan Evaluasi Rapor New Hire (Store Leader)
 * **Method & URL**: `POST /api/v1/buddy/evaluations`
 * **Request Body**:
 ```json
 {
-  "crewId": "crew-010",
-  "storeId": "store-gi-01",
-  "mentorId": "sl-001",
-  "days": [
-    {
-      "dayNumber": 1,
-      "score": 92,
-      "status": "PASSED",
-      "notes": "Pengenalan SOP higienitas bar sangat cepat dipahami."
-    },
-    {
-      "dayNumber": 2,
-      "score": 88,
-      "status": "PASSED",
-      "notes": "Pemotongan buah rapi dan presisi."
-    },
-    {
-      "dayNumber": 3,
-      "score": 90,
-      "status": "PASSED",
-      "notes": "Kecepatan layanan sudah mencapai standar < 45 detik."
-    }
-  ],
-  "finalRecommendation": "READY_FOR_BATCH",
-  "targetBatchId": "batch-alpha",
-  "storeLeaderNote": "Kru memiliki potensi tinggi dan siap ditempatkan di Batch 1 Grand Indonesia."
+  "batchId": "batch-alpha",
+  "crewId": "crew-001",
+  "storeTraining": "Re.juve Grand Indonesia",
+  "storeCaptain": "Budi Santoso (Store Leader)",
+  "trainingPeriod": "1 - 3 September 2026",
+  "indicatorRatings": {
+    "ind-pk-01": "KOMPETEN",
+    "ind-pk-02": "KOMPETEN",
+    "ind-pk-03": "KOMPETEN",
+    "ind-cs-01": "KOMPETEN",
+    "ind-cs-02": "KOMPETEN",
+    "ind-cs-03": "KOMPETEN",
+    "ind-su-01": "BUTUH_PENDAMPINGAN",
+    "ind-su-02": "BUTUH_PENDAMPINGAN",
+    "ind-su-03": "KOMPETEN",
+    "ind-co-01": "KOMPETEN",
+    "ind-co-02": "KOMPETEN",
+    "ind-co-03": "KOMPETEN",
+    "ind-so-01": "KOMPETEN",
+    "ind-so-02": "KOMPETEN",
+    "ind-so-03": "BUTUH_PENDAMPINGAN",
+    "ind-so-04": "KOMPETEN",
+    "ind-fsq-01": "KOMPETEN",
+    "ind-fsq-02": "KOMPETEN",
+    "ind-fsq-03": "KOMPETEN",
+    "ind-ta-01": "KOMPETEN",
+    "ind-ta-02": "KOMPETEN",
+    "ind-ta-03": "KOMPETEN"
+  },
+  "recommendationNote": "Andi menunjukkan penguasaan SOP dan hospitality yang sangat baik.",
+  "status": "RECOMMENDED",
+  "captainSigned": true,
+  "crewSigned": true
 }
 ```
+* **Status Nilai**:
+  * `KOMPETEN` (Tingkat penguasaan mandiri / siap)
+  * `BUTUH_PENDAMPINGAN` (Perlu pendampingan lanjutan)
+  * `BELUM_MENGUASAI` (Belum menguasai)
+* **Status Kelayakan**:
+  * `RECOMMENDED` (Siap Masuk Batch)
+  * `NEED_RETRAINING` (Butuh Pembekalan Tambahan)
 
 ---
 

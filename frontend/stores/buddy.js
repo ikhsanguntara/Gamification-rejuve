@@ -5,9 +5,9 @@ import { getStoredData, setStoredData } from '../utils/storage.js'
 
 export const useBuddyStore = defineStore('buddy', {
   state: () => ({
-    packages: getStoredData('rejuve_buddy_packages_v1', mockBuddyPackages),
-    evaluations: getStoredData('rejuve_buddy_evaluations_v1', mockBuddyEvaluations),
-    selectedDay: 1
+    packages: getStoredData('rejuve_buddy_packages_v2', mockBuddyPackages),
+    evaluations: getStoredData('rejuve_buddy_evaluations_v2', mockBuddyEvaluations),
+    selectedCompetencyId: 'comp-pk'
   }),
 
   getters: {
@@ -23,46 +23,79 @@ export const useBuddyStore = defineStore('buddy', {
       return state.evaluations.find(e => e.batchId === batchId && e.crewId === crewId)
     },
 
-    crewDayEvaluation: (state) => (batchId, crewId, dayNumber) => {
-      const record = state.evaluations.find(e => e.batchId === batchId && e.crewId === crewId)
-      return record?.dayEvaluations?.[dayNumber] || null
-    },
-
     crewOverallStatus: (state) => (batchId, crewId) => {
       const record = state.evaluations.find(e => e.batchId === batchId && e.crewId === crewId)
       return record?.status || 'NOT_STARTED'
     },
 
-    crewAvgScore: (state) => (batchId, crewId) => {
+    /**
+     * Menghitung ringkasan perolehan skor rapor new hire (Persentase Kompeten)
+     */
+    crewCompetencySummary: (state) => (batchId, crewId) => {
       const record = state.evaluations.find(e => e.batchId === batchId && e.crewId === crewId)
-      if (!record || !record.dayEvaluations) return 0
-      const days = Object.values(record.dayEvaluations).filter(d => d.score !== undefined)
-      if (days.length === 0) return 0
-      const total = days.reduce((acc, curr) => acc + Number(curr.score || 0), 0)
-      return Math.round(total / days.length)
+      if (!record || !record.indicatorRatings) {
+        return {
+          total: 22,
+          rated: 0,
+          kompeten: 0,
+          butuhPendampingan: 0,
+          belumMenguasai: 0,
+          scorePercent: 0,
+          isCompleted: false
+        }
+      }
+
+      const ratings = Object.values(record.indicatorRatings)
+      const total = ratings.length || 22
+      const kompeten = ratings.filter(r => r === 'KOMPETEN').length
+      const butuhPendampingan = ratings.filter(r => r === 'BUTUH_PENDAMPINGAN').length
+      const belumMenguasai = ratings.filter(r => r === 'BELUM_MENGUASAI').length
+      const rated = kompeten + butuhPendampingan + belumMenguasai
+
+      // Bobot: Kompeten = 100%, Butuh Pendampingan = 60%, Belum = 20%
+      let weightedPoints = 0
+      ratings.forEach(r => {
+        if (r === 'KOMPETEN') weightedPoints += 100
+        else if (r === 'BUTUH_PENDAMPINGAN') weightedPoints += 60
+        else if (r === 'BELUM_MENGUASAI') weightedPoints += 20
+      })
+
+      const scorePercent = total > 0 ? Math.round(weightedPoints / total) : 0
+      const isCompleted = rated >= 20
+
+      return {
+        total,
+        rated,
+        kompeten,
+        butuhPendampingan,
+        belumMenguasai,
+        scorePercent,
+        isCompleted
+      }
     }
   },
 
   actions: {
-    selectDay(dayNumber) {
-      this.selectedDay = Number(dayNumber) || 1
+    selectCompetency(compId) {
+      this.selectedCompetencyId = compId || 'comp-pk'
     },
 
     /**
-     * Save or update Store Leader's day evaluation for a specific crew
+     * Menyimpan atau mengupdate evaluasi Rapor New Hire 3 Hari
      */
-    saveDayEvaluation({
+    saveBuddyEvaluation({
       batchId,
       crewId,
-      dayNumber,
-      score = 0,
-      note = '',
-      checklistResults = {},
-      evidences = [],
+      crewName = '',
+      storeTraining = '',
+      storeCaptain = '',
       evaluatorId = '',
-      evaluatorName = '',
-      storeId = '',
-      storeName = ''
+      trainingPeriod = '3 Hari Pra-Batch',
+      indicatorRatings = {},
+      recommendationNote = '',
+      status = 'IN_PROGRESS',
+      captainSigned = false,
+      crewSigned = false
     }) {
       let record = this.evaluations.find(e => e.batchId === batchId && e.crewId === crewId)
 
@@ -71,49 +104,41 @@ export const useBuddyStore = defineStore('buddy', {
           id: `beval-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
           batchId,
           crewId,
+          crewName,
+          storeTraining,
+          storeCaptain,
           evaluatorId,
-          evaluatorName,
-          storeId,
-          storeName,
-          status: 'IN_PROGRESS',
-          recommendationNote: '',
-          dayEvaluations: {}
+          trainingPeriod,
+          status,
+          recommendationNote,
+          captainSigned,
+          crewSigned,
+          indicatorRatings: {},
+          updatedAt: new Date().toISOString()
         }
         this.evaluations.push(record)
       }
 
-      if (!record.dayEvaluations) {
-        record.dayEvaluations = {}
-      }
+      record.crewName = crewName || record.crewName
+      record.storeTraining = storeTraining || record.storeTraining
+      record.storeCaptain = storeCaptain || record.storeCaptain
+      record.evaluatorId = evaluatorId || record.evaluatorId
+      record.trainingPeriod = trainingPeriod || record.trainingPeriod
+      record.indicatorRatings = { ...record.indicatorRatings, ...indicatorRatings }
+      record.recommendationNote = recommendationNote !== undefined ? recommendationNote : record.recommendationNote
+      record.status = status || record.status
+      record.captainSigned = captainSigned !== undefined ? captainSigned : record.captainSigned
+      record.crewSigned = crewSigned !== undefined ? crewSigned : record.crewSigned
+      record.updatedAt = new Date().toISOString()
 
-      record.dayEvaluations[dayNumber] = {
-        score: Number(score),
-        status: 'COMPLETED',
-        note,
-        checklistResults,
-        evidences,
-        updatedAt: new Date().toISOString()
-      }
-
-      if (evaluatorId) record.evaluatorId = evaluatorId
-      if (evaluatorName) record.evaluatorName = evaluatorName
-      if (storeId) record.storeId = storeId
-      if (storeName) record.storeName = storeName
-
-      // Check if all 3 days are completed
-      const completedDays = Object.keys(record.dayEvaluations).length
-      if (completedDays >= 3 && record.status === 'IN_PROGRESS') {
-        record.status = 'RECOMMENDED'
-      }
-
-      setStoredData('rejuve_buddy_evaluations_v1', this.evaluations)
+      setStoredData('rejuve_buddy_evaluations_v2', this.evaluations)
       return record
     },
 
     /**
-     * Update overall crew recommendation note & status
+     * Update rekomendasi Store Leader terhadap kesiapan New Hire masuk Batch
      */
-    updateCrewRecommendation(batchId, crewId, { status, recommendationNote }) {
+    updateCrewRecommendation(batchId, crewId, { status, recommendationNote, captainSigned, crewSigned }) {
       let record = this.evaluations.find(e => e.batchId === batchId && e.crewId === crewId)
       if (!record) {
         record = {
@@ -122,47 +147,43 @@ export const useBuddyStore = defineStore('buddy', {
           crewId,
           status: status || 'RECOMMENDED',
           recommendationNote: recommendationNote || '',
-          dayEvaluations: {}
+          captainSigned: captainSigned || false,
+          crewSigned: crewSigned || false,
+          indicatorRatings: {},
+          updatedAt: new Date().toISOString()
         }
         this.evaluations.push(record)
       } else {
         if (status) record.status = status
         if (recommendationNote !== undefined) record.recommendationNote = recommendationNote
+        if (captainSigned !== undefined) record.captainSigned = captainSigned
+        if (crewSigned !== undefined) record.crewSigned = crewSigned
+        record.updatedAt = new Date().toISOString()
       }
 
-      setStoredData('rejuve_buddy_evaluations_v1', this.evaluations)
+      setStoredData('rejuve_buddy_evaluations_v2', this.evaluations)
       return record
     },
 
     /**
      * Create new Buddy Template Package
      */
-    /**
-     * Create new Buddy Template Package
-     */
     createBuddyPackage(payload) {
       const id = `pkg-buddy-${Date.now()}`
-      const totalDays = Number(payload.totalDays) || 3
-      
-      const defaultDays = Array.from({ length: totalDays }, (_, i) => ({
-        dayNumber: i + 1,
-        offsetDays: totalDays - i,
-        title: `Hari ${i + 1} (H-${totalDays - i}): Modul Pendampingan`,
-        focus: 'Standar Operasional & Kesiapan',
-        missions: []
-      }))
+      const basePkg = this.defaultPackage
+      const defaultComps = basePkg?.competencies ? JSON.parse(JSON.stringify(basePkg.competencies)) : []
 
       const newPkg = {
         id,
         name: payload.name,
         code: payload.code || `BUDDY-${String(this.packages.length + 1).padStart(2, '0')}`,
-        totalDays,
+        durationDays: 3,
         description: payload.description || '',
-        days: payload.days && payload.days.length > 0 ? payload.days : defaultDays
+        competencies: payload.competencies && payload.competencies.length > 0 ? payload.competencies : defaultComps
       }
 
       this.packages.push(newPkg)
-      setStoredData('rejuve_buddy_packages_v1', this.packages)
+      setStoredData('rejuve_buddy_packages_v2', this.packages)
       return newPkg
     },
 
@@ -182,88 +203,89 @@ export const useBuddyStore = defineStore('buddy', {
       }
 
       this.packages.push(duplicated)
-      setStoredData('rejuve_buddy_packages_v1', this.packages)
+      setStoredData('rejuve_buddy_packages_v2', this.packages)
       return duplicated
     },
 
     /**
-     * Add new mission item to a specific day in Buddy Package
+     * Tambah Butir Indikator ke Kompetensi tertentu dalam Paket Buddy
      */
-    addMissionToBuddyDay(pkgId, dayNumber, missionPayload) {
+    addIndicatorToCompetency(pkgId, compId, indicatorPayload) {
       const pkg = this.packageById(pkgId)
-      if (!pkg) return null
+      if (!pkg || !pkg.competencies) return null
 
-      const dayObj = pkg.days.find(d => d.dayNumber === Number(dayNumber))
-      if (!dayObj) return null
+      const comp = pkg.competencies.find(c => c.id === compId)
+      if (!comp) return null
 
-      const newMission = {
-        id: `bm-${Date.now()}-${Math.random().toString(36).substr(2, 3)}`,
-        title: missionPayload.title,
-        description: missionPayload.description || '',
-        checklist: missionPayload.checklist || []
+      const newIndicator = {
+        id: `ind-${Date.now()}-${Math.random().toString(36).substr(2, 3)}`,
+        name: indicatorPayload.name,
+        isStar: !!indicatorPayload.isStar,
+        note: indicatorPayload.note || (indicatorPayload.isStar ? 'Wajib pembekalan, dimaklumi bila belum praktik langsung' : ''),
+        description: indicatorPayload.description || ''
       }
 
-      dayObj.missions.push(newMission)
-      setStoredData('rejuve_buddy_packages_v1', this.packages)
-      return newMission
+      comp.indicators.push(newIndicator)
+      setStoredData('rejuve_buddy_packages_v2', this.packages)
+      return newIndicator
     },
 
     /**
-     * Update mission item in Buddy Day
+     * Update Butir Indikator dalam Kompetensi
      */
-    updateMissionInBuddyDay(pkgId, dayNumber, missionId, missionPayload) {
+    updateIndicator(pkgId, compId, indicatorId, indicatorPayload) {
       const pkg = this.packageById(pkgId)
-      if (!pkg) return null
+      if (!pkg || !pkg.competencies) return null
 
-      const dayObj = pkg.days.find(d => d.dayNumber === Number(dayNumber))
-      if (!dayObj) return null
+      const comp = pkg.competencies.find(c => c.id === compId)
+      if (!comp) return null
 
-      const mIdx = dayObj.missions.findIndex(m => m.id === missionId)
-      if (mIdx === -1) return null
+      const ind = comp.indicators.find(i => i.id === indicatorId)
+      if (!ind) return null
 
-      Object.assign(dayObj.missions[mIdx], missionPayload)
-      setStoredData('rejuve_buddy_packages_v1', this.packages)
-      return dayObj.missions[mIdx]
+      Object.assign(ind, indicatorPayload)
+      setStoredData('rejuve_buddy_packages_v2', this.packages)
+      return ind
     },
 
     /**
-     * Remove mission item from Buddy Day
+     * Hapus Butir Indikator dari Kompetensi
      */
-    removeMissionFromBuddyDay(pkgId, dayNumber, missionId) {
+    removeIndicator(pkgId, compId, indicatorId) {
       const pkg = this.packageById(pkgId)
-      if (!pkg) return false
+      if (!pkg || !pkg.competencies) return false
 
-      const dayObj = pkg.days.find(d => d.dayNumber === Number(dayNumber))
-      if (!dayObj) return false
+      const comp = pkg.competencies.find(c => c.id === compId)
+      if (!comp) return false
 
-      const mIdx = dayObj.missions.findIndex(m => m.id === missionId)
-      if (mIdx !== -1) {
-        dayObj.missions.splice(mIdx, 1)
-        setStoredData('rejuve_buddy_packages_v1', this.packages)
+      const idx = comp.indicators.findIndex(i => i.id === indicatorId)
+      if (idx !== -1) {
+        comp.indicators.splice(idx, 1)
+        setStoredData('rejuve_buddy_packages_v2', this.packages)
         return true
       }
       return false
     },
 
     /**
-     * Update existing Buddy Template Package
+     * Update Paket Buddy
      */
     updateBuddyPackage(id, payload) {
       const pkg = this.packages.find(p => p.id === id)
       if (!pkg) return null
       Object.assign(pkg, payload)
-      setStoredData('rejuve_buddy_packages_v1', this.packages)
+      setStoredData('rejuve_buddy_packages_v2', this.packages)
       return pkg
     },
 
     /**
-     * Delete Buddy Template Package
+     * Hapus Paket Buddy
      */
     deleteBuddyPackage(id) {
       const idx = this.packages.findIndex(p => p.id === id)
       if (idx !== -1) {
         const removed = this.packages.splice(idx, 1)[0]
-        setStoredData('rejuve_buddy_packages_v1', this.packages)
+        setStoredData('rejuve_buddy_packages_v2', this.packages)
         return removed
       }
       return null

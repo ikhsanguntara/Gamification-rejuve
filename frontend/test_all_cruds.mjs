@@ -275,42 +275,62 @@ console.log('📌 7. Menguji CRUD Program Misi Buddy (Pre-Batch 3 Hari):')
 import { useBuddyStore } from './stores/buddy.js'
 const buddyStore = useBuddyStore()
 
-// 7.1 READ BUDDY TEMPLATES
+// 7.1 READ BUDDY TEMPLATES (RAPOR NEW HIRE 7 KOMPETENSI)
 const defaultBuddy = buddyStore.defaultPackage
-assert(defaultBuddy && defaultBuddy.totalDays === 3 && defaultBuddy.days.length === 3, 'Read Buddy Template: Berhasil memuat paket master Buddy 3 Hari')
+assert(defaultBuddy && defaultBuddy.competencies?.length === 7, 'Read Buddy Template: Berhasil memuat paket master Rapor New Hire 7 Kompetensi')
 
-// 7.2 CREATE BUDDY EVALUATION (STORE LEADER MENTORING)
-const initialBuddyEval = buddyStore.saveDayEvaluation({
+// 7.2 CREATE BUDDY EVALUATION (STORE LEADER RAPOR ASSESSMENT)
+const initialBuddyEval = buddyStore.saveBuddyEvaluation({
   batchId: 'batch-alpha',
   crewId: 'crew-005',
-  dayNumber: 1,
-  score: 95,
-  note: 'Orientasi #CleanLabel dan grooming sangat rapi',
-  checklistResults: { 'bm-d1-01': true, 'bm-d1-02': true, 'bm-d1-03': true },
-  evaluatorId: 'sl-001',
-  evaluatorName: 'Budi Santoso (Store Leader)'
+  crewName: 'Rudi Hermawan',
+  storeTraining: 'Re.juve Grand Indonesia',
+  storeCaptain: 'Budi Santoso (Store Leader)',
+  trainingPeriod: '1 - 3 September 2026',
+  indicatorRatings: {
+    'ind-pk-01': 'KOMPETEN',
+    'ind-pk-02': 'KOMPETEN',
+    'ind-cs-01': 'KOMPETEN',
+    'ind-co-01': 'BUTUH_PENDAMPINGAN'
+  },
+  recommendationNote: 'Rudi menunjukkan kedisiplinan dan penguasaan #CleanLabel yang baik.',
+  status: 'IN_PROGRESS',
+  captainSigned: true,
+  crewSigned: true
 })
-assert(initialBuddyEval && initialBuddyEval.dayEvaluations[1]?.score === 95, 'Create Buddy Eval: Store Leader berhasil menyimpan evaluasi Hari 1')
+assert(initialBuddyEval && initialBuddyEval.indicatorRatings['ind-pk-01'] === 'KOMPETEN', 'Create Buddy Eval: Store Leader berhasil menyimpan evaluasi Rapor New Hire')
 
 // 7.3 UPDATE & RECOMMEND CREW
 buddyStore.updateCrewRecommendation('batch-alpha', 'crew-005', {
   status: 'RECOMMENDED',
-  recommendationNote: 'Kru sangat kompeten dan siap masuk Batch 1.'
+  recommendationNote: 'Kru sangat kompeten dan siap 100% masuk kompetisi Batch 1.',
+  captainSigned: true,
+  crewSigned: true
 })
 const updatedBuddyRecord = buddyStore.evaluationForCrew('batch-alpha', 'crew-005')
 assert(updatedBuddyRecord && updatedBuddyRecord.status === 'RECOMMENDED', 'Update Buddy Recommendation: Kru berhasil direkomendasikan masuk Batch')
 
 // 7.4 CREATE BUDDY PACKAGE
 const newBuddyPkg = buddyStore.createBuddyPackage({
-  name: 'Paket Buddy Flagship Intensif (3 Hari)',
-  totalDays: 3,
-  description: 'Program akselerasi pendampingan 3 hari untuk gerai flagship.'
+  name: 'Rapor Pendampingan Gerai Bandara',
+  code: 'BUDDY-AIRPORT',
+  description: 'Program akselerasi pendampingan 3 hari untuk gerai bandara.'
 })
-assert(newBuddyPkg && newBuddyPkg.id && buddyStore.packageById(newBuddyPkg.id) !== undefined, 'Create Buddy Package: Berhasil membuat paket template Buddy baru')
+assert(newBuddyPkg && newBuddyPkg.id && buddyStore.packageById(newBuddyPkg.id) !== undefined, 'Create Buddy Package: Berhasil membuat paket template Rapor baru')
 
-// 7.5 DELETE BUDDY PACKAGE
+// 7.5 ADD & REMOVE INDICATOR TO COMPETENCY
+const addedInd = buddyStore.addIndicatorToCompetency(newBuddyPkg.id, 'comp-pk', {
+  name: 'Menjelaskan sertifikasi halal Re.juve',
+  isStar: false,
+  description: 'Mengetahui status halal grade A.'
+})
+assert(addedInd && addedInd.id, 'Add Indicator: Berhasil menambahkan indikator ke kompetensi Product Knowledge')
+
+buddyStore.removeIndicator(newBuddyPkg.id, 'comp-pk', addedInd.id)
+
+// 7.6 DELETE BUDDY PACKAGE
 buddyStore.deleteBuddyPackage(newBuddyPkg.id)
-assert(buddyStore.packageById(newBuddyPkg.id) === undefined, 'Delete Buddy Package: Berhasil menghapus paket template Buddy')
+assert(buddyStore.packageById(newBuddyPkg.id) === undefined, 'Delete Buddy Package: Berhasil menghapus paket template Rapor')
 
 console.log('')
 

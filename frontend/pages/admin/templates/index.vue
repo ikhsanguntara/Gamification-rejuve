@@ -347,13 +347,13 @@
 
     </div>
 
-    <!-- 2-Column Workspace for BUDDY TEMPLATES (Pre-Batch 3 Hari) -->
+    <!-- 2-Column Workspace for BUDDY TEMPLATES (Rapor New Hire 3 Hari) -->
     <div v-else-if="activeCatalogCategory === 'BUDDY'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Sisi Kiri: Daftar Paket Template Buddy -->
       <div class="lg:col-span-4 space-y-3">
         <div class="flex items-center justify-between px-1">
           <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            Daftar Template Buddy ({{ buddyStore.allPackages.length }})
+            Daftar Template Rapor New Hire ({{ buddyStore.allPackages.length }})
           </h3>
           <button
             type="button"
@@ -381,7 +381,7 @@
                 {{ bpkg.code }}
               </span>
               <span class="text-[10px] text-slate-400 font-semibold">
-                {{ bpkg.totalDays }} Hari Pra-Batch
+                7 Kompetensi • 3 Hari
               </span>
             </div>
 
@@ -393,12 +393,12 @@
             </p>
 
             <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
-              <span class="text-slate-400 font-medium">🤝 Pendampingan SL</span>
+              <span class="text-slate-400 font-medium">📋 Rapor 22 Indikator</span>
               <div class="flex items-center gap-1">
                 <button
                   type="button"
                   @click.stop="duplicateBuddyPkg(bpkg.id)"
-                  title="Duplikat Paket Buddy"
+                  title="Duplikat Paket Rapor"
                   class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
                 >
                   <Copy class="w-3 h-3" />
@@ -407,7 +407,7 @@
                   v-if="buddyStore.allPackages.length > 1"
                   type="button"
                   @click.stop="confirmDeleteBuddyPkg(bpkg)"
-                  title="Hapus Paket Buddy"
+                  title="Hapus Paket Rapor"
                   class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"
                 >
                   <Trash2 class="w-3 h-3" />
@@ -418,7 +418,7 @@
         </div>
       </div>
 
-      <!-- Sisi Kanan: Detail Modul & Butir Misi SOP Buddy -->
+      <!-- Sisi Kanan: Detail 7 Pilar Kompetensi & Butir Indikator Rapor New Hire -->
       <div class="lg:col-span-8">
         <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
@@ -438,69 +438,76 @@
             
             <button
               type="button"
-              @click="openAddBuddyMissionModal()"
+              @click="openAddBuddyIndicatorModal()"
               class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
             >
               <Plus class="w-3.5 h-3.5" />
-              <span>Tambah Butir SOP</span>
+              <span>Tambah Indikator</span>
             </button>
           </div>
 
-          <!-- 3-Day Modules List with Interactive CRUD on each Day -->
+          <!-- 7 Competency Categories with Interactive CRUD on each Indicator -->
           <div class="space-y-4">
             <div
-              v-for="bday in activeBuddyPkg?.days"
-              :key="bday.dayNumber"
+              v-for="comp in activeBuddyPkg?.competencies"
+              :key="comp.id"
               class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-3"
             >
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <span class="text-xs font-bold text-purple-700 dark:text-purple-300">
-                    HARI {{ bday.dayNumber }} (H-{{ bday.offsetDays }})
-                  </span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
                   <span class="text-xs font-bold text-slate-900 dark:text-white">
-                    — {{ bday.title }}
+                    {{ comp.name }}
                   </span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                    Fokus: {{ bday.focus }}
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300">
+                    {{ comp.indicators?.length || 0 }} Indikator
                   </span>
                   <button
                     type="button"
-                    @click="openAddBuddyMissionModal(bday.dayNumber)"
+                    @click="openAddBuddyIndicatorModal(comp.id)"
                     class="text-[11px] text-purple-600 hover:underline font-bold cursor-pointer"
                   >
-                    + Butir SOP
+                    + Butir Indikator
                   </button>
                 </div>
               </div>
 
-              <!-- Missions in Day -->
+              <!-- Indicators List in this Competency -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div
-                  v-for="bm in bday.missions"
-                  :key="bm.id"
-                  class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs space-y-2 relative group"
+                  v-for="ind in comp.indicators"
+                  :key="ind.id"
+                  class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1.5 relative group"
                 >
                   <div class="flex items-start justify-between gap-2">
-                    <h5 class="font-bold text-slate-900 dark:text-white line-clamp-1">
-                      {{ bm.title }}
-                    </h5>
-                    <div class="flex items-center gap-1 opacity-80 group-hover:opacity-100">
+                    <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                      <h5 class="font-bold text-slate-900 dark:text-white line-clamp-1">
+                        {{ ind.name }}
+                      </h5>
+                      <span
+                        v-if="ind.isStar"
+                        class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex-shrink-0"
+                      >
+                        * Wajib Pembekalan
+                      </span>
+                    </div>
+
+                    <div class="flex items-center gap-1 opacity-80 group-hover:opacity-100 flex-shrink-0">
                       <button
                         type="button"
-                        @click="openEditBuddyMissionModal(bday.dayNumber, bm)"
+                        @click="openEditBuddyIndicatorModal(comp.id, ind)"
                         class="p-1 text-slate-400 hover:text-purple-600 cursor-pointer"
-                        title="Edit Butir"
+                        title="Edit Indikator"
                       >
                         <Settings class="w-3 h-3" />
                       </button>
                       <button
                         type="button"
-                        @click="removeBuddyMission(bday.dayNumber, bm.id)"
+                        @click="removeBuddyIndicator(comp.id, ind.id)"
                         class="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                        title="Hapus Butir"
+                        title="Hapus Indikator"
                       >
                         <Trash2 class="w-3 h-3" />
                       </button>
@@ -508,25 +515,16 @@
                   </div>
 
                   <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
-                    {{ bm.description }}
+                    {{ ind.description }}
                   </p>
-
-                  <div class="pt-1 border-t border-slate-100 dark:border-slate-800 space-y-0.5">
-                    <span class="text-[9px] font-bold text-slate-400 uppercase">Checklist SOP:</span>
-                    <ul class="text-[10px] text-slate-600 dark:text-slate-400 list-disc list-inside space-y-0.5">
-                      <li v-for="(chk, chkIdx) in bm.checklist" :key="chkIdx">
-                        {{ chk }}
-                      </li>
-                    </ul>
-                  </div>
                 </div>
               </div>
 
               <div
-                v-if="bday.missions.length === 0"
-                class="py-6 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-700 rounded-xl"
+                v-if="!comp.indicators || comp.indicators.length === 0"
+                class="py-4 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-700 rounded-xl"
               >
-                Belum ada butir SOP di Hari {{ bday.dayNumber }}. Klik "+ Butir SOP" untuk menambahkan.
+                Belum ada butir indikator di kompetensi {{ comp.name }}.
               </div>
             </div>
           </div>
@@ -985,50 +983,35 @@
       </form>
     </BaseModal>
 
-    <!-- MODAL 4: BUAT PAKET BUDDY BARU (CRUD) -->
+    <!-- MODAL 4: BUAT PAKET RAPOR NEW HIRE BARU (CRUD) -->
     <BaseModal
       :modelValue="showCreateBuddyPackageModal"
-      title="Buat Paket Template Buddy Baru"
-      subtitle="Definisikan kurikulum orientasi & pendampingan Store Leader pra-batch"
+      title="Buat Paket Template Rapor New Hire Baru"
+      subtitle="Definisikan standar kurikulum orientasi & rapor pendampingan 3 hari"
       max-width="sm"
       @update:modelValue="showCreateBuddyPackageModal = $event"
       @close="showCreateBuddyPackageModal = false"
     >
       <form @submit.prevent="executeCreateBuddyPackage" class="space-y-3 py-2">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Paket Buddy *</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Paket Rapor *</label>
           <input
             v-model="newBuddyPkgForm.name"
             type="text"
             required
-            placeholder="Contoh: Paket Buddy Gerai Bandara (3 Hari)"
+            placeholder="Contoh: Rapor Pendampingan New Hire (3 Hari)"
             class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
           />
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Paket</label>
-            <input
-              v-model="newBuddyPkgForm.code"
-              type="text"
-              placeholder="BUDDY-03"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
-            />
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jumlah Hari Pra-Batch</label>
-            <select
-              v-model.number="newBuddyPkgForm.totalDays"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 cursor-pointer font-bold"
-            >
-              <option :value="2">2 Hari (H-2 s/d H-1)</option>
-              <option :value="3">3 Hari (H-3 s/d H-1)</option>
-              <option :value="4">4 Hari (H-4 s/d H-1)</option>
-              <option :value="5">5 Hari (H-5 s/d H-1)</option>
-            </select>
-          </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Paket</label>
+          <input
+            v-model="newBuddyPkgForm.code"
+            type="text"
+            placeholder="BUDDY-03"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
+          />
         </div>
 
         <div>
@@ -1036,7 +1019,7 @@
           <textarea
             v-model="newBuddyPkgForm.description"
             rows="2"
-            placeholder="Penjelasan ringkas fokus pendampingan Store Leader..."
+            placeholder="Penjelasan ringkas fokus pendampingan 3 hari pra-batch..."
             class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 resize-none"
           ></textarea>
         </div>
@@ -1053,74 +1036,73 @@
             type="submit"
             class="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20 active:scale-95 cursor-pointer"
           >
-            Simpan Paket Buddy
+            Simpan Paket
           </button>
         </div>
       </form>
     </BaseModal>
 
-    <!-- MODAL 5: TAMBAH / EDIT BUTIR SOP BUDDY (CRUD) -->
+    <!-- MODAL 5: TAMBAH / EDIT BUTIR INDIKATOR RAPOR (CRUD) -->
     <BaseModal
       :modelValue="showAddBuddyMissionModal"
-      :title="isEditingBuddyMission ? 'Edit Butir SOP Buddy' : 'Tambah Butir SOP Buddy'"
-      :subtitle="`Paket ${activeBuddyPkg?.name} — Hari ${newBuddyMissionForm.dayNumber}`"
+      :title="isEditingBuddyMission ? 'Edit Indikator Penilaian' : 'Tambah Indikator Penilaian'"
+      :subtitle="`Paket ${activeBuddyPkg?.name}`"
       max-width="md"
       @update:modelValue="showAddBuddyMissionModal = $event"
       @close="showAddBuddyMissionModal = false"
     >
-      <form @submit.prevent="executeSaveBuddyMission" class="space-y-3 py-2">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Pilih Hari Pendampingan *
-            </label>
-            <select
-              v-model="newBuddyMissionForm.dayNumber"
-              required
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 cursor-pointer font-bold"
+      <form @submit.prevent="executeSaveBuddyIndicator" class="space-y-3 py-2">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Pilih Kategori Kompetensi *
+          </label>
+          <select
+            v-model="newBuddyIndicatorForm.competencyId"
+            required
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 cursor-pointer font-bold"
+          >
+            <option
+              v-for="comp in activeBuddyPkg?.competencies"
+              :key="comp.id"
+              :value="comp.id"
             >
-              <option
-                v-for="bday in activeBuddyPkg?.days"
-                :key="bday.dayNumber"
-                :value="bday.dayNumber"
-              >
-                Hari {{ bday.dayNumber }} (H-{{ bday.offsetDays }})
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Judul Butir SOP *</label>
-            <input
-              v-model="newBuddyMissionForm.title"
-              type="text"
-              required
-              placeholder="Contoh: Edukasi Filosofi #CleanLabel"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
-            />
-          </div>
+              {{ comp.name }}
+            </option>
+          </select>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi / Instruksi Observasi</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Indikator Penilaian *</label>
+          <input
+            v-model="newBuddyIndicatorForm.name"
+            type="text"
+            required
+            placeholder="Contoh: Menjelaskan produk & ingredients*"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi / Panduan Evaluator</label>
           <textarea
-            v-model="newBuddyMissionForm.description"
+            v-model="newBuddyIndicatorForm.description"
             rows="2"
-            placeholder="Panduan bagi Store Leader dalam menilai kesiapan kru..."
+            placeholder="Kriteria yang dinilai oleh Store Captain saat observasi 3 hari..."
             class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 resize-none"
           ></textarea>
         </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            Daftar Checklist Observasi (1 baris per poin)
+        <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/40">
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <input
+              type="checkbox"
+              v-model="newBuddyIndicatorForm.isStar"
+              class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 accent-purple-600"
+            />
+            <span class="font-bold text-slate-800 dark:text-slate-200">
+              Tandai Bintang (*) — Wajib Pembekalan (Dimaklumi bila belum praktik langsung)
+            </span>
           </label>
-          <textarea
-            v-model="newBuddyMissionForm.requirementsText"
-            rows="3"
-            placeholder="Memahami standar seragam dan hairnet&#10;Mampu menjelaskan konsep #CleanLabel tanpa air gula"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 resize-none"
-          ></textarea>
         </div>
 
         <div class="pt-3 flex items-center justify-end gap-3">
@@ -1135,7 +1117,7 @@
             type="submit"
             class="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20 active:scale-95 cursor-pointer"
           >
-            {{ isEditingBuddyMission ? 'Simpan Perubahan' : 'Tambah Butir SOP' }}
+            {{ isEditingBuddyMission ? 'Simpan Perubahan' : 'Tambah Indikator' }}
           </button>
         </div>
       </form>
@@ -1400,19 +1382,18 @@ const newMissionForm = ref({
   requirementsText: ''
 })
 
-// Buddy Template Forms
+// Buddy Template Forms (Rapor New Hire)
 const newBuddyPkgForm = ref({
   name: '',
   code: '',
-  totalDays: 3,
   description: ''
 })
 
-const newBuddyMissionForm = ref({
-  dayNumber: 1,
-  title: '',
-  description: '',
-  requirementsText: ''
+const newBuddyIndicatorForm = ref({
+  competencyId: 'comp-pk',
+  name: '',
+  isStar: false,
+  description: ''
 })
 
 const openCreatePackageModal = () => {
@@ -1501,13 +1482,12 @@ const executeApplyPackage = () => {
 }
 
 // ==========================================
-// BUDDY TEMPLATE CRUD HANDLERS
+// BUDDY TEMPLATE CRUD HANDLERS (RAPOR NEW HIRE)
 // ==========================================
 const openCreateBuddyPackageModal = () => {
   newBuddyPkgForm.value = {
     name: '',
     code: `BUDDY-${String(buddyStore.allPackages.length + 1).padStart(2, '0')}`,
-    totalDays: 3,
     description: ''
   }
   showCreateBuddyPackageModal.value = true
@@ -1517,89 +1497,85 @@ const executeCreateBuddyPackage = () => {
   const created = buddyStore.createBuddyPackage(newBuddyPkgForm.value)
   showCreateBuddyPackageModal.value = false
   selectedBuddyPkgId.value = created.id
-  toast.success('Paket Buddy Dibuat', `Paket "${created.name}" (${created.totalDays} Hari Pra-Batch) siap digunakan.`)
+  toast.success('Paket Rapor Dibuat', `Paket "${created.name}" siap digunakan.`)
 }
 
 const duplicateBuddyPkg = (pkgId) => {
   const dup = buddyStore.duplicateBuddyPackage(pkgId)
   if (dup) {
     selectedBuddyPkgId.value = dup.id
-    toast.success('Paket Buddy Diduplikasi', `Salinan "${dup.name}" berhasil dibuat.`)
+    toast.success('Paket Rapor Diduplikasi', `Salinan "${dup.name}" berhasil dibuat.`)
   }
 }
 
 const confirmDeleteBuddyPkg = (bpkg) => {
-  if (confirm(`Hapus paket template Buddy "${bpkg.name}"?`)) {
+  if (confirm(`Hapus paket template Rapor New Hire "${bpkg.name}"?`)) {
     buddyStore.deleteBuddyPackage(bpkg.id)
     selectedBuddyPkgId.value = buddyStore.defaultPackage?.id || ''
-    toast.info('Paket Buddy Dihapus', `Paket "${bpkg.name}" telah dihapus.`)
+    toast.info('Paket Rapor Dihapus', `Paket "${bpkg.name}" telah dihapus.`)
   }
 }
 
-const openAddBuddyMissionModal = (dayNum = 1) => {
+const openAddBuddyIndicatorModal = (compId = 'comp-pk') => {
   isEditingBuddyMission.value = false
   editingBuddyMissionId.value = ''
-  newBuddyMissionForm.value = {
-    dayNumber: dayNum,
-    title: '',
-    description: '',
-    requirementsText: ''
+  newBuddyIndicatorForm.value = {
+    competencyId: compId || activeBuddyPkg.value?.competencies?.[0]?.id || 'comp-pk',
+    name: '',
+    isStar: false,
+    description: ''
   }
   showAddBuddyMissionModal.value = true
 }
 
-const openEditBuddyMissionModal = (dayNum, mission) => {
+const openEditBuddyIndicatorModal = (compId, ind) => {
   isEditingBuddyMission.value = true
-  editingBuddyMissionId.value = mission.id
-  newBuddyMissionForm.value = {
-    dayNumber: dayNum,
-    title: mission.title,
-    description: mission.description,
-    requirementsText: (mission.checklist || []).join('\n')
+  editingBuddyMissionId.value = ind.id
+  newBuddyIndicatorForm.value = {
+    competencyId: compId,
+    name: ind.name,
+    isStar: !!ind.isStar,
+    description: ind.description || ''
   }
   showAddBuddyMissionModal.value = true
 }
 
-const executeSaveBuddyMission = () => {
+const executeSaveBuddyIndicator = () => {
   if (!activeBuddyPkg.value) return
-  const checkList = newBuddyMissionForm.value.requirementsText
-    .split('\n')
-    .map(s => s.trim())
-    .filter(Boolean)
 
   if (isEditingBuddyMission.value) {
-    buddyStore.updateMissionInBuddyDay(
+    buddyStore.updateIndicator(
       activeBuddyPkg.value.id,
-      newBuddyMissionForm.value.dayNumber,
+      newBuddyIndicatorForm.value.competencyId,
       editingBuddyMissionId.value,
       {
-        title: newBuddyMissionForm.value.title,
-        description: newBuddyMissionForm.value.description,
-        checklist: checkList.length > 0 ? checkList : ['Pemeriksaan kesiapan dasar kru']
+        name: newBuddyIndicatorForm.value.name,
+        isStar: newBuddyIndicatorForm.value.isStar,
+        description: newBuddyIndicatorForm.value.description
       }
     )
-    toast.success('Butir SOP Buddy Diperbarui', `Perubahan butir SOP "${newBuddyMissionForm.value.title}" tersimpan.`)
+    toast.success('Indikator Diperbarui', `Perubahan indikator "${newBuddyIndicatorForm.value.name}" tersimpan.`)
   } else {
-    buddyStore.addMissionToBuddyDay(
+    buddyStore.addIndicatorToCompetency(
       activeBuddyPkg.value.id,
-      newBuddyMissionForm.value.dayNumber,
+      newBuddyIndicatorForm.value.competencyId,
       {
-        title: newBuddyMissionForm.value.title,
-        description: newBuddyMissionForm.value.description,
-        checklist: checkList.length > 0 ? checkList : ['Pemeriksaan kesiapan dasar kru']
+        name: newBuddyIndicatorForm.value.name,
+        isStar: newBuddyIndicatorForm.value.isStar,
+        description: newBuddyIndicatorForm.value.description
       }
     )
-    toast.success('Butir SOP Buddy Ditambahkan', `Butir "${newBuddyMissionForm.value.title}" ditambahkan ke Hari ${newBuddyMissionForm.value.dayNumber}.`)
+    toast.success('Indikator Ditambahkan', `Indikator "${newBuddyIndicatorForm.value.name}" berhasil ditambahkan.`)
   }
 
   showAddBuddyMissionModal.value = false
 }
 
-const removeBuddyMission = (dayNum, missionId) => {
+const removeBuddyIndicator = (compId, indId) => {
   if (!activeBuddyPkg.value) return
-  if (confirm('Hapus butir SOP Buddy ini?')) {
-    buddyStore.removeMissionFromBuddyDay(activeBuddyPkg.value.id, dayNum, missionId)
-    toast.info('Butir SOP Buddy Dihapus', 'Butir telah dihapus dari paket.')
+  if (confirm('Hapus indikator penilaian ini?')) {
+    buddyStore.removeIndicator(activeBuddyPkg.value.id, compId, indId)
+    toast.info('Indikator Dihapus', 'Indikator telah dihapus dari paket.')
   }
 }
 
