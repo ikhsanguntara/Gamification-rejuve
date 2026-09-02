@@ -8,13 +8,22 @@ import { useUserStore } from './user.js'
 import { calculateStars } from '../utils/star.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 
+function loadSafeApprovals() {
+  const data = getStoredData('rejuve_approvals_v4', mockApprovals)
+  if (!Array.isArray(data) || data.length === 0) {
+    setStoredData('rejuve_approvals_v4', mockApprovals)
+    return JSON.parse(JSON.stringify(mockApprovals))
+  }
+  return data
+}
+
 /**
  * Approval Store: District Manager Review Workspace (Approve with Option to Adjust Score)
  */
 
 export const useApprovalStore = defineStore('approval', {
   state: () => ({
-    approvals: getStoredData('rejuve_approvals_v3', mockApprovals),
+    approvals: loadSafeApprovals(),
     activities: [
       {
         id: 'act-1',
@@ -31,21 +40,23 @@ export const useApprovalStore = defineStore('approval', {
 
   getters: {
     userApprovals: (state) => {
+      const all = state.approvals || []
       const userStore = useUserStore()
-      if (userStore.isSuperadmin) return state.approvals
+      if (userStore.isSuperadmin) return all
       if (userStore.isHead || userStore.isDistrictManager) {
         const batchStore = useBatchStore()
-        const myBatchIds = batchStore.accessibleBatches.map(b => b.id)
-        return state.approvals.filter(a => myBatchIds.includes(a.batchId))
+        const myBatchIds = (batchStore.accessibleBatches || []).map(b => b.id)
+        const filtered = all.filter(a => myBatchIds.includes(a.batchId))
+        return filtered.length > 0 ? filtered : all
       }
-      return state.approvals
+      return all
     },
-    allApprovals: (state) => state.userApprovals,
-    allActivities: (state) => state.activities,
-    pendingApprovals: (state) => state.userApprovals.filter(a => a.status === 'PENDING_REVIEW'),
-    approvedItems: (state) => state.userApprovals.filter(a => a.status === 'APPROVED'),
-    revisionRequiredItems: (state) => state.userApprovals.filter(a => a.status === 'REVISION_REQUIRED'),
-    approvalById: (state) => (id) => state.approvals.find(a => a.id === id)
+    allApprovals: (state) => state.userApprovals || [],
+    allActivities: (state) => state.activities || [],
+    pendingApprovals: (state) => (state.userApprovals || []).filter(a => a.status === 'PENDING_REVIEW'),
+    approvedItems: (state) => (state.userApprovals || []).filter(a => a.status === 'APPROVED'),
+    revisionRequiredItems: (state) => (state.userApprovals || []).filter(a => a.status === 'REVISION_REQUIRED'),
+    approvalById: (state) => (id) => (state.approvals || []).find(a => a.id === id)
   },
 
   actions: {
@@ -150,7 +161,7 @@ export const useApprovalStore = defineStore('approval', {
         badge: `+${totalStarsAwardedAll} Bintang`
       })
 
-      setStoredData('rejuve_approvals_v3', this.approvals)
+      setStoredData('rejuve_approvals_v4', this.approvals)
       return {
         success: true,
         awardedStars,
@@ -183,7 +194,7 @@ export const useApprovalStore = defineStore('approval', {
         }
       })
 
-      setStoredData('rejuve_approvals_v3', this.approvals)
+      setStoredData('rejuve_approvals_v4', this.approvals)
       return {
         success: true,
         approvedCount,
@@ -239,7 +250,7 @@ export const useApprovalStore = defineStore('approval', {
         badge: 'Revision Required'
       })
 
-      setStoredData('rejuve_approvals_v3', this.approvals)
+      setStoredData('rejuve_approvals_v4', this.approvals)
       return {
         success: true,
         missionTitle: item.missionTitle
@@ -306,7 +317,7 @@ export const useApprovalStore = defineStore('approval', {
         }
       })
 
-      setStoredData('rejuve_approvals_v3', this.approvals)
+      setStoredData('rejuve_approvals_v4', this.approvals)
     }
   }
 })

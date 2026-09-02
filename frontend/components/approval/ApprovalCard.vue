@@ -129,9 +129,9 @@
             class="group relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 aspect-video bg-slate-100 dark:bg-slate-800 cursor-pointer shadow-2xs hover:ring-2 hover:ring-[#831843] transition-all"
             title="Klik untuk memperbesar foto bukti"
           >
-            <img :src="ev.url" :alt="ev.caption" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+            <img :src="getEvidenceUrl(ev)" :alt="getEvidenceCaption(ev)" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
             <div class="absolute inset-0 bg-slate-950/60 flex items-end justify-between p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-              <span class="text-[10px] text-white truncate">{{ ev.caption || 'Foto Bukti' }}</span>
+              <span class="text-[10px] text-white truncate">{{ getEvidenceCaption(ev) }}</span>
               <Eye class="w-3 h-3 text-white flex-shrink-0" />
             </div>
           </div>
@@ -170,7 +170,7 @@
     <!-- Image Preview Lightbox Modal -->
     <BaseModal
       :model-value="!!previewImage"
-      :title="previewImage?.caption || 'Foto Bukti Lapangan SOP'"
+      :title="getEvidenceCaption(previewImage)"
       max-width="2xl"
       @update:model-value="previewImage = null"
       @close="previewImage = null"
@@ -184,14 +184,14 @@
       <div v-if="previewImage" class="space-y-3 py-2">
         <div class="rounded-2xl overflow-hidden bg-slate-950/5 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center p-2">
           <img
-            :src="previewImage.url"
-            :alt="previewImage.caption"
+            :src="getEvidenceUrl(previewImage)"
+            :alt="getEvidenceCaption(previewImage)"
             class="max-h-[60vh] w-auto max-w-full object-contain rounded-xl shadow-md"
           />
         </div>
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
           <span class="font-semibold text-slate-800 dark:text-slate-200">
-            📄 {{ previewImage.caption || 'Foto Bukti Pemeriksaan Gerai' }}
+            📄 {{ getEvidenceCaption(previewImage) }}
           </span>
           <span class="text-slate-400 text-[11px]">
             Kru: {{ item.crewName }} ({{ item.missionCode }})
@@ -247,5 +247,17 @@ const previewImage = ref(null)
 function getInitials(name) {
   if (!name) return 'CR'
   return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+}
+
+function getEvidenceUrl(ev) {
+  if (!ev) return ''
+  if (typeof ev === 'string') return ev
+  return ev.url || ''
+}
+
+function getEvidenceCaption(ev) {
+  if (!ev) return 'Foto Bukti'
+  if (typeof ev === 'string') return 'Foto Bukti Lapangan SOP'
+  return ev.caption || 'Foto Bukti'
 }
 </script>
