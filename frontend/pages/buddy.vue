@@ -225,14 +225,14 @@
                   </h4>
                 </div>
                 <span class="text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2.5 py-0.5 rounded-full">
-                  {{ comp.indicators.length }} Indikator Penilaian
+                  {{ comp.indicators?.length || 0 }} Indikator Penilaian
                 </span>
               </div>
 
               <!-- List of Indicators in this Competency -->
               <div class="space-y-2">
                 <div
-                  v-for="ind in comp.indicators"
+                  v-for="ind in (comp.indicators || [])"
                   :key="ind.id"
                   class="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 flex flex-col md:flex-row md:items-center justify-between gap-3"
                 >

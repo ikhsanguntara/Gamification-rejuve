@@ -477,7 +477,7 @@
               <!-- Indicators List in this Competency -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div
-                  v-for="ind in comp.indicators"
+                  v-for="ind in (comp.indicators || [])"
                   :key="ind.id"
                   class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1.5 relative group"
                 >
