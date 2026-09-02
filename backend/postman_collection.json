@@ -1,0 +1,376 @@
+{
+  "info": {
+    "name": "Re.juve Gamification & Onboarding REST API",
+    "_postman_id": "9b12a83f-67d1-4e89-a291-72f913d82a10",
+    "description": "Koleksi API Endpoint lengkap untuk Re.juve Gamification Platform mencakup Auth, Stores, Users, Batches, Templates, Evaluations, Approvals, Gamification, Buddy Rapor New Hire, dan Feedback.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login Multi-Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"budi.santoso@rejuve.co.id\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Authenticated User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Master Stores",
+      "item": [
+        {
+          "name": "Get All Stores",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/stores",
+              "host": ["{{base_url}}"],
+              "path": ["stores"]
+            }
+          }
+        },
+        {
+          "name": "Create Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"STR-PIM-03\",\n  \"name\": \"Pondok Indah Mall 2\",\n  \"city\": \"Jakarta Selatan\",\n  \"address\": \"Pondok Indah Mall 2 Lt. 1 No. 102\",\n  \"storeLeaderId\": \"sl-001\",\n  \"districtManagerId\": \"dm-001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/stores",
+              "host": ["{{base_url}}"],
+              "path": ["stores"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Master Users & Crew",
+      "item": [
+        {
+          "name": "Get Users (Filtered by Role & Store)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users?role=CREW&storeId=store-001&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["users"],
+              "query": [
+                { "key": "role", "value": "CREW" },
+                { "key": "storeId", "value": "store-001" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create User / Crew",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Riko Pratama\",\n  \"email\": \"riko.pratama@rejuve.co.id\",\n  \"password\": \"Password123!\",\n  \"role\": \"CREW\",\n  \"position\": \"Junior Barista\",\n  \"storeId\": \"store-001\",\n  \"phone\": \"081234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Master Templates SOP",
+      "item": [
+        {
+          "name": "Get Template Packages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/templates/packages",
+              "host": ["{{base_url}}"],
+              "path": ["templates", "packages"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Batch Management",
+      "item": [
+        {
+          "name": "Get All Batches",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/batches",
+              "host": ["{{base_url}}"],
+              "path": ["batches"]
+            }
+          }
+        },
+        {
+          "name": "Create Batch (Auto Generate Missions)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Batch 4 - Senayan City\",\n  \"storeId\": \"store-002\",\n  \"templatePackageId\": \"pkg-std-01\",\n  \"buddyPackageId\": \"pkg-buddy-standard\",\n  \"startDate\": \"2026-09-10\",\n  \"totalWeeks\": 3,\n  \"approvalConfig\": {\n    \"minScoreFor5Stars\": 90,\n    \"minEvidenceCount\": 1,\n    \"requireEvidence\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/batches",
+              "host": ["{{base_url}}"],
+              "path": ["batches"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Store Leader Evaluations",
+      "item": [
+        {
+          "name": "Submit Mission Evaluation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"batch-alpha\",\n  \"missionId\": \"msn-w2-001\",\n  \"crewId\": \"crew-001\",\n  \"slScore\": 95,\n  \"comment\": \"Pemeriksaan rasa jus cold-pressed sangat segar dan takaran brix presisi.\",\n  \"evidenceUrls\": [\n    {\n      \"url\": \"https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80\",\n      \"caption\": \"Foto brix meter 12.4\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/evaluations",
+              "host": ["{{base_url}}"],
+              "path": ["evaluations"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. District Manager Approvals",
+      "item": [
+        {
+          "name": "Get Pending Approvals",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/approvals?status=PENDING_REVIEW&storeId=store-001",
+              "host": ["{{base_url}}"],
+              "path": ["approvals"],
+              "query": [
+                { "key": "status", "value": "PENDING_REVIEW" },
+                { "key": "storeId", "value": "store-001" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Mission with DM Score Adjustment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dmScore\": 90,\n  \"dmNote\": \"Hasil kalibrasi sensorik konsisten baik.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/approvals/appr-001/approve",
+              "host": ["{{base_url}}"],
+              "path": ["approvals", "appr-001", "approve"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Gamification & Progression",
+      "item": [
+        {
+          "name": "Get Crew Journey Map",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gamification/journey/crew-001",
+              "host": ["{{base_url}}"],
+              "path": ["gamification", "journey", "crew-001"]
+            }
+          }
+        },
+        {
+          "name": "Get Store Leaderboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gamification/leaderboard?storeId=store-001",
+              "host": ["{{base_url}}"],
+              "path": ["gamification", "leaderboard"],
+              "query": [
+                { "key": "storeId", "value": "store-001" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Buddy Mentoring (Rapor New Hire 3 Hari)",
+      "item": [
+        {
+          "name": "Get Rapor Template (7 Kompetensi & 22 Indikator)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/buddy/templates",
+              "host": ["{{base_url}}"],
+              "path": ["buddy", "templates"]
+            }
+          }
+        },
+        {
+          "name": "Save Rapor New Hire Evaluation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchId\": \"batch-alpha\",\n  \"crewId\": \"crew-001\",\n  \"storeTraining\": \"Re.juve Grand Indonesia\",\n  \"storeCaptain\": \"Budi Santoso (Store Leader)\",\n  \"trainingPeriod\": \"1 - 3 September 2026\",\n  \"indicatorRatings\": {\n    \"ind-pk-01\": \"KOMPETEN\",\n    \"ind-pk-02\": \"KOMPETEN\",\n    \"ind-pk-03\": \"KOMPETEN\",\n    \"ind-cs-01\": \"KOMPETEN\",\n    \"ind-cs-02\": \"KOMPETEN\",\n    \"ind-cs-03\": \"KOMPETEN\",\n    \"ind-su-01\": \"BUTUH_PENDAMPINGAN\",\n    \"ind-su-02\": \"BUTUH_PENDAMPINGAN\",\n    \"ind-su-03\": \"KOMPETEN\",\n    \"ind-co-01\": \"KOMPETEN\",\n    \"ind-co-02\": \"KOMPETEN\",\n    \"ind-co-03\": \"KOMPETEN\",\n    \"ind-so-01\": \"KOMPETEN\",\n    \"ind-so-02\": \"KOMPETEN\",\n    \"ind-so-03\": \"BUTUH_PENDAMPINGAN\",\n    \"ind-so-04\": \"KOMPETEN\",\n    \"ind-fsq-01\": \"KOMPETEN\",\n    \"ind-fsq-02\": \"KOMPETEN\",\n    \"ind-fsq-03\": \"KOMPETEN\",\n    \"ind-ta-01\": \"KOMPETEN\",\n    \"ind-ta-02\": \"KOMPETEN\",\n    \"ind-ta-03\": \"KOMPETEN\"\n  },\n  \"recommendationNote\": \"Andi menunjukkan penguasaan SOP dan hospitality yang sangat baik.\",\n  \"status\": \"RECOMMENDED\",\n  \"captainSigned\": true,\n  \"crewSigned\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/buddy/evaluations",
+              "host": ["{{base_url}}"],
+              "path": ["buddy", "evaluations"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Feedback Onboarding",
+      "item": [
+        {
+          "name": "Get Survey Questions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/feedback/questions",
+              "host": ["{{base_url}}"],
+              "path": ["feedback", "questions"]
+            }
+          }
+        },
+        {
+          "name": "Submit Crew Onboarding Survey",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"crewId\": \"crew-001\",\n  \"batchId\": \"batch-alpha\",\n  \"crewName\": \"Andi Pratama\",\n  \"storeLocation\": \"Grand Indonesia\",\n  \"buddyName\": \"Budi Santoso\",\n  \"ratings\": {\n    \"sq-01\": 10,\n    \"sq-02\": 9,\n    \"sq-03\": 10,\n    \"sq-04\": 10,\n    \"sq-05\": 9,\n    \"sq-06\": 10,\n    \"sq-07\": 8,\n    \"sq-08\": 9,\n    \"sq-09\": 10,\n    \"sq-10\": 10,\n    \"sq-11\": 9,\n    \"sq-12\": 10,\n    \"sq-13\": 10,\n    \"sq-14\": 9,\n    \"sq-15\": 10,\n    \"sq-16\": 9\n  },\n  \"essayAnswer\": \"Program pendampingan sangat menyenangkan dan penjelasan Store Leader sangat sabar dan mendetail.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/feedback/surveys",
+              "host": ["{{base_url}}"],
+              "path": ["feedback", "surveys"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

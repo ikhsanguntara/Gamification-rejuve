@@ -1,27 +1,29 @@
-# Re.juve Gamification - Backend Service
+# 📦 Re.juve Gamification Platform - Backend Workspace
 
-Folder ini dialokasikan untuk service Backend (REST API) sistem Re.juve Gamification & Onboarding.
+Workspace ini berisi seluruh dokumentasi, skema database, spesifikasi REST API, dan panduan teknis yang siap digunakan untuk implementasi backend oleh tim Backend Developer.
 
-## Dokumen Spesifikasi API
-Spesifikasi lengkap REST API JSON, skema data, endpoint, parameter, response model, dan alur business logic dapat dilihat pada:
-- File spesifikasi: `docs/backend_api_specification.md` (atau di folder `docs/`)
+---
 
-## Modul Utama Backend:
-1. **Authentication & Authorization (JWT & Role-based Access)**
-   - Roles: `ADMIN`, `DM` (Duty Manager), `SL` (Store Leader), `CREW`
-2. **Master Gerai / Stores**
-   - CRUD Gerai, penugasan SL & DM per gerai
-3. **Template Misi & Batch (Onboarding 3-5 Minggu)**
-   - Manajemen template misi SOP, penugasan batch ke kru gerai
-4. **Evaluasi Misi Harian (Store Leader)**
-   - Input skor SOP, checklist, foto bukti, catatan SL
-5. **Persetujuan / Approvals (Duty Manager)**
-   - Verifikasi evaluasi SL, override skor DM, formula nilai: `(Skor SL + Skor DM) / 2`
-   - Reward pencairan bintang ke kru
-6. **Gamifikasi & Progress (Adventure Map & Leaderboard)**
-   - Journey map status (Base Camp, River Crossing, Canopy, Summit)
-   - Bintang, level, streak harian, badge pencapaian, leaderboard gerai
-7. **Buddy Pre-Batch (3 Hari)**
-   - Evaluasi checklist harian SOP + rekomendasi SL (`READY_FOR_BATCH` / `NEED_RETRAINING`)
-8. **Feedback Onboarding & Rapor 7 Pilar Kompetensi**
-   - Survei 17 butir pertanyaan kru baru & kalkulasi otomatis 7 pilar kompetensi Re.juve
+## 📚 Dokumen Spesifikasi Teknis:
+
+1. **[Spesifikasi Lengkap REST API](API_SPECIFICATION.md)** (`API_SPECIFICATION.md`):
+   - Daftar 11 Modul REST API lengkap (Endpoints, Request Body, Response JSON, Query Filter, Pagination).
+   - Skema Header JWT & Role-Based Access Control (`SUPERADMIN`, `DISTRICT_MANAGER`, `STORE_LEADER`, `CREW`).
+   - Formula Business Logic (Perhitungan Nilai Rata-Rata DM+SL, Star Reward Minting, Leveling, Rapor 7 Kompetensi).
+   - Standar HTTP Status & Error Handling.
+
+2. **[Arsitektur & Skema Database](DATABASE_SCHEMA.md)** (`DATABASE_SCHEMA.md`):
+   - Diagram Relasi Entitas (ERD).
+   - Skrip DDL SQL PostgreSQL 14+ / MySQL 8.0+ lengkap dengan Foreign Keys, Unique Indexes, Enums, dan Constraints.
+   - Total 18 Tabel terintegrasi (Stores, Users, Batches, Weeks, Templates, Missions, Evaluations, Star Ledger, Buddy Rapor, Feedback).
+
+3. **[Koleksi Postman v2.1.0](postman_collection.json)** (`postman_collection.json`):
+   - File JSON yang dapat langsung di-*import* ke Postman / Insomnia untuk pengujian langsung seluruh endpoint API.
+
+---
+
+## 🛠️ Rekomendasi Tech Stack Backend:
+- **Language/Framework**: Node.js (NestJS / Express / Fastify), Go (Fiber / Gin), atau Python (FastAPI).
+- **Database**: PostgreSQL 14+
+- **ORM / Query Builder**: Prisma, TypeORM, Drizzle, GORM, atau SQLAlchemy.
+- **Authentication**: JWT (JSON Web Token) dengan bcrypt hashing.
