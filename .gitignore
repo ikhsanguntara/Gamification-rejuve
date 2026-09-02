@@ -36,9 +36,12 @@ Thumbs.db
 .firebase/
 firebase-debug.log
 
-# Python
-__pycache__/
+# Java / Python / Misc
+*.class
 *.py[cod]
-*$py.class
-*.venv/
-venv/
+*.jar
+target/
+TEST*.xml
+*.app
+*.exe
+*.war
