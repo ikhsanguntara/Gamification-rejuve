@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
-import { mockEvaluations } from '~/mocks/evaluations.js'
-import { calculateStars } from '~/utils/star.js'
+import { mockEvaluations } from '../mocks/evaluations.js'
+import { calculateStars } from '../utils/star.js'
 import { useMissionStore } from './mission.js'
 import { useApprovalStore } from './approval.js'
-import { getStoredData, setStoredData } from '~/utils/storage.js'
+import { getStoredData, setStoredData } from '../utils/storage.js'
 
 /**
  * Evaluation Store: Manages Supervisor Evaluations, Drafts, Multi-Crew Scores, Evidence & Comments

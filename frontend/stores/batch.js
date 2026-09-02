@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { mockBatches } from '~/mocks/batches.js'
+import { mockBatches } from '../mocks/batches.js'
 import { useTemplateStore } from './template.js'
 import { useUserStore } from './user.js'
-import { getStoredData, setStoredData } from '~/utils/storage.js'
+import { getStoredData, setStoredData } from '../utils/storage.js'
 
 /**
  * Helper: Format date to short readable string e.g. "01 Sep"

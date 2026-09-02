@@ -14,7 +14,9 @@
     "build:frontend": "npm --prefix frontend run build",
     "generate": "npm --prefix frontend run generate",
     "deploy": "npm --prefix frontend run deploy",
-    "test:frontend": "node frontend/test_all_cruds.mjs",
-    "audit:frontend": "node frontend/audit_all_pages.mjs"
+    "test": "npm --prefix frontend run test",
+    "test:frontend": "npm --prefix frontend run test",
+    "audit": "npm --prefix frontend run audit",
+    "audit:frontend": "npm --prefix frontend run audit"
   }
 }

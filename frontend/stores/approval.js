@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
-import { mockApprovals } from '~/mocks/approvals.js'
+import { mockApprovals } from '../mocks/approvals.js'
 import { useMissionStore } from './mission.js'
 import { useEvaluationStore } from './evaluation.js'
 import { useGamificationStore } from './gamification.js'
 import { useBatchStore } from './batch.js'
 import { useUserStore } from './user.js'
-import { calculateStars } from '~/utils/star.js'
-import { getStoredData, setStoredData } from '~/utils/storage.js'
+import { calculateStars } from '../utils/star.js'
+import { getStoredData, setStoredData } from '../utils/storage.js'
 
 /**
  * Approval Store: District Manager Review Workspace (Approve with Option to Adjust Score)

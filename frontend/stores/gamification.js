@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { mockCrews } from '~/mocks/crews.js'
-import { mockAchievements } from '~/mocks/achievements.js'
-import { calculateStarLevel } from '~/utils/star.js'
-import { getStoredData, setStoredData } from '~/utils/storage.js'
+import { mockCrews } from '../mocks/crews.js'
+import { mockAchievements } from '../mocks/achievements.js'
+import { calculateStarLevel } from '../utils/star.js'
+import { getStoredData, setStoredData } from '../utils/storage.js'
 
 /**
  * Gamification Store: Stars, Levels, Leaderboard & Achievements

@@ -4,8 +4,8 @@ import {
   mockNewHireReportTemplate,
   mockSubmittedFeedbacks,
   mockNewHireReports
-} from '~/mocks/feedbackTemplates.js'
-import { getStoredData, setStoredData } from '~/utils/storage.js'
+} from '../mocks/feedbackTemplates.js'
+import { getStoredData, setStoredData } from '../utils/storage.js'
 
 export const useFeedbackStore = defineStore('feedback', {
   state: () => ({

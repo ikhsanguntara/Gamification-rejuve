@@ -9,6 +9,8 @@
     "build:deploy": "nuxt generate",
     "deploy": "nuxt generate && npx --yes firebase-tools deploy --only hosting --non-interactive",
     "preview": "nuxt preview",
+    "test": "node test_all_cruds.mjs",
+    "audit": "node audit_all_pages.mjs",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {

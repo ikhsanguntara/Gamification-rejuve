@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { mockMissions } from '~/mocks/missions.js'
-import { calculateStars } from '~/utils/star.js'
+import { mockMissions } from '../mocks/missions.js'
+import { calculateStars } from '../utils/star.js'
 import { useGamificationStore } from './gamification.js'
-import { getStoredData, setStoredData } from '~/utils/storage.js'
+import { getStoredData, setStoredData } from '../utils/storage.js'
 
 /**
  * Mission Store: Manages store-wide missions across batches and weeks, and Superadmin CRUD

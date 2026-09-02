@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { mockStores } from '~/mocks/stores.js'
+import { mockStores } from '../mocks/stores.js'
 import { useUserStore } from './user.js'
 import { useBatchStore } from './batch.js'
-import { getStoredData, setStoredData } from '~/utils/storage.js'
+import { getStoredData, setStoredData } from '../utils/storage.js'
 
 /**
  * Store Store: Manage Master Stores/Outlets, Location, Store Leader & District Manager Assignments

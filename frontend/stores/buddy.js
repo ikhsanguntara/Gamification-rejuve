@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
-import { mockBuddyPackages } from '~/mocks/buddyTemplates.js'
-import { mockBuddyEvaluations } from '~/mocks/buddyEvaluations.js'
-import { getStoredData, setStoredData } from '~/utils/storage.js'
+import { mockBuddyPackages } from '../mocks/buddyTemplates.js'
+import { mockBuddyEvaluations } from '../mocks/buddyEvaluations.js'
+import { getStoredData, setStoredData } from '../utils/storage.js'
 
 export const useBuddyStore = defineStore('buddy', {
   state: () => ({

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { mockCrews } from '~/mocks/crews.js'
+import { mockCrews } from '../mocks/crews.js'
 import { useGamificationStore } from './gamification.js'
 import { useBatchStore } from './batch.js'
 
@@ -211,7 +211,7 @@ const initialDirectory = [
   })
 ]
 
-import { getStoredData, setStoredData } from '~/utils/storage.js'
+import { getStoredData, setStoredData } from '../utils/storage.js'
 
 export const useUserStore = defineStore('user', {
   state: () => ({

@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
-import { mockTemplatePackages } from '~/mocks/templates.js'
+import { mockTemplatePackages } from '../mocks/templates.js'
 import { useMissionStore } from './mission.js'
 import { useBatchStore } from './batch.js'
 import { useGamificationStore } from './gamification.js'
-import { getStoredData, setStoredData } from '~/utils/storage.js'
+import { getStoredData, setStoredData } from '../utils/storage.js'
 
 /**
  * Normalizes a package to ensure `weeks` array and `totalWeeks` exist
