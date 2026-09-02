@@ -387,6 +387,12 @@
             </div>
           </div>
         </template>
+        <div
+          v-else
+          class="p-12 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 text-xs"
+        >
+          Silakan pilih kru dari daftar di sebelah kiri untuk mengisi Rapor New Hire.
+        </div>
       </div>
 
     </div>

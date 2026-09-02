@@ -164,33 +164,28 @@
                 class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 cursor-pointer shadow-2xs"
               >
                 <option v-for="bpkg in buddyStore.allPackages" :key="bpkg.id" :value="bpkg.id">
-                  {{ bpkg.name }} ({{ bpkg.totalDays }} Hari Pra-Batch • {{ bpkg.code }})
+                  {{ bpkg.name }} (7 Kompetensi • {{ bpkg.code }})
                 </option>
                 <option value="NONE">-- Lewati / Tanpa Program Buddy --</option>
               </select>
             </div>
 
-            <!-- Pratinjau 3 Hari Misi Buddy -->
+            <!-- Pratinjau Rapor New Hire 7 Kompetensi -->
             <div v-if="selectedBuddyPackage" class="pt-2 border-t border-purple-200/60 dark:border-purple-800/40">
               <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-2">
-                📋 Pratinjau Modul Pendampingan ({{ selectedBuddyPackage.days.length }} Hari):
+                📋 Pratinjau Rapor New Hire ({{ selectedBuddyPackage.competencies?.length || 7 }} Kompetensi • 3 Hari Pra-Batch):
               </div>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div
-                  v-for="bday in selectedBuddyPackage.days"
-                  :key="bday.dayNumber"
-                  class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/60 text-xs space-y-1"
+                  v-for="comp in selectedBuddyPackage.competencies"
+                  :key="comp.id"
+                  class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/60 text-xs space-y-0.5"
                 >
-                  <div class="flex items-center justify-between">
-                    <span class="font-bold text-purple-700 dark:text-purple-300">Hari {{ bday.dayNumber }} (H-{{ bday.offsetDays }})</span>
-                    <span class="text-[10px] text-slate-400 font-semibold">{{ bday.missions.length }} Butir SOP</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-purple-600 flex-shrink-0"></span>
+                    <span class="font-bold text-purple-700 dark:text-purple-300 truncate text-[11px]">{{ comp.name }}</span>
                   </div>
-                  <p class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 line-clamp-2">
-                    {{ bday.title }}
-                  </p>
-                  <span class="inline-block text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                    Fokus: {{ bday.focus }}
-                  </span>
+                  <span class="text-[10px] text-slate-400 font-semibold block">{{ comp.indicators?.length || 0 }} Indikator</span>
                 </div>
               </div>
             </div>
