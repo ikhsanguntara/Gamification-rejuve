@@ -316,6 +316,7 @@
                       type="range"
                       min="0"
                       max="100"
+                      step="10"
                       class="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#831843]"
                     />
 
@@ -326,6 +327,7 @@
                         type="number"
                         min="0"
                         max="100"
+                        step="10"
                         class="w-14 text-center text-xs font-bold rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 py-1 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#831843]"
                       />
                       <span class="text-[11px] text-slate-400 font-semibold">/100</span>
@@ -333,11 +335,11 @@
                   </div>
 
                   <div class="flex items-center justify-between text-[10px] text-slate-400 px-0.5">
-                    <span>0 (Gagal)</span>
-                    <span>50 (⭐1)</span>
-                    <span>80 (⭐4)</span>
-                    <span>90 (⭐5)</span>
-                    <span>100</span>
+                    <span>0</span>
+                    <span>30 (3⭐)</span>
+                    <span>50 (5⭐)</span>
+                    <span class="text-amber-600 dark:text-amber-400">80 (8⭐)</span>
+                    <span class="text-emerald-600 dark:text-emerald-400">100 (10⭐)</span>
                   </div>
                 </div>
 

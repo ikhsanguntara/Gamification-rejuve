@@ -271,9 +271,9 @@
                 <div class="flex items-center gap-1.5 flex-shrink-0">
                   <div class="flex gap-0.5">
                     <span
-                      v-for="i in 5"
+                      v-for="i in 10"
                       :key="i"
-                      class="text-[10px] leading-none"
+                      class="text-[9px] leading-none"
                       :class="i <= (m.awardedStars || 0) ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'"
                     >★</span>
                   </div>

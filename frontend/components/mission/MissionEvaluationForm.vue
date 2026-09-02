@@ -87,7 +87,7 @@
               </span>
             </label>
             <p class="text-xs text-slate-400 mt-0.5">
-              Geser slider atau masukkan angka nilai (0–100). Bintang (⭐ 1–5) dihitung otomatis secara realtime.
+              Geser slider atau masukkan angka nilai kelipatan 10 (0–100). Bintang (⭐ 1–10, 1★/10 poin) dihitung otomatis secara realtime.
             </p>
           </div>
 
@@ -96,24 +96,24 @@
             <span class="text-xs font-semibold text-slate-400 px-1.5 uppercase">Set Semua:</span>
             <button
               type="button"
-              @click="applyBulkScore(95)"
+              @click="applyBulkScore(100)"
               class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
             >
-              95 (⭐⭐⭐⭐⭐)
+              100 (10⭐)
             </button>
             <button
               type="button"
               @click="applyBulkScore(90)"
               class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
             >
-              90 (⭐⭐⭐⭐⭐)
+              90 (9⭐)
             </button>
             <button
               type="button"
-              @click="applyBulkScore(85)"
+              @click="applyBulkScore(80)"
               class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
             >
-              85 (⭐⭐⭐⭐)
+              80 (8⭐)
             </button>
           </div>
         </div>
@@ -189,6 +189,7 @@
                     type="number"
                     min="0"
                     max="100"
+                    step="10"
                     :disabled="isLocked"
                     class="w-16 text-center text-sm font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 py-1.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] focus:border-[#831843] disabled:opacity-50 shadow-inner"
                   />
@@ -213,7 +214,7 @@
                   type="range"
                   min="0"
                   max="100"
-                  step="1"
+                  step="10"
                   :disabled="isLocked"
                   :style="getSliderTrackStyle(crewScoresMap[crew.id])"
                   class="w-full h-3 rounded-full appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-inner border border-slate-300 dark:border-slate-700 transition-all custom-range-slider"
@@ -230,10 +231,10 @@
               <!-- Score Indicator Markers -->
               <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400 px-1">
                 <span>0</span>
-                <span>50 (1⭐)</span>
-                <span class="text-amber-600 dark:text-amber-400">80 (4⭐)</span>
-                <span class="text-emerald-600 dark:text-emerald-400">90 (5⭐)</span>
-                <span>100</span>
+                <span>30 (3⭐)</span>
+                <span>50 (5⭐)</span>
+                <span class="text-amber-600 dark:text-amber-400">80 (8⭐)</span>
+                <span class="text-emerald-600 dark:text-emerald-400">100 (10⭐)</span>
               </div>
             </div>
           </div>

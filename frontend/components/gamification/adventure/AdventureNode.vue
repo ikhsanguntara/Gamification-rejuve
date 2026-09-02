@@ -29,7 +29,7 @@
 
     <!-- Stars earned (completed) -->
     <div v-if="nodeState === 'completed'" class="node-stars">
-      <span v-for="i in (mission.awardedStars || 5)" :key="i" class="star">★</span>
+      <span v-for="i in (mission.awardedStars || 10)" :key="i" class="star">★</span>
     </div>
 
     <!-- Revision warning -->

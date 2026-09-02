@@ -57,7 +57,7 @@
               type="range"
               min="0"
               max="100"
-              step="1"
+              step="10"
               class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#831843]"
             />
             <input
@@ -65,6 +65,7 @@
               type="number"
               min="0"
               max="100"
+              step="10"
               class="w-14 text-center font-bold text-xs py-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
             />
           </div>

@@ -17,16 +17,14 @@ export const STAR_LEVEL_THRESHOLDS = [
 
 /**
  * Calculate stars from a 0-100 numerical score
+ * 1 bintang = 10 poin, max 10 bintang
  * @param {number} score 
- * @returns {number} 1 to 5 stars
+ * @returns {number} 0 to 10 stars
  */
 export function calculateStars(score) {
   const numScore = Number(score) || 0
-  if (numScore >= 90) return 5
-  if (numScore >= 80) return 4
-  if (numScore >= 70) return 3
-  if (numScore >= 60) return 2
-  return 1
+  if (numScore <= 0) return 0
+  return Math.min(10, Math.max(0, Math.round(numScore / 10)))
 }
 
 /**

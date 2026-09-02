@@ -47,7 +47,7 @@ const props = defineProps({
   },
   maxStars: {
     type: Number,
-    default: 5
+    default: 10
   },
   size: {
     type: String,

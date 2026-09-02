@@ -86,7 +86,7 @@
                   ⭐ {{ mission.calculatedStars }} Stars (Calculated)
                 </span>
                 <span v-else>
-                  Up to 5 Stars per Crew
+                  Up to 10 Stars per Crew
                 </span>
               </p>
             </template>
