@@ -1,0 +1,346 @@
+// =============================================================================
+// Gamification API — Prisma Schema
+// Database Target : db_gamification (PostgreSQL)
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url dipindah ke prisma.config.js sesuai Prisma v7
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+enum BatchStatus {
+  DRAFT
+  OPEN
+  CLOSE
+}
+
+enum MissionCategory {
+  TECHNICAL
+  SOFT_SKILL
+  LEADERSHIP
+  PROJECT
+}
+
+enum TypeMissions {
+  BUDDY
+  JOURNEY
+  FEEDBACK
+}
+
+enum UserMissionStatus {
+  LOCKED
+  ACTIVE
+  SUBMITTED
+  SCORED_BY_TL
+  APPROVED_BY_DM
+  REVISED_BY_DM
+  REJECTED
+}
+
+// =============================================================================
+// MASTER DATA
+// =============================================================================
+
+model Role {
+  roleId       String   @id @default(uuid()) @db.Uuid @map("role_id")
+  roleCode     String   @unique                       @map("role_code")
+  roleName     String                                 @map("role_name")
+  
+  users        User[]
+
+  createdAt    DateTime @default(now())              @map("created_at")
+  createdBy    String?                               @map("created_by")
+  updatedAt    DateTime @updatedAt                   @map("updated_at")
+  updatedBy    String?                               @map("updated_by")
+
+  @@map("m_roles")
+}
+
+model Department {
+  departmentId   String  @id @default(uuid()) @db.Uuid @map("department_id")
+  departmentCode String  @unique                       @map("department_code")
+  departmentName String                                @map("department_name")
+  regionCode     String?                               @map("region_code")
+  isActive       Boolean @default(true)                @map("is_active")
+  
+  userSlId       String? @db.Uuid                      @map("user_sl_id")
+  userDmId       String? @db.Uuid                      @map("user_dm_id")
+
+  createdAt      DateTime @default(now())              @map("created_at")
+  createdBy      String?                               @map("created_by")
+  updatedAt      DateTime @updatedAt                   @map("updated_at")
+  updatedBy      String?                               @map("updated_by")
+
+  usersActual    User[] @relation("ActualDepartment")
+
+  @@map("m_departments")
+}
+
+model User {
+  userId            String  @id @default(uuid()) @db.Uuid @map("user_id")
+  name              String
+  email             String  @unique
+  password          String
+  
+  roleId            String  @db.Uuid                      @map("role_id")
+  role              Role    @relation(fields: [roleId], references: [roleId])
+
+  isActive          Boolean @default(true)                @map("is_active")
+  stars             Int     @default(0)
+  level             Int     @default(1)
+
+  departmentId      String? @db.Uuid                      @map("department_id")
+  department        Department? @relation("ActualDepartment", fields: [departmentId], references: [departmentId], onDelete: SetNull)
+
+  isBuddy           Boolean @default(false)               @map("is_buddy")
+  userBuddyId       String? @db.Uuid                      @map("user_buddy_id")
+  userBuddy         User?   @relation("UserToBuddy", fields: [userBuddyId], references: [userId])
+  mentees           User[]  @relation("UserToBuddy")
+
+  batchId           String? @db.Uuid                      @map("batch_id")
+  batch             Batch?  @relation(fields: [batchId], references: [batchId], onDelete: SetNull)
+
+  createdAt         DateTime @default(now())              @map("created_at")
+  createdBy         String?                               @map("created_by")
+  updatedAt         DateTime @updatedAt                   @map("updated_at")
+  updatedBy         String?                               @map("updated_by")
+
+  // Relasi ke UserMission
+  missions          UserMission[] @relation("UserMissions")
+  scoredMissions    UserMission[] @relation("TlMissions")
+  reviewedMissions  UserMission[] @relation("DmMissions")
+
+  @@map("m_users")
+}
+
+model ParamGroup {
+  paramgroupId String  @id @default(uuid()) @db.Uuid @map("paramgroup_id")
+  code         String  @unique
+  name         String
+  isActive     Boolean @default(true)                @map("is_active")
+  
+  params       Param[]
+
+  createdAt    DateTime @default(now())              @map("created_at")
+  createdBy    String?                               @map("created_by")
+  updatedAt    DateTime @updatedAt                   @map("updated_at")
+  updatedBy    String?                               @map("updated_by")
+
+  @@map("m_paramgroup")
+}
+
+model Param {
+  paramId      String  @id @default(uuid()) @db.Uuid @map("param_id")
+  paramgroupId String  @db.Uuid                      @map("paramgroup_id")
+  code         String  @unique
+  value        String
+  isActive     Boolean @default(true)                @map("is_active")
+
+  paramgroup   ParamGroup @relation(fields: [paramgroupId], references: [paramgroupId], onDelete: Cascade)
+
+  createdAt    DateTime @default(now())              @map("created_at")
+  createdBy    String?                               @map("created_by")
+  updatedAt    DateTime @updatedAt                   @map("updated_at")
+  updatedBy    String?                               @map("updated_by")
+
+  @@map("m_param")
+}
+
+model ApiLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  method       String
+  url          String
+  statusCode   Int      @map("status_code")
+  duration     Int      
+  requestData  Json?    @map("request_data")
+  responseData Json?    @map("response_data")
+  timestamp    DateTime @default(now())
+
+  @@index([timestamp(sort: Desc)])
+  @@index([method, statusCode])
+  
+  @@map("m_apilog")
+}
+
+// =============================================================================
+// ADMINISTRATION
+// =============================================================================
+
+model Setting {
+  settingId    String  @id @default(uuid()) @db.Uuid @map("setting_id")
+  settingName  String                                @map("setting_name")
+  settingValue String                                @map("setting_value")
+  objectCode   String  @default("SETTING")           @map("object_code")
+  companyId    String? @db.Uuid                      @map("company_id")
+  
+  createdAt    DateTime @default(now())              @map("created_at")
+  createdBy    String?                               @map("created_by")
+  updatedAt    DateTime @updatedAt                   @map("updated_at")
+  updatedBy    String?                               @map("updated_by")
+
+  @@map("m_settings")
+}
+
+model UserPolicy {
+  userpolicyId      String  @id @default(uuid()) @db.Uuid @map("userpolicy_id")
+  userpolicyCode    String                                @map("userpolicy_code")
+  userpolicyValue   String                                @map("userpolicy_value")
+  informationRemark String?                               @map("information_remark")
+  isRules           String  @default("N")                 @map("is_rules")
+  displayOrder      Int                                   @map("display_order")
+  objectCode        String  @default("USERPOLICY")        @map("object_code")
+
+  createdAt         DateTime @default(now())              @map("created_at")
+  createdBy         String?                               @map("created_by")
+  updatedAt         DateTime @updatedAt                   @map("updated_at")
+  updatedBy         String?                               @map("updated_by")
+
+  @@map("m_user_policies")
+}
+
+// =============================================================================
+// UNIFIED MASTER TEMPLATES
+// =============================================================================
+
+model TplMission {
+  tplMissionId  String  @id @default(uuid()) @db.Uuid @map("tpl_mission_id")
+  code          String  @unique
+  name          String
+  type          TypeMissions
+  durationCode  String?                               @map("duration_code")
+  durationValue Int?                                  @map("duration_value")
+  description   String? @db.Text
+  
+  details       TplMissionDetail[]
+  batchDetails  BatchDetail[]
+
+  createdAt     DateTime @default(now())              @map("created_at")
+  createdBy     String?                               @map("created_by")
+  updatedAt     DateTime @updatedAt                   @map("updated_at")
+  updatedBy     String?                               @map("updated_by")
+
+  @@map("m_tpl_missions")
+}
+
+model TplMissionDetail {
+  tplMissionDetailId String  @id @default(uuid()) @db.Uuid @map("tpl_mission_detail_id")
+  tplMissionId       String  @db.Uuid                      @map("tpl_mission_id")
+  missionTitle       String                                @map("mission_title")
+  description        String? @db.Text
+  category           MissionCategory
+
+  tplMission         TplMission @relation(fields: [tplMissionId], references: [tplMissionId], onDelete: Cascade)
+
+  @@map("m_tpl_mission_details")
+}
+
+// =============================================================================
+// TRANSACTIONAL (BATCHES & MISSIONS)
+// =============================================================================
+
+model Batch {
+  batchId      String  @id @default(uuid()) @db.Uuid @map("batch_id")
+  code         String  @unique
+  name         String
+  status       BatchStatus
+  startDate    DateTime                              @map("start_date") @db.Date
+  endDate      DateTime                              @map("end_date") @db.Date
+  currentWeek  Int                                   @map("current_week")
+
+  details      BatchDetail[]
+  missions     Mission[]
+  users        User[]
+
+  createdAt    DateTime @default(now())              @map("created_at")
+  createdBy    String?                               @map("created_by")
+  updatedAt    DateTime @updatedAt                   @map("updated_at")
+  updatedBy    String?                               @map("updated_by")
+
+  @@map("t_batches")
+}
+
+model BatchDetail {
+  batchDetailId String  @id @default(uuid()) @db.Uuid @map("batch_detail_id")
+  batchId       String  @db.Uuid                      @map("batch_id")
+  tplMissionId  String  @db.Uuid                      @map("tpl_mission_id")
+  status        BatchStatus
+  startDate     DateTime                              @map("start_date") @db.Date
+  endDate       DateTime                              @map("end_date") @db.Date
+  isLock        Boolean @default(true)                @map("is_lock")
+
+  batch         Batch      @relation(fields: [batchId], references: [batchId], onDelete: Cascade)
+  tplMission    TplMission @relation(fields: [tplMissionId], references: [tplMissionId])
+  
+  missions      Mission[]
+
+  createdAt     DateTime @default(now())              @map("created_at")
+  createdBy     String?                               @map("created_by")
+  updatedAt     DateTime @updatedAt                   @map("updated_at")
+  updatedBy     String?                               @map("updated_by")
+
+  @@map("t_batches_detail")
+}
+
+model Mission {
+  missionId        String  @id @default(uuid()) @db.Uuid @map("mission_id")
+  batchId          String  @db.Uuid                      @map("batch_id")
+  batchDetailId    String  @db.Uuid                      @map("batch_detail_id")
+  weekOrDayNumber  Int                                   @map("week_or_day_number")
+  missionTitle     String                                @map("mission_title")
+  description      String? @db.Text
+  requirements     String? @db.Text
+  category         MissionCategory
+  type             TypeMissions
+  
+  startDate        DateTime                              @map("start_date") @db.Date
+  endDate          DateTime                              @map("end_date") @db.Date
+
+  batch            Batch       @relation(fields: [batchId], references: [batchId], onDelete: Cascade)
+  batchDetail      BatchDetail @relation(fields: [batchDetailId], references: [batchDetailId], onDelete: Cascade)
+  userMissions     UserMission[]
+
+  createdAt        DateTime @default(now())              @map("created_at")
+
+  @@map("t_missions")
+}
+
+model UserMission {
+  userMissionId    String  @id @default(uuid()) @db.Uuid @map("user_mission_id")
+  userId           String  @db.Uuid                      @map("user_id")
+  missionId        String  @db.Uuid                      @map("mission_id")
+  status           UserMissionStatus @default(LOCKED)
+  
+  evidenceUrl      String?                               @map("evidence_url")
+  submissionNotes  String? @db.Text                      @map("submission_notes")
+  submittedAt      DateTime?                             @map("submitted_at")
+  
+  tlId             String? @db.Uuid                      @map("tl_id")
+  tlScore          Int?                                  @map("tl_score")
+  tlNotes          String? @db.Text                      @map("tl_notes")
+  tlScoredAt       DateTime?                             @map("tl_scored_at")
+  
+  dmId             String? @db.Uuid                      @map("dm_id")
+  dmScore          Int?                                  @map("dm_score")
+  dmNotes          String? @db.Text                      @map("dm_notes")
+  dmReviewedAt     DateTime?                             @map("dm_reviewed_at")
+  
+  finalScore       Int?                                  @map("final_score")
+
+  user             User    @relation("UserMissions", fields: [userId], references: [userId], onDelete: Cascade)
+  tl               User?   @relation("TlMissions", fields: [tlId], references: [userId])
+  dm               User?   @relation("DmMissions", fields: [dmId], references: [userId])
+  mission          Mission @relation(fields: [missionId], references: [missionId], onDelete: Cascade)
+
+  createdAt        DateTime @default(now())              @map("created_at")
+  updatedAt        DateTime @updatedAt                   @map("updated_at")
+
+  @@map("t_user_missions")
+}
