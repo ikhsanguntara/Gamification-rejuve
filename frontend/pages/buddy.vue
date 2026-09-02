@@ -413,10 +413,6 @@ import { useBatchStore } from '~/stores/batch.js'
 import { useUserStore } from '~/stores/user.js'
 import { useToast } from '~/composables/useToast.js'
 
-definePageMeta({
-  middleware: 'auth'
-})
-
 const buddyStore = useBuddyStore()
 const batchStore = useBatchStore()
 const userStore = useUserStore()
