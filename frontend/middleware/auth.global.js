@@ -15,4 +15,9 @@ export default defineNuxtRouteMiddleware((to) => {
   if (!userStore.isAuthenticated) {
     return navigateTo('/login')
   }
+
+  // If user is Crew and navigates to dashboard, redirect directly to journey
+  if (userStore.isCrew && to.path === '/dashboard') {
+    return navigateTo('/journey')
+  }
 })

@@ -18,7 +18,11 @@ const userStore = useUserStore()
 onMounted(() => {
   userStore.initAuth()
   if (userStore.isAuthenticated) {
-    router.replace('/dashboard')
+    if (userStore.isCrew) {
+      router.replace('/journey')
+    } else {
+      router.replace('/dashboard')
+    }
   } else {
     router.replace('/login')
   }

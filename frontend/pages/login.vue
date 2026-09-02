@@ -342,6 +342,8 @@ const handleLogin = () => {
     toast.success('Selamat Datang di Re.juve Operations', `Masuk sebagai ${userStore.currentUser.name} (${userStore.currentUser.roleTitle})`)
     if (userStore.isSuperadmin) {
       router.push('/admin')
+    } else if (userStore.isCrew) {
+      router.push('/journey')
     } else {
       router.push('/dashboard')
     }

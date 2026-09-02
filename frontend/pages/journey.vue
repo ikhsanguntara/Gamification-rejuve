@@ -50,10 +50,4 @@ import { Target, Trophy } from 'lucide-vue-next'
 
 const router = useRouter()
 const userStore = useUserStore()
-
-onMounted(() => {
-  if (!userStore.isCrew) {
-    router.replace('/dashboard')
-  }
-})
 </script>
