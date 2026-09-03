@@ -4,20 +4,13 @@
     <div class="lg:col-span-4 space-y-3">
       <div class="flex items-center justify-between px-1">
         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-          Daftar Template Buddy ({{ (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages).length }})
+          Daftar Template Buddy ({{ allBuddyPackages.length }})
         </h3>
-        <button
-          type="button"
-          @click="$emit('open-create')"
-          class="text-[11px] text-purple-600 font-bold hover:underline cursor-pointer"
-        >
-          + Paket Baru
-        </button>
       </div>
 
       <div class="space-y-2">
         <div
-          v-for="bpkg in (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages)"
+          v-for="bpkg in allBuddyPackages"
           :key="bpkg.id"
           @click="selectBuddyPackageTab(bpkg.id)"
           class="p-4 rounded-2xl border transition-all cursor-pointer relative"
@@ -32,7 +25,7 @@
               {{ bpkg.code }}
             </span>
             <span class="text-[10px] text-slate-400 font-semibold">
-              {{ bpkg.durationValue || 3 }} Hari • {{ (bpkg.templates || []).length || (bpkg.details || []).length || 7 }} Butir
+              {{ bpkg.durationValue || 3 }} Hari • {{ totalIndicatorsForPkg(bpkg) }} Indikator
             </span>
           </div>
 
@@ -44,7 +37,7 @@
           </p>
 
           <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
-            <span class="text-slate-400 font-medium">🎯 Target Kru Baru</span>
+            <span class="text-slate-400 font-medium">🎯 Target Kru Baru (Rapor)</span>
             <div class="flex items-center gap-1">
               <button
                 type="button"
@@ -52,7 +45,7 @@
                 title="Hapus Paket"
                 class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"
               >
-                <Trash2 class="w-3 h-3" />
+                <Trash2 class="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -60,27 +53,31 @@
       </div>
     </div>
 
-    <!-- Sisi Kanan: Detail Butir SOP & Kompetensi Buddy -->
+    <!-- Sisi Kanan: Detail Rapor 3 Hari (1 Periode, Kategori & Indikator Penilaian) -->
     <div class="lg:col-span-8">
       <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
+        <!-- Header Banner Detail Template -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
           <div>
             <div class="flex items-center gap-2 mb-1 flex-wrap">
               <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-purple-600 text-white">
                 {{ activeBuddyPkg?.code }}
               </span>
-              <span class="text-xs font-bold text-slate-900 dark:text-white">
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">
                 {{ activeBuddyPkg?.name }}
+              </h3>
+              <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold">
+                Jangka Waktu: {{ activeBuddyPkg?.durationValue || 3 }} Hari
               </span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold">
-                {{ activeBuddyPkg?.durationValue || 3 }} Hari
+              <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
+                {{ indicatorsList.length }} Indikator Penilaian
               </span>
               <span v-if="isCardLoading" class="inline-flex items-center gap-1 text-[10px] text-purple-600 dark:text-purple-400 font-semibold animate-pulse">
                 <Loader2 class="w-3 h-3 animate-spin" /> Memuat detail...
               </span>
             </div>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              {{ activeBuddyPkg?.description }}
+              {{ activeBuddyPkg?.description || 'Program orientasi dan evaluasi pendampingan 3 hari untuk kru baru.' }}
             </p>
           </div>
           
@@ -93,136 +90,120 @@
               <Edit3 class="w-3.5 h-3.5 text-slate-500" />
               <span>Edit Template</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Catatan Resmi Rapor PDF -->
+        <div class="p-3 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+          <span class="text-base leading-none">📋</span>
+          <div>
+            <b>Standar Penilaian Rapor 3 Hari:</b> Indikator bertanda bintang (<span class="font-bold text-amber-700 dark:text-amber-400">★</span>) wajib diberikan pembekalan oleh Store Captain. Kru dimaklumi bila belum sempat praktik langsung selama masa pendampingan 3 hari.
+          </div>
+        </div>
+
+        <!-- Filter Kategori Resmi Backend -->
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 overflow-x-auto">
             <button
               type="button"
-              @click="$emit('open-add-mission')"
-              class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
+              @click="selectedCategory = 'ALL'"
+              class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5"
+              :class="[
+                selectedCategory === 'ALL'
+                  ? 'bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs font-bold'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              ]"
             >
-              <Plus class="w-3.5 h-3.5" />
-              <span>Tambah Butir SOP Buddy</span>
+              <span>Semua Kategori</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                {{ indicatorsList.length }}
+              </span>
+            </button>
+
+            <button
+              v-for="cat in availableCategories"
+              :key="cat"
+              type="button"
+              @click="selectedCategory = cat"
+              class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5"
+              :class="[
+                selectedCategory === cat
+                  ? 'bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs font-bold'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              ]"
+            >
+              <span>{{ cat }}</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                {{ countByCategory(cat) }}
+              </span>
             </button>
           </div>
+
+          <span class="text-xs text-slate-400 font-medium">
+            Menampilkan {{ filteredIndicators.length }} dari {{ indicatorsList.length }} Butir
+          </span>
         </div>
 
-        <!-- Live Mission Details from Backend API jika ada -->
-        <div v-if="activeBuddyPkg?.templates && activeBuddyPkg.templates.length > 0" class="space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Butir Misi SOP Buddy ({{ activeBuddyPkg.templates.length }})
-            </h4>
-            <span class="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">Live Backend API</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div
-              v-for="(item, idx) in activeBuddyPkg.templates"
-              :key="item.id || idx"
-              class="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5"
-            >
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex items-center gap-1.5 flex-wrap min-w-0">
-                  <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+        <!-- Daftar Indikator Penilaian Rapor -->
+        <div class="space-y-2.5">
+          <div
+            v-for="(ind, idx) in filteredIndicators"
+            :key="ind.id || idx"
+            class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs space-y-2 hover:border-purple-300 dark:hover:border-purple-800 transition-all shadow-2xs"
+          >
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <div class="space-y-1.5 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-purple-600 dark:text-purple-400 font-mono font-bold text-[11px]">#{{ idx + 1 }}</span>
                   <h5 class="text-xs font-bold text-slate-900 dark:text-white">
-                    {{ item.title || item.missionTitle }}
+                    {{ ind.name }}
                   </h5>
-                  <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
-                    Hari {{ item.week || item.durationNumber || 1 }}
+                  <span
+                    v-if="ind.isStar || ind.name.includes('*')"
+                    class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex-shrink-0"
+                  >
+                    ★ Wajib Pembekalan
+                  </span>
+                  <span
+                    class="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300"
+                  >
+                    {{ ind.category }}
                   </span>
                 </div>
-                <span class="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex-shrink-0">
-                  {{ item.category || 'TECHNICAL' }}
-                </span>
-              </div>
-              <p v-if="item.description" class="text-[11px] text-slate-500 dark:text-slate-400">
-                {{ item.description }}
-              </p>
-              <div class="text-[10px] text-purple-600 dark:text-purple-400 font-medium">
-                Tipe Input: {{ item.inputType || 'SCALE' }}
-                <span v-if="item.scaleConfig">({{ item.scaleConfig.min }} - {{ item.scaleConfig.max }})</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 7 Competency Categories with Interactive CRUD on each Indicator -->
-        <div class="space-y-4">
-          <div
-            v-for="comp in activeBuddyPkg?.competencies"
-            :key="comp.id"
-            class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-3"
-          >
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
-                <span class="text-xs font-bold text-slate-900 dark:text-white">
-                  {{ comp.name }}
-                </span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300">
-                  {{ comp.indicators?.length || 0 }} Indikator
-                </span>
-                <button
-                  type="button"
-                  @click="$emit('open-add-indicator', comp.id)"
-                  class="text-[11px] text-purple-600 hover:underline font-bold cursor-pointer"
-                >
-                  + Butir Indikator
-                </button>
-              </div>
-            </div>
-
-            <!-- Indicators List in this Competency -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div
-                v-for="ind in (comp.indicators || [])"
-                :key="ind.id"
-                class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1.5 relative group"
-              >
-                <div class="flex items-start justify-between gap-2">
-                  <div class="flex items-center gap-1.5 flex-wrap min-w-0">
-                    <h5 class="font-bold text-slate-900 dark:text-white line-clamp-1">
-                      {{ ind.name }}
-                    </h5>
-                    <span
-                      v-if="ind.isStar"
-                      class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex-shrink-0"
-                    >
-                      * Wajib Pembekalan
-                    </span>
-                  </div>
-
-                  <div class="flex items-center gap-1 opacity-80 group-hover:opacity-100 flex-shrink-0">
-                    <button
-                      type="button"
-                      @click="$emit('open-edit-indicator', comp.id, ind)"
-                      class="p-1 text-slate-400 hover:text-purple-600 cursor-pointer"
-                      title="Edit Indikator"
-                    >
-                      <Settings class="w-3 h-3" />
-                    </button>
-                    <button
-                      type="button"
-                      @click="removeBuddyIndicator(comp.id, ind.id)"
-                      class="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                      title="Hapus Indikator"
-                    >
-                      <Trash2 class="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                <p v-if="ind.description" class="text-xs text-slate-600 dark:text-slate-300">
                   {{ ind.description }}
                 </p>
               </div>
-            </div>
 
-            <div
-              v-if="!comp.indicators || comp.indicators.length === 0"
-              class="py-4 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-700 rounded-xl"
-            >
-              Belum ada butir indikator di kompetensi {{ comp.name }}.
+              <!-- Preview 3 Kolom Opsi Rapor Penilaian New Hire Sesuai PDF -->
+              <div class="flex items-center gap-1.5 shrink-0 self-start sm:self-center">
+                <span class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-medium border border-slate-200 dark:border-slate-700">
+                  Belum Menguasai
+                </span>
+                <span class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-medium border border-slate-200 dark:border-slate-700">
+                  Butuh Pendampingan
+                </span>
+                <span class="px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold border border-emerald-200 dark:border-emerald-800/40">
+                  Kompeten
+                </span>
+              </div>
             </div>
+          </div>
+
+          <!-- Empty State Jika Filter Kosong -->
+          <div
+            v-if="filteredIndicators.length === 0"
+            class="py-12 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-700 rounded-2xl space-y-2"
+          >
+            <p>Tidak ada indikator penilaian pada kategori ini.</p>
+            <button
+              type="button"
+              @click="$emit('open-edit', activeBuddyPkg)"
+              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold text-xs hover:bg-purple-200 cursor-pointer"
+            >
+              <Edit3 class="w-3.5 h-3.5" />
+              <span>Edit / Tambah Indikator</span>
+            </button>
           </div>
         </div>
       </div>
@@ -231,12 +212,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { Copy, Trash2, Plus, Settings, Loader2, Edit3 } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import { Trash2, Loader2, Edit3 } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
 import { useBuddyStore } from '~/stores/buddy.js'
 import { useToast } from '~/composables/useToast.js'
 import { confirmDeleteDialog } from '~/utils/dialog.js'
+import { normalizeBuddyDetails } from '~/utils/buddyHelper.js'
 
 const props = defineProps({
   selectedBuddyPkgId: {
@@ -252,9 +234,6 @@ const props = defineProps({
 const emit = defineEmits([
   'open-create',
   'open-edit',
-  'open-add-mission',
-  'open-add-indicator',
-  'open-edit-indicator',
   'update:selectedBuddyPkgId',
   'update:loading'
 ])
@@ -263,11 +242,51 @@ const templateStore = useTemplateStore()
 const buddyStore = useBuddyStore()
 const toast = useToast()
 
+const selectedCategory = ref('ALL')
+
+const allBuddyPackages = computed(() => {
+  return templateStore.buddyTemplates.length > 0
+    ? templateStore.buddyTemplates
+    : buddyStore.allPackages
+})
+
 const activeBuddyPkg = computed(() => {
   return templateStore.buddyTemplates.find(b => b.id === props.selectedBuddyPkgId)
     || templateStore.buddyTemplates[0]
     || buddyStore.packageById(props.selectedBuddyPkgId)
     || buddyStore.defaultPackage
+})
+
+const totalIndicatorsForPkg = (pkg) => {
+  if (!pkg) return 22
+  if (pkg.details && pkg.details.length > 0) return pkg.details.length
+  if (pkg.templates && pkg.templates.length > 0) return pkg.templates.length
+  return 22
+}
+
+const indicatorsList = computed(() => {
+  if (!activeBuddyPkg.value) return []
+  const details = activeBuddyPkg.value.details || activeBuddyPkg.value.templates || []
+  return normalizeBuddyDetails(details)
+})
+
+const availableCategories = computed(() => {
+  const cats = new Set()
+  indicatorsList.value.forEach(i => {
+    if (i.category) cats.add(i.category)
+  })
+  return Array.from(cats)
+})
+
+const countByCategory = (cat) => {
+  return indicatorsList.value.filter(i => i.category === cat).length
+}
+
+const filteredIndicators = computed(() => {
+  if (selectedCategory.value === 'ALL') {
+    return indicatorsList.value
+  }
+  return indicatorsList.value.filter(i => i.category === selectedCategory.value)
 })
 
 const selectBuddyPackageTab = async (bpkgId) => {
@@ -277,14 +296,6 @@ const selectBuddyPackageTab = async (bpkgId) => {
     await templateStore.fetchTemplateById(bpkgId, 'BUDDY')
   } finally {
     emit('update:loading', false)
-  }
-}
-
-const duplicateBuddyPkg = (bpkgId) => {
-  const dup = buddyStore.duplicatePackage(bpkgId)
-  if (dup) {
-    emit('update:selectedBuddyPkgId', dup.id)
-    toast.success('Paket Rapor Diduplikasi', `Paket "${dup.name}" berhasil dibuat.`)
   }
 }
 
@@ -305,12 +316,6 @@ const confirmDeleteBuddyPkg = async (bpkg) => {
     emit('update:selectedBuddyPkgId', nextId)
     toast.success('Paket Buddy Dihapus', `Paket "${bpkg.name}" telah dihapus.`)
   }
-}
-
-const removeBuddyIndicator = (compId, indId) => {
-  if (!activeBuddyPkg.value) return
-  buddyStore.deleteIndicator(activeBuddyPkg.value.id, compId, indId)
-  toast.success('Indikator Dihapus', 'Indikator penilaian berhasil dihapus.')
 }
 
 defineExpose({

@@ -33,20 +33,11 @@
         <template v-else-if="activeCatalogCategory === 'BUDDY'">
           <button
             type="button"
-            @click="openCreatePackageModal('BUDDY')"
-            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-200 dark:border-purple-800 bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 text-xs font-bold hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all shadow-xs cursor-pointer"
-          >
-            <Plus class="w-4 h-4 text-purple-600" />
-            <span>Buat Paket Buddy Baru</span>
-          </button>
-
-          <button
-            type="button"
-            @click="openAddBuddyMissionModal()"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all shadow-md shadow-purple-600/20 active:scale-95 cursor-pointer"
+            @click="openCreateBuddyModal"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all shadow-md shadow-purple-600/20 active:scale-95 cursor-pointer"
           >
             <Plus class="w-4 h-4" />
-            <span>Tambah Butir SOP Buddy</span>
+            <span>Buat Paket Buddy Baru</span>
           </button>
         </template>
 
@@ -136,11 +127,8 @@
       ref="buddyTabRef"
       v-model:selected-buddy-pkg-id="selectedBuddyPkgId"
       :is-card-loading="isCardLoading"
-      @open-create="openCreatePackageModal('BUDDY')"
-      @open-edit="openEditPackageModal"
-      @open-add-mission="openAddBuddyMissionModal()"
-      @open-add-indicator="openAddBuddyIndicatorModal"
-      @open-edit-indicator="openEditBuddyIndicatorModal"
+      @open-create="openCreateBuddyModal"
+      @open-edit="openEditBuddyModal"
       @update:loading="isCardLoading = $event"
     />
 
@@ -170,6 +158,13 @@
       v-model="showEditPackageModal"
       :template="editingPackage"
       @updated="handlePackageUpdated"
+    />
+
+    <BuddyTemplateModal
+      v-model="showBuddyTemplateModal"
+      :template="editingBuddyPackage"
+      @created="handleBuddyCreated"
+      @updated="handleBuddyUpdated"
     />
 
     <ApplyToStoreModal
@@ -213,6 +208,7 @@ import BuddyMissionTab from '~/components/template/BuddyMissionTab.vue'
 import FeedbackRaporTab from '~/components/template/FeedbackRaporTab.vue'
 import CreateTemplateModal from '~/components/template/CreateTemplateModal.vue'
 import EditTemplateModal from '~/components/template/EditTemplateModal.vue'
+import BuddyTemplateModal from '~/components/template/BuddyTemplateModal.vue'
 import ApplyToStoreModal from '~/components/template/ApplyToStoreModal.vue'
 import AddMissionModal from '~/components/template/AddMissionModal.vue'
 import BuddyIndicatorModal from '~/components/template/BuddyIndicatorModal.vue'
@@ -242,6 +238,8 @@ const feedbackTabRef = ref(null)
 // Modal Visibility State
 const showCreatePackageModal = ref(false)
 const showEditPackageModal = ref(false)
+const showBuddyTemplateModal = ref(false)
+const editingBuddyPackage = ref(null)
 const createModalType = ref('JOURNEY')
 const editingPackage = ref(null)
 
@@ -305,6 +303,10 @@ const switchCatalogTab = async (category) => {
 }
 
 const openCreatePackageModal = (type = 'JOURNEY') => {
+  if (type === 'BUDDY') {
+    openCreateBuddyModal()
+    return
+  }
   editingPackage.value = null
   createModalType.value = type
   showCreatePackageModal.value = true
@@ -312,6 +314,10 @@ const openCreatePackageModal = (type = 'JOURNEY') => {
 
 const openEditPackageModal = async (pkg) => {
   if (!pkg) return
+  if (pkg.type === 'BUDDY') {
+    await openEditBuddyModal(pkg)
+    return
+  }
   const targetId = pkg.id || pkg.tplMissionId
   if (targetId && (!pkg.templates || pkg.templates.length === 0)) {
     await templateStore.fetchTemplateById(targetId, pkg.type || 'JOURNEY').catch(() => {})
@@ -355,6 +361,42 @@ const handlePackageUpdated = async (updated) => {
     await templateStore.fetchTemplateById(targetId, 'BUDDY')
   } else if (updated?.type === 'FEEDBACK') {
     await templateStore.fetchTemplateById(targetId, 'FEEDBACK')
+  }
+}
+
+const openCreateBuddyModal = () => {
+  editingBuddyPackage.value = null
+  showBuddyTemplateModal.value = true
+}
+
+const openEditBuddyModal = async (pkg) => {
+  if (!pkg) return
+  const targetId = pkg.id || pkg.tplMissionId
+  if (targetId && (!pkg.details || pkg.details.length === 0) && (!pkg.templates || pkg.templates.length === 0)) {
+    await templateStore.fetchTemplateById(targetId, 'BUDDY').catch(() => {})
+  }
+  const freshPkg = templateStore.packageById(targetId) || pkg
+  editingBuddyPackage.value = freshPkg
+  showBuddyTemplateModal.value = true
+}
+
+const handleBuddyCreated = async (payload) => {
+  showBuddyTemplateModal.value = false
+  editingBuddyPackage.value = null
+  activeCatalogCategory.value = 'BUDDY'
+  selectedBuddyPkgId.value = payload.id || payload.tplMissionId || ''
+  await templateStore.fetchTemplatesByType('BUDDY')
+  if (selectedBuddyPkgId.value) {
+    await templateStore.fetchTemplateById(selectedBuddyPkgId.value, 'BUDDY').catch(() => {})
+  }
+}
+
+const handleBuddyUpdated = async (updated) => {
+  showBuddyTemplateModal.value = false
+  editingBuddyPackage.value = null
+  const targetId = updated?.id || updated?.tplMissionId
+  if (targetId) {
+    await templateStore.fetchTemplateById(targetId, 'BUDDY').catch(() => {})
   }
 }
 

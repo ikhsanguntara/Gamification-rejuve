@@ -31,7 +31,7 @@
           </div>
 
           <!-- Modal Body -->
-          <div class="px-6 py-5 max-h-[75vh] overflow-y-auto">
+          <div class="px-6 py-5 max-h-[82vh] overflow-y-auto">
             <slot />
           </div>
 
@@ -91,6 +91,9 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'close'])
 
 const maxWidthClass = computed(() => {
+  if (props.maxWidth && props.maxWidth.startsWith('max-w-')) {
+    return props.maxWidth
+  }
   switch (props.maxWidth) {
     case 'sm': return 'max-w-sm'
     case 'md': return 'max-w-md'
@@ -102,6 +105,7 @@ const maxWidthClass = computed(() => {
     case '5xl': return 'max-w-5xl'
     case '6xl': return 'max-w-6xl'
     case '7xl': return 'max-w-7xl'
+    case 'full': return 'max-w-[95vw]'
     default: return 'max-w-md'
   }
 })
