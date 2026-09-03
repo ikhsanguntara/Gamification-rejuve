@@ -109,7 +109,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import BaseModal from '~/components/ui/BaseModal.vue'
-import { calculateStars } from '~/utils/star.js'
+import { calculateStars, calculateAverageDmSl } from '~/utils/star.js'
 import { Star } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -125,20 +125,21 @@ const props = defineProps({
 
 defineEmits(['update:modelValue', 'confirm', 'cancel'])
 
-const slScore = computed(() => Number(props.item?.slScore ?? props.item?.originalScore ?? props.item?.score ?? props.item?.averageScore ?? 90))
-const dmScore = ref(90)
+const slScore = computed(() => Number(props.item?.slScore ?? props.item?.originalScore ?? props.item?.score ?? props.item?.averageScore ?? 78))
+const dmScore = ref(85)
 const dmNote = ref('')
 
 watch(() => props.item, (newItem) => {
   if (newItem) {
-    const base = Number(newItem.slScore ?? newItem.originalScore ?? newItem.score ?? newItem.averageScore ?? 90)
+    const base = Number(newItem.slScore ?? newItem.originalScore ?? newItem.score ?? newItem.averageScore ?? 78)
     dmScore.value = Number(newItem.dmScore ?? base)
     dmNote.value = newItem.dmNote || ''
   }
 }, { immediate: true, deep: true })
 
-// Rumus: (SL + DM) / 2
-const finalScore = computed(() => Math.round((slScore.value + Number(dmScore.value)) / 2))
-const finalStars = computed(() => calculateStars(finalScore.value))
+// Rumus Resmi: Avg(SL + DM) Score -> (Avg/100)*5 dibulatkan 1 angka di belakang koma
+const averageCalc = computed(() => calculateAverageDmSl(slScore.value, dmScore.value))
+const finalScore = computed(() => averageCalc.value.avgScore)
+const finalStars = computed(() => averageCalc.value.stars)
 const isAdjusted = computed(() => Number(dmScore.value) !== Number(slScore.value))
 </script>

@@ -86,7 +86,7 @@
                   ⭐ {{ mission.calculatedStars }} Stars (Calculated)
                 </span>
                 <span v-else>
-                  Up to 10 Stars per Crew
+                  Hingga 5 Bintang per Kru
                 </span>
               </p>
             </template>

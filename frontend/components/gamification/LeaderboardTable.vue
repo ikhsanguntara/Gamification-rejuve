@@ -75,10 +75,14 @@
         <p class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate w-full mt-0.5">
           📍 {{ topThreeList[1].storeLocation }}
         </p>
-
-        <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm">
-          <Star class="w-4 h-4 fill-amber-400 text-amber-500" />
-          <span>{{ topThreeList[1].stars.toLocaleString() }} Stars</span>
+        <div class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
+          <div class="inline-flex items-center gap-1 font-black text-amber-500 text-xs px-2 py-0.5 rounded-lg bg-slate-900 text-amber-300 shadow-2xs">
+            <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+            <span>{{ (Number(topThreeList[1].stars) || 0).toFixed(1).replace(/\.0$/, '') }}</span>
+          </div>
+          <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+            {{ (topThreeList[1].points || starsToPoints(topThreeList[1].stars)).toLocaleString() }} Points
+          </span>
         </div>
       </div>
 
@@ -93,8 +97,8 @@
         ]"
       >
         <div class="absolute -top-4 px-4 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-xs font-bold shadow-md flex items-center gap-1">
-          <Crown class="w-3.5 h-3.5 fill-amber-950" />
-          <span>🥇 #1 Gold Champion</span>
+          <Crown class="w-4 h-4 fill-amber-950" />
+          <span>🥇 #1 Juara Batch</span>
         </div>
         <img
           :src="topThreeList[0].avatar"
@@ -112,9 +116,16 @@
           📍 {{ topThreeList[0].storeLocation }}
         </p>
 
-        <div class="mt-3.5 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-amber-400 text-amber-950 font-bold text-base shadow-sm">
-          <Star class="w-4 h-4 fill-amber-950" />
-          <span>{{ topThreeList[0].stars.toLocaleString() }} Stars</span>
+        <!-- Badge Stars & Points Podium 1 -->
+        <div class="mt-3.5 inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-slate-900 text-white shadow-md border border-amber-400/40">
+          <div class="inline-flex items-center gap-1 text-amber-400 font-black text-sm">
+            <Star class="w-4 h-4 fill-amber-400" />
+            <span>{{ (Number(topThreeList[0].stars) || 0).toFixed(1).replace(/\.0$/, '') }}</span>
+          </div>
+          <span class="text-slate-400">|</span>
+          <span class="text-xs font-black text-white">
+            {{ (topThreeList[0].points || starsToPoints(topThreeList[0].stars)).toLocaleString() }} Points
+          </span>
         </div>
 
         <span class="text-xs font-medium text-amber-700 dark:text-amber-300 mt-2">
@@ -149,9 +160,14 @@
           📍 {{ topThreeList[2].storeLocation }}
         </p>
 
-        <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm">
-          <Star class="w-4 h-4 fill-amber-400 text-amber-500" />
-          <span>{{ topThreeList[2].stars.toLocaleString() }} Stars</span>
+        <div class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
+          <div class="inline-flex items-center gap-1 font-black text-amber-500 text-xs px-2 py-0.5 rounded-lg bg-slate-900 text-amber-300 shadow-2xs">
+            <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+            <span>{{ (Number(topThreeList[2].stars) || 0).toFixed(1).replace(/\.0$/, '') }}</span>
+          </div>
+          <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+            {{ (topThreeList[2].points || starsToPoints(topThreeList[2].stars)).toLocaleString() }} Points
+          </span>
         </div>
       </div>
     </div>
@@ -175,7 +191,7 @@
               <th class="py-3 px-4 text-center">Star Level</th>
               <th class="py-3 px-4 text-center">Completed</th>
               <th class="py-3 px-4 text-center">Avg Score</th>
-              <th class="py-3 px-4 text-right">Total Stars</th>
+              <th class="py-3 px-4 text-right">Stars & Points</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-normal">
@@ -255,11 +271,16 @@
                 {{ crew.averageScore }}%
               </td>
 
-              <!-- Total Stars -->
+              <!-- Stars & Points (Sesuai Standar Re.juve Baru) -->
               <td class="py-3.5 px-4 text-right">
-                <div class="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400 text-sm">
-                  <Star class="w-4 h-4 fill-amber-400 text-amber-500" />
-                  <span>{{ crew.stars.toLocaleString() }}</span>
+                <div class="inline-flex items-center gap-2">
+                  <div class="inline-flex items-center gap-1 font-black text-amber-300 text-xs px-2 py-0.5 rounded-lg bg-slate-900 dark:bg-slate-950 shadow-2xs">
+                    <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    <span>{{ (Number(crew.stars) || 0).toFixed(1).replace(/\.0$/, '') }}</span>
+                  </div>
+                  <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    {{ (crew.points || starsToPoints(crew.stars)).toLocaleString() }} Points
+                  </span>
                 </div>
               </td>
             </tr>
@@ -286,6 +307,7 @@ import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
+import { starsToPoints } from '~/utils/star.js'
 import {
   Crown,
   Star
