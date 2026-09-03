@@ -45,20 +45,11 @@
         <template v-else>
           <button
             type="button"
-            @click="openCreatePackageModal('FEEDBACK')"
-            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-bold hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-all shadow-xs cursor-pointer"
-          >
-            <Plus class="w-4 h-4 text-blue-600" />
-            <span>Buat Paket Feedback Baru</span>
-          </button>
-
-          <button
-            type="button"
-            @click="openAddSurveyQuestionModal"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer"
+            @click="openCreateFeedbackModal"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer"
           >
             <Plus class="w-4 h-4" />
-            <span>Tambah Pertanyaan Survei</span>
+            <span>Buat Paket Feedback Baru</span>
           </button>
         </template>
       </div>
@@ -139,11 +130,8 @@
       v-model:selected-feedback-pkg-id="selectedFeedbackPkgId"
       v-model:active-feedback-sub-tab="activeFeedbackSubTab"
       :is-card-loading="isCardLoading"
-      @open-create="openCreatePackageModal('FEEDBACK')"
-      @open-edit="openEditPackageModal"
-      @open-add-survey="openAddSurveyQuestionModal"
-      @open-edit-survey="openEditSurveyQuestionModal"
-      @open-add-rapor-indicator="openAddRaporIndicatorModal"
+      @open-create="openCreateFeedbackModal"
+      @open-edit="openEditFeedbackModal"
       @update:loading="isCardLoading = $event"
     />
 
@@ -165,6 +153,13 @@
       :template="editingBuddyPackage"
       @created="handleBuddyCreated"
       @updated="handleBuddyUpdated"
+    />
+
+    <FeedbackTemplateModal
+      v-model="showFeedbackTemplateModal"
+      :template="editingFeedbackPackage"
+      @created="handleFeedbackCreated"
+      @updated="handleFeedbackUpdated"
     />
 
     <ApplyToStoreModal
@@ -209,6 +204,7 @@ import FeedbackRaporTab from '~/components/template/FeedbackRaporTab.vue'
 import CreateTemplateModal from '~/components/template/CreateTemplateModal.vue'
 import EditTemplateModal from '~/components/template/EditTemplateModal.vue'
 import BuddyTemplateModal from '~/components/template/BuddyTemplateModal.vue'
+import FeedbackTemplateModal from '~/components/template/FeedbackTemplateModal.vue'
 import ApplyToStoreModal from '~/components/template/ApplyToStoreModal.vue'
 import AddMissionModal from '~/components/template/AddMissionModal.vue'
 import BuddyIndicatorModal from '~/components/template/BuddyIndicatorModal.vue'
@@ -240,6 +236,8 @@ const showCreatePackageModal = ref(false)
 const showEditPackageModal = ref(false)
 const showBuddyTemplateModal = ref(false)
 const editingBuddyPackage = ref(null)
+const showFeedbackTemplateModal = ref(false)
+const editingFeedbackPackage = ref(null)
 const createModalType = ref('JOURNEY')
 const editingPackage = ref(null)
 
@@ -307,6 +305,10 @@ const openCreatePackageModal = (type = 'JOURNEY') => {
     openCreateBuddyModal()
     return
   }
+  if (type === 'FEEDBACK') {
+    openCreateFeedbackModal()
+    return
+  }
   editingPackage.value = null
   createModalType.value = type
   showCreatePackageModal.value = true
@@ -316,6 +318,10 @@ const openEditPackageModal = async (pkg) => {
   if (!pkg) return
   if (pkg.type === 'BUDDY') {
     await openEditBuddyModal(pkg)
+    return
+  }
+  if (pkg.type === 'FEEDBACK') {
+    await openEditFeedbackModal(pkg)
     return
   }
   const targetId = pkg.id || pkg.tplMissionId
@@ -397,6 +403,43 @@ const handleBuddyUpdated = async (updated) => {
   const targetId = updated?.id || updated?.tplMissionId
   if (targetId) {
     await templateStore.fetchTemplateById(targetId, 'BUDDY').catch(() => {})
+  }
+}
+
+const openCreateFeedbackModal = () => {
+  editingFeedbackPackage.value = null
+  showFeedbackTemplateModal.value = true
+}
+
+const openEditFeedbackModal = async (pkg) => {
+  if (!pkg) return
+  const targetId = pkg.id || pkg.tplMissionId
+  if (targetId && (!pkg.details || pkg.details.length === 0) && (!pkg.templates || pkg.templates.length === 0)) {
+    await templateStore.fetchTemplateById(targetId, 'FEEDBACK').catch(() => {})
+  }
+  const freshPkg = templateStore.packageById(targetId) || pkg
+  editingFeedbackPackage.value = freshPkg
+  showFeedbackTemplateModal.value = true
+}
+
+const handleFeedbackCreated = async (payload) => {
+  showFeedbackTemplateModal.value = false
+  editingFeedbackPackage.value = null
+  activeCatalogCategory.value = 'FEEDBACK'
+  activeFeedbackSubTab.value = 'API_FEEDBACK'
+  selectedFeedbackPkgId.value = payload.id || payload.tplMissionId || ''
+  await templateStore.fetchTemplatesByType('FEEDBACK')
+  if (selectedFeedbackPkgId.value) {
+    await templateStore.fetchTemplateById(selectedFeedbackPkgId.value, 'FEEDBACK').catch(() => {})
+  }
+}
+
+const handleFeedbackUpdated = async (updated) => {
+  showFeedbackTemplateModal.value = false
+  editingFeedbackPackage.value = null
+  const targetId = updated?.id || updated?.tplMissionId
+  if (targetId) {
+    await templateStore.fetchTemplateById(targetId, 'FEEDBACK').catch(() => {})
   }
 }
 
