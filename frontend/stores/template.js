@@ -49,6 +49,10 @@ export const useTemplateStore = defineStore('template', {
       const list = state.journeyTemplates.length > 0 ? state.journeyTemplates : state.packages
       return list.find(p => p.id === state.selectedPackageId) || list[0]
     },
+    selectedPackage: (state) => {
+      const list = state.journeyTemplates.length > 0 ? state.journeyTemplates : state.packages
+      return list.find(p => p.id === state.selectedPackageId) || list[0] || null
+    },
     activeBuddyPackage: (state) => {
       return state.buddyTemplates.find(b => b.id === state.selectedBuddyId) || state.buddyTemplates[0] || null
     },
@@ -430,15 +434,32 @@ export const useTemplateStore = defineStore('template', {
       const pkg = this.packageById(pkgId)
       if (!pkg) return null
 
-      if (!pkg.weeks) pkg.weeks = []
+      if (!pkg.weeks || pkg.weeks.length === 0) {
+        normalizePackage(pkg)
+      }
       const nextWeekNum = pkg.weeks.length + 1
       const newWeek = {
         weekNumber: nextWeekNum,
         title: title || `Minggu ${nextWeekNum}: Tema SOP Lanjutan`
       }
 
-      pkg.weeks.push(newWeek)
+      pkg.weeks = [...pkg.weeks, newWeek]
       pkg.totalWeeks = pkg.weeks.length
+      pkg.durationValue = pkg.weeks.length
+
+      const inPkg = this.packages.find(p => p.id === pkgId)
+      if (inPkg && inPkg !== pkg) {
+        inPkg.weeks = [...pkg.weeks]
+        inPkg.totalWeeks = pkg.totalWeeks
+        inPkg.durationValue = pkg.durationValue
+      }
+      const inJrn = this.journeyTemplates.find(p => p.id === pkgId)
+      if (inJrn && inJrn !== pkg) {
+        inJrn.weeks = [...pkg.weeks]
+        inJrn.totalWeeks = pkg.totalWeeks
+        inJrn.durationValue = pkg.durationValue
+      }
+
       setStoredData('rejuve_templates_v4', this.packages)
       return newWeek
     },
@@ -450,9 +471,16 @@ export const useTemplateStore = defineStore('template', {
       const pkg = this.packageById(pkgId)
       if (!pkg || !pkg.weeks) return false
 
-      const target = pkg.weeks.find(w => w.weekNumber === Number(weekNumber))
+      const target = pkg.weeks.find(w => Number(w.weekNumber) === Number(weekNumber))
       if (target) {
         target.title = title
+        pkg.weeks = [...pkg.weeks]
+
+        const inPkg = this.packages.find(p => p.id === pkgId)
+        if (inPkg && inPkg !== pkg) inPkg.weeks = [...pkg.weeks]
+        const inJrn = this.journeyTemplates.find(p => p.id === pkgId)
+        if (inJrn && inJrn !== pkg) inJrn.weeks = [...pkg.weeks]
+
         setStoredData('rejuve_templates_v4', this.packages)
         return true
       }
@@ -466,31 +494,49 @@ export const useTemplateStore = defineStore('template', {
       const pkg = this.packageById(pkgId)
       if (!pkg || !pkg.weeks || pkg.weeks.length <= 1) return false
 
-      const targetIdx = pkg.weeks.findIndex(w => w.weekNumber === Number(weekNumber))
+      const targetIdx = pkg.weeks.findIndex(w => Number(w.weekNumber) === Number(weekNumber))
       if (targetIdx === -1) return false
 
       // Remove templates in that week
-      pkg.templates = pkg.templates.filter(t => t.week !== Number(weekNumber))
+      pkg.templates = (pkg.templates || []).filter(t => Number(t.week) !== Number(weekNumber))
 
       // Remove week
-      pkg.weeks.splice(targetIdx, 1)
+      const remaining = [...pkg.weeks]
+      remaining.splice(targetIdx, 1)
 
       // Re-index remaining weeks and templates
-      pkg.weeks.forEach((w, idx) => {
+      remaining.forEach((w, idx) => {
         const oldWeekNum = w.weekNumber
         const newWeekNum = idx + 1
         w.weekNumber = newWeekNum
         
         // Update template week numbers
         pkg.templates.forEach(t => {
-          if (t.week === oldWeekNum) {
+          if (Number(t.week) === Number(oldWeekNum)) {
             t.week = newWeekNum
           }
         })
       })
 
-      pkg.totalWeeks = pkg.weeks.length
-      pkg.totalMissions = pkg.templates.length
+      pkg.weeks = remaining
+      pkg.totalWeeks = remaining.length
+      pkg.durationValue = remaining.length
+
+      const inPkg = this.packages.find(p => p.id === pkgId)
+      if (inPkg && inPkg !== pkg) {
+        inPkg.weeks = [...pkg.weeks]
+        inPkg.templates = [...pkg.templates]
+        inPkg.totalWeeks = pkg.totalWeeks
+        inPkg.durationValue = pkg.durationValue
+      }
+      const inJrn = this.journeyTemplates.find(p => p.id === pkgId)
+      if (inJrn && inJrn !== pkg) {
+        inJrn.weeks = [...pkg.weeks]
+        inJrn.templates = [...pkg.templates]
+        inJrn.totalWeeks = pkg.totalWeeks
+        inJrn.durationValue = pkg.durationValue
+      }
+
       setStoredData('rejuve_templates_v4', this.packages)
       return true
     },

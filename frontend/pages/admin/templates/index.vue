@@ -30,7 +30,7 @@
 
           <button
             type="button"
-            @click="openApplyPackageModal"
+            @click="showApplyModal = true"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white text-xs font-bold transition-all shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
           >
             <Sparkles class="w-4 h-4" />
@@ -95,7 +95,7 @@
         ]"
       >
         <Layers class="w-4 h-4" />
-        <span>1. Paket Misi Batch ({{ templateStore.journeyTemplates.length || templateStore.allPackages.length }})</span>
+        <span>1. Paket Misi Batch ({{ (templateStore.journeyTemplates.length > 0 ? templateStore.journeyTemplates : templateStore.allPackages).length }})</span>
       </button>
 
       <button
@@ -127,1384 +127,133 @@
       </button>
     </div>
 
-    <!-- 2-Column Workspace for BATCH TEMPLATES -->
-    <div v-if="activeCatalogCategory === 'BATCH'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      
-      <!-- KOLOM KIRI: DAFTAR PAKET MASTER (4/12) -->
-      <div class="lg:col-span-4 space-y-3">
-        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
-          Daftar Paket Template ({{ (templateStore.journeyTemplates.length > 0 ? templateStore.journeyTemplates : templateStore.allPackages).length }})
-        </h3>
-
-        <div class="space-y-2">
-          <div
-            v-for="pkg in (templateStore.journeyTemplates.length > 0 ? templateStore.journeyTemplates : templateStore.allPackages)"
-            :key="pkg.id"
-            @click="selectPackageTab(pkg.id)"
-            class="p-4 rounded-2xl border transition-all cursor-pointer relative"
-            :class="[
-              templateStore.selectedPackageId === pkg.id
-                ? 'border-[#831843] bg-white dark:bg-slate-900 ring-2 ring-[#831843]/40 shadow-xs'
-                : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-slate-300'
-            ]"
-          >
-            <div class="flex items-center justify-between gap-2 mb-1">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
-                {{ pkg.code }}
-              </span>
-              <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-semibold">
-                <span>{{ (pkg.weeks || []).length || pkg.totalWeeks || 3 }} Minggu</span>
-                <span>•</span>
-                <span>{{ pkg.templates.length }} Misi</span>
-              </div>
-            </div>
-
-            <h4 class="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
-              {{ pkg.name }}
-            </h4>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
-              {{ pkg.description }}
-            </p>
-
-            <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
-              <span class="text-slate-400 font-medium">🎯 {{ pkg.targetType }}</span>
-              <div class="flex items-center gap-1">
-                <button
-                  type="button"
-                  @click.stop="duplicatePackage(pkg.id)"
-                  title="Duplikat Paket"
-                  class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-                >
-                  <Copy class="w-3 h-3" />
-                </button>
-                <button
-                  v-if="templateStore.allPackages.length > 1"
-                  type="button"
-                  @click.stop="confirmDeletePackage(pkg)"
-                  title="Hapus Paket"
-                  class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"
-                >
-                  <Trash2 class="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- KOLOM KANAN: DETAIL PAKET & TABS MINGGUAN (8/12) -->
-      <div class="lg:col-span-8">
-        <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
-          
-          <!-- Package Header Summary -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
-            <div>
-              <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-[#831843] text-white">
-                  {{ activePackage?.code }}
-                </span>
-                <span class="text-xs font-bold text-slate-900 dark:text-white">
-                  {{ activePackage?.name }}
-                </span>
-                <span v-if="isCardLoading" class="inline-flex items-center gap-1 text-[10px] text-[#831843] dark:text-[#f472b6] font-semibold animate-pulse">
-                  <Loader2 class="w-3 h-3 animate-spin" /> Memuat detail...
-                </span>
-              </div>
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                {{ activePackage?.description }}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              @click="openAddMissionModal"
-              class="px-3.5 py-2 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
-            >
-              <Plus class="w-3.5 h-3.5" />
-              <span>Tambah Butir SOP</span>
-            </button>
-          </div>
-
-          <!-- Week Tabs via Reka UI dengan Dukungan Lebih dari 3 Week & Judul Week -->
-          <TabsRoot :model-value="String(activeWeekTab)" @update:model-value="activeWeekTab = Number($event)" class="w-full space-y-4">
-            
-            <!-- Week Selector Navigation & Add Week Button -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
-              <div class="flex items-center gap-2 flex-wrap">
-                <TabsList class="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 overflow-x-auto">
-                  <TabsTrigger
-                    v-for="w in activePackageWeeks"
-                    :key="w.weekNumber"
-                    :value="String(w.weekNumber)"
-                    class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer"
-                    :class="[
-                      activeWeekTab === w.weekNumber
-                        ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-xs'
-                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                    ]"
-                  >
-                    Minggu {{ w.weekNumber }}
-                  </TabsTrigger>
-                </TabsList>
-
-                <!-- Tombol Tambah Week Dinamis -->
-                <button
-                  type="button"
-                  @click="handleAddNewWeek"
-                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-[#831843] text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-[#831843] transition-all cursor-pointer"
-                  title="Tambah Minggu Baru ke Paket Ini"
-                >
-                  <Plus class="w-3.5 h-3.5" />
-                  <span>Tambah Week</span>
-                </button>
-              </div>
-
-              <!-- Action buttons for currently active week -->
-              <div class="flex items-center gap-2">
-                <button
-                  v-if="activePackageWeeks.length > 1"
-                  type="button"
-                  @click="handleRemoveCurrentWeek"
-                  class="text-[11px] text-rose-500 hover:text-rose-700 font-semibold cursor-pointer"
-                >
-                  Hapus Minggu Ini
-                </button>
-              </div>
-            </div>
-
-            <!-- Dynamic Week Title Editor Card -->
-            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div class="flex items-center gap-2 flex-1 min-w-0">
-                <span class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap flex items-center gap-1">
-                  <Bookmark class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
-                  <span>Judul Minggu {{ activeWeekTab }}:</span>
-                </span>
-                <input
-                  v-model="currentWeekTitle"
-                  type="text"
-                  placeholder="Contoh: Minggu 1: Suhu & Sanitasi Dasar"
-                  class="flex-1 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-slate-900 dark:text-white font-semibold focus:ring-1 focus:ring-[#831843]"
-                />
-              </div>
-              <button
-                type="button"
-                @click="saveCurrentWeekTitle"
-                class="px-3 py-1.5 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white text-xs font-bold shadow-2xs transition-all cursor-pointer active:scale-95 flex-shrink-0"
-              >
-                Simpan Judul
-              </button>
-            </div>
-
-            <!-- Content per Week -->
-            <TabsContent
-              v-for="w in activePackageWeeks"
-              :key="w.weekNumber"
-              :value="String(w.weekNumber)"
-              class="space-y-3 pt-2"
-            >
-              <div
-                v-for="item in activePackage?.templates.filter(t => t.week === w.weekNumber)"
-                :key="item.id"
-                class="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-slate-200 bg-slate-50/50 dark:bg-slate-900/40 space-y-2.5 transition-all"
-              >
-                <div class="flex items-start justify-between gap-3">
-                  <div class="space-y-1 min-w-0">
-                    <div class="flex items-center gap-2">
-                      <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        {{ item.codePrefix }}
-                      </span>
-                      <span class="text-xs font-bold text-slate-900 dark:text-white">
-                        {{ item.title }}
-                      </span>
-                    </div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">
-                      {{ item.description }}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    @click="removeMission(item.id)"
-                    class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                    title="Hapus butir SOP ini"
-                  >
-                    <Trash2 class="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/80">
-                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                    Checklist & Poin SOP:
-                  </span>
-                  <ul class="text-[11px] text-slate-600 dark:text-slate-300 space-y-0.5 list-disc list-inside">
-                    <li v-for="(req, rIdx) in item.requirements" :key="rIdx">
-                      {{ req }}
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <div
-                v-if="!activePackage?.templates.some(t => t.week === w.weekNumber)"
-                class="py-12 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl"
-              >
-                Belum ada butir misi SOP di Minggu {{ w.weekNumber }}. Klik "Tambah Butir SOP" di atas.
-              </div>
-            </TabsContent>
-
-          </TabsRoot>
-
-        </div>
-      </div>
-
-    </div>
-
-    <!-- 2-Column Workspace for BUDDY TEMPLATES (Rapor New Hire 3 Hari) -->
-    <div v-else-if="activeCatalogCategory === 'BUDDY'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <!-- Sisi Kiri: Daftar Paket Template Buddy -->
-      <div class="lg:col-span-4 space-y-3">
-        <div class="flex items-center justify-between px-1">
-          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            Daftar Template Buddy ({{ (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages).length }})
-          </h3>
-          <button
-            type="button"
-            @click="openCreatePackageModal('BUDDY')"
-            class="text-[11px] text-purple-600 font-bold hover:underline cursor-pointer"
-          >
-            + Paket Baru
-          </button>
-        </div>
-
-        <div class="space-y-2">
-          <div
-            v-for="bpkg in (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages)"
-            :key="bpkg.id"
-            @click="selectBuddyPackageTab(bpkg.id)"
-            class="p-4 rounded-2xl border transition-all cursor-pointer relative"
-            :class="[
-              selectedBuddyPkgId === bpkg.id
-                ? 'border-purple-600 bg-white dark:bg-slate-900 ring-2 ring-purple-600/40 shadow-xs'
-                : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-slate-300'
-            ]"
-          >
-            <div class="flex items-center justify-between gap-2 mb-1">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300">
-                {{ bpkg.code }}
-              </span>
-              <span class="text-[10px] text-slate-400 font-semibold">
-                {{ bpkg.durationValue || 3 }} Hari • {{ (bpkg.templates || []).length || (bpkg.details || []).length || 7 }} Butir
-              </span>
-            </div>
-
-            <h4 class="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
-              {{ bpkg.name }}
-            </h4>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-              {{ bpkg.description || 'Program orientasi dan pendampingan kru baru bersama Buddy' }}
-            </p>
-
-            <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
-              <span class="text-slate-400 font-medium">🎯 Target Kru Baru</span>
-              <div class="flex items-center gap-1">
-                <button
-                  type="button"
-                  @click.stop="duplicateBuddyPkg(bpkg.id)"
-                  title="Duplikat Paket"
-                  class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-                >
-                  <Copy class="w-3 h-3" />
-                </button>
-                <button
-                  type="button"
-                  @click.stop="confirmDeletePackage(bpkg, 'BUDDY')"
-                  title="Hapus Paket"
-                  class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"
-                >
-                  <Trash2 class="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sisi Kanan: Detail Butir SOP & Kompetensi Buddy -->
-      <div class="lg:col-span-8">
-        <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
-            <div>
-              <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-purple-600 text-white">
-                  {{ activeBuddyPkg?.code }}
-                </span>
-                <span class="text-xs font-bold text-slate-900 dark:text-white">
-                  {{ activeBuddyPkg?.name }}
-                </span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold">
-                  {{ activeBuddyPkg?.durationValue || 3 }} Hari
-                </span>
-                <span v-if="isCardLoading" class="inline-flex items-center gap-1 text-[10px] text-purple-600 dark:text-purple-400 font-semibold animate-pulse">
-                  <Loader2 class="w-3 h-3 animate-spin" /> Memuat detail...
-                </span>
-              </div>
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                {{ activeBuddyPkg?.description }}
-              </p>
-            </div>
-            
-            <button
-              type="button"
-              @click="openAddBuddyMissionModal()"
-              class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
-            >
-              <Plus class="w-3.5 h-3.5" />
-              <span>Tambah Butir SOP Buddy</span>
-            </button>
-          </div>
-
-          <!-- Live Mission Details from Backend API jika ada -->
-          <div v-if="activeBuddyPkg?.templates && activeBuddyPkg.templates.length > 0" class="space-y-3">
-            <div class="flex items-center justify-between">
-              <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                Butir Misi SOP Buddy ({{ activeBuddyPkg.templates.length }})
-              </h4>
-              <span class="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">Live Backend API</span>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div
-                v-for="(item, idx) in activeBuddyPkg.templates"
-                :key="item.id || idx"
-                class="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5"
-              >
-                <div class="flex items-start justify-between gap-2">
-                  <div class="flex items-center gap-1.5 flex-wrap min-w-0">
-                    <span class="w-2 h-2 rounded-full bg-purple-600"></span>
-                    <h5 class="text-xs font-bold text-slate-900 dark:text-white">
-                      {{ item.title || item.missionTitle }}
-                    </h5>
-                    <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
-                      Hari {{ item.week || item.durationNumber || 1 }}
-                    </span>
-                  </div>
-                  <span class="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex-shrink-0">
-                    {{ item.category || 'TECHNICAL' }}
-                  </span>
-                </div>
-                <p v-if="item.description" class="text-[11px] text-slate-500 dark:text-slate-400">
-                  {{ item.description }}
-                </p>
-                <div class="text-[10px] text-purple-600 dark:text-purple-400 font-medium">
-                  Tipe Input: {{ item.inputType || 'SCALE' }}
-                  <span v-if="item.scaleConfig">({{ item.scaleConfig.min }} - {{ item.scaleConfig.max }})</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 7 Competency Categories with Interactive CRUD on each Indicator -->
-          <div class="space-y-4">
-            <div
-              v-for="comp in activeBuddyPkg?.competencies"
-              :key="comp.id"
-              class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-3"
-            >
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
-                  <span class="text-xs font-bold text-slate-900 dark:text-white">
-                    {{ comp.name }}
-                  </span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300">
-                    {{ comp.indicators?.length || 0 }} Indikator
-                  </span>
-                  <button
-                    type="button"
-                    @click="openAddBuddyIndicatorModal(comp.id)"
-                    class="text-[11px] text-purple-600 hover:underline font-bold cursor-pointer"
-                  >
-                    + Butir Indikator
-                  </button>
-                </div>
-              </div>
-
-              <!-- Indicators List in this Competency -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div
-                  v-for="ind in (comp.indicators || [])"
-                  :key="ind.id"
-                  class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1.5 relative group"
-                >
-                  <div class="flex items-start justify-between gap-2">
-                    <div class="flex items-center gap-1.5 flex-wrap min-w-0">
-                      <h5 class="font-bold text-slate-900 dark:text-white line-clamp-1">
-                        {{ ind.name }}
-                      </h5>
-                      <span
-                        v-if="ind.isStar"
-                        class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex-shrink-0"
-                      >
-                        * Wajib Pembekalan
-                      </span>
-                    </div>
-
-                    <div class="flex items-center gap-1 opacity-80 group-hover:opacity-100 flex-shrink-0">
-                      <button
-                        type="button"
-                        @click="openEditBuddyIndicatorModal(comp.id, ind)"
-                        class="p-1 text-slate-400 hover:text-purple-600 cursor-pointer"
-                        title="Edit Indikator"
-                      >
-                        <Settings class="w-3 h-3" />
-                      </button>
-                      <button
-                        type="button"
-                        @click="removeBuddyIndicator(comp.id, ind.id)"
-                        class="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                        title="Hapus Indikator"
-                      >
-                        <Trash2 class="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
-                    {{ ind.description }}
-                  </p>
-                </div>
-              </div>
-
-              <div
-                v-if="!comp.indicators || comp.indicators.length === 0"
-                class="py-4 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-700 rounded-xl"
-              >
-                Belum ada butir indikator di kompetensi {{ comp.name }}.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2-Column Workspace for FEEDBACK & RAPOR TEMPLATES -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <!-- Sisi Kiri: Selector Sub-Kategori Feedback & Rapor -->
-      <div class="lg:col-span-4 space-y-3">
-        <div class="flex items-center justify-between px-1">
-          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            Template Feedback ({{ templateStore.feedbackTemplates.length }})
-          </h3>
-          <button
-            type="button"
-            @click="openCreatePackageModal('FEEDBACK')"
-            class="text-[11px] text-blue-600 font-bold hover:underline cursor-pointer"
-          >
-            + Paket Baru
-          </button>
-        </div>
-
-        <div class="space-y-2">
-          <!-- Live Feedback Templates from Backend -->
-          <div
-            v-for="fpkg in templateStore.feedbackTemplates"
-            :key="fpkg.id"
-            @click="selectFeedbackPackageTab(fpkg.id)"
-            class="p-4 rounded-2xl border transition-all cursor-pointer relative"
-            :class="[
-              activeFeedbackSubTab === 'API_FEEDBACK' && selectedFeedbackPkgId === fpkg.id
-                ? 'border-blue-600 bg-white dark:bg-slate-900 ring-2 ring-blue-600/40 shadow-xs'
-                : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-slate-300'
-            ]"
-          >
-            <div class="flex items-center justify-between gap-2 mb-1">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
-                {{ fpkg.code }}
-              </span>
-              <span class="text-[10px] text-slate-400 font-semibold">
-                {{ (fpkg.templates || []).length || (fpkg.details || []).length }} Butir Evaluasi
-              </span>
-            </div>
-
-            <h4 class="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
-              {{ fpkg.name }}
-            </h4>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-              {{ fpkg.description || 'Kuesioner evaluasi program onboarding oleh Crew' }}
-            </p>
-
-            <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
-              <span class="text-slate-400 font-medium">📋 Kuesioner Feedback</span>
-              <button
-                type="button"
-                @click.stop="confirmDeletePackage(fpkg, 'FEEDBACK')"
-                title="Hapus Template"
-                class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"
-              >
-                <Trash2 class="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-
-          <!-- Divider Format Master -->
-          <div class="pt-2">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">
-              Bank Pertanyaan & Format Master
-            </span>
-          </div>
-
-          <!-- Card 1: Rapor New Hire 7 Kompetensi -->
-          <div
-            @click="activeFeedbackSubTab = 'RAPOR'"
-            class="p-4 rounded-2xl border transition-all cursor-pointer relative"
-            :class="[
-              activeFeedbackSubTab === 'RAPOR'
-                ? 'border-blue-600 bg-white dark:bg-slate-900 ring-2 ring-blue-600/40 shadow-xs'
-                : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-slate-300'
-            ]"
-          >
-            <div class="flex items-center justify-between gap-2 mb-1">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
-                RAPOR-07-SOP
-              </span>
-              <span class="text-[10px] text-slate-400 font-semibold">
-                7 Pilar Kompetensi
-              </span>
-            </div>
-
-            <h4 class="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
-              Rapor New Hire Re.juve (Store Leader)
-            </h4>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-              Evaluasi 7 kompetensi inti: Product Knowledge, Service, Sales, Kasir, Store Ops, Food Safety & Attitude.
-            </p>
-          </div>
-
-          <!-- Card 2: Survei Pengalaman Onboarding 1 Bulan -->
-          <div
-            @click="activeFeedbackSubTab = 'SURVEY'"
-            class="p-4 rounded-2xl border transition-all cursor-pointer relative"
-            :class="[
-              activeFeedbackSubTab === 'SURVEY'
-                ? 'border-blue-600 bg-white dark:bg-slate-900 ring-2 ring-blue-600/40 shadow-xs'
-                : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-slate-300'
-            ]"
-          >
-            <div class="flex items-center justify-between gap-2 mb-1">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
-                SURVEY-16-MS
-              </span>
-              <span class="text-[10px] text-slate-400 font-semibold">
-                17 Butir Pertanyaan
-              </span>
-            </div>
-
-            <h4 class="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
-              Survei Onboarding & Buddy (Kru Baru)
-            </h4>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-              Survei kepuasan 360° pengalaman onboarding 1 bulan (16 rating skala 0–10 + 1 masukan esai).
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sisi Kanan: Detail & Pengaturan Template Feedback / Rapor -->
-      <div class="lg:col-span-8">
-        
-        <!-- SUB-TAB: LIVE API FEEDBACK -->
-        <div v-if="activeFeedbackSubTab === 'API_FEEDBACK'" class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
-            <div>
-              <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-600 text-white">
-                  {{ activeFeedbackPkg?.code || 'TPL-FEEDBACK' }}
-                </span>
-                <span class="text-xs font-bold text-slate-900 dark:text-white">
-                  {{ activeFeedbackPkg?.name || 'Template Feedback' }}
-                </span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">
-                  {{ activeFeedbackPkg?.durationValue || 1 }} Hari
-                </span>
-                <span v-if="isCardLoading" class="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 font-semibold animate-pulse">
-                  <Loader2 class="w-3 h-3 animate-spin" /> Memuat detail...
-                </span>
-              </div>
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                {{ activeFeedbackPkg?.description || 'Kuesioner evaluasi program onboarding oleh Crew' }}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              @click="openAddSurveyQuestionModal"
-              class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
-            >
-              <Plus class="w-3.5 h-3.5" />
-              <span>Tambah Pertanyaan Survei</span>
-            </button>
-          </div>
-
-          <!-- Items in this Feedback Template -->
-          <div class="space-y-3">
-            <div
-              v-for="(item, idx) in (activeFeedbackPkg?.templates || [])"
-              :key="item.id || idx"
-              class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5"
-            >
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-                  <h5 class="text-xs font-bold text-slate-900 dark:text-white">
-                    {{ item.title || item.missionTitle }}
-                  </h5>
-                  <span class="text-[10px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">
-                    {{ item.category || 'SOFT_SKILL' }}
-                  </span>
-                </div>
-                <span class="text-[10px] text-slate-400 font-semibold">
-                  Tipe Input: {{ item.inputType || 'TEXT' }}
-                </span>
-              </div>
-              <p v-if="item.description" class="text-[11px] text-slate-500 dark:text-slate-400">
-                {{ item.description }}
-              </p>
-            </div>
-
-            <div
-              v-if="!activeFeedbackPkg?.templates || activeFeedbackPkg.templates.length === 0"
-              class="py-12 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl"
-            >
-              Belum ada butir evaluasi di template ini. Klik "+ Tambah Pertanyaan Survei" di atas.
-            </div>
-          </div>
-        </div>
-
-        <!-- SUB-TAB 1: RAPOR NEW HIRE 7 KOMPETENSI -->
-        <div v-else-if="activeFeedbackSubTab === 'RAPOR'" class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
-            <div>
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-600 text-white">
-                  RAPOR NEW HIRE RE.JUVE
-                </span>
-                <span class="text-xs font-bold text-slate-900 dark:text-white">
-                  Format Standar Penilaian Store Leader
-                </span>
-              </div>
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                {{ feedbackStore.raporTemplate.specialNotice }}
-              </p>
-            </div>
-          </div>
-
-          <!-- 7 Competencies List -->
-          <div class="space-y-4">
-            <div
-              v-for="(comp, cIdx) in feedbackStore.raporCompetencies"
-              :key="comp.id"
-              class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-3"
-            >
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-bold text-blue-700 dark:text-blue-300">
-                    {{ cIdx + 1 }}. {{ comp.name }}
-                  </span>
-                  <span class="text-[10px] text-slate-400 font-semibold">
-                    ({{ comp.indicators.length }} Indikator)
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  @click="openAddRaporIndicatorModal(comp.id)"
-                  class="text-[11px] text-blue-600 hover:underline font-bold cursor-pointer"
-                >
-                  + Tambah Indikator
-                </button>
-              </div>
-
-              <!-- Indicators Table -->
-              <div class="space-y-1.5">
-                <div
-                  v-for="ind in comp.indicators"
-                  :key="ind.id"
-                  class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-xs flex items-center justify-between gap-3 group"
-                >
-                  <div class="flex items-center gap-2 min-w-0">
-                    <span class="text-slate-400 font-bold">•</span>
-                    <span class="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                      {{ ind.text }}
-                    </span>
-                    <span
-                      v-if="ind.isMandatoryIntro"
-                      class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex-shrink-0"
-                    >
-                      * Wajib Pembekalan
-                    </span>
-                  </div>
-
-                  <div class="flex items-center gap-2 flex-shrink-0">
-                    <span class="text-[10px] text-slate-400 font-medium hidden sm:inline">
-                      [Belum Menguasai / Butuh Pendampingan / Kompeten]
-                    </span>
-                    <button
-                      type="button"
-                      @click="deleteRaporIndicator(comp.id, ind.id)"
-                      class="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                      title="Hapus Indikator"
-                    >
-                      <Trash2 class="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SUB-TAB 2: SURVEI PENGALAMAN ONBOARDING & BUDDY (MICROSOFT FORMS FORMAT) -->
-        <div v-else class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
-            <div>
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">
-                  SURVEI ONBOARDING 1 BULAN
-                </span>
-                <span class="text-xs font-bold text-slate-900 dark:text-white">
-                  Kuesioner Evaluasi Kru Baru
-                </span>
-              </div>
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                16 Butir Skala Likert (0–10: Sangat Tidak Setuju s/d Sangat Setuju) + 1 Pertanyaan Refleksi Esai.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              @click="openAddSurveyQuestionModal"
-              class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
-            >
-              <Plus class="w-3.5 h-3.5" />
-              <span>Tambah Pertanyaan</span>
-            </button>
-          </div>
-
-          <!-- Questions List -->
-          <div class="space-y-2.5">
-            <div
-              v-for="q in feedbackStore.surveyQuestions"
-              :key="q.id"
-              class="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/70 flex items-start justify-between gap-3 group"
-            >
-              <div class="space-y-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-xs font-bold text-blue-600 dark:text-blue-400">
-                    No. {{ q.number }}
-                  </span>
-                  <span class="text-[10px] font-bold px-2 py-0.2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                    {{ q.category }}
-                  </span>
-                  <span class="text-[10px] font-semibold text-slate-400">
-                    {{ q.type === 'SCALE_0_10' ? 'Rating Skala 0–10' : 'Input Esai Deskriptif' }}
-                  </span>
-                </div>
-
-                <p class="text-xs font-semibold text-slate-900 dark:text-white leading-relaxed">
-                  {{ q.text }}
-                </p>
-              </div>
-
-              <div class="flex items-center gap-1 opacity-80 group-hover:opacity-100 flex-shrink-0">
-                <button
-                  type="button"
-                  @click="openEditSurveyQuestionModal(q)"
-                  class="p-1.5 text-slate-400 hover:text-blue-600 cursor-pointer"
-                  title="Edit Pertanyaan"
-                >
-                  <Settings class="w-3.5 h-3.5" />
-                </button>
-                <button
-                  v-if="feedbackStore.surveyQuestions.length > 1"
-                  type="button"
-                  @click="deleteSurveyQuestion(q.id)"
-                  class="p-1.5 text-slate-400 hover:text-rose-600 cursor-pointer"
-                  title="Hapus Pertanyaan"
-                >
-                  <Trash2 class="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- MODAL 1: BUAT MASTER PAKET / TEMPLATE BARU -->
-    <BaseModal
-      :modelValue="showCreatePackageModal"
-      :title="modalTitle"
-      :subtitle="modalSubtitle"
-      max-width="sm"
-      @update:modelValue="showCreatePackageModal = $event"
-      @close="showCreatePackageModal = false"
-    >
-      <form @submit.prevent="executeCreatePackage" class="space-y-3 py-2">
-        <!-- Tipe Template (Defaulted per Tab Aktif) -->
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tipe Template *</label>
-          <select
-            v-model="newPkgForm.type"
-            @change="onTypeChange"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-[#831843]"
-          >
-            <option value="JOURNEY">JOURNEY (Paket Misi Batch Onboarding)</option>
-            <option value="BUDDY">BUDDY (Paket Misi Buddy 3 Hari)</option>
-            <option value="FEEDBACK">FEEDBACK (Kuesioner Feedback & Rapor)</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Template *</label>
-          <input
-            v-model="newPkgForm.code"
-            type="text"
-            required
-            placeholder="Contoh: TPL-JOURNEY-01"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white uppercase focus:ring-2 focus:ring-[#831843]"
-          />
-        </div>
-
-        <!-- Dua Field Durasi: durationCode (DAYS, WEEK, MONTH) & durationValue -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Satuan Durasi (Code) *</label>
-            <select
-              v-model="newPkgForm.durationCode"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-[#831843]"
-            >
-              <option value="DAY">DAYS (Hari)</option>
-              <option value="WEEK">WEEK (Minggu)</option>
-              <option value="MONTH">MONTH (Bulan)</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Nilai Durasi (Value) *
-            </label>
-            <input
-              v-model.number="newPkgForm.durationValue"
-              type="number"
-              min="1"
-              :max="newPkgForm.durationCode === 'MONTH' ? 12 : (newPkgForm.durationCode === 'WEEK' ? 52 : 365)"
-              required
-              placeholder="Contoh: 1"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Paket / Template *</label>
-          <input
-            v-model="newPkgForm.name"
-            type="text"
-            required
-            :placeholder="namePlaceholder"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-          />
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Target Format Gerai</label>
-            <input
-              v-model="newPkgForm.targetType"
-              type="text"
-              placeholder="Kiosk / Mall / Standalone"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-            />
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori</label>
-            <input
-              v-model="newPkgForm.category"
-              type="text"
-              placeholder="Standar Operasional / Onboarding"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi Paket</label>
-          <textarea
-            v-model="newPkgForm.description"
-            rows="2"
-            placeholder="Penjelasan ringkas fokus kurikulum paket..."
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-          ></textarea>
-        </div>
-
-        <div class="pt-3 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            @click="showCreatePackageModal = false"
-            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
-          >
-            Simpan Paket
-          </button>
-        </div>
-      </form>
-    </BaseModal>
-
-    <!-- MODAL 2: TAMBAH BUTIR SOP MISI BARU -->
-    <BaseModal
-      :modelValue="showAddMissionModal"
-      title="Tambah Butir SOP Misi"
-      :subtitle="`Tambahkan misi standar baru ke paket ${activePackage?.name}`"
-      max-width="md"
-      @update:modelValue="showAddMissionModal = $event"
-      @close="showAddMissionModal = false"
-    >
-      <form @submit.prevent="executeAddMission" class="space-y-3 py-2">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Pilih Minggu (Week) *
-            </label>
-            <select
-              v-model="newMissionForm.week"
-              required
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] cursor-pointer"
-            >
-              <option
-                v-for="w in activePackageWeeks"
-                :key="w.weekNumber"
-                :value="w.weekNumber"
-              >
-                Week {{ w.weekNumber }} — {{ w.title }}
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori Misi</label>
-            <input
-              v-model="newMissionForm.category"
-              type="text"
-              required
-              placeholder="Contoh: Suhu Dingin, Kebersihan, Pelayanan"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Judul Misi SOP *</label>
-          <input
-            v-model="newMissionForm.title"
-            type="text"
-            required
-            placeholder="Contoh: Cek Kalibrasi Sensorik Rasa Jus"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-          />
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi & Tujuan Misi</label>
-          <textarea
-            v-model="newMissionForm.description"
-            rows="2"
-            placeholder="Instruksi singkat bagi kru dalam menjalankan SOP ini..."
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-          ></textarea>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            Daftar Checklist / Poin SOP (1 baris per poin)
-          </label>
-          <textarea
-            v-model="newMissionForm.requirementsText"
-            rows="3"
-            placeholder="Cek temperatur chiller di 2-4°C&#10;Catat di logbook fisik dan submit foto"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-          ></textarea>
-        </div>
-
-        <div class="pt-3 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            @click="showAddMissionModal = false"
-            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
-          >
-            Simpan Misi
-          </button>
-        </div>
-      </form>
-    </BaseModal>
-
-    <!-- MODAL 3: TERAPKAN PAKET KE GERAI / BATCH -->
-    <BaseModal
-      :modelValue="showApplyModal"
-      title="Terapkan Paket Template ke Gerai / Batch"
-      :subtitle="`Menerapkan seluruh butir misi dari ${activePackage?.name} ke Batch gerai aktif`"
-      max-width="sm"
-      @update:modelValue="showApplyModal = $event"
-      @close="showApplyModal = false"
-    >
-      <form @submit.prevent="executeApplyPackage" class="space-y-4 py-2">
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            Pilih Target Batch Gerai *
-          </label>
-          <select
-            v-model="targetBatchId"
-            required
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] cursor-pointer"
-          >
-            <option v-for="b in batchStore.allBatches" :key="b.id" :value="b.id">
-              {{ b.name }} — {{ b.storeLocation }}
-            </option>
-          </select>
-        </div>
-
-        <p class="text-[11px] text-slate-500">
-          Seluruh {{ activePackage?.templates.length }} butir misi SOP dan {{ activePackageWeeks.length }} tema mingguan akan otomatis diterapkan untuk batch yang dipilih.
-        </p>
-
-        <div class="pt-3 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            @click="showApplyModal = false"
-            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
-          >
-            Terapkan Sekarang
-          </button>
-        </div>
-      </form>
-    </BaseModal>
-
-    <!-- MODAL 4: BUAT PAKET RAPOR NEW HIRE BARU (CRUD) -->
-    <BaseModal
-      :modelValue="showCreateBuddyPackageModal"
-      title="Buat Paket Template Rapor New Hire Baru"
-      subtitle="Definisikan standar kurikulum orientasi & rapor pendampingan 3 hari"
-      max-width="sm"
-      @update:modelValue="showCreateBuddyPackageModal = $event"
-      @close="showCreateBuddyPackageModal = false"
-    >
-      <form @submit.prevent="executeCreateBuddyPackage" class="space-y-3 py-2">
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Paket Rapor *</label>
-          <input
-            v-model="newBuddyPkgForm.name"
-            type="text"
-            required
-            placeholder="Contoh: Rapor Pendampingan New Hire (3 Hari)"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
-          />
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Paket</label>
-          <input
-            v-model="newBuddyPkgForm.code"
-            type="text"
-            placeholder="BUDDY-03"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
-          />
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi Paket</label>
-          <textarea
-            v-model="newBuddyPkgForm.description"
-            rows="2"
-            placeholder="Penjelasan ringkas fokus pendampingan 3 hari pra-batch..."
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 resize-none"
-          ></textarea>
-        </div>
-
-        <div class="pt-3 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            @click="showCreateBuddyPackageModal = false"
-            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20 active:scale-95 cursor-pointer"
-          >
-            Simpan Paket
-          </button>
-        </div>
-      </form>
-    </BaseModal>
-
-    <!-- MODAL 5: TAMBAH / EDIT BUTIR INDIKATOR RAPOR (CRUD) -->
-    <BaseModal
-      :modelValue="showAddBuddyMissionModal"
-      :title="isEditingBuddyMission ? 'Edit Indikator Penilaian' : 'Tambah Indikator Penilaian'"
-      :subtitle="`Paket ${activeBuddyPkg?.name}`"
-      max-width="md"
-      @update:modelValue="showAddBuddyMissionModal = $event"
-      @close="showAddBuddyMissionModal = false"
-    >
-      <form @submit.prevent="executeSaveBuddyIndicator" class="space-y-3 py-2">
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            Pilih Kategori Kompetensi *
-          </label>
-          <select
-            v-model="newBuddyIndicatorForm.competencyId"
-            required
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 cursor-pointer font-bold"
-          >
-            <option
-              v-for="comp in activeBuddyPkg?.competencies"
-              :key="comp.id"
-              :value="comp.id"
-            >
-              {{ comp.name }}
-            </option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Indikator Penilaian *</label>
-          <input
-            v-model="newBuddyIndicatorForm.name"
-            type="text"
-            required
-            placeholder="Contoh: Menjelaskan produk & ingredients*"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
-          />
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi / Panduan Evaluator</label>
-          <textarea
-            v-model="newBuddyIndicatorForm.description"
-            rows="2"
-            placeholder="Kriteria yang dinilai oleh Store Captain saat observasi 3 hari..."
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 resize-none"
-          ></textarea>
-        </div>
-
-        <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/40">
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <input
-              type="checkbox"
-              v-model="newBuddyIndicatorForm.isStar"
-              class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 accent-purple-600"
-            />
-            <span class="font-bold text-slate-800 dark:text-slate-200">
-              Tandai Bintang (*) — Wajib Pembekalan (Dimaklumi bila belum praktik langsung)
-            </span>
-          </label>
-        </div>
-
-        <div class="pt-3 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            @click="showAddBuddyMissionModal = false"
-            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20 active:scale-95 cursor-pointer"
-          >
-            {{ isEditingBuddyMission ? 'Simpan Perubahan' : 'Tambah Indikator' }}
-          </button>
-        </div>
-      </form>
-    </BaseModal>
-
-    <!-- MODAL 6: TAMBAH / EDIT PERTANYAAN SURVEI (FEEDBACK) -->
-    <BaseModal
-      :modelValue="showAddSurveyQuestionModal"
-      :title="isEditingSurveyQuestion ? 'Edit Pertanyaan Survei' : 'Tambah Pertanyaan Survei Baru'"
-      subtitle="Kuesioner evaluasi pengalaman onboarding & pendampingan kru baru"
-      max-width="md"
-      @update:modelValue="showAddSurveyQuestionModal = $event"
-      @close="showAddSurveyQuestionModal = false"
-    >
-      <form @submit.prevent="executeSaveSurveyQuestion" class="space-y-3 py-2">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori Pertanyaan *</label>
-            <input
-              v-model="surveyQuestionForm.category"
-              type="text"
-              required
-              placeholder="Contoh: Peran Buddy, Teamwork, Budaya"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600"
-            />
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tipe Input Jawaban</label>
-            <select
-              v-model="surveyQuestionForm.type"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 cursor-pointer font-bold"
-            >
-              <option value="SCALE_0_10">Rating Skala 0 s/d 10</option>
-              <option value="ESSAY">Input Esai Deskriptif</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Teks Pertanyaan Kuesioner *</label>
-          <textarea
-            v-model="surveyQuestionForm.text"
-            rows="3"
-            required
-            placeholder="Tuliskan butir pernyataan kuesioner..."
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 resize-none"
-          ></textarea>
-        </div>
-
-        <div class="pt-3 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            @click="showAddSurveyQuestionModal = false"
-            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer"
-          >
-            {{ isEditingSurveyQuestion ? 'Simpan Perubahan' : 'Tambah Pertanyaan' }}
-          </button>
-        </div>
-      </form>
-    </BaseModal>
-
-    <!-- MODAL 7: TAMBAH INDIKATOR RAPOR NEW HIRE -->
-    <BaseModal
-      :modelValue="showAddRaporIndModal"
-      title="Tambah Indikator Rapor New Hire"
-      subtitle="Tambahkan butir kompetensi standar operasional Re.juve"
-      max-width="sm"
-      @update:modelValue="showAddRaporIndModal = $event"
-      @close="showAddRaporIndModal = false"
-    >
-      <form @submit.prevent="executeSaveRaporIndicator" class="space-y-3 py-2">
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Butir Indikator Penilaian *</label>
-          <textarea
-            v-model="raporIndForm.text"
-            rows="2"
-            required
-            placeholder="Contoh: Menjelaskan batas toleransi suhu chiller 2-4°C"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 resize-none"
-          ></textarea>
-        </div>
-
-        <div class="flex items-center gap-2 pt-1">
-          <input
-            id="chkMandatory"
-            v-model="raporIndForm.isMandatoryIntro"
-            type="checkbox"
-            class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-          />
-          <label for="chkMandatory" class="text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
-            Poin Bertanda Bintang (*) Wajib Pembekalan
-          </label>
-        </div>
-
-        <div class="pt-3 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            @click="showAddRaporIndModal = false"
-            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            class="px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer"
-          >
-            Simpan Indikator
-          </button>
-        </div>
-      </form>
-    </BaseModal>
+    <!-- TAB 1: WORKSPACE PAKET KURIKULUM ONBOARDING (BATCH JOURNEY) -->
+    <BatchJourneyTab
+      v-if="activeCatalogCategory === 'BATCH'"
+      ref="batchTabRef"
+      :is-card-loading="isCardLoading"
+      @open-create="openCreatePackageModal('JOURNEY')"
+      @open-apply="showApplyModal = true"
+      @open-add-mission="showAddMissionModal = true"
+      @update:loading="isCardLoading = $event"
+    />
+
+    <!-- TAB 2: WORKSPACE PAKET ORIENTASI PRE-BATCH (BUDDY) -->
+    <BuddyMissionTab
+      v-else-if="activeCatalogCategory === 'BUDDY'"
+      ref="buddyTabRef"
+      v-model:selected-buddy-pkg-id="selectedBuddyPkgId"
+      :is-card-loading="isCardLoading"
+      @open-create="openCreatePackageModal('BUDDY')"
+      @open-add-mission="openAddBuddyMissionModal()"
+      @open-add-indicator="openAddBuddyIndicatorModal"
+      @open-edit-indicator="openEditBuddyIndicatorModal"
+      @update:loading="isCardLoading = $event"
+    />
+
+    <!-- TAB 3: WORKSPACE FEEDBACK & RAPOR NEW HIRE (FEEDBACK) -->
+    <FeedbackRaporTab
+      v-else
+      ref="feedbackTabRef"
+      v-model:selected-feedback-pkg-id="selectedFeedbackPkgId"
+      v-model:active-feedback-sub-tab="activeFeedbackSubTab"
+      :is-card-loading="isCardLoading"
+      @open-create="openCreatePackageModal('FEEDBACK')"
+      @open-add-survey="openAddSurveyQuestionModal"
+      @open-edit-survey="openEditSurveyQuestionModal"
+      @open-add-rapor-indicator="openAddRaporIndicatorModal"
+      @update:loading="isCardLoading = $event"
+    />
+
+    <!-- MODALS MODULAR -->
+    <CreateTemplateModal
+      v-model="showCreatePackageModal"
+      :initial-type="createModalType"
+      @created="handlePackageCreated"
+    />
+
+    <ApplyToStoreModal
+      v-model="showApplyModal"
+      :active-package="templateStore.selectedPackage"
+    />
+
+    <AddMissionModal
+      v-model="showAddMissionModal"
+      :active-package="templateStore.selectedPackage"
+      :active-week="batchTabRef?.activeWeekTab || 1"
+    />
+
+    <BuddyIndicatorModal
+      v-model="showAddBuddyMissionModal"
+      :active-package="buddyTabRef?.activeBuddyPkg"
+      :initial-competency-id="activeBuddyCompId"
+      :editing-indicator="editingBuddyIndicator"
+    />
+
+    <SurveyQuestionModal
+      v-model="showAddSurveyQuestionModal"
+      :editing-question="editingSurveyQuestion"
+    />
+
+    <RaporIndicatorModal
+      v-model="showAddRaporIndModal"
+      :competency-id="activeRaporCompId"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import {
-  TabsRoot,
-  TabsList,
-  TabsTrigger,
-  TabsContent
-} from 'reka-ui'
-import { useBatchStore } from '~/stores/batch.js'
+import { ref, onMounted } from 'vue'
+import { Plus, Sparkles, Layers, Handshake, MessageSquareText } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
-import { useBuddyStore } from '~/stores/buddy.js'
-import { useFeedbackStore } from '~/stores/feedback.js'
-import { useToast } from '~/composables/useToast.js'
-import BaseModal from '~/components/ui/BaseModal.vue'
-import {
-  Sparkles,
-  Check,
-  Plus,
-  Copy,
-  Trash2,
-  Bookmark,
-  Layers,
-  Handshake,
-  Settings,
-  MessageSquareText,
-  Loader2
-} from 'lucide-vue-next'
 
-const router = useRouter()
-const batchStore = useBatchStore()
+// Sub-Komponen Modul Template
+import BatchJourneyTab from '~/components/template/BatchJourneyTab.vue'
+import BuddyMissionTab from '~/components/template/BuddyMissionTab.vue'
+import FeedbackRaporTab from '~/components/template/FeedbackRaporTab.vue'
+import CreateTemplateModal from '~/components/template/CreateTemplateModal.vue'
+import ApplyToStoreModal from '~/components/template/ApplyToStoreModal.vue'
+import AddMissionModal from '~/components/template/AddMissionModal.vue'
+import BuddyIndicatorModal from '~/components/template/BuddyIndicatorModal.vue'
+import SurveyQuestionModal from '~/components/template/SurveyQuestionModal.vue'
+import RaporIndicatorModal from '~/components/template/RaporIndicatorModal.vue'
+
+definePageMeta({
+  title: 'Master Templates SOP | Re.juve Training & Gamification',
+  roles: ['SUPER_ADMIN', 'DISTRICT_MANAGER', 'STORE_LEADER']
+})
+
 const templateStore = useTemplateStore()
-const buddyStore = useBuddyStore()
-const feedbackStore = useFeedbackStore()
-const toast = useToast()
 
+// State Kategori Tab
 const activeCatalogCategory = ref('BATCH') // 'BATCH' | 'BUDDY' | 'FEEDBACK'
 const activeFeedbackSubTab = ref('API_FEEDBACK') // 'API_FEEDBACK' | 'RAPOR' | 'SURVEY'
 
 const selectedBuddyPkgId = ref('')
 const selectedFeedbackPkgId = ref('')
 const isCardLoading = ref(false)
+
+// Template Refs
+const batchTabRef = ref(null)
+const buddyTabRef = ref(null)
+const feedbackTabRef = ref(null)
+
+// Modal Visibility State
+const showCreatePackageModal = ref(false)
+const createModalType = ref('JOURNEY')
+
+const showApplyModal = ref(false)
+const showAddMissionModal = ref(false)
+
+const showAddBuddyMissionModal = ref(false)
+const activeBuddyCompId = ref('comp-pk')
+const editingBuddyIndicator = ref(null)
+
+const showAddSurveyQuestionModal = ref(false)
+const editingSurveyQuestion = ref(null)
+
+const showAddRaporIndModal = ref(false)
+const activeRaporCompId = ref('comp-pk')
 
 onMounted(async () => {
   await templateStore.fetchAllTemplateTypes()
@@ -1521,7 +270,9 @@ onMounted(async () => {
     selectedFeedbackPkgId.value = templateStore.feedbackTemplates[0].id
     await templateStore.fetchTemplateById(templateStore.feedbackTemplates[0].id, 'FEEDBACK')
   }
-  syncWeekTitle()
+  if (batchTabRef.value?.syncWeekTitle) {
+    batchTabRef.value.syncWeekTitle()
+  }
 })
 
 const switchCatalogTab = async (category) => {
@@ -1533,7 +284,9 @@ const switchCatalogTab = async (category) => {
     const targetId = templateStore.selectedPackageId || templateStore.journeyTemplates[0].id
     templateStore.selectedPackageId = targetId
     await templateStore.fetchTemplateById(targetId, 'JOURNEY')
-    syncWeekTitle()
+    if (batchTabRef.value?.syncWeekTitle) {
+      batchTabRef.value.syncWeekTitle()
+    }
   } else if (category === 'BUDDY' && templateStore.buddyTemplates.length > 0) {
     if (!selectedBuddyPkgId.value || !templateStore.buddyTemplates.find(b => b.id === selectedBuddyPkgId.value)) {
       selectedBuddyPkgId.value = templateStore.buddyTemplates[0].id
@@ -1548,532 +301,59 @@ const switchCatalogTab = async (category) => {
   }
 }
 
-const activeBuddyPkg = computed(() => {
-  return templateStore.buddyTemplates.find(b => b.id === selectedBuddyPkgId.value)
-    || templateStore.buddyTemplates[0]
-    || buddyStore.packageById(selectedBuddyPkgId.value)
-    || buddyStore.defaultPackage
-})
-
-const activeFeedbackPkg = computed(() => {
-  return templateStore.feedbackTemplates.find(f => f.id === selectedFeedbackPkgId.value)
-    || templateStore.feedbackTemplates[0]
-    || null
-})
-
-const activeWeekTab = ref(1)
-const currentWeekTitle = ref('')
-const showApplyModal = ref(false)
-const showCreatePackageModal = ref(false)
-const showAddMissionModal = ref(false)
-
-// Buddy Template Modals
-const showCreateBuddyPackageModal = ref(false)
-const showAddBuddyMissionModal = ref(false)
-const isEditingBuddyMission = ref(false)
-const editingBuddyMissionId = ref('')
-
-// Feedback & Rapor Modals
-const showAddSurveyQuestionModal = ref(false)
-const isEditingSurveyQuestion = ref(false)
-const editingSurveyQuestionId = ref('')
-const surveyQuestionForm = ref({
-  category: 'Peran Buddy',
-  type: 'SCALE_0_10',
-  text: ''
-})
-
-const showAddRaporIndModal = ref(false)
-const selectedCompIdForNewInd = ref('')
-const raporIndForm = ref({
-  text: '',
-  isMandatoryIntro: false
-})
-
-const targetBatchId = ref(batchStore.selectedBatchId || 'batch-alpha')
-
-const activePackage = computed(() => templateStore.currentPackage)
-
-const activePackageWeeks = computed(() => {
-  return templateStore.packageWeeks(activePackage.value?.id)
-})
-
-// Sync week title when activeWeekTab or activePackage changes
-const syncWeekTitle = () => {
-  const currentWeekObj = activePackageWeeks.value.find(w => w.weekNumber === Number(activeWeekTab.value))
-  currentWeekTitle.value = currentWeekObj ? currentWeekObj.title : `Minggu ${activeWeekTab.value}: Tema SOP`
-}
-
-watch([activeWeekTab, activePackage], () => {
-  syncWeekTitle()
-}, { immediate: true })
-
-const selectPackageTab = async (pkgId) => {
-  templateStore.selectedPackageId = pkgId
-  activeWeekTab.value = 1
-  isCardLoading.value = true
-  try {
-    await templateStore.fetchTemplateById(pkgId, 'JOURNEY')
-  } finally {
-    isCardLoading.value = false
-    syncWeekTitle()
-  }
-}
-
-const selectBuddyPackageTab = async (bpkgId) => {
-  selectedBuddyPkgId.value = bpkgId
-  isCardLoading.value = true
-  try {
-    await templateStore.fetchTemplateById(bpkgId, 'BUDDY')
-  } finally {
-    isCardLoading.value = false
-  }
-}
-
-const selectFeedbackPackageTab = async (fpkgId) => {
-  activeFeedbackSubTab.value = 'API_FEEDBACK'
-  selectedFeedbackPkgId.value = fpkgId
-  isCardLoading.value = true
-  try {
-    await templateStore.fetchTemplateById(fpkgId, 'FEEDBACK')
-  } finally {
-    isCardLoading.value = false
-  }
-}
-
-const saveCurrentWeekTitle = () => {
-  if (!currentWeekTitle.value.trim() || !activePackage.value) return
-  templateStore.updateWeekTitle(activePackage.value.id, activeWeekTab.value, currentWeekTitle.value.trim())
-  toast.success('Judul Week Disimpan', `Judul Week ${activeWeekTab.value} berhasil diperbarui.`)
-}
-
-const handleAddNewWeek = () => {
-  if (!activePackage.value) return
-  const created = templateStore.addWeekToPackage(activePackage.value.id)
-  if (created) {
-    activeWeekTab.value = created.weekNumber
-    syncWeekTitle()
-    toast.success('Week Ditambahkan', `Week ${created.weekNumber} siap ditambahkan butir SOP.`)
-  }
-}
-
-import { confirmDeleteDialog } from '~/utils/dialog.js'
-
-const handleRemoveCurrentWeek = async () => {
-  if (!activePackage.value) return
-  const isConfirmed = await confirmDeleteDialog({
-    title: `Hapus Week ${activeWeekTab.value}?`,
-    text: `Seluruh butir misi di dalam Week ${activeWeekTab.value} akan ikut dihapus.`,
-    confirmButtonText: 'Ya, Hapus Week'
-  })
-
-  if (isConfirmed) {
-    const success = templateStore.removeWeekFromPackage(activePackage.value.id, activeWeekTab.value)
-    if (success) {
-      activeWeekTab.value = 1
-      syncWeekTitle()
-      toast.success('Week Dihapus', 'Minggu beserta seluruh butir SOP di dalamnya telah dihapus.')
-    }
-  }
-}
-
-// Package Creation Form
-const newPkgForm = ref({
-  type: 'JOURNEY',
-  code: '',
-  name: '',
-  category: 'Standar Operasional',
-  targetType: 'Semua Gerai',
-  durationCode: 'WEEK',
-  durationValue: 3,
-  totalWeeks: 3,
-  description: ''
-})
-
-const modalTitle = computed(() => {
-  if (newPkgForm.value.type === 'BUDDY') return 'Buat Template Paket Buddy'
-  if (newPkgForm.value.type === 'FEEDBACK') return 'Buat Template Paket Feedback'
-  return 'Buat Master Paket Baru (Batch Journey)'
-})
-
-const modalSubtitle = computed(() => {
-  if (newPkgForm.value.type === 'BUDDY') return 'Definisikan nama, jumlah hari, dan deskripsi paket orientasi kru baru bersama Buddy'
-  if (newPkgForm.value.type === 'FEEDBACK') return 'Definisikan nama, format evaluasi, dan butir kuesioner feedback onboarding'
-  return 'Definisikan nama, durasi (hari/minggu/bulan), dan format gerai untuk paket template kurikulum ini'
-})
-
-const namePlaceholder = computed(() => {
-  if (newPkgForm.value.type === 'BUDDY') return 'Contoh: Onboarding Buddy Barista 3 Hari'
-  if (newPkgForm.value.type === 'FEEDBACK') return 'Contoh: End-of-Journey Crew Feedback'
-  return 'Contoh: Standar Gerai Bandara & Kiosk'
-})
-
-// Mission Template Creation Form
-const newMissionForm = ref({
-  week: 1,
-  title: '',
-  category: 'Quality Control',
-  description: '',
-  requirementsText: ''
-})
-
-// Buddy Template Forms (Rapor New Hire)
-const newBuddyPkgForm = ref({
-  name: '',
-  code: '',
-  description: ''
-})
-
-const newBuddyIndicatorForm = ref({
-  competencyId: 'comp-pk',
-  name: '',
-  isStar: false,
-  description: ''
-})
-
-const openCreatePackageModal = (overrideType = null) => {
-  const typeMap = { BATCH: 'JOURNEY', BUDDY: 'BUDDY', FEEDBACK: 'FEEDBACK' }
-  const currentType = overrideType || typeMap[activeCatalogCategory.value] || 'JOURNEY'
-
-  const count = currentType === 'JOURNEY'
-    ? templateStore.journeyTemplates.length
-    : (currentType === 'BUDDY' ? templateStore.buddyTemplates.length : templateStore.feedbackTemplates.length)
-
-  const defaultDurationCode = currentType === 'JOURNEY' ? 'WEEK' : 'DAY'
-  const defaultDurationValue = currentType === 'JOURNEY' ? 3 : (currentType === 'BUDDY' ? 3 : 1)
-
-  newPkgForm.value = {
-    type: currentType,
-    code: `TPL-${currentType}-${String(count + 1).padStart(2, '0')}`,
-    name: '',
-    category: currentType === 'JOURNEY' ? 'Standar Operasional' : (currentType === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi'),
-    targetType: 'Semua Gerai',
-    durationCode: defaultDurationCode,
-    durationValue: defaultDurationValue,
-    totalWeeks: defaultDurationValue,
-    description: ''
-  }
+const openCreatePackageModal = (type = 'JOURNEY') => {
+  createModalType.value = type
   showCreatePackageModal.value = true
 }
 
-const onTypeChange = () => {
-  const t = newPkgForm.value.type
-  const count = t === 'JOURNEY'
-    ? templateStore.journeyTemplates.length
-    : (t === 'BUDDY' ? templateStore.buddyTemplates.length : templateStore.feedbackTemplates.length)
-
-  const defaultDurationCode = t === 'JOURNEY' ? 'WEEK' : 'DAY'
-  const defaultDurationValue = t === 'JOURNEY' ? 3 : (t === 'BUDDY' ? 3 : 1)
-
-  newPkgForm.value.code = `TPL-${t}-${String(count + 1).padStart(2, '0')}`
-  newPkgForm.value.durationCode = defaultDurationCode
-  newPkgForm.value.durationValue = defaultDurationValue
-  newPkgForm.value.totalWeeks = defaultDurationValue
-  newPkgForm.value.category = t === 'JOURNEY' ? 'Standar Operasional' : (t === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi')
-}
-
-const executeCreatePackage = async () => {
-  if (!newPkgForm.value.name?.trim()) {
-    toast.error('Validasi Gagal', 'Nama paket/template wajib diisi')
-    return
-  }
-
-  const dVal = Number(newPkgForm.value.durationValue || 1)
-  const dCode = newPkgForm.value.durationCode || (newPkgForm.value.type === 'JOURNEY' ? 'WEEK' : 'DAY')
-
-  const payload = {
-    code: newPkgForm.value.code?.trim() || `TPL-${newPkgForm.value.type}-${Date.now()}`,
-    name: newPkgForm.value.name.trim(),
-    type: newPkgForm.value.type,
-    durationCode: dCode,
-    durationValue: dVal,
-    totalWeeks: dCode === 'WEEK' ? dVal : (dCode === 'MONTH' ? dVal * 4 : Math.ceil(dVal / 7)),
-    category: newPkgForm.value.category || 'Standar Operasional',
-    targetType: newPkgForm.value.targetType || 'Semua Gerai',
-    description: newPkgForm.value.description?.trim() || '',
-    details: []
-  }
-
-  const created = await templateStore.createPackage(payload)
-  showCreatePackageModal.value = false
-
-  // Pindahkan tab aktif ke tipe paket yang baru dibuat jika berbeda
+const handlePackageCreated = (payload) => {
   if (payload.type === 'JOURNEY') {
     activeCatalogCategory.value = 'BATCH'
-    activeWeekTab.value = 1
-    syncWeekTitle()
+    templateStore.selectedPackageId = payload.id || payload.tplMissionId || ''
+    if (batchTabRef.value) {
+      batchTabRef.value.activeWeekTab = 1
+      batchTabRef.value.syncWeekTitle()
+    }
   } else if (payload.type === 'BUDDY') {
     activeCatalogCategory.value = 'BUDDY'
-    selectedBuddyPkgId.value = created?.id || created?.tplMissionId || ''
+    selectedBuddyPkgId.value = payload.id || payload.tplMissionId || ''
   } else if (payload.type === 'FEEDBACK') {
     activeCatalogCategory.value = 'FEEDBACK'
     activeFeedbackSubTab.value = 'API_FEEDBACK'
-    selectedFeedbackPkgId.value = created?.id || created?.tplMissionId || ''
-  }
-
-  toast.success('Paket Dibuat', `Paket "${created?.name || payload.name}" (${payload.type}) siap digunakan.`)
-}
-
-const duplicatePackage = (pkgId) => {
-  const dup = templateStore.duplicatePackage(pkgId)
-  if (dup) {
-    toast.success('Paket Diduplikasi', `Salinan "${dup.name}" berhasil dibuat.`)
+    selectedFeedbackPkgId.value = payload.id || payload.tplMissionId || ''
   }
 }
 
-const confirmDeletePackage = async (pkg, type = 'JOURNEY') => {
-  const isConfirmed = await confirmDeleteDialog({
-    title: 'Hapus Paket Template?',
-    text: `Apakah Anda yakin ingin menghapus paket template "${pkg.name}" (${pkg.code})?`,
-    confirmButtonText: 'Ya, Hapus Paket'
-  })
-
-  if (isConfirmed) {
-    await templateStore.deletePackage(pkg.id, type)
-    toast.success('Paket Dihapus', `Paket "${pkg.name}" telah dihapus.`)
-  }
-}
-
-const openAddMissionModal = () => {
-  newMissionForm.value = {
-    week: activeWeekTab.value,
-    title: '',
-    category: 'Standar Operasional',
-    description: '',
-    requirementsText: ''
-  }
-  showAddMissionModal.value = true
-}
-
-const executeAddMission = () => {
-  const reqs = newMissionForm.value.requirementsText
-    .split('\n')
-    .map(s => s.trim())
-    .filter(Boolean)
-
-  templateStore.addMissionToPackage(activePackage.value.id, {
-    ...newMissionForm.value,
-    codePrefix: `M-0${(activePackage.value?.templates.length || 0) + 1}`,
-    requirements: reqs.length > 0 ? reqs : ['Pemeriksaan kepatuhan standar SOP Re.juve']
-  })
-
-  showAddMissionModal.value = false
-  toast.success('Butir SOP Ditambahkan', `Misi "${newMissionForm.value.title}" ditambahkan ke Week ${newMissionForm.value.week}.`)
-}
-
-const removeMission = async (tmplId) => {
-  const isConfirmed = await confirmDeleteDialog({
-    title: 'Hapus Butir SOP?',
-    text: 'Apakah Anda yakin ingin menghapus butir SOP ini dari kurikulum paket?',
-    confirmButtonText: 'Ya, Hapus'
-  })
-
-  if (isConfirmed) {
-    templateStore.removeMissionFromPackage(activePackage.value.id, tmplId)
-    toast.success('Butir SOP Dihapus', 'Misi telah dihapus dari paket.')
-  }
-}
-
-const openApplyPackageModal = () => {
-  showApplyModal.value = true
-}
-
-const executeApplyPackage = () => {
-  const created = templateStore.applyPackageToBatch(targetBatchId.value, activePackage.value.id)
-  showApplyModal.value = false
-  const targetBatch = batchStore.batchById(targetBatchId.value)
-  toast.success(
-    'Paket SOP Diterapkan!',
-    `${created.length} Misi dari "${activePackage.value?.name}" aktif untuk ${targetBatch?.name || 'Batch'}.`
-  )
-  router.push('/admin/missions')
-}
-
-// ==========================================
-// BUDDY TEMPLATE CRUD HANDLERS (RAPOR NEW HIRE)
-// ==========================================
-const openCreateBuddyPackageModal = () => {
-  newBuddyPkgForm.value = {
-    name: '',
-    code: `BUDDY-${String(buddyStore.allPackages.length + 1).padStart(2, '0')}`,
-    description: ''
-  }
-  showCreateBuddyPackageModal.value = true
-}
-
-const executeCreateBuddyPackage = () => {
-  const created = buddyStore.createBuddyPackage(newBuddyPkgForm.value)
-  showCreateBuddyPackageModal.value = false
-  selectedBuddyPkgId.value = created.id
-  toast.success('Paket Rapor Dibuat', `Paket "${created.name}" siap digunakan.`)
-}
-
-const duplicateBuddyPkg = (pkgId) => {
-  const dup = buddyStore.duplicateBuddyPackage(pkgId)
-  if (dup) {
-    selectedBuddyPkgId.value = dup.id
-    toast.success('Paket Rapor Diduplikasi', `Salinan "${dup.name}" berhasil dibuat.`)
-  }
-}
-
-const confirmDeleteBuddyPkg = async (bpkg) => {
-  const isConfirmed = await confirmDeleteDialog({
-    title: 'Hapus Paket Rapor?',
-    text: `Apakah Anda yakin ingin menghapus paket template Rapor New Hire "${bpkg.name}"?`,
-    confirmButtonText: 'Ya, Hapus Paket'
-  })
-
-  if (isConfirmed) {
-    buddyStore.deleteBuddyPackage(bpkg.id)
-    selectedBuddyPkgId.value = buddyStore.defaultPackage?.id || ''
-    toast.success('Paket Rapor Dihapus', `Paket "${bpkg.name}" telah dihapus.`)
-  }
+const openAddBuddyMissionModal = () => {
+  editingBuddyIndicator.value = null
+  activeBuddyCompId.value = 'comp-pk'
+  showAddBuddyMissionModal.value = true
 }
 
 const openAddBuddyIndicatorModal = (compId = 'comp-pk') => {
-  isEditingBuddyMission.value = false
-  editingBuddyMissionId.value = ''
-  newBuddyIndicatorForm.value = {
-    competencyId: compId || activeBuddyPkg.value?.competencies?.[0]?.id || 'comp-pk',
-    name: '',
-    isStar: false,
-    description: ''
-  }
+  editingBuddyIndicator.value = null
+  activeBuddyCompId.value = compId
   showAddBuddyMissionModal.value = true
 }
 
 const openEditBuddyIndicatorModal = (compId, ind) => {
-  isEditingBuddyMission.value = true
-  editingBuddyMissionId.value = ind.id
-  newBuddyIndicatorForm.value = {
-    competencyId: compId,
-    name: ind.name,
-    isStar: Boolean(ind.isStar),
-    description: ind.description || ''
-  }
+  editingBuddyIndicator.value = ind
+  activeBuddyCompId.value = compId
   showAddBuddyMissionModal.value = true
 }
 
-const executeSaveBuddyIndicator = () => {
-  if (!activeBuddyPkg.value || !newBuddyIndicatorForm.value.name.trim()) return
-
-  if (isEditingBuddyMission.value) {
-    buddyStore.updateIndicator(
-      activeBuddyPkg.value.id,
-      newBuddyIndicatorForm.value.competencyId,
-      editingBuddyMissionId.value,
-      {
-        name: newBuddyIndicatorForm.value.name.trim(),
-        isStar: newBuddyIndicatorForm.value.isStar,
-        description: newBuddyIndicatorForm.value.description.trim()
-      }
-    )
-    toast.success('Indikator Diperbarui', `Indikator "${newBuddyIndicatorForm.value.name}" berhasil diupdate.`)
-  } else {
-    buddyStore.addIndicator(
-      activeBuddyPkg.value.id,
-      newBuddyIndicatorForm.value.competencyId,
-      {
-        name: newBuddyIndicatorForm.value.name.trim(),
-        isStar: newBuddyIndicatorForm.value.isStar,
-        description: newBuddyIndicatorForm.value.description.trim()
-      }
-    )
-    toast.success('Indikator Ditambahkan', `Indikator "${newBuddyIndicatorForm.value.name}" berhasil ditambahkan.`)
-  }
-
-  showAddBuddyMissionModal.value = false
-}
-
-const removeBuddyIndicator = async (compId, indId) => {
-  if (!activeBuddyPkg.value) return
-  const isConfirmed = await confirmDeleteDialog({
-    title: 'Hapus Indikator Penilaian?',
-    text: 'Apakah Anda yakin ingin menghapus indikator penilaian ini?',
-    confirmButtonText: 'Ya, Hapus'
-  })
-
-  if (isConfirmed) {
-    buddyStore.removeIndicator(activeBuddyPkg.value.id, compId, indId)
-    toast.success('Indikator Dihapus', 'Indikator telah dihapus dari paket.')
-  }
-}
-
-// ==========================================
-// FEEDBACK & RAPOR TEMPLATE HANDLERS
-// ==========================================
 const openAddSurveyQuestionModal = () => {
-  isEditingSurveyQuestion.value = false
-  editingSurveyQuestionId.value = ''
-  surveyQuestionForm.value = {
-    category: 'Peran Buddy',
-    type: 'SCALE_0_10',
-    text: ''
-  }
+  editingSurveyQuestion.value = null
   showAddSurveyQuestionModal.value = true
 }
 
-const openEditSurveyQuestionModal = (q) => {
-  isEditingSurveyQuestion.value = true
-  editingSurveyQuestionId.value = q.id
-  surveyQuestionForm.value = {
-    category: q.category,
-    type: q.type,
-    text: q.text
-  }
+const openEditSurveyQuestionModal = (question) => {
+  editingSurveyQuestion.value = question
   showAddSurveyQuestionModal.value = true
-}
-
-const executeSaveSurveyQuestion = () => {
-  if (isEditingSurveyQuestion.value) {
-    feedbackStore.updateSurveyQuestion(editingSurveyQuestionId.value, surveyQuestionForm.value)
-    toast.success('Pertanyaan Diperbarui', 'Perubahan butir survei berhasil disimpan.')
-  } else {
-    feedbackStore.addSurveyQuestion(surveyQuestionForm.value)
-    toast.success('Pertanyaan Ditambahkan', 'Butir pertanyaan baru berhasil ditambahkan ke survei.')
-  }
-  showAddSurveyQuestionModal.value = false
-}
-
-const deleteSurveyQuestion = async (id) => {
-  const isConfirmed = await confirmDeleteDialog({
-    title: 'Hapus Pertanyaan Survei?',
-    text: 'Apakah Anda yakin ingin menghapus butir pertanyaan survei ini?',
-    confirmButtonText: 'Ya, Hapus'
-  })
-
-  if (isConfirmed) {
-    feedbackStore.deleteSurveyQuestion(id)
-    toast.success('Pertanyaan Dihapus', 'Butir pertanyaan telah dihapus dari survei.')
-  }
 }
 
 const openAddRaporIndicatorModal = (compId) => {
-  selectedCompIdForNewInd.value = compId
-  raporIndForm.value = {
-    text: '',
-    isMandatoryIntro: false
-  }
+  activeRaporCompId.value = compId
   showAddRaporIndModal.value = true
-}
-
-const executeSaveRaporIndicator = () => {
-  if (!selectedCompIdForNewInd.value || !raporIndForm.value.text.trim()) return
-  feedbackStore.addRaporIndicator(selectedCompIdForNewInd.value, raporIndForm.value)
-  showAddRaporIndModal.value = false
-  toast.success('Indikator Ditambahkan', 'Indikator kompetensi berhasil ditambahkan ke Rapor New Hire.')
-}
-
-const deleteRaporIndicator = async (compId, indId) => {
-  const isConfirmed = await confirmDeleteDialog({
-    title: 'Hapus Indikator Kompetensi?',
-    text: 'Apakah Anda yakin ingin menghapus indikator kompetensi ini dari Rapor?',
-    confirmButtonText: 'Ya, Hapus'
-  })
-
-  if (isConfirmed) {
-    feedbackStore.deleteRaporIndicator(compId, indId)
-    toast.success('Indikator Dihapus', 'Indikator telah dihapus dari Rapor.')
-  }
 }
 </script>
