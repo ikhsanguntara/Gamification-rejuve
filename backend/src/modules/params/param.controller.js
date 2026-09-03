@@ -1,13 +1,13 @@
 'use strict';
 
 /**
- * @file paramController.js
- * @description Handles CRUD untuk Bisnis Parameter: Param Group dan Param.
+ * @file param.controller.js
+ * @description Handles CRUD untuk Bisnis Parameter: Param Group dan Param (dengan dukungan global search).
  */
 
-const prisma = require('../config/db');
-const { sendSuccess, sendError, sendPaginated } = require('../utils/responseWrapper');
-const { parsePrismaQuery } = require('../utils/queryParser');
+const prisma = require('../../config/db');
+const { sendSuccess, sendError, sendPaginated } = require('../../utils/responseWrapper');
+const { parsePrismaQuery } = require('../../utils/queryParser');
 
 // =============================================================================
 // Param Group CRUD
@@ -23,7 +23,8 @@ const getParamGroups = async (req, res, next) => {
     delete queryClone.page;
     delete queryClone.limit;
 
-    const where = parsePrismaQuery(queryClone);
+    // Searchable: code, name
+    const where = parsePrismaQuery(queryClone, ['code', 'name']);
 
     const [data, total] = await Promise.all([
       prisma.paramGroup.findMany({
@@ -136,7 +137,8 @@ const getParams = async (req, res, next) => {
     delete queryClone.page;
     delete queryClone.limit;
 
-    const where = parsePrismaQuery(queryClone);
+    // Searchable: code, value
+    const where = parsePrismaQuery(queryClone, ['code', 'value']);
 
     const [data, total] = await Promise.all([
       prisma.param.findMany({
@@ -177,8 +179,6 @@ const getParamById = async (req, res, next) => {
 
 /**
  * GET /api/params/group-code/:groupCode
- * Endpoint khusus untuk FE: mengambil param berdasarkan groupCode dan memformatnya jadi dictionary options
- * Output: { paramGroup, options: { [code]: value }, list: [...] }
  */
 const getParamsByGroupCode = async (req, res, next) => {
   try {
@@ -196,7 +196,7 @@ const getParamsByGroupCode = async (req, res, next) => {
     if (!group) {
       return sendError(res, {
         statusCode: 404,
-        message: `ParamGroup dengan code "${groupCode}" tidak ditemukan.`
+        message: `Param Group dengan code "${groupCode}" tidak ditemukan.`
       });
     }
 
@@ -232,8 +232,6 @@ const createParam = async (req, res, next) => {
     }
 
     let targetGroupId = paramgroupId;
-
-    // Jika paramgroupId tidak diisi, coba lookup berdasarkan paramgroupCode / groupCode
     const targetGroupCode = paramgroupCode || groupCode;
     if (!targetGroupId && targetGroupCode) {
       const group = await prisma.paramGroup.findUnique({

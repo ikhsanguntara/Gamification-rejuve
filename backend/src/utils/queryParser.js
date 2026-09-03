@@ -97,8 +97,8 @@ const parseValueTree = (val) => {
  * @param {Object} query - req.query dari Express
  * @returns {Object} prismaWhere - Objek filter Prisma
  */
-const parsePrismaQuery = (query = {}) => {
-  const skipFields = ['page', 'limit', 'search'];
+const parsePrismaQuery = (query = {}, searchableFields = []) => {
+  const skipFields = ['page', 'limit', 'search', 'q'];
   const prismaWhere = {};
 
   for (const [key, value] of Object.entries(query)) {
@@ -142,6 +142,30 @@ const parsePrismaQuery = (query = {}) => {
 
     // 4. Exact match biasa: e.g. status = 'ACTIVE'
     prismaWhere[key] = castValue(value);
+  }
+
+  // 5. Global search handler (?search=... atau ?q=...)
+  const searchTerm = query.search || query.q;
+  if (searchTerm && typeof searchTerm === 'string' && searchTerm.trim() !== '' && Array.isArray(searchableFields) && searchableFields.length > 0) {
+    const searchTrimmed = searchTerm.trim();
+    const orConditions = searchableFields.map(field => {
+      if (field.includes('.')) {
+        const parts = field.split('.');
+        const cond = {};
+        setDeepValue(cond, parts, { contains: searchTrimmed, mode: 'insensitive' });
+        return cond;
+      }
+      return { [field]: { contains: searchTrimmed, mode: 'insensitive' } };
+    });
+
+    if (prismaWhere.OR) {
+      prismaWhere.AND = [
+        ...(prismaWhere.AND || []),
+        { OR: orConditions }
+      ];
+    } else {
+      prismaWhere.OR = orConditions;
+    }
   }
 
   return prismaWhere;

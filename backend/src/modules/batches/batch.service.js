@@ -1,12 +1,12 @@
 'use strict';
 
 /**
- * @file batchService.js
- * @description Service layer untuk Batch Management dan Transactional Batch Mission Generator (Fase 3).
+ * @file batch.service.js
+ * @description Service layer untuk Batch Management dan Transactional Batch Mission Generator (dengan search support).
  */
 
-const prisma = require('../config/db');
-const { parsePrismaQuery } = require('../utils/queryParser');
+const prisma = require('../../config/db');
+const { parsePrismaQuery } = require('../../utils/queryParser');
 
 /**
  * Helper untuk format date ke Date object tanpa jam (UTC / midnight).
@@ -140,7 +140,6 @@ const executeBatchGeneration = async (tx, {
     });
 
     for (const detail of buddySchedule.template.details) {
-      // Hitung tanggal rentang detail buddy
       const detailStep = (detail.durationNumber || 1) - 1;
       const mStart = addDays(buddySchedule.startDate, detailStep * buddySchedule.unitDays);
       const mEnd = addDays(mStart, buddySchedule.unitDays - 1);
@@ -261,13 +260,10 @@ const executeBatchGeneration = async (tx, {
 
       if (mission.templateType === 'BUDDY') {
         tlId = buddyEvaluatorId;
-        // Jika ada buddy, misi Buddy langsung ACTIVE di awal batch
         initialStatus = 'ACTIVE';
       } else if (mission.templateType === 'JOURNEY') {
         tlId = storeLeaderId;
         dmId = districtManagerId;
-        // Jika TIDAK ADA template Buddy, maka Journey Week 1 langsung ACTIVE.
-        // Jika ADA template Buddy, Journey Week 1 terkunci (LOCKED) hingga masa Buddy selesai.
         if (!buddySchedule && mission.weekOrDayNumber === 1) {
           initialStatus = 'ACTIVE';
         } else {
@@ -301,7 +297,7 @@ const executeBatchGeneration = async (tx, {
 };
 
 /**
- * Buat Batch baru (bisa simpan DRAFT atau langsung OPEN & generate).
+ * Buat Batch baru.
  */
 const createBatch = async (payload, creatorId = null) => {
   const {
@@ -320,7 +316,6 @@ const createBatch = async (payload, creatorId = null) => {
     throw new Error('Field "code", "name", "startDate", dan "tplJourneyId" wajib diisi.');
   }
 
-  // 1. Ambil seluruh template yang dipilih beserta detailnya
   const [tplJourney, tplBuddy, tplFeedback] = await Promise.all([
     prisma.tplMission.findUnique({
       where: { tplMissionId: tplJourneyId },
@@ -340,10 +335,8 @@ const createBatch = async (payload, creatorId = null) => {
     throw new Error(`Template Journey dengan id "${tplJourneyId}" tidak ditemukan.`);
   }
 
-  // 2. Hitung timeline tanggal
   const timeline = calculateTimeline(startDate, tplBuddy, tplJourney, tplFeedback);
 
-  // 3. Eksekusi penyimpanan Batch secara atomik
   const result = await prisma.$transaction(async (tx) => {
     const batch = await tx.batch.create({
       data: {
@@ -357,7 +350,6 @@ const createBatch = async (payload, creatorId = null) => {
       }
     });
 
-    // Assign Crew ke batch ini jika ada
     if (Array.isArray(crewIds) && crewIds.length > 0) {
       await tx.user.updateMany({
         where: { userId: { in: crewIds } },
@@ -365,7 +357,6 @@ const createBatch = async (payload, creatorId = null) => {
       });
     }
 
-    // Jika status langsung OPEN: generate detail, missions, dan user_missions
     if (status === 'OPEN') {
       const genResult = await executeBatchGeneration(tx, {
         batchId: batch.batchId,
@@ -377,7 +368,6 @@ const createBatch = async (payload, creatorId = null) => {
       });
       batch.generation = genResult;
     } else {
-      // Jika DRAFT: buat catatan batch_detail berstatus DRAFT tanpa generate butir misi
       const draftDetails = [
         {
           batchId: batch.batchId,
@@ -429,6 +419,7 @@ const createBatch = async (payload, creatorId = null) => {
             name: true,
             email: true,
             stars: true,
+            points: true,
             level: true,
             department: true
           }
@@ -444,7 +435,7 @@ const createBatch = async (payload, creatorId = null) => {
 };
 
 /**
- * Trigger manual generator untuk Batch yang masih DRAFT (mengubah DRAFT -> OPEN dan generate misi).
+ * Trigger manual generator untuk Batch yang masih DRAFT.
  */
 const generateBatch = async (batchId, creatorId = null) => {
   const batch = await prisma.batch.findUnique({
@@ -469,7 +460,6 @@ const generateBatch = async (batchId, creatorId = null) => {
     throw new Error(`Batch "${batch.name}" sudah pernah di-generate sebelumnya.`);
   }
 
-  // Cari template yang sudah terasosiasi di batch detail
   const tplJourney = batch.details.find((d) => d.tplMission.type === 'JOURNEY')?.tplMission;
   const tplBuddy = batch.details.find((d) => d.tplMission.type === 'BUDDY')?.tplMission;
   const tplFeedback = batch.details.find((d) => d.tplMission.type === 'FEEDBACK')?.tplMission;
@@ -481,10 +471,8 @@ const generateBatch = async (batchId, creatorId = null) => {
   const timeline = calculateTimeline(batch.startDate, tplBuddy, tplJourney, tplFeedback);
 
   const result = await prisma.$transaction(async (tx) => {
-    // Hapus placeholder detail draft lama
     await tx.batchDetail.deleteMany({ where: { batchId } });
 
-    // Update batch menjadi OPEN
     await tx.batch.update({
       where: { batchId },
       data: {
@@ -521,19 +509,11 @@ const getBatches = async (query = {}) => {
   const skip = (page - 1) * limit;
 
   const queryClone = { ...query };
-  const search = queryClone.search;
-  delete queryClone.search;
   delete queryClone.page;
   delete queryClone.limit;
 
-  const where = parsePrismaQuery(queryClone);
-
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { code: { contains: search, mode: 'insensitive' } }
-    ];
-  }
+  // Searchable: name, code
+  const where = parsePrismaQuery(queryClone, ['name', 'code']);
 
   const [total, batches] = await Promise.all([
     prisma.batch.count({ where }),
@@ -578,6 +558,7 @@ const getBatchById = async (batchId) => {
           name: true,
           email: true,
           stars: true,
+          points: true,
           level: true,
           department: true,
           userBuddy: {
@@ -609,7 +590,6 @@ const updateBatch = async (batchId, payload, updaterId = null) => {
     return null;
   }
 
-  // Jika transisi dari DRAFT ke OPEN dan misi belum ada, otomatis generate
   if (existing.status === 'DRAFT' && status === 'OPEN' && existing.missions.length === 0) {
     await generateBatch(batchId, updaterId);
   }
@@ -633,7 +613,6 @@ const updateBatch = async (batchId, payload, updaterId = null) => {
   }
 
   if (Array.isArray(crewIds)) {
-    // Re-assign crews
     await prisma.user.updateMany({
       where: { batchId },
       data: { batchId: null }

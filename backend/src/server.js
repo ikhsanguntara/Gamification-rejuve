@@ -11,14 +11,20 @@ dotenv.config();
 
 const app = express();
 
+// Enable trust proxy for Ngrok / reverse proxy
+app.set('trust proxy', true);
+
 const { apiLogger } = require('./middlewares/apiLogger');
 
 // ─── Core Middlewares ──────────────────────────────────────────────────────────
 app.use(apiLogger);
+
+const corsOrigin = process.env.CORS_ORIGIN === '*' ? true : (process.env.CORS_ORIGIN || true);
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: corsOrigin,
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning', 'Accept', 'X-Requested-With'],
 }));
 
 app.use(express.json());
@@ -38,6 +44,29 @@ app.get('/health', (req, res) => {
     },
     meta: null,
   });
+});
+
+// ─── Swagger Documentation ───────────────────────────────────────────────────
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('../docs/swagger.json');
+
+app.use(
+  '/swagger',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    customSiteTitle: 'Re.juve Gamification API Documentation',
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      docExpansion: 'none',
+      filter: true
+    }
+  })
+);
+
+app.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerDocument);
 });
 
 // ─── API Routes ──────────────────────────────────────────────────────────────

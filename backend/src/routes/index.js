@@ -2,34 +2,22 @@
 
 /**
  * @file index.js
- * @description Router utama yang menggabungkan seluruh sub-router.
+ * @description Central API Router — Mengagregasi seluruh domain modul dari src/modules/.
  *
- * Semua route diawali dengan prefix /api
- * Daftarkan route baru di sini setiap menambah resource.
+ * Semua rute diawali dengan prefix /api
  */
 
 const router = require('express').Router();
 
-// ─── Sub-Routers ──────────────────────────────────────────────────────────────
-const authRoutes = require('./authRoutes');
-const masterRoutes = require('./masterRoutes');
-const batchRoutes = require('./batchRoutes');
-const apiLogRoutes = require('./apiLogRoutes');
-const syncRoutes = require('./syncRoutes');
-const paramRoutes = require('./paramRoutes');
-const templateRoutes = require('./templateRoutes');
-const settingRoutes = require('./settingRoutes');
-const evaluationRoutes = require('./evaluationRoutes');
-
-router.use('/auth', authRoutes);
-router.use('/masters', masterRoutes);
-router.use('/batches', batchRoutes);
-router.use('/api-logs', apiLogRoutes);
-router.use('/sync', syncRoutes);
-router.use('/params', paramRoutes);
-router.use('/templates', templateRoutes);
-router.use('/administration', settingRoutes);
-router.use('/admin', settingRoutes);
-router.use('/evaluations', evaluationRoutes);
+router.use('/auth', require('../modules/auth/auth.routes'));
+router.use('/masters', require('../modules/masters/master.routes'));
+router.use('/batches', require('../modules/batches/batch.routes'));
+router.use('/api-logs', require('../modules/api-logs/api-log.routes'));
+router.use('/sync', require('../modules/sync/sync.routes'));
+router.use('/params', require('../modules/params/param.routes'));
+router.use('/templates', require('../modules/templates/template.routes'));
+router.use('/administration', require('../modules/admin/admin.routes'));
+router.use('/admin', require('../modules/admin/admin.routes'));
+router.use('/evaluations', require('../modules/evaluations/evaluation.routes'));
 
 module.exports = router;

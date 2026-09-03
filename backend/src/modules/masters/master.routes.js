@@ -1,14 +1,9 @@
 'use strict';
 
-/**
- * @file masterRoutes.js
- * @description Routes untuk Master Data: Departments, Users, dan Roles (SUPERADMIN only).
- */
-
 const router = require('express').Router();
-const masterController = require('../controllers/masterController');
-const { authenticate } = require('../middlewares/auth');
-const { authorizeRole } = require('../middlewares/role');
+const masterController = require('./master.controller');
+const { authenticate } = require('../../middlewares/auth');
+const { authorizeRole } = require('../../middlewares/role');
 
 router.use(authenticate);
 router.use(authorizeRole(['SUPERADMIN']));

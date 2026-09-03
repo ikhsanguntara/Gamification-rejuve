@@ -1,16 +1,13 @@
 'use strict';
 
 /**
- * @file batchController.js
- * @description Controller untuk Batch Management & Mission Generator (Thin Controller delegating to batchService).
+ * @file batch.controller.js
+ * @description Controller untuk Batch Management & Mission Generator.
  */
 
-const batchService = require('../services/batchService');
-const { sendSuccess, sendError, sendPaginated } = require('../utils/responseWrapper');
+const batchService = require('./batch.service');
+const { sendSuccess, sendError, sendPaginated } = require('../../utils/responseWrapper');
 
-/**
- * GET /api/batches
- */
 const getBatches = async (req, res, next) => {
   try {
     const { batches, total, page, limit } = await batchService.getBatches(req.query);
@@ -26,9 +23,6 @@ const getBatches = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/batches/:id
- */
 const getBatchById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -50,35 +44,27 @@ const getBatchById = async (req, res, next) => {
   }
 };
 
-/**
- * POST /api/batches
- */
 const createBatch = async (req, res, next) => {
   try {
     const creatorId = req.user?.id || req.user?.userId || null;
     const batch = await batchService.createBatch(req.body, creatorId);
 
     return sendSuccess(res, {
+      message: 'Batch berhasil dibuat.',
       statusCode: 201,
-      message: batch.status === 'OPEN'
-        ? 'Batch berhasil dibuat dan misi telah di-generate secara atomik.'
-        : 'Batch berhasil disimpan sebagai DRAFT.',
       data: batch
     });
   } catch (error) {
     if (error.code === 'P2002') {
       return sendError(res, {
-        statusCode: 409,
-        message: `Kode batch "${req.body.code}" sudah digunakan.`
+        message: `Batch dengan code "${req.body.code}" sudah ada.`,
+        statusCode: 409
       });
     }
     next(error);
   }
 };
 
-/**
- * POST /api/batches/:id/generate
- */
 const generateBatchMissions = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -86,8 +72,7 @@ const generateBatchMissions = async (req, res, next) => {
     const result = await batchService.generateBatch(id, creatorId);
 
     return sendSuccess(res, {
-      statusCode: 200,
-      message: 'Misi untuk batch ini berhasil di-generate secara atomik.',
+      message: 'Misi batch berhasil di-generate secara atomik.',
       data: result
     });
   } catch (error) {
@@ -95,16 +80,13 @@ const generateBatchMissions = async (req, res, next) => {
   }
 };
 
-/**
- * PATCH /api/batches/:id
- */
 const updateBatch = async (req, res, next) => {
   try {
     const { id } = req.params;
     const updaterId = req.user?.id || req.user?.userId || null;
-    const batch = await batchService.updateBatch(id, req.body, updaterId);
+    const updated = await batchService.updateBatch(id, req.body, updaterId);
 
-    if (!batch) {
+    if (!updated) {
       return sendError(res, {
         message: `Batch dengan id "${id}" tidak ditemukan.`,
         statusCode: 404
@@ -113,16 +95,19 @@ const updateBatch = async (req, res, next) => {
 
     return sendSuccess(res, {
       message: 'Data batch berhasil diperbarui.',
-      data: batch
+      data: updated
     });
   } catch (error) {
+    if (error.code === 'P2002') {
+      return sendError(res, {
+        message: `Batch dengan code "${req.body.code}" sudah ada.`,
+        statusCode: 409
+      });
+    }
     next(error);
   }
 };
 
-/**
- * DELETE /api/batches/:id
- */
 const deleteBatch = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -137,7 +122,8 @@ const deleteBatch = async (req, res, next) => {
     }
 
     return sendSuccess(res, {
-      message: 'Batch berhasil dihapus.'
+      message: 'Batch berhasil dihapus.',
+      data: null
     });
   } catch (error) {
     next(error);

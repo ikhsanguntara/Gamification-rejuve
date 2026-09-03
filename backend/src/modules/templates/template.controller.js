@@ -1,12 +1,12 @@
 'use strict';
 
 /**
- * @file tplMissionController.js
- * @description Controller untuk Unified Template Missions (Thin Controller delegating to templateService).
+ * @file template.controller.js
+ * @description Controller untuk Unified Template Missions.
  */
 
-const templateService = require('../services/templateService');
-const { sendSuccess, sendError, sendPaginated } = require('../utils/responseWrapper');
+const templateService = require('./template.service');
+const { sendSuccess, sendError, sendPaginated } = require('../../utils/responseWrapper');
 
 const getTemplates = async (req, res, next) => {
   try {
@@ -59,7 +59,7 @@ const createTemplate = async (req, res, next) => {
     if (error.code === 'P2002') {
       return sendError(res, {
         statusCode: 409,
-        message: `Kode template "${req.body.code}" sudah digunakan.`
+        message: `Kode template misi "${req.body.code}" sudah digunakan.`
       });
     }
     next(error);
@@ -81,7 +81,7 @@ const updateTemplate = async (req, res, next) => {
     if (error.code === 'P2002') {
       return sendError(res, {
         statusCode: 409,
-        message: `Kode template "${req.body.code}" sudah digunakan.`
+        message: `Kode template misi "${req.body.code}" sudah digunakan.`
       });
     }
     next(error);
@@ -103,7 +103,8 @@ const deleteTemplate = async (req, res, next) => {
 
     return sendSuccess(res, {
       statusCode: 200,
-      message: 'Template misi berhasil dihapus.'
+      message: 'Template misi berhasil dihapus.',
+      data: null
     });
   } catch (error) {
     next(error);

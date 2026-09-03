@@ -1,19 +1,13 @@
 'use strict';
 
-/**
- * @file paramRoutes.js
- * @description Routes untuk Bisnis Parameter (Param Group & Param).
- */
-
 const router = require('express').Router();
-const paramController = require('../controllers/paramController');
-const { authenticate } = require('../middlewares/auth');
-const { authorizeRole } = require('../middlewares/role');
+const paramController = require('./param.controller');
+const { authenticate } = require('../../middlewares/auth');
+const { authorizeRole } = require('../../middlewares/role');
 
 router.use(authenticate);
 
 // ─── Public/Authenticated Read Options ────────────────────────────────────────
-// Dropdown options endpoint dapat diakses seluruh user yang telah login
 router.get('/group-code/:groupCode', paramController.getParamsByGroupCode);
 router.get('/groups', paramController.getParamGroups);
 router.get('/groups/:id', paramController.getParamGroupById);

@@ -1,12 +1,12 @@
 'use strict';
 
 /**
- * @file templateService.js
- * @description Service layer untuk Unified Template Missions (m_tpl_missions & m_tpl_mission_details).
+ * @file template.service.js
+ * @description Service layer untuk Unified Template Missions (m_tpl_missions & m_tpl_mission_details) dengan search support.
  */
 
-const prisma = require('../config/db');
-const { parsePrismaQuery } = require('../utils/queryParser');
+const prisma = require('../../config/db');
+const { parsePrismaQuery } = require('../../utils/queryParser');
 
 /**
  * Ambil daftar template dengan filter & pagination dinamis.
@@ -22,7 +22,8 @@ const getTemplates = async (query = {}) => {
   delete queryClone.page;
   delete queryClone.limit;
 
-  const where = parsePrismaQuery(queryClone);
+  // Searchable: code, name, description
+  const where = parsePrismaQuery(queryClone, ['code', 'name', 'description']);
 
   const [total, templates] = await Promise.all([
     prisma.tplMission.count({ where }),
@@ -61,7 +62,18 @@ const getTemplateById = async (id) => {
     }
   });
 
-  return template;
+  if (!template) {
+    return null;
+  }
+
+  const durationTotal = template.details.length
+    ? Math.max(...template.details.map(detail => detail.durationNumber))
+    : 0;
+
+  return {
+    ...template,
+    durationTotal
+  };
 };
 
 /**

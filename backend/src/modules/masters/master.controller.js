@@ -1,19 +1,18 @@
 'use strict';
 
 /**
- * @file masterController.js
+ * @file master.controller.js
  * @description Handles CRUD untuk Master Data: Departments, Users, dan Roles.
  */
 
 const bcrypt = require('bcryptjs');
-const prisma = require('../config/db');
-const { sendSuccess, sendError, sendPaginated } = require('../utils/responseWrapper');
-const { parsePrismaQuery } = require('../utils/queryParser');
-const { pushToLynx } = require('../utils/lynxSync');
+const prisma = require('../../config/db');
+const { sendSuccess, sendError, sendPaginated } = require('../../utils/responseWrapper');
+const { parsePrismaQuery } = require('../../utils/queryParser');
+const { pushToLynx } = require('../../utils/lynxSync');
 
 // =============================================================================
 // DEPARTMENTS
-// (Department disinkronisasikan dari Lynx, Gamification menyediakan CRUD lokal tanpa webhook keluar)
 // =============================================================================
 
 const getDepartments = async (req, res, next) => {
@@ -26,7 +25,8 @@ const getDepartments = async (req, res, next) => {
     delete queryClone.page;
     delete queryClone.limit;
 
-    const where = parsePrismaQuery(queryClone);
+    // Searchable: departmentCode, departmentName, regionCode
+    const where = parsePrismaQuery(queryClone, ['departmentCode', 'departmentName', 'regionCode']);
 
     const [data, total] = await Promise.all([
       prisma.department.findMany({
@@ -145,7 +145,6 @@ const deleteDepartment = async (req, res, next) => {
 
 // =============================================================================
 // USERS CRUD
-// (User disinkronkan ke Lynx saat mutasi create/update/delete)
 // =============================================================================
 
 const getUsers = async (req, res, next) => {
@@ -158,7 +157,8 @@ const getUsers = async (req, res, next) => {
     delete queryClone.page;
     delete queryClone.limit;
 
-    const where = parsePrismaQuery(queryClone);
+    // Searchable: name, email
+    const where = parsePrismaQuery(queryClone, ['name', 'email']);
 
     // Alias convenience: ?role=CREW atau ?roleCode=CREW dipetakan otomatis ke { role: { roleCode: ... } }
     if (where.role && typeof where.role === 'string') {
@@ -183,12 +183,14 @@ const getUsers = async (req, res, next) => {
           role: true,
           isActive: true,
           stars: true,
+          points: true,
           level: true,
           isBuddy: true,
           userBuddyId: true,
           departmentId: true,
           department: true,
           batchId: true,
+          activeBatchId: true,
           createdAt: true,
           updatedAt: true
         },
@@ -222,12 +224,14 @@ const getUserById = async (req, res, next) => {
         role: true,
         isActive: true,
         stars: true,
+        points: true,
         level: true,
         isBuddy: true,
         userBuddyId: true,
         departmentId: true,
         department: true,
         batchId: true,
+        activeBatchId: true,
         createdAt: true,
         updatedAt: true
       }
@@ -249,7 +253,7 @@ const getUserById = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive } = req.body;
+    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive, activeBatchId } = req.body;
     const creatorId = req.user?.id || req.user?.userId || null;
 
     const hashedPassword = await bcrypt.hash(password || 'password123', 10);
@@ -264,6 +268,7 @@ const createUser = async (req, res, next) => {
         isBuddy: isBuddy || false,
         userBuddyId: userBuddyId || null,
         batchId: batchId || null,
+        activeBatchId: activeBatchId || null,
         isActive: isActive !== undefined ? isActive : true,
         createdBy: creatorId
       },
@@ -292,7 +297,7 @@ const createUser = async (req, res, next) => {
 const updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive } = req.body;
+    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive, activeBatchId } = req.body;
     const updaterId = req.user?.id || req.user?.userId || null;
 
     const data = {
@@ -305,6 +310,7 @@ const updateUser = async (req, res, next) => {
     if (isBuddy !== undefined) data.isBuddy = isBuddy;
     if (userBuddyId !== undefined) data.userBuddyId = userBuddyId;
     if (batchId !== undefined) data.batchId = batchId;
+    if (activeBatchId !== undefined) data.activeBatchId = activeBatchId;
     if (isActive !== undefined) data.isActive = isActive;
 
     if (password) {
@@ -339,10 +345,11 @@ const updateUser = async (req, res, next) => {
 const deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const data = await prisma.user.delete({ where: { userId: id } });
 
-    // Sinkronkan delete user ke Lynx
-    await pushToLynx('/gamification/webhook/users/delete', { userId: data.userId }, 'POST');
+    // Sinkronkan delete user ke Lynx Webhook
+    await pushToLynx('/gamification/webhook/users/delete', { userId: id }, 'POST');
+
+    await prisma.user.delete({ where: { userId: id } });
 
     return sendSuccess(res, { statusCode: 200, message: 'User berhasil dihapus.' });
   } catch (error) {
@@ -351,7 +358,7 @@ const deleteUser = async (req, res, next) => {
 };
 
 // =============================================================================
-// ROLES CRUD (m_roles)
+// ROLES CRUD
 // =============================================================================
 
 const getRoles = async (req, res, next) => {
@@ -364,7 +371,8 @@ const getRoles = async (req, res, next) => {
     delete queryClone.page;
     delete queryClone.limit;
 
-    const where = parsePrismaQuery(queryClone);
+    // Searchable: roleCode, roleName
+    const where = parsePrismaQuery(queryClone, ['roleCode', 'roleName']);
 
     const [data, total] = await Promise.all([
       prisma.role.findMany({

@@ -1,31 +1,28 @@
 'use strict';
 
 /**
- * @file syncController.js
+ * @file sync.controller.js
  * @description Controller untuk sinkronisasi data Master Departments dan Users dengan sistem Lynx.
  */
 
 const axios = require('axios');
-const prisma = require('../config/db');
-const { sendSuccess, sendError } = require('../utils/responseWrapper');
+const prisma = require('../../config/db');
+const { sendSuccess, sendError } = require('../../utils/responseWrapper');
 
 /**
  * Helper internal untuk memetakan role dari payload Lynx ke roleId UUID di Gamification.
  */
 const resolveUserRoleId = async (user, roleMapByCode, roleMapById, defaultCrewRoleId, tx) => {
-  // 1. Jika Lynx mengirimkan roleId langsung yang cocok dengan UUID m_roles
   if (user.roleId && roleMapById[user.roleId]) {
     return user.roleId;
   }
 
-  // 2. Normalisasi string role / roleCode / usergroup dari Lynx
   const rawRole = String(user.roleCode || user.role || user.usergroup || '').trim().toUpperCase();
 
   if (rawRole && roleMapByCode[rawRole]) {
     return roleMapByCode[rawRole];
   }
 
-  // 3. Mapping alias umum antara Lynx dan Gamification
   if (['CREW_STORE', 'BARISTA', 'STORE_CREW', 'CREW'].includes(rawRole)) {
     return roleMapByCode['CREW'] || defaultCrewRoleId;
   }
@@ -39,7 +36,6 @@ const resolveUserRoleId = async (user, roleMapByCode, roleMapById, defaultCrewRo
     return roleMapByCode['SUPERADMIN'] || defaultCrewRoleId;
   }
 
-  // 4. Jika role belum ada sama sekali di Gamification, auto-create agar sinkronisasi tidak gagal
   if (rawRole && tx) {
     const createdRole = await tx.role.create({
       data: {
@@ -59,7 +55,6 @@ const resolveUserRoleId = async (user, roleMapByCode, roleMapById, defaultCrewRo
 // DEPARTMENTS SYNC
 // =============================================================================
 
-// POST /sync/departments (Webhook penerima dari Lynx)
 const syncDepartments = async (req, res) => {
   try {
     const departments = req.body;
@@ -110,7 +105,6 @@ const syncDepartments = async (req, res) => {
   }
 };
 
-// POST /sync/departments/pull-all (Tarik seluruh departemen dari Lynx)
 const pullAllDepartments = async (req, res) => {
   try {
     const lynxBaseUrl = process.env.LYNX_API_URL;
@@ -129,8 +123,6 @@ const pullAllDepartments = async (req, res) => {
     const lynxDeptIds = departments.map(d => d.departmentId).filter(Boolean);
 
     await prisma.$transaction(async (tx) => {
-      // Soft-deactivate: Ubah status departemen lokal menjadi isActive: false jika tidak ada di respons Lynx
-      // Ini menjaga integritas referensi User & histori audit agar tidak menjadi orphan/null
       if (lynxDeptIds.length > 0) {
         await tx.department.updateMany({
           where: {
@@ -186,7 +178,6 @@ const pullAllDepartments = async (req, res) => {
 // USERS SYNC
 // =============================================================================
 
-// POST /sync/users (Webhook penerima dari Lynx)
 const syncUsers = async (req, res) => {
   try {
     const users = req.body;
@@ -195,7 +186,6 @@ const syncUsers = async (req, res) => {
       return sendError(res, { statusCode: 400, message: 'Payload must be an array' });
     }
 
-    // Pre-load master roles untuk pencocokan role UUID
     const roles = await prisma.role.findMany();
     const roleMapByCode = {};
     const roleMapById = {};
@@ -205,7 +195,6 @@ const syncUsers = async (req, res) => {
     }
     const defaultCrewRoleId = roleMapByCode['CREW'] || (roles[0] ? roles[0].roleId : null);
 
-    // Pre-load departments untuk memvalidasi foreign key
     const existingDepts = await prisma.department.findMany({ select: { departmentId: true } });
     const validDeptIds = new Set(existingDepts.map(d => d.departmentId));
 
@@ -261,7 +250,6 @@ const syncUsers = async (req, res) => {
   }
 };
 
-// POST /sync/users/pull-all (Tarik seluruh user dari Lynx)
 const pullAllUsers = async (req, res) => {
   try {
     const lynxBaseUrl = process.env.LYNX_API_URL;
@@ -276,7 +264,6 @@ const pullAllUsers = async (req, res) => {
     const users = response.data;
     if (!Array.isArray(users)) return sendError(res, { statusCode: 500, message: 'Invalid data format from Lynx' });
 
-    // Pre-load master roles untuk pencocokan role UUID
     const roles = await prisma.role.findMany();
     const roleMapByCode = {};
     const roleMapById = {};
@@ -286,7 +273,6 @@ const pullAllUsers = async (req, res) => {
     }
     const defaultCrewRoleId = roleMapByCode['CREW'] || (roles[0] ? roles[0].roleId : null);
 
-    // Pre-load departments untuk memvalidasi foreign key
     const existingDepts = await prisma.department.findMany({ select: { departmentId: true } });
     const validDeptIds = new Set(existingDepts.map(d => d.departmentId));
 

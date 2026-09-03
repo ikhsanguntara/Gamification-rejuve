@@ -1,13 +1,13 @@
 'use strict';
 
 /**
- * @file settingController.js
- * @description Handles CRUD untuk Administration: Settings dan User Policies.
+ * @file admin.controller.js
+ * @description Handles CRUD untuk Administration: Settings dan User Policies (dengan search support).
  */
 
-const prisma = require('../config/db');
-const { sendSuccess, sendError, sendPaginated } = require('../utils/responseWrapper');
-const { parsePrismaQuery } = require('../utils/queryParser');
+const prisma = require('../../config/db');
+const { sendSuccess, sendError, sendPaginated } = require('../../utils/responseWrapper');
+const { parsePrismaQuery } = require('../../utils/queryParser');
 
 // =============================================================================
 // SETTINGS CRUD
@@ -23,7 +23,8 @@ const getSettings = async (req, res, next) => {
     delete queryClone.page;
     delete queryClone.limit;
 
-    const where = parsePrismaQuery(queryClone);
+    // Searchable: settingName, settingValue, objectCode
+    const where = parsePrismaQuery(queryClone, ['settingName', 'settingValue', 'objectCode']);
 
     const [data, total] = await Promise.all([
       prisma.setting.findMany({
@@ -63,20 +64,25 @@ const getSettingById = async (req, res, next) => {
 
 const createSetting = async (req, res, next) => {
   try {
-    const { settingName, settingValue, objectCode, companyId } = req.body;
+    const { settingName, settingValue, objectCode } = req.body;
     const creatorId = req.user?.id || req.user?.userId || null;
 
-    const setting = await prisma.setting.create({
+    if (!settingName || settingValue === undefined) {
+      return sendError(res, { statusCode: 400, message: 'Field "settingName" dan "settingValue" wajib diisi.' });
+    }
+
+    const result = await prisma.setting.create({
       data: {
         settingName,
-        settingValue,
+        settingValue: String(settingValue),
         objectCode: objectCode || 'SETTING',
-        companyId: companyId || null,
         createdBy: creatorId
       }
     });
-    return sendSuccess(res, { statusCode: 201, message: 'Setting berhasil dibuat', data: setting });
+
+    return sendSuccess(res, { statusCode: 201, message: 'Setting berhasil dibuat', data: result });
   } catch (error) {
+    if (error.code === 'P2002') return sendError(res, { statusCode: 409, message: `Setting "${req.body.settingName}" sudah ada.` });
     next(error);
   }
 };
@@ -84,30 +90,29 @@ const createSetting = async (req, res, next) => {
 const updateSetting = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { settingName, settingValue, objectCode, companyId } = req.body;
+    const { settingName, settingValue, objectCode } = req.body;
     const updaterId = req.user?.id || req.user?.userId || null;
 
-    const setting = await prisma.setting.update({
+    const data = { updatedBy: updaterId };
+    if (settingName !== undefined) data.settingName = settingName;
+    if (settingValue !== undefined) data.settingValue = String(settingValue);
+    if (objectCode !== undefined) data.objectCode = objectCode;
+
+    const result = await prisma.setting.update({
       where: { settingId: id },
-      data: {
-        settingName,
-        settingValue,
-        objectCode,
-        companyId,
-        updatedBy: updaterId
-      }
+      data
     });
 
-    return sendSuccess(res, { message: 'Setting berhasil diperbarui', data: setting });
+    return sendSuccess(res, { message: 'Setting berhasil diperbarui', data: result });
   } catch (error) {
+    if (error.code === 'P2002') return sendError(res, { statusCode: 409, message: `Setting "${req.body.settingName}" sudah ada.` });
     next(error);
   }
 };
 
 const deleteSetting = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    await prisma.setting.delete({ where: { settingId: id } });
+    await prisma.setting.delete({ where: { settingId: req.params.id } });
     return sendSuccess(res, { message: 'Setting berhasil dihapus' });
   } catch (error) {
     next(error);
@@ -128,7 +133,8 @@ const getUserPolicies = async (req, res, next) => {
     delete queryClone.page;
     delete queryClone.limit;
 
-    const where = parsePrismaQuery(queryClone);
+    // Searchable: userpolicyCode, userpolicyValue, informationRemark
+    const where = parsePrismaQuery(queryClone, ['userpolicyCode', 'userpolicyValue', 'informationRemark']);
 
     const [data, total] = await Promise.all([
       prisma.userPolicy.findMany({
@@ -181,19 +187,25 @@ const createUserPolicy = async (req, res, next) => {
     const { userpolicyCode, userpolicyValue, informationRemark, isRules, displayOrder, objectCode } = req.body;
     const creatorId = req.user?.id || req.user?.userId || null;
 
-    const policy = await prisma.userPolicy.create({
+    if (!userpolicyCode || userpolicyValue === undefined) {
+      return sendError(res, { statusCode: 400, message: 'Field "userpolicyCode" dan "userpolicyValue" wajib diisi.' });
+    }
+
+    const result = await prisma.userPolicy.create({
       data: {
         userpolicyCode,
         userpolicyValue,
-        informationRemark,
+        informationRemark: informationRemark || null,
         isRules: parseBoolean(isRules, false),
-        displayOrder: Number(displayOrder) || 1,
+        displayOrder: parseInt(displayOrder, 10) || 0,
         objectCode: objectCode || 'USERPOLICY',
         createdBy: creatorId
       }
     });
-    return sendSuccess(res, { statusCode: 201, message: 'User policy berhasil dibuat', data: policy });
+
+    return sendSuccess(res, { statusCode: 201, message: 'User policy berhasil dibuat', data: result });
   } catch (error) {
+    if (error.code === 'P2002') return sendError(res, { statusCode: 409, message: `Policy "${req.body.userpolicyCode}" sudah ada.` });
     next(error);
   }
 };
@@ -209,24 +221,24 @@ const updateUserPolicy = async (req, res, next) => {
     if (userpolicyValue !== undefined) data.userpolicyValue = userpolicyValue;
     if (informationRemark !== undefined) data.informationRemark = informationRemark;
     if (isRules !== undefined) data.isRules = parseBoolean(isRules, false);
-    if (displayOrder !== undefined) data.displayOrder = Number(displayOrder);
+    if (displayOrder !== undefined) data.displayOrder = parseInt(displayOrder, 10) || 0;
     if (objectCode !== undefined) data.objectCode = objectCode;
 
-    const policy = await prisma.userPolicy.update({
+    const result = await prisma.userPolicy.update({
       where: { userpolicyId: id },
       data
     });
 
-    return sendSuccess(res, { message: 'User policy berhasil diperbarui', data: policy });
+    return sendSuccess(res, { message: 'User policy berhasil diperbarui', data: result });
   } catch (error) {
+    if (error.code === 'P2002') return sendError(res, { statusCode: 409, message: `Policy "${req.body.userpolicyCode}" sudah ada.` });
     next(error);
   }
 };
 
 const deleteUserPolicy = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    await prisma.userPolicy.delete({ where: { userpolicyId: id } });
+    await prisma.userPolicy.delete({ where: { userpolicyId: req.params.id } });
     return sendSuccess(res, { message: 'User policy berhasil dihapus' });
   } catch (error) {
     next(error);

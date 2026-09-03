@@ -1,20 +1,23 @@
 'use strict';
 
 /**
- * @file evaluationRoutes.js
- * @description Routes untuk Alur Evaluasi Terpadu (Buddy, SL, DM, Feedback Crew).
+ * @file evaluation.routes.js
+ * @description Routes untuk Alur Evaluasi Terpadu & Workstation Kru.
  */
 
 const express = require('express');
 const router = express.Router();
-const evaluationController = require('../controllers/evaluationController');
-const { authenticate } = require('../middlewares/auth');
-const { authorizeRole } = require('../middlewares/role');
-
-const { uploadMiddleware } = require('../utils/minioStorage');
+const evaluationController = require('./evaluation.controller');
+const { authenticate } = require('../../middlewares/auth');
+const { authorizeRole } = require('../../middlewares/role');
+const { uploadMiddleware } = require('../../utils/minioStorage');
 
 // Pasang authenticate untuk seluruh rute evaluasi
 router.use(authenticate);
+
+// ─── Workstation Endpoints (Sidebar Kru & Detail Misi Kru) ─────────────────────
+router.get('/crews', evaluationController.getWorkstationCrews);
+router.get('/crews/:userId/missions', evaluationController.getCrewMissions);
 
 // ─── Read User Missions ───────────────────────────────────────────────────────
 router.get('/user-missions', evaluationController.getUserMissions);

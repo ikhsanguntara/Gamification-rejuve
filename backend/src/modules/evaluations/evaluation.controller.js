@@ -1,20 +1,20 @@
 'use strict';
 
 /**
- * @file evaluationController.js
- * @description Controller untuk alur evaluasi terpadu (Thin Controller delegating to evaluationService).
+ * @file evaluation.controller.js
+ * @description Controller untuk alur evaluasi terpadu & workstation kru.
  */
 
-const evaluationService = require('../services/evaluationService');
-const { sendSuccess, sendError, sendPaginated } = require('../utils/responseWrapper');
-const { uploadFileToStorage } = require('../utils/minioStorage');
+const evaluationService = require('./evaluation.service');
+const { sendSuccess, sendError, sendPaginated } = require('../../utils/responseWrapper');
+const { uploadFileToStorage } = require('../../utils/minioStorage');
 
 /**
  * GET /api/evaluations/user-missions
  */
 const getUserMissions = async (req, res, next) => {
   try {
-    const { userMissions, total, page, limit } = await evaluationService.getUserMissions(req.query);
+    const { userMissions, total, page, limit } = await evaluationService.getUserMissions(req.query, req.user);
     return sendPaginated(res, {
       message: 'Daftar penugasan misi berhasil diambil.',
       data: userMissions,
@@ -43,8 +43,40 @@ const getUserMissionById = async (req, res, next) => {
 };
 
 /**
+ * GET /api/evaluations/crews
+ * Mengambil daftar Crew gerai untuk workstation penilaian sidebar (SL / DM / Buddy).
+ */
+const getWorkstationCrews = async (req, res, next) => {
+  try {
+    const result = await evaluationService.getWorkstationCrews(req.user, req.query);
+    return sendSuccess(res, {
+      message: 'Daftar kru gerai untuk workstation berhasil diambil.',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/evaluations/crews/:userId/missions
+ * Mengambil seluruh kartu misi kru tertentu saat card diklik di sidebar.
+ */
+const getCrewMissions = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const result = await evaluationService.getCrewMissions(userId, req.user, req.query);
+    return sendSuccess(res, {
+      message: 'Daftar misi kru berhasil diambil.',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * POST /api/evaluations/user-missions/:id/buddy-score
- * Penilaian oleh Buddy -> Langsung COMPLETED
  */
 const evaluateBuddy = async (req, res, next) => {
   try {
@@ -52,7 +84,6 @@ const evaluateBuddy = async (req, res, next) => {
     const evaluatorId = req.user?.id || req.user?.userId;
     let { score, notes, evidenceUrl } = req.body;
 
-    // Jika ada upload file evidence (multipart/form-data)
     if (req.file) {
       evidenceUrl = await uploadFileToStorage(req.file, 'evidence');
     }
@@ -74,7 +105,6 @@ const evaluateBuddy = async (req, res, next) => {
 
 /**
  * POST /api/evaluations/user-missions/:id/sl-score
- * Penilaian oleh Store Leader -> Status SCORED_BY_TL
  */
 const evaluateJourneyBySL = async (req, res, next) => {
   try {
@@ -82,7 +112,6 @@ const evaluateJourneyBySL = async (req, res, next) => {
     const slId = req.user?.id || req.user?.userId;
     let { score, notes, evidenceUrl } = req.body;
 
-    // Jika ada upload file evidence (multipart/form-data)
     if (req.file) {
       evidenceUrl = await uploadFileToStorage(req.file, 'evidence');
     }
@@ -104,7 +133,6 @@ const evaluateJourneyBySL = async (req, res, next) => {
 
 /**
  * POST /api/evaluations/user-missions/:id/dm-review
- * Review oleh District Manager (APPROVE / REVISE / REJECT)
  */
 const reviewJourneyByDM = async (req, res, next) => {
   try {
@@ -138,7 +166,6 @@ const reviewJourneyByDM = async (req, res, next) => {
 
 /**
  * POST /api/evaluations/user-missions/:id/crew-feedback
- * Pengisian teks masukan oleh Crew di akhir journey -> Status COMPLETED
  */
 const submitCrewFeedback = async (req, res, next) => {
   try {
@@ -162,6 +189,8 @@ const submitCrewFeedback = async (req, res, next) => {
 module.exports = {
   getUserMissions,
   getUserMissionById,
+  getWorkstationCrews,
+  getCrewMissions,
   evaluateBuddy,
   evaluateJourneyBySL,
   reviewJourneyByDM,
