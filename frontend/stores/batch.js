@@ -92,7 +92,13 @@ export const useBatchStore = defineStore('batch', {
     batches: getStoredData('rejuve_batches_v4', mockBatches),
     selectedBatchId: 'batch-alpha',
     customSelectedWeek: null, // Follows batch's active week if not manually clicked
-    isLiveApi: false
+    isLiveApi: false,
+    serverPagination: {
+      total: 0,
+      page: 1,
+      limit: 9,
+      totalPages: 1
+    }
   }),
 
   getters: {
@@ -192,10 +198,21 @@ export const useBatchStore = defineStore('batch', {
       }
     },
 
-    async fetchBatchesFromApi() {
+    async fetchBatchesFromApi(params = {}) {
       try {
-        const res = await batchApi.getAll()
-        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+        const page = params.page || 1
+        const limit = params.limit || 9
+        const query = { page, limit }
+
+        if (params.search && params.search.trim()) {
+          query['name[contains]'] = params.search.trim()
+        }
+        if (params.status && params.status !== 'ALL') {
+          query['status'] = params.status
+        }
+
+        const res = await batchApi.getAll(query)
+        if (res && res.data && Array.isArray(res.data)) {
           this.isLiveApi = true
           this.batches = res.data.map(b => {
             const startDate = b.startDate ? b.startDate.split('T')[0] : new Date().toISOString().split('T')[0]
@@ -226,10 +243,18 @@ export const useBatchStore = defineStore('batch', {
               weeks: computeWeeksLifecycle(startDate)
             }
           })
+
+          const meta = res.meta || res.pagination || {}
+          this.serverPagination = {
+            total: meta.total !== undefined ? meta.total : res.data.length,
+            page: meta.page || page,
+            limit: meta.limit || limit,
+            totalPages: meta.totalPages || 1
+          }
+
           if (this.batches.length > 0 && (!this.selectedBatchId || !this.batches.find(b => b.id === this.selectedBatchId))) {
             this.selectedBatchId = this.batches[0].id
           }
-          setStoredData('rejuve_batches_v4', this.batches)
           return this.batches
         }
       } catch (err) {

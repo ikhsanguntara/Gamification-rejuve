@@ -130,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useBatchStore } from '~/stores/batch.js'
 import { useMissionStore } from '~/stores/mission.js'
 import { useGamificationStore } from '~/stores/gamification.js'
@@ -149,6 +149,11 @@ const missionWeekFilter = ref('ALL')
 
 const currentPage = ref(1)
 const itemsPerPage = 9
+
+onMounted(async () => {
+  await batchStore.fetchBatchesFromApi()
+  await missionStore.fetchMissionsFromApi()
+})
 
 const filteredMissions = computed(() => {
   return missionStore.allMissions.filter(m => {

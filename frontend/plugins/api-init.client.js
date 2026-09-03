@@ -8,31 +8,18 @@ import { useTemplateStore } from '~/stores/template.js'
 
 export default defineNuxtPlugin(async () => {
   const userStore = useUserStore()
-  const storeStore = useStoreStore()
-  const batchStore = useBatchStore()
-  const missionStore = useMissionStore()
-  const approvalStore = useApprovalStore()
-  const evaluationStore = useEvaluationStore()
-  const templateStore = useTemplateStore()
 
-  // Inisialisasi autentikasi & sesi
+  // Inisialisasi autentikasi & token sesi
   await userStore.initAuth()
 
-  // Jika terhubung ke token API, ambil seluruh data riil dari backend PostgreSQL
+  // Saat app dimuat / di-refresh, HANYA ambil data profil user login (/auth/me).
+  // Data spesifik tiap menu (Stores, Users, Batches, Templates, Approvals, dll.)
+  // hanya akan di-GET secara on-demand ketika user membuka menu tersebut (onMounted).
   if (userStore.token) {
     try {
-      await Promise.allSettled([
-        userStore.fetchMe(),
-        userStore.fetchUsersFromApi(),
-        storeStore.fetchStoresFromApi(),
-        batchStore.fetchBatchesFromApi(),
-        missionStore.fetchMissionsFromApi(),
-        approvalStore.fetchApprovalsFromApi(),
-        evaluationStore.fetchEvaluationsFromApi(),
-        templateStore.fetchTemplatesFromApi()
-      ])
+      await userStore.fetchMe()
     } catch (e) {
-      console.warn('Initial API sync notice:', e.message)
+      console.warn('Initial auth check notice:', e.message)
     }
   }
 })

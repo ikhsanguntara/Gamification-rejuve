@@ -25,6 +25,12 @@ function loadSafeApprovals() {
 export const useApprovalStore = defineStore('approval', {
   state: () => ({
     approvals: loadSafeApprovals(),
+    serverPagination: {
+      total: 0,
+      page: 1,
+      limit: 9,
+      totalPages: 1
+    },
     activities: [
       {
         id: 'act-1',
@@ -61,10 +67,18 @@ export const useApprovalStore = defineStore('approval', {
   },
 
   actions: {
-    async fetchApprovalsFromApi() {
+    async fetchApprovalsFromApi(params = {}) {
       try {
-        const res = await evaluationApi.getUserMissions()
-        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+        const page = params.page || 1
+        const limit = params.limit || 9
+        const query = { page, limit }
+
+        if (params.status && params.status !== 'ALL') {
+          query.status = params.status
+        }
+
+        const res = await evaluationApi.getUserMissions(query)
+        if (res && res.data && Array.isArray(res.data)) {
           this.approvals = res.data.map(m => {
             const isApproved = m.status === 'APPROVED_BY_DM' || m.status === 'COMPLETED'
             const isPending = m.status === 'SCORED_BY_TL' || m.status === 'PENDING_REVIEW' || m.status === 'OPEN'
@@ -98,7 +112,15 @@ export const useApprovalStore = defineStore('approval', {
               evidence: m.evidenceUrl ? [{ url: m.evidenceUrl, caption: 'Bukti Foto Operasional' }] : []
             }
           })
-          setStoredData('rejuve_approvals_v4', this.approvals)
+
+          const meta = res.meta || res.pagination || {}
+          this.serverPagination = {
+            total: meta.total !== undefined ? meta.total : res.data.length,
+            page: meta.page || page,
+            limit: meta.limit || limit,
+            totalPages: meta.totalPages || 1
+          }
+
           return this.approvals
         }
       } catch (err) {

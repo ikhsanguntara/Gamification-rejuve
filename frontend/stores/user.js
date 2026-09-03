@@ -251,6 +251,12 @@ export const useUserStore = defineStore('user', {
     isLiveApi: false,
     currentUserId: 'spv-001',
     userDirectory: getStoredData('rejuve_users_v3', initialDirectory),
+    serverPagination: {
+      total: 0,
+      page: 1,
+      limit: 10,
+      totalPages: 1
+    },
     notifications: [
       {
         id: 'notif-1',
@@ -451,22 +457,33 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    async fetchUsersFromApi() {
+    async fetchUsersFromApi(params = {}) {
       try {
-        const res = await userApi.getAll({ limit: 100 })
-        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+        const page = params.page || 1
+        const limit = params.limit || 10
+        const query = { page, limit }
+
+        if (params.search && params.search.trim()) {
+          query['name[contains]'] = params.search.trim()
+        }
+        if (params.role && params.role !== 'ALL') {
+          query['role'] = params.role
+        }
+
+        const res = await userApi.getAll(query)
+        if (res && res.data && Array.isArray(res.data)) {
           this.isLiveApi = true
           this.userDirectory = res.data.map(apiU => {
-            const roleCode = apiU.role?.roleCode || apiU.role || 'CREW'
+            const roleCode = extractRoleCode(apiU.role) || extractRoleCode(apiU.roleDetails) || 'CREW'
             return {
               id: apiU.userId,
               name: apiU.name,
               role: roleCode,
-              roleTitle: apiU.role?.roleName || roleCode,
+              roleTitle: resolveRoleTitle(apiU),
               email: apiU.email,
               avatar: apiU.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
               department: apiU.department?.departmentName || 'Store Operations',
-              position: apiU.position || apiU.role?.roleName || 'Crew Specialist',
+              position: apiU.position || resolveRoleTitle(apiU),
               storeLocation: apiU.department?.departmentName || 'Re.juve Store',
               batchId: apiU.batchId || 'batch-alpha',
               stars: apiU.stars || 0,
@@ -474,7 +491,15 @@ export const useUserStore = defineStore('user', {
               isBuddy: Boolean(apiU.isBuddy)
             }
           })
-          setStoredData('rejuve_users_v3', this.userDirectory)
+
+          const meta = res.meta || res.pagination || {}
+          this.serverPagination = {
+            total: meta.total !== undefined ? meta.total : res.data.length,
+            page: meta.page || page,
+            limit: meta.limit || limit,
+            totalPages: meta.totalPages || 1
+          }
+
           return this.userDirectory
         }
       } catch (e) {

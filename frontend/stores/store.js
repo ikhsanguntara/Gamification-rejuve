@@ -13,7 +13,14 @@ export const useStoreStore = defineStore('store', {
   state: () => ({
     stores: getStoredData('rejuve_stores_v1', mockStores),
     selectedStoreId: 'store-001',
-    isLiveApi: false
+    isLiveApi: false,
+    isLoading: false,
+    serverPagination: {
+      total: 0,
+      page: 1,
+      limit: 9,
+      totalPages: 1
+    }
   }),
 
   getters: {
@@ -55,7 +62,7 @@ export const useStoreStore = defineStore('store', {
     },
 
     activeStores: (state) => state.stores.filter(s => s.status === 'ACTIVE'),
-    totalStoreCount: (state) => state.stores.length,
+    totalStoreCount: (state) => state.serverPagination.total || state.stores.length,
     activeStoreCount: (state) => state.stores.filter(s => s.status === 'ACTIVE').length
   },
 
@@ -64,10 +71,25 @@ export const useStoreStore = defineStore('store', {
       this.selectedStoreId = id
     },
 
-    async fetchStoresFromApi() {
+    async fetchStoresFromApi(params = {}) {
+      this.isLoading = true
       try {
-        const res = await departmentApi.getAll({ limit: 100 })
-        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+        const page = params.page || 1
+        const limit = params.limit || 9
+        const query = { page, limit }
+
+        if (params.search && params.search.trim()) {
+          query['departmentName[contains]'] = params.search.trim()
+        }
+        if (params.region && params.region !== 'ALL') {
+          query['regionCode'] = params.region
+        }
+        if (params.status && params.status !== 'ALL') {
+          query['isActive'] = params.status === 'ACTIVE'
+        }
+
+        const res = await departmentApi.getAll(query)
+        if (res && res.data && Array.isArray(res.data)) {
           this.isLiveApi = true
           this.stores = res.data.map(d => ({
             id: d.departmentId,
@@ -85,14 +107,24 @@ export const useStoreStore = defineStore('store', {
             openingHours: '10:00 - 22:00',
             createdAt: d.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
           }))
+
+          const meta = res.meta || res.pagination || {}
+          this.serverPagination = {
+            total: meta.total !== undefined ? meta.total : res.data.length,
+            page: meta.page || page,
+            limit: meta.limit || limit,
+            totalPages: meta.totalPages || 1
+          }
+
           if (this.stores.length > 0 && (!this.selectedStoreId || !this.stores.find(s => s.id === this.selectedStoreId))) {
             this.selectedStoreId = this.stores[0].id
           }
-          setStoredData('rejuve_stores_v1', this.stores)
           return this.stores
         }
       } catch (err) {
         console.warn('fetchStoresFromApi failed:', err.message)
+      } finally {
+        this.isLoading = false
       }
     },
 

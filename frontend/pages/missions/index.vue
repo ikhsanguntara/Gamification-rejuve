@@ -124,7 +124,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useMissionStore } from '~/stores/mission.js'
@@ -144,6 +144,11 @@ const selectedCategoryFilter = ref('ALL')
 
 const currentPage = ref(1)
 const itemsPerPage = 9
+
+onMounted(async () => {
+  await batchStore.fetchBatchesFromApi()
+  await missionStore.fetchMissionsFromApi()
+})
 
 const filteredMissions = computed(() => {
   const targetBatchId = userStore.isCrew ? userStore.currentUser.batchId : batchStore.selectedBatchId

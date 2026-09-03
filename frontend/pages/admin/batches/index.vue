@@ -26,9 +26,9 @@
     </div>
 
     <!-- Clean Batches Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-if="batchStore.allBatches.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div
-        v-for="b in paginatedBatches"
+        v-for="b in batchStore.allBatches"
         :key="b.id"
         class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between shadow-sm relative hover:border-slate-300 dark:hover:border-slate-700 transition-all"
       >
@@ -42,19 +42,22 @@
             </span>
           </div>
 
-          <h4 class="text-base font-bold text-slate-900 dark:text-white">
+          <h3 class="font-bold text-base text-slate-900 dark:text-white mb-1">
             {{ b.name }}
-          </h4>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
-            <MapPin class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-4">
+            <MapPin class="w-3.5 h-3.5 text-slate-400" />
             <span>{{ b.storeLocation }}</span>
           </p>
 
-          <!-- Clean Info Rows -->
-          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs">
+          <div class="space-y-1.5 text-xs">
             <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
-              <span class="text-slate-400">👔 Supervisor:</span>
-              <span class="font-semibold">{{ b.assignment?.supervisorName || 'Budi Santoso' }}</span>
+              <span class="text-slate-400">📅 Periode:</span>
+              <span class="font-medium">{{ b.startDate }} s/d {{ b.endDate }}</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
+              <span class="text-slate-400">👤 Store Leader:</span>
+              <span class="font-semibold">{{ b.assignment?.storeLeaderName || 'Budi Santoso' }}</span>
             </div>
             <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
               <span class="text-slate-400">👑 Head Approver:</span>
@@ -92,9 +95,9 @@
 
     <!-- App Pagination for Grid Cards (9 Items / Page) -->
     <AppPagination
-      v-if="batchStore.allBatches.length > 0"
+      v-if="batchStore.serverPagination.total > 0"
       v-model:current-page="currentPage"
-      :total-items="batchStore.allBatches.length"
+      :total-items="batchStore.serverPagination.total"
       :items-per-page="itemsPerPage"
       item-label="batch"
     />
@@ -102,7 +105,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { useToast } from '~/composables/useToast.js'
@@ -116,13 +119,20 @@ const toast = useToast()
 const currentPage = ref(1)
 const itemsPerPage = 9
 
-onMounted(async () => {
-  await batchStore.fetchBatchesFromApi()
+const loadBatches = async (page = 1) => {
+  await batchStore.fetchBatchesFromApi({
+    page,
+    limit: itemsPerPage
+  })
+}
+
+onMounted(() => {
+  loadBatches(1)
 })
 
-const paginatedBatches = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return batchStore.allBatches.slice(start, start + itemsPerPage)
+// Pindah halaman via pagination -> HIT API Backend!
+watch(currentPage, (newPage) => {
+  loadBatches(newPage)
 })
 
 const confirmDeleteBatch = (batch) => {

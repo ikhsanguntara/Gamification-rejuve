@@ -205,23 +205,7 @@ const handleLogin = async () => {
         `Selamat datang ${userStore.currentUser.name} (${userStore.currentUser.role}) • Sesi JWT Aktif 🎉`
       )
 
-      // Sedot seluruh data riil dari REST API backend live
-      const storeStore = useStoreStore()
-      const batchStore = useBatchStore()
-      const missionStore = useMissionStore()
-      const approvalStore = useApprovalStore()
-      const evaluationStore = useEvaluationStore()
-      const templateStore = useTemplateStore()
-
-      await Promise.allSettled([
-        userStore.fetchUsersFromApi(),
-        storeStore.fetchStoresFromApi(),
-        batchStore.fetchBatchesFromApi(),
-        missionStore.fetchMissionsFromApi(),
-        approvalStore.fetchApprovalsFromApi(),
-        evaluationStore.fetchEvaluationsFromApi(),
-        templateStore.fetchTemplatesFromApi()
-      ])
+      // Navigasi instan sesuai role (data spesifik akan di-load on-demand di halaman tujuan)
 
       // Navigasi sesuai role dari database API
       if (userStore.isSuperadmin) {

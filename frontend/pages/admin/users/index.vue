@@ -78,7 +78,7 @@
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
             <tr
-              v-for="u in paginatedUsers"
+              v-for="u in userStore.allUsers"
               :key="u.id"
               class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
             >
@@ -166,10 +166,10 @@
       </div>
 
       <!-- App Pagination for Table List (10 Items / Page) -->
-      <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+      <div v-if="userStore.serverPagination.total > 0" class="p-4 border-t border-slate-100 dark:border-slate-800">
         <AppPagination
           v-model:current-page="currentPage"
-          :total-items="filteredUsers.length"
+          :total-items="userStore.serverPagination.total"
           :items-per-page="itemsPerPage"
           item-label="pengguna"
         />
@@ -179,7 +179,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useStoreStore } from '~/stores/store.js'
@@ -199,32 +199,38 @@ const userBatchFilter = ref('ALL')
 const currentPage = ref(1)
 const itemsPerPage = 10
 
-onMounted(async () => {
-  await userStore.fetchUsersFromApi()
-})
-
-const filteredUsers = computed(() => {
-  return userStore.allUsers.filter(u => {
-    if (searchQuery.value) {
-      const q = searchQuery.value.toLowerCase().trim()
-      const matchName = u.name.toLowerCase().includes(q)
-      const matchEmail = u.email.toLowerCase().includes(q)
-      if (!matchName && !matchEmail) return false
-    }
-    if (userRoleFilter.value !== 'ALL' && u.role !== userRoleFilter.value) return false
-    if (userBatchFilter.value !== 'ALL' && u.batchId !== userBatchFilter.value) return false
-    return true
+const loadUsers = async (page = 1) => {
+  await userStore.fetchUsersFromApi({
+    page,
+    limit: itemsPerPage,
+    search: searchQuery.value,
+    role: userRoleFilter.value
   })
+}
+
+onMounted(() => {
+  loadUsers(1)
 })
 
-// Auto-reset ke halaman 1 saat filter atau pencarian berubah
-watch([searchQuery, userRoleFilter, userBatchFilter], () => {
+// Pindah halaman via pagination -> HIT API Backend!
+watch(currentPage, (newPage) => {
+  loadUsers(newPage)
+})
+
+// Filter search debounced 350ms -> Reset ke Page 1 & HIT API!
+let searchTimer = null
+watch(searchQuery, () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    currentPage.value = 1
+    loadUsers(1)
+  }, 350)
+})
+
+// Filter role -> Reset ke Page 1 & HIT API!
+watch(userRoleFilter, () => {
   currentPage.value = 1
-})
-
-const paginatedUsers = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredUsers.value.slice(start, start + itemsPerPage)
+  loadUsers(1)
 })
 
 const getStoreName = (storeId) => {

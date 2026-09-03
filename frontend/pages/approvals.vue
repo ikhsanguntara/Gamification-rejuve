@@ -196,10 +196,6 @@ import {
 const approvalStore = useApprovalStore()
 const toast = useToast()
 
-onMounted(async () => {
-  await approvalStore.fetchApprovalsFromApi()
-})
-
 const activeTab = ref('PENDING')
 const isApproveModalOpen = ref(false)
 const selectedItem = ref(null)
@@ -209,6 +205,22 @@ const selectedIds = ref([])
 const currentPendingPage = ref(1)
 const currentApprovedPage = ref(1)
 const itemsPerPage = 9
+
+const loadApprovals = async (page = 1) => {
+  await approvalStore.fetchApprovalsFromApi({
+    page,
+    limit: itemsPerPage
+  })
+}
+
+onMounted(() => {
+  loadApprovals(1)
+})
+
+watch([currentPendingPage, currentApprovedPage], ([pPage, aPage]) => {
+  const targetPage = activeTab.value === 'PENDING' ? pPage : aPage
+  loadApprovals(targetPage)
+})
 
 const paginatedPending = computed(() => {
   const start = (currentPendingPage.value - 1) * itemsPerPage

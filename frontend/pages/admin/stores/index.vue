@@ -27,56 +27,7 @@
       </div>
     </div>
 
-    <!-- KPI Summary Row -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-4">
-        <div class="w-12 h-12 rounded-2xl bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] flex items-center justify-center flex-shrink-0">
-          <Store class="w-6 h-6" />
-        </div>
-        <div>
-          <span class="text-xs font-medium text-slate-400">Total Outlet</span>
-          <p class="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
-            {{ storeStore.totalStoreCount }}
-          </p>
-        </div>
-      </div>
 
-      <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-4">
-        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-          <CheckCircle2 class="w-6 h-6" />
-        </div>
-        <div>
-          <span class="text-xs font-medium text-slate-400">Gerai Aktif</span>
-          <p class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
-            {{ storeStore.activeStoreCount }}
-          </p>
-        </div>
-      </div>
-
-      <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-4">
-        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
-          <UserCheck class="w-6 h-6" />
-        </div>
-        <div>
-          <span class="text-xs font-medium text-slate-400">Store Leader Terdaftar</span>
-          <p class="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
-            {{ userStore.storeLeaders.length }}
-          </p>
-        </div>
-      </div>
-
-      <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-4">
-        <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
-          <ShieldCheck class="w-6 h-6" />
-        </div>
-        <div>
-          <span class="text-xs font-medium text-slate-400">District Manager</span>
-          <p class="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
-            {{ userStore.districtManagers.length }}
-          </p>
-        </div>
-      </div>
-    </div>
 
     <!-- Filters & Search Toolbar -->
     <div class="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
@@ -120,9 +71,9 @@
     </div>
 
     <!-- Stores Grid List -->
-    <div v-if="filteredStores.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div v-if="storeStore.allStores.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
       <div
-        v-for="store in paginatedStores"
+        v-for="store in storeStore.allStores"
         :key="store.id"
         class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group relative overflow-hidden"
       >
@@ -259,16 +210,16 @@
 
     <!-- App Pagination for Grid Cards (9 Items / Page) -->
     <AppPagination
-      v-if="filteredStores.length > 0"
+      v-if="storeStore.serverPagination.total > 0"
       v-model:current-page="currentPage"
-      :total-items="filteredStores.length"
+      :total-items="storeStore.serverPagination.total"
       :items-per-page="itemsPerPage"
       item-label="outlet"
     />
 
     <!-- Empty State -->
     <EmptyState
-      v-else
+      v-else-if="!storeStore.isLoading"
       title="Tidak Ada Gerai Ditemukan"
       description="Tidak ada gerai yang cocok dengan filter atau kata kunci pencarian Anda."
       icon="Store"
@@ -289,7 +240,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useStoreStore } from '~/stores/store.js'
 import { useUserStore } from '~/stores/user.js'
 import { useToast } from '~/composables/useToast.js'
@@ -300,9 +251,6 @@ import {
   Store,
   Plus,
   Search,
-  CheckCircle2,
-  UserCheck,
-  ShieldCheck,
   MapPin,
   Phone,
   Clock,
@@ -324,44 +272,40 @@ const itemsPerPage = 9
 const showDeleteModal = ref(false)
 const storeToDelete = ref(null)
 
-onMounted(async () => {
-  await storeStore.fetchStoresFromApi()
+// Server-side load function: langsung menembak API backend dengan parameter page, limit, dan filters
+const loadStores = async (page = 1) => {
+  await storeStore.fetchStoresFromApi({
+    page,
+    limit: itemsPerPage,
+    search: searchQuery.value,
+    region: selectedRegion.value,
+    status: selectedStatus.value
+  })
+}
+
+onMounted(() => {
+  loadStores(1)
 })
 
-const filteredStores = computed(() => {
-  let list = storeStore.allStores
-
-  if (selectedRegion.value !== 'ALL') {
-    list = list.filter(s => s.region === selectedRegion.value)
-  }
-
-  if (selectedStatus.value !== 'ALL') {
-    list = list.filter(s => s.status === selectedStatus.value)
-  }
-
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.toLowerCase()
-    list = list.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      s.code.toLowerCase().includes(q) ||
-      s.mallName?.toLowerCase().includes(q) ||
-      s.address?.toLowerCase().includes(q) ||
-      s.storeLeader?.name.toLowerCase().includes(q) ||
-      s.districtManager?.name.toLowerCase().includes(q)
-    )
-  }
-
-  return list
+// Ketika user klik pindah halaman (Page 2, Page 3, dst) -> HIT API Backend!
+watch(currentPage, (newPage) => {
+  loadStores(newPage)
 })
 
-// Auto-reset ke halaman 1 saat filter atau pencarian berubah
-watch([searchQuery, selectedRegion, selectedStatus], () => {
+// Ketika user mencari nama gerai (Debounce 350ms) -> Reset ke Page 1 & HIT API Backend!
+let searchTimer = null
+watch(searchQuery, () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    currentPage.value = 1
+    loadStores(1)
+  }, 350)
+})
+
+// Ketika filter region / status diubah -> Reset ke Page 1 & HIT API Backend!
+watch([selectedRegion, selectedStatus], () => {
   currentPage.value = 1
-})
-
-const paginatedStores = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredStores.value.slice(start, start + itemsPerPage)
+  loadStores(1)
 })
 
 const confirmDelete = (store) => {
