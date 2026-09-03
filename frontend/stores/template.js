@@ -374,6 +374,20 @@ export const useTemplateStore = defineStore('template', {
         title: type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`
       }))
 
+      const inputDetails = Array.isArray(payload.details) ? payload.details : []
+      const mappedTemplates = inputDetails.map((d, idx) => ({
+        id: d.id || d.tempId || `mis-${Date.now()}-${idx}`,
+        codePrefix: d.codePrefix || `M-W${d.durationNumber || 1}-${String(idx + 1).padStart(2, '0')}`,
+        title: d.missionTitle || d.title || `Butir SOP ${idx + 1}`,
+        description: d.description || '',
+        week: Number(d.durationNumber) || 1,
+        category: d.category || 'TECHNICAL',
+        inputType: d.inputType || 'SCALE',
+        requirements: Array.isArray(d.requirements)
+          ? d.requirements
+          : (d.requirementsText ? d.requirementsText.split('\n').map(r => r.trim()).filter(Boolean) : ['Verifikasi checklist standar operasional'])
+      }))
+
       const newPkg = normalizePackage({
         id,
         tplMissionId: id,
@@ -385,11 +399,11 @@ export const useTemplateStore = defineStore('template', {
         category: payload.category || 'Operasional',
         targetType: payload.targetType || 'Semua Gerai',
         description: payload.description || '',
-        totalMissions: 0,
+        totalMissions: mappedTemplates.length,
         totalWeeks: durationValue,
         weeks,
-        templates: [],
-        details: []
+        templates: mappedTemplates,
+        details: inputDetails
       })
 
       if (type === 'JOURNEY') {
@@ -414,7 +428,7 @@ export const useTemplateStore = defineStore('template', {
         durationCode,
         durationValue,
         description: newPkg.description || '',
-        details: []
+        details: inputDetails
       }).then(res => {
         if (res?.data?.tplMissionId) {
           newPkg.tplMissionId = res.data.tplMissionId

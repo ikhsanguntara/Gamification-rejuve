@@ -27,15 +27,6 @@
             <Plus class="w-4 h-4 text-[#831843] dark:text-[#f472b6]" />
             <span>Buat Paket Master Baru</span>
           </button>
-
-          <button
-            type="button"
-            @click="showApplyModal = true"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white text-xs font-bold transition-all shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
-          >
-            <Sparkles class="w-4 h-4" />
-            <span>Terapkan ke Gerai</span>
-          </button>
         </template>
 
         <!-- Action Buttons when in BUDDY tab -->
@@ -213,7 +204,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Plus, Sparkles, Layers, Handshake, MessageSquareText } from 'lucide-vue-next'
+import { Plus, Layers, Handshake, MessageSquareText } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
 
 // Sub-Komponen Modul Template

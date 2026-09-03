@@ -49,22 +49,6 @@
             <span class="text-slate-400 font-medium">🎯 {{ pkg.targetType }}</span>
             <div class="flex items-center gap-1">
               <button
-                type="button"
-                @click.stop="$emit('open-edit', pkg)"
-                title="Edit Template Paket"
-                class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <Edit3 class="w-3 h-3" />
-              </button>
-              <button
-                type="button"
-                @click.stop="duplicatePackage(pkg.id)"
-                title="Duplikat Paket"
-                class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <Copy class="w-3 h-3" />
-              </button>
-              <button
                 v-if="templateStore.allPackages.length > 1"
                 type="button"
                 @click.stop="confirmDeletePackage(pkg)"
@@ -106,18 +90,10 @@
             <button
               type="button"
               @click="$emit('open-edit', activePackage)"
-              class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all"
+              class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all"
             >
               <Edit3 class="w-3.5 h-3.5 text-slate-500" />
               <span>Edit Template</span>
-            </button>
-            <button
-              type="button"
-              @click="$emit('open-add-mission')"
-              class="px-3.5 py-2 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
-            >
-              <Plus class="w-3.5 h-3.5" />
-              <span>Tambah Butir SOP</span>
             </button>
           </div>
         </div>
@@ -144,52 +120,7 @@
                 </TabsTrigger>
               </TabsList>
 
-              <!-- Tombol Tambah Week Dinamis -->
-              <button
-                type="button"
-                @click="handleAddNewWeek"
-                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-[#831843] text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-[#831843] transition-all cursor-pointer"
-                title="Tambah Minggu Baru ke Paket Ini"
-              >
-                <Plus class="w-3.5 h-3.5" />
-                <span>Tambah Week</span>
-              </button>
             </div>
-
-            <!-- Action buttons for currently active week -->
-            <div class="flex items-center gap-2">
-              <button
-                v-if="activePackageWeeks.length > 1"
-                type="button"
-                @click="handleRemoveCurrentWeek"
-                class="text-[11px] text-rose-500 hover:text-rose-700 font-semibold cursor-pointer"
-              >
-                Hapus Minggu Ini
-              </button>
-            </div>
-          </div>
-
-          <!-- Dynamic Week Title Editor Card -->
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-2 flex-1 min-w-0">
-              <span class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap flex items-center gap-1">
-                <Bookmark class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
-                <span>Judul Minggu {{ activeWeekTab }}:</span>
-              </span>
-              <input
-                v-model="currentWeekTitle"
-                type="text"
-                placeholder="Contoh: Minggu 1: Suhu & Sanitasi Dasar"
-                class="flex-1 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-slate-900 dark:text-white font-semibold focus:ring-1 focus:ring-[#831843]"
-              />
-            </div>
-            <button
-              type="button"
-              @click="saveCurrentWeekTitle"
-              class="px-3 py-1.5 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white text-xs font-bold shadow-2xs transition-all cursor-pointer active:scale-95 flex-shrink-0"
-            >
-              Simpan Judul
-            </button>
           </div>
 
           <!-- Content per Week -->
@@ -218,15 +149,6 @@
                     {{ item.description }}
                   </p>
                 </div>
-
-                <button
-                  type="button"
-                  @click="removeMission(item.id)"
-                  class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                  title="Hapus butir SOP ini"
-                >
-                  <Trash2 class="w-3.5 h-3.5" />
-                </button>
               </div>
 
               <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/80">
@@ -245,7 +167,7 @@
               v-if="!(activePackage?.templates || []).some(t => Number(t.week) === Number(w.weekNumber))"
               class="py-12 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl"
             >
-              Belum ada butir misi SOP di Minggu {{ w.weekNumber }}. Klik "Tambah Butir SOP" di atas.
+              Belum ada butir misi SOP di Minggu {{ w.weekNumber }}. Klik "Edit Template" di atas untuk mengelola butir SOP.
             </div>
           </TabsContent>
 
@@ -259,7 +181,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from 'reka-ui'
-import { Copy, Trash2, Plus, Bookmark, Loader2, Edit3 } from 'lucide-vue-next'
+import { Trash2, Loader2, Edit3 } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
 import { useToast } from '~/composables/useToast.js'
 import { confirmDeleteDialog } from '~/utils/dialog.js'
@@ -310,13 +232,6 @@ const selectPackageTab = async (pkgId) => {
   }
 }
 
-const duplicatePackage = (pkgId) => {
-  const dup = templateStore.duplicatePackage(pkgId)
-  if (dup) {
-    toast.success('Paket Diduplikasi', `Salinan "${dup.name}" berhasil dibuat.`)
-  }
-}
-
 const confirmDeletePackage = async (pkg) => {
   const isConfirmed = await confirmDeleteDialog({
     title: 'Hapus Paket Template?',
@@ -331,46 +246,6 @@ const confirmDeletePackage = async (pkg) => {
       syncWeekTitle()
     }
   }
-}
-
-const saveCurrentWeekTitle = () => {
-  if (!currentWeekTitle.value.trim() || !activePackage.value) return
-  templateStore.updateWeekTitle(activePackage.value.id, activeWeekTab.value, currentWeekTitle.value.trim())
-  toast.success('Judul Week Disimpan', `Judul Week ${activeWeekTab.value} berhasil diperbarui.`)
-}
-
-const handleAddNewWeek = () => {
-  if (!activePackage.value) return
-  const created = templateStore.addWeekToPackage(activePackage.value.id)
-  if (created) {
-    activeWeekTab.value = created.weekNumber
-    syncWeekTitle()
-    toast.success('Week Ditambahkan', `Week ${created.weekNumber} siap ditambahkan butir SOP.`)
-  }
-}
-
-const handleRemoveCurrentWeek = async () => {
-  if (!activePackage.value) return
-  const isConfirmed = await confirmDeleteDialog({
-    title: `Hapus Week ${activeWeekTab.value}?`,
-    text: `Seluruh butir misi di dalam Week ${activeWeekTab.value} akan ikut dihapus.`,
-    confirmButtonText: 'Ya, Hapus Week'
-  })
-
-  if (isConfirmed) {
-    const success = templateStore.removeWeekFromPackage(activePackage.value.id, activeWeekTab.value)
-    if (success) {
-      activeWeekTab.value = 1
-      syncWeekTitle()
-      toast.success('Week Dihapus', 'Minggu beserta seluruh butir SOP di dalamnya telah dihapus.')
-    }
-  }
-}
-
-const removeMission = (missionId) => {
-  if (!activePackage.value) return
-  templateStore.removeTemplateFromPackage(activePackage.value.id, missionId)
-  toast.success('Butir SOP Dihapus', 'Misi telah dihapus dari paket master ini.')
 }
 
 defineExpose({

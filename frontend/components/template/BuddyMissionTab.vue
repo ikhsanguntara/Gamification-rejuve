@@ -48,22 +48,6 @@
             <div class="flex items-center gap-1">
               <button
                 type="button"
-                @click.stop="$emit('open-edit', bpkg)"
-                title="Edit Template Paket"
-                class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <Edit3 class="w-3 h-3" />
-              </button>
-              <button
-                type="button"
-                @click.stop="duplicateBuddyPkg(bpkg.id)"
-                title="Duplikat Paket"
-                class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <Copy class="w-3 h-3" />
-              </button>
-              <button
-                type="button"
                 @click.stop="confirmDeleteBuddyPkg(bpkg)"
                 title="Hapus Paket"
                 class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"

@@ -47,23 +47,15 @@
           <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
             <span class="text-slate-400 font-medium">📋 Kuesioner Feedback</span>
             <div class="flex items-center gap-1">
-            <button
-              type="button"
-              @click.stop="$emit('open-edit', fpkg)"
-              title="Edit Template Paket"
-              class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-            >
-              <Edit3 class="w-3 h-3" />
-            </button>
-            <button
-              type="button"
-              @click.stop="confirmDeleteFeedbackPkg(fpkg)"
-              title="Hapus Template"
-              class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"
-            >
-              <Trash2 class="w-3 h-3" />
-            </button>
-          </div>
+              <button
+                type="button"
+                @click.stop="confirmDeleteFeedbackPkg(fpkg)"
+                title="Hapus Template"
+                class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"
+              >
+                <Trash2 class="w-3 h-3" />
+              </button>
+            </div>
         </div>
       </div>
 
