@@ -491,7 +491,17 @@ watch(selectedCrew, () => {
   loadSelectedCrewRapor()
 }, { immediate: true })
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    // Selalu hit live API backend untuk User & Batch saat halaman dibuka
+    await Promise.all([
+      userStore.fetchUsersFromApi({ limit: 100 }),
+      batchStore.fetchBatchesFromApi({ limit: 10 })
+    ])
+  } catch (err) {
+    console.error('Failed to fetch users/batches in buddy page:', err)
+  }
+
   if (currentBatchCrews.value.length > 0 && !selectedCrewId.value) {
     selectedCrewId.value = currentBatchCrews.value[0].id
   }
