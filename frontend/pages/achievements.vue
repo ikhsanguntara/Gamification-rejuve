@@ -48,23 +48,31 @@
         v-for="cat in categories"
         :key="cat"
         :value="cat"
-        class="focus:outline-hidden"
+        class="focus:outline-hidden space-y-4"
       >
         <!-- Achievements Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
           <AchievementCard
-            v-for="ach in (cat === 'All Badges' ? gamificationStore.allAchievements : gamificationStore.allAchievements.filter(a => a.category === cat))"
+            v-for="ach in paginatedAchievements"
             :key="ach.id"
             :achievement="ach"
           />
         </div>
+
+        <AppPagination
+          v-if="filteredAchievements.length > 0"
+          v-model:current-page="currentPage"
+          :total-items="filteredAchievements.length"
+          :items-per-page="itemsPerPage"
+          item-label="lencana"
+        />
       </TabsContent>
     </TabsRoot>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   TabsRoot,
   TabsList,
@@ -74,6 +82,7 @@ import {
 import { useUserStore } from '~/stores/user.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import AchievementCard from '~/components/gamification/AchievementCard.vue'
+import AppPagination from '~/components/ui/AppPagination.vue'
 
 const userStore = useUserStore()
 const gamificationStore = useGamificationStore()
@@ -81,10 +90,22 @@ const gamificationStore = useGamificationStore()
 const selectedCategory = ref('All Badges')
 const categories = ['All Badges', 'Missions', 'Excellence', 'Consistency', 'Progression', 'Safety', 'Ranking']
 
+const currentPage = ref(1)
+const itemsPerPage = 9
+
 const unlockedCount = computed(() => gamificationStore.unlockedAchievements.length)
 
 const filteredAchievements = computed(() => {
   if (selectedCategory.value === 'All Badges') return gamificationStore.allAchievements
   return gamificationStore.allAchievements.filter(a => a.category === selectedCategory.value)
+})
+
+watch(selectedCategory, () => {
+  currentPage.value = 1
+})
+
+const paginatedAchievements = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredAchievements.value.slice(start, start + itemsPerPage)
 })
 </script>

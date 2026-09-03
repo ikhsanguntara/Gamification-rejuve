@@ -180,7 +180,7 @@
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-normal">
             <tr
-              v-for="crew in displayedLeaderboard"
+              v-for="crew in paginatedLeaderboard"
               :key="crew.crewId || crew.id"
               class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
               :class="[
@@ -266,15 +266,26 @@
           </tbody>
         </table>
       </div>
+
+      <!-- App Pagination for Leaderboard Table (10 Rows / Page) -->
+      <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+        <AppPagination
+          v-model:current-page="currentPage"
+          :total-items="displayedLeaderboard.length"
+          :items-per-page="itemsPerPage"
+          item-label="kru"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
+import AppPagination from '~/components/ui/AppPagination.vue'
 import {
   Crown,
   Star
@@ -286,6 +297,9 @@ const gamificationStore = useGamificationStore()
 
 const selectedBatch = ref(userStore.isCrew ? (userStore.currentUser.batchId || 'batch-alpha') : 'ALL')
 
+const currentPage = ref(1)
+const itemsPerPage = 10
+
 const batchOptions = [
   { id: 'ALL', label: 'All Store Batches' },
   { id: 'batch-alpha', label: 'Grand Indonesia (6)' },
@@ -296,6 +310,15 @@ const batchOptions = [
 const displayedLeaderboard = computed(() => {
   const batchId = userStore.isCrew ? (userStore.currentUser.batchId || 'batch-alpha') : selectedBatch.value
   return gamificationStore.leaderboardByBatch(batchId)
+})
+
+watch(selectedBatch, () => {
+  currentPage.value = 1
+})
+
+const paginatedLeaderboard = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return displayedLeaderboard.value.slice(start, start + itemsPerPage)
 })
 
 const topThreeList = computed(() => {

@@ -108,13 +108,13 @@
       </TabsList>
 
       <!-- Pending Tab Content -->
-      <TabsContent value="PENDING" class="focus:outline-hidden">
+      <TabsContent value="PENDING" class="focus:outline-hidden space-y-4">
         <div
           v-if="approvalStore.pendingApprovals.length > 0"
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
         >
           <ApprovalCard
-            v-for="item in approvalStore.pendingApprovals"
+            v-for="item in paginatedPending"
             :key="item.id"
             :item="item"
             :selectable="true"
@@ -123,6 +123,13 @@
             @approve="openApproveModal"
           />
         </div>
+        <AppPagination
+          v-if="approvalStore.pendingApprovals.length > 0"
+          v-model:current-page="currentPendingPage"
+          :total-items="approvalStore.pendingApprovals.length"
+          :items-per-page="itemsPerPage"
+          item-label="evaluasi"
+        />
         <EmptyState
           v-else
           title="Semua Evaluasi Telah Disetujui"
@@ -132,18 +139,25 @@
       </TabsContent>
 
       <!-- Approved Tab Content -->
-      <TabsContent value="APPROVED" class="focus:outline-hidden">
+      <TabsContent value="APPROVED" class="focus:outline-hidden space-y-4">
         <div
           v-if="approvalStore.approvedItems.length > 0"
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
         >
           <ApprovalCard
-            v-for="item in approvalStore.approvedItems"
+            v-for="item in paginatedApproved"
             :key="item.id"
             :item="item"
             @approve="openApproveModal"
           />
         </div>
+        <AppPagination
+          v-if="approvalStore.approvedItems.length > 0"
+          v-model:current-page="currentApprovedPage"
+          :total-items="approvalStore.approvedItems.length"
+          :items-per-page="itemsPerPage"
+          item-label="evaluasi"
+        />
         <EmptyState
           v-else
           title="Belum Ada Misi Disetujui"
@@ -171,6 +185,7 @@ import { useToast } from '~/composables/useToast.js'
 import ApprovalCard from '~/components/approval/ApprovalCard.vue'
 import ApprovalModal from '~/components/approval/ApprovalModal.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
+import AppPagination from '~/components/ui/AppPagination.vue'
 import {
   Hourglass,
   CheckCircle2,
@@ -190,6 +205,20 @@ const isApproveModalOpen = ref(false)
 const selectedItem = ref(null)
 
 const selectedIds = ref([])
+
+const currentPendingPage = ref(1)
+const currentApprovedPage = ref(1)
+const itemsPerPage = 9
+
+const paginatedPending = computed(() => {
+  const start = (currentPendingPage.value - 1) * itemsPerPage
+  return approvalStore.pendingApprovals.slice(start, start + itemsPerPage)
+})
+
+const paginatedApproved = computed(() => {
+  const start = (currentApprovedPage.value - 1) * itemsPerPage
+  return approvalStore.approvedItems.slice(start, start + itemsPerPage)
+})
 
 const isAllSelected = computed(() => {
   const pending = approvalStore.pendingApprovals

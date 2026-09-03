@@ -122,7 +122,7 @@
     <!-- Stores Grid List -->
     <div v-if="filteredStores.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
       <div
-        v-for="store in filteredStores"
+        v-for="store in paginatedStores"
         :key="store.id"
         class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group relative overflow-hidden"
       >
@@ -257,6 +257,15 @@
       </div>
     </div>
 
+    <!-- App Pagination for Grid Cards (9 Items / Page) -->
+    <AppPagination
+      v-if="filteredStores.length > 0"
+      v-model:current-page="currentPage"
+      :total-items="filteredStores.length"
+      :items-per-page="itemsPerPage"
+      item-label="outlet"
+    />
+
     <!-- Empty State -->
     <EmptyState
       v-else
@@ -280,12 +289,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useStoreStore } from '~/stores/store.js'
 import { useUserStore } from '~/stores/user.js'
 import { useToast } from '~/composables/useToast.js'
 import ConfirmationModal from '~/components/ui/ConfirmationModal.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
+import AppPagination from '~/components/ui/AppPagination.vue'
 import {
   Store,
   Plus,
@@ -307,6 +317,9 @@ const toast = useToast()
 const searchQuery = ref('')
 const selectedRegion = ref('ALL')
 const selectedStatus = ref('ALL')
+
+const currentPage = ref(1)
+const itemsPerPage = 9
 
 const showDeleteModal = ref(false)
 const storeToDelete = ref(null)
@@ -339,6 +352,16 @@ const filteredStores = computed(() => {
   }
 
   return list
+})
+
+// Auto-reset ke halaman 1 saat filter atau pencarian berubah
+watch([searchQuery, selectedRegion, selectedStatus], () => {
+  currentPage.value = 1
+})
+
+const paginatedStores = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredStores.value.slice(start, start + itemsPerPage)
 })
 
 const confirmDelete = (store) => {

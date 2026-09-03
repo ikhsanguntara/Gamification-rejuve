@@ -78,7 +78,7 @@
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
             <tr
-              v-for="u in filteredUsers"
+              v-for="u in paginatedUsers"
               :key="u.id"
               class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
             >
@@ -164,16 +164,27 @@
           </tbody>
         </table>
       </div>
+
+      <!-- App Pagination for Table List (10 Items / Page) -->
+      <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+        <AppPagination
+          v-model:current-page="currentPage"
+          :total-items="filteredUsers.length"
+          :items-per-page="itemsPerPage"
+          item-label="pengguna"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useStoreStore } from '~/stores/store.js'
 import { useToast } from '~/composables/useToast.js'
+import AppPagination from '~/components/ui/AppPagination.vue'
 import { Plus, Edit3, Trash2, Search, Store } from 'lucide-vue-next'
 
 const userStore = useUserStore()
@@ -184,6 +195,9 @@ const toast = useToast()
 const searchQuery = ref('')
 const userRoleFilter = ref('ALL')
 const userBatchFilter = ref('ALL')
+
+const currentPage = ref(1)
+const itemsPerPage = 10
 
 onMounted(async () => {
   await userStore.fetchUsersFromApi()
@@ -201,6 +215,16 @@ const filteredUsers = computed(() => {
     if (userBatchFilter.value !== 'ALL' && u.batchId !== userBatchFilter.value) return false
     return true
   })
+})
+
+// Auto-reset ke halaman 1 saat filter atau pencarian berubah
+watch([searchQuery, userRoleFilter, userBatchFilter], () => {
+  currentPage.value = 1
+})
+
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredUsers.value.slice(start, start + itemsPerPage)
 })
 
 const getStoreName = (storeId) => {

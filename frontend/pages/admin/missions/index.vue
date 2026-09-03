@@ -65,7 +65,7 @@
     <!-- Missions Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div
-        v-for="m in filteredMissions"
+        v-for="m in paginatedMissions"
         :key="m.id"
         class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between shadow-sm"
       >
@@ -117,15 +117,25 @@
         </div>
       </div>
     </div>
+
+    <!-- App Pagination for Grid Cards (9 Items / Page) -->
+    <AppPagination
+      v-if="filteredMissions.length > 0"
+      v-model:current-page="currentPage"
+      :total-items="filteredMissions.length"
+      :items-per-page="itemsPerPage"
+      item-label="misi"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useBatchStore } from '~/stores/batch.js'
 import { useMissionStore } from '~/stores/mission.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { useToast } from '~/composables/useToast.js'
+import AppPagination from '~/components/ui/AppPagination.vue'
 import { Plus, Edit3, Trash2, Search } from 'lucide-vue-next'
 
 const batchStore = useBatchStore()
@@ -136,6 +146,9 @@ const toast = useToast()
 const searchQuery = ref('')
 const missionBatchFilter = ref('ALL')
 const missionWeekFilter = ref('ALL')
+
+const currentPage = ref(1)
+const itemsPerPage = 9
 
 const filteredMissions = computed(() => {
   return missionStore.allMissions.filter(m => {
@@ -149,6 +162,16 @@ const filteredMissions = computed(() => {
     if (missionWeekFilter.value !== 'ALL' && m.week !== Number(missionWeekFilter.value)) return false
     return true
   })
+})
+
+// Auto-reset ke halaman 1 saat filter atau pencarian berubah
+watch([searchQuery, missionBatchFilter, missionWeekFilter], () => {
+  currentPage.value = 1
+})
+
+const paginatedMissions = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredMissions.value.slice(start, start + itemsPerPage)
 })
 
 const getBatchName = (batchId) => {

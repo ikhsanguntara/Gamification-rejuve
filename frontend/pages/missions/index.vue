@@ -88,11 +88,20 @@
       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5"
     >
       <MissionCard
-        v-for="mission in filteredMissions"
+        v-for="mission in paginatedMissions"
         :key="mission.id"
         :mission="mission"
       />
     </div>
+
+    <!-- App Pagination for Grid Cards (9 Items / Page) -->
+    <AppPagination
+      v-if="filteredMissions.length > 0"
+      v-model:current-page="currentPage"
+      :total-items="filteredMissions.length"
+      :items-per-page="itemsPerPage"
+      item-label="misi"
+    />
 
     <!-- Empty State -->
     <EmptyState
@@ -115,12 +124,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useMissionStore } from '~/stores/mission.js'
 import MissionCard from '~/components/mission/MissionCard.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
+import AppPagination from '~/components/ui/AppPagination.vue'
 import { Search, ChevronDown } from 'lucide-vue-next'
 
 const userStore = useUserStore()
@@ -131,6 +141,9 @@ const search = ref('')
 const selectedWeekFilter = ref('ALL')
 const selectedStatusFilter = ref('ALL')
 const selectedCategoryFilter = ref('ALL')
+
+const currentPage = ref(1)
+const itemsPerPage = 9
 
 const filteredMissions = computed(() => {
   const targetBatchId = userStore.isCrew ? userStore.currentUser.batchId : batchStore.selectedBatchId
@@ -170,10 +183,21 @@ const filteredMissions = computed(() => {
   })
 })
 
+// Auto-reset ke halaman 1 saat filter atau pencarian berubah
+watch([search, selectedWeekFilter, selectedStatusFilter, selectedCategoryFilter], () => {
+  currentPage.value = 1
+})
+
+const paginatedMissions = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredMissions.value.slice(start, start + itemsPerPage)
+})
+
 const resetFilters = () => {
   search.value = ''
   selectedWeekFilter.value = 'ALL'
   selectedStatusFilter.value = 'ALL'
   selectedCategoryFilter.value = 'ALL'
+  currentPage.value = 1
 }
 </script>

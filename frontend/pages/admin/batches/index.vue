@@ -28,7 +28,7 @@
     <!-- Clean Batches Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div
-        v-for="b in batchStore.allBatches"
+        v-for="b in paginatedBatches"
         :key="b.id"
         class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between shadow-sm relative hover:border-slate-300 dark:hover:border-slate-700 transition-all"
       >
@@ -89,22 +89,40 @@
         </div>
       </div>
     </div>
+
+    <!-- App Pagination for Grid Cards (9 Items / Page) -->
+    <AppPagination
+      v-if="batchStore.allBatches.length > 0"
+      v-model:current-page="currentPage"
+      :total-items="batchStore.allBatches.length"
+      :items-per-page="itemsPerPage"
+      item-label="batch"
+    />
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { useToast } from '~/composables/useToast.js'
+import AppPagination from '~/components/ui/AppPagination.vue'
 import { Plus, Edit3, Trash2, MapPin } from 'lucide-vue-next'
 
 const batchStore = useBatchStore()
 const gamificationStore = useGamificationStore()
 const toast = useToast()
 
+const currentPage = ref(1)
+const itemsPerPage = 9
+
 onMounted(async () => {
   await batchStore.fetchBatchesFromApi()
+})
+
+const paginatedBatches = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return batchStore.allBatches.slice(start, start + itemsPerPage)
 })
 
 const confirmDeleteBatch = (batch) => {

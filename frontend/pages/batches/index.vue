@@ -21,17 +21,36 @@
     <!-- Batch Cards Grid (Filtered by Accessible Batches) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <BatchCard
-        v-for="batch in batchStore.accessibleBatches"
+        v-for="batch in paginatedBatches"
         :key="batch.id"
         :batch="batch"
       />
     </div>
+
+    <!-- App Pagination for Grid Cards (9 Items / Page) -->
+    <AppPagination
+      v-if="batchStore.accessibleBatches.length > 0"
+      v-model:current-page="currentPage"
+      :total-items="batchStore.accessibleBatches.length"
+      :items-per-page="itemsPerPage"
+      item-label="batch"
+    />
   </div>
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
 import { useBatchStore } from '~/stores/batch.js'
 import BatchCard from '~/components/batch/BatchCard.vue'
+import AppPagination from '~/components/ui/AppPagination.vue'
 
 const batchStore = useBatchStore()
+
+const currentPage = ref(1)
+const itemsPerPage = 9
+
+const paginatedBatches = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return batchStore.accessibleBatches.slice(start, start + itemsPerPage)
+})
 </script>
