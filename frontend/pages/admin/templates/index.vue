@@ -133,6 +133,7 @@
       ref="batchTabRef"
       :is-card-loading="isCardLoading"
       @open-create="openCreatePackageModal('JOURNEY')"
+      @open-edit="openEditPackageModal"
       @open-apply="showApplyModal = true"
       @open-add-mission="showAddMissionModal = true"
       @update:loading="isCardLoading = $event"
@@ -145,6 +146,7 @@
       v-model:selected-buddy-pkg-id="selectedBuddyPkgId"
       :is-card-loading="isCardLoading"
       @open-create="openCreatePackageModal('BUDDY')"
+      @open-edit="openEditPackageModal"
       @open-add-mission="openAddBuddyMissionModal()"
       @open-add-indicator="openAddBuddyIndicatorModal"
       @open-edit-indicator="openEditBuddyIndicatorModal"
@@ -159,6 +161,7 @@
       v-model:active-feedback-sub-tab="activeFeedbackSubTab"
       :is-card-loading="isCardLoading"
       @open-create="openCreatePackageModal('FEEDBACK')"
+      @open-edit="openEditPackageModal"
       @open-add-survey="openAddSurveyQuestionModal"
       @open-edit-survey="openEditSurveyQuestionModal"
       @open-add-rapor-indicator="openAddRaporIndicatorModal"
@@ -170,6 +173,12 @@
       v-model="showCreatePackageModal"
       :initial-type="createModalType"
       @created="handlePackageCreated"
+    />
+
+    <EditTemplateModal
+      v-model="showEditPackageModal"
+      :template="editingPackage"
+      @updated="handlePackageUpdated"
     />
 
     <ApplyToStoreModal
@@ -212,6 +221,7 @@ import BatchJourneyTab from '~/components/template/BatchJourneyTab.vue'
 import BuddyMissionTab from '~/components/template/BuddyMissionTab.vue'
 import FeedbackRaporTab from '~/components/template/FeedbackRaporTab.vue'
 import CreateTemplateModal from '~/components/template/CreateTemplateModal.vue'
+import EditTemplateModal from '~/components/template/EditTemplateModal.vue'
 import ApplyToStoreModal from '~/components/template/ApplyToStoreModal.vue'
 import AddMissionModal from '~/components/template/AddMissionModal.vue'
 import BuddyIndicatorModal from '~/components/template/BuddyIndicatorModal.vue'
@@ -240,7 +250,9 @@ const feedbackTabRef = ref(null)
 
 // Modal Visibility State
 const showCreatePackageModal = ref(false)
+const showEditPackageModal = ref(false)
 const createModalType = ref('JOURNEY')
+const editingPackage = ref(null)
 
 const showApplyModal = ref(false)
 const showAddMissionModal = ref(false)
@@ -302,11 +314,24 @@ const switchCatalogTab = async (category) => {
 }
 
 const openCreatePackageModal = (type = 'JOURNEY') => {
+  editingPackage.value = null
   createModalType.value = type
   showCreatePackageModal.value = true
 }
 
+const openEditPackageModal = async (pkg) => {
+  if (!pkg) return
+  const targetId = pkg.id || pkg.tplMissionId
+  if (targetId && (!pkg.templates || pkg.templates.length === 0)) {
+    await templateStore.fetchTemplateById(targetId, pkg.type || 'JOURNEY').catch(() => {})
+  }
+  const freshPkg = templateStore.packageById(targetId) || pkg
+  editingPackage.value = freshPkg
+  showEditPackageModal.value = true
+}
+
 const handlePackageCreated = (payload) => {
+  editingPackage.value = null
   if (payload.type === 'JOURNEY') {
     activeCatalogCategory.value = 'BATCH'
     templateStore.selectedPackageId = payload.id || payload.tplMissionId || ''
@@ -321,6 +346,24 @@ const handlePackageCreated = (payload) => {
     activeCatalogCategory.value = 'FEEDBACK'
     activeFeedbackSubTab.value = 'API_FEEDBACK'
     selectedFeedbackPkgId.value = payload.id || payload.tplMissionId || ''
+  }
+}
+
+const handlePackageUpdated = async (updated) => {
+  editingPackage.value = null
+  showEditPackageModal.value = false
+  const targetId = updated?.id || updated?.tplMissionId
+  if (!targetId) return
+
+  if (updated?.type === 'JOURNEY') {
+    await templateStore.fetchTemplateById(targetId, 'JOURNEY')
+    if (batchTabRef.value?.syncWeekTitle) {
+      batchTabRef.value.syncWeekTitle()
+    }
+  } else if (updated?.type === 'BUDDY') {
+    await templateStore.fetchTemplateById(targetId, 'BUDDY')
+  } else if (updated?.type === 'FEEDBACK') {
+    await templateStore.fetchTemplateById(targetId, 'FEEDBACK')
   }
 }
 

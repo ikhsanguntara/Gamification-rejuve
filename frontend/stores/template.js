@@ -368,7 +368,7 @@ export const useTemplateStore = defineStore('template', {
       const durationCode = payload.durationCode || (type === 'JOURNEY' ? 'WEEK' : 'DAY')
       const durationValue = Number(payload.durationValue || payload.totalWeeks || (type === 'JOURNEY' ? 3 : 1))
 
-      const id = `pkg-${Date.now()}`
+      const id = payload.id || payload.tplMissionId || `pkg-${Date.now()}`
       const weeks = Array.from({ length: durationValue }, (_, i) => ({
         weekNumber: i + 1,
         title: type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`
@@ -418,6 +418,10 @@ export const useTemplateStore = defineStore('template', {
       }).then(res => {
         if (res?.data?.tplMissionId) {
           newPkg.tplMissionId = res.data.tplMissionId
+          newPkg.id = res.data.tplMissionId
+          if (type === 'JOURNEY') this.selectedPackageId = newPkg.id
+          else if (type === 'BUDDY') this.selectedBuddyId = newPkg.id
+          else if (type === 'FEEDBACK') this.selectedFeedbackId = newPkg.id
           this.fetchTemplatesByType(type, { limit: 10 }).catch(() => {})
         }
       }).catch(err => {
@@ -572,13 +576,152 @@ export const useTemplateStore = defineStore('template', {
     },
 
     /**
-     * Update an existing Master Package Metadata
+     * Update an existing Master Package and its Details to backend API & local store
      */
-    updatePackage(id, payload) {
-      const pkg = this.packages.find(p => p.id === id)
-      if (!pkg) return null
-      Object.assign(pkg, payload)
+    async updatePackage(id, payload) {
+      let pkg = this.packageById(id)
+        || this.packages.find(p => p.id === id || p.tplMissionId === id)
+        || this.journeyTemplates.find(p => p.id === id || p.tplMissionId === id)
+        || this.buddyTemplates.find(p => p.id === id || p.tplMissionId === id)
+        || this.feedbackTemplates.find(p => p.id === id || p.tplMissionId === id)
+
+      if (!pkg) {
+        pkg = normalizePackage({
+          id,
+          tplMissionId: id,
+          name: payload.name || 'Template Misi',
+          type: payload.type || 'JOURNEY',
+          durationCode: payload.durationCode || 'WEEK',
+          durationValue: payload.durationValue || 1,
+          details: payload.details || []
+        })
+        this.packages.push(pkg)
+      }
+
+      // Map incoming fields to local package
+      if (payload.name) pkg.name = payload.name.trim()
+      if (payload.description !== undefined) pkg.description = payload.description.trim()
+      if (payload.durationCode) pkg.durationCode = payload.durationCode
+      if (payload.durationValue) {
+        pkg.durationValue = Number(payload.durationValue)
+        pkg.totalWeeks = pkg.durationCode === 'WEEK'
+          ? pkg.durationValue
+          : (pkg.durationCode === 'MONTH' ? pkg.durationValue * 4 : Math.ceil(pkg.durationValue / 7))
+      }
+      if (payload.category) pkg.category = payload.category
+      if (payload.targetType) pkg.targetType = payload.targetType
+
+      // Ensure weeks array matches durationValue if type is JOURNEY
+      if (pkg.type === 'JOURNEY' && pkg.durationCode === 'WEEK') {
+        const currentWeeks = pkg.weeks || []
+        const targetCount = Number(pkg.durationValue || 1)
+        if (currentWeeks.length < targetCount) {
+          for (let i = currentWeeks.length + 1; i <= targetCount; i++) {
+            currentWeeks.push({
+              weekNumber: i,
+              title: `Minggu ${i}: Tema SOP Lanjutan`
+            })
+          }
+        }
+        pkg.weeks = [...currentWeeks]
+      }
+
+      // Prepare full JSON payload for backend API
+      const validCategories = ['TECHNICAL', 'SOFT_SKILL', 'LEADERSHIP', 'PROJECT']
+      const validInputs = ['SCALE', 'CHECKBOX', 'RADIO', 'TEXT']
+
+      const sourceDetails = Array.isArray(payload.details) && payload.details.length > 0
+        ? payload.details
+        : (pkg.templates || pkg.details || [])
+
+      const mappedDetails = sourceDetails.map((item, idx) => {
+        let cat = (item.category || 'TECHNICAL').toUpperCase()
+        if (!validCategories.includes(cat)) {
+          if (cat.includes('SOFT') || cat.includes('PELAYANAN') || cat.includes('SERVICE')) cat = 'SOFT_SKILL'
+          else if (cat.includes('LEAD') || cat.includes('MANAGER')) cat = 'LEADERSHIP'
+          else if (cat.includes('PROJ')) cat = 'PROJECT'
+          else cat = 'TECHNICAL'
+        }
+
+        let inp = (item.inputType || 'SCALE').toUpperCase()
+        if (!validInputs.includes(inp)) {
+          inp = 'SCALE'
+        }
+
+        const scaleConfig = item.scaleConfig || (inp === 'SCALE' ? { min: 0, max: 100, step: 20, starPerStep: 1 } : null)
+
+        return {
+          durationNumber: Number(item.week || item.durationNumber || 1),
+          missionTitle: item.title || item.missionTitle || `Misi SOP ${idx + 1}`,
+          description: item.description || '',
+          category: cat,
+          inputType: inp,
+          scaleConfig
+        }
+      })
+
+      const apiPayload = {
+        name: pkg.name,
+        durationCode: pkg.durationCode || (pkg.type === 'JOURNEY' ? 'WEEK' : 'DAY'),
+        durationValue: Number(pkg.durationValue || pkg.totalWeeks || 1),
+        description: pkg.description || '',
+        details: mappedDetails
+      }
+
+      // Update local pkg.templates with clean mapped objects so view updates immediately
+      pkg.templates = mappedDetails.map((d, idx) => ({
+        id: sourceDetails[idx]?.id || sourceDetails[idx]?.tplMissionDetailId || `tmpl-${idx + 1}`,
+        week: d.durationNumber,
+        durationNumber: d.durationNumber,
+        codePrefix: `M-W${d.durationNumber}-0${idx + 1}`,
+        title: d.missionTitle,
+        missionTitle: d.missionTitle,
+        category: d.category,
+        inputType: d.inputType,
+        scaleConfig: d.scaleConfig,
+        description: d.description,
+        requirements: sourceDetails[idx]?.requirements || ['Verifikasi checklist standar operasional', 'Pemeriksaan kepatuhan SOP']
+      }))
+      pkg.totalMissions = pkg.templates.length
+
+      // Sync to all internal package lists
+      const inPkg = this.packages.find(p => p.id === id)
+      if (inPkg && inPkg !== pkg) Object.assign(inPkg, pkg)
+
+      const targetList = pkg.type === 'BUDDY'
+        ? this.buddyTemplates
+        : (pkg.type === 'FEEDBACK' ? this.feedbackTemplates : this.journeyTemplates)
+      const inList = targetList.find(p => p.id === id)
+      if (inList && inList !== pkg) Object.assign(inList, pkg)
+
       setStoredData('rejuve_templates_v4', this.packages)
+
+      // Send complete JSON payload to live backend API if ID is a valid UUID
+      const isUuid = (val) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val)
+      const targetApiId = isUuid(id) ? id : (pkg.tplMissionId && isUuid(pkg.tplMissionId) ? pkg.tplMissionId : null)
+
+      if (targetApiId) {
+        try {
+          const res = await templateApi.update(targetApiId, apiPayload)
+          if (res && res.data) {
+            Object.assign(pkg, {
+              name: res.data.name || pkg.name,
+              durationCode: res.data.durationCode || pkg.durationCode,
+              durationValue: res.data.durationValue || pkg.durationValue,
+              description: res.data.description || pkg.description
+            })
+            if (Array.isArray(res.data.details)) {
+              pkg.details = res.data.details
+            }
+          }
+          // Refresh details from backend
+          await this.fetchTemplateById(targetApiId, pkg.type || 'JOURNEY').catch(() => {})
+        } catch (err) {
+          console.warn('templateApi.update warning:', err.message)
+          throw err
+        }
+      }
+
       return pkg
     },
 
@@ -652,6 +795,20 @@ export const useTemplateStore = defineStore('template', {
         return true
       }
       return false
+    },
+
+    /**
+     * Alias for addMissionToPackage
+     */
+    addTemplateToPackage(pkgId, payload) {
+      return this.addMissionToPackage(pkgId, payload)
+    },
+
+    /**
+     * Alias for removeMissionFromPackage
+     */
+    removeTemplateFromPackage(pkgId, tmplId) {
+      return this.removeMissionFromPackage(pkgId, tmplId)
     }
   }
 })

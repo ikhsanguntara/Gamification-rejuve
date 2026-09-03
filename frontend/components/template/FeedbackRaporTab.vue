@@ -46,6 +46,15 @@
 
           <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
             <span class="text-slate-400 font-medium">📋 Kuesioner Feedback</span>
+            <div class="flex items-center gap-1">
+            <button
+              type="button"
+              @click.stop="$emit('open-edit', fpkg)"
+              title="Edit Template Paket"
+              class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            >
+              <Edit3 class="w-3 h-3" />
+            </button>
             <button
               type="button"
               @click.stop="confirmDeleteFeedbackPkg(fpkg)"
@@ -56,6 +65,7 @@
             </button>
           </div>
         </div>
+      </div>
 
         <!-- Divider Format Master -->
         <div class="pt-2">
@@ -146,14 +156,24 @@
             </p>
           </div>
 
-          <button
-            type="button"
-            @click="$emit('open-add-survey')"
-            class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
-          >
-            <Plus class="w-3.5 h-3.5" />
-            <span>Tambah Pertanyaan Survei</span>
-          </button>
+          <div class="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+            <button
+              type="button"
+              @click="$emit('open-edit', activeFeedbackPkg)"
+              class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all"
+            >
+              <Edit3 class="w-3.5 h-3.5 text-slate-500" />
+              <span>Edit Template</span>
+            </button>
+            <button
+              type="button"
+              @click="$emit('open-add-survey')"
+              class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
+            >
+              <Plus class="w-3.5 h-3.5" />
+              <span>Tambah Pertanyaan Survei</span>
+            </button>
+          </div>
         </div>
 
         <!-- Items in this Feedback Template -->
@@ -354,7 +374,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { Trash2, Plus, Settings, Loader2 } from 'lucide-vue-next'
+import { Trash2, Plus, Settings, Loader2, Edit3 } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
 import { useFeedbackStore } from '~/stores/feedback.js'
 import { useToast } from '~/composables/useToast.js'
@@ -377,6 +397,7 @@ const props = defineProps({
 
 const emit = defineEmits([
   'open-create',
+  'open-edit',
   'open-add-survey',
   'open-edit-survey',
   'open-add-rapor-indicator',

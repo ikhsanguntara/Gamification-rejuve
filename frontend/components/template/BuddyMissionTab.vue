@@ -48,6 +48,14 @@
             <div class="flex items-center gap-1">
               <button
                 type="button"
+                @click.stop="$emit('open-edit', bpkg)"
+                title="Edit Template Paket"
+                class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <Edit3 class="w-3 h-3" />
+              </button>
+              <button
+                type="button"
                 @click.stop="duplicateBuddyPkg(bpkg.id)"
                 title="Duplikat Paket"
                 class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
@@ -92,14 +100,24 @@
             </p>
           </div>
           
-          <button
-            type="button"
-            @click="$emit('open-add-mission')"
-            class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
-          >
-            <Plus class="w-3.5 h-3.5" />
-            <span>Tambah Butir SOP Buddy</span>
-          </button>
+          <div class="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+            <button
+              type="button"
+              @click="$emit('open-edit', activeBuddyPkg)"
+              class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all"
+            >
+              <Edit3 class="w-3.5 h-3.5 text-slate-500" />
+              <span>Edit Template</span>
+            </button>
+            <button
+              type="button"
+              @click="$emit('open-add-mission')"
+              class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
+            >
+              <Plus class="w-3.5 h-3.5" />
+              <span>Tambah Butir SOP Buddy</span>
+            </button>
+          </div>
         </div>
 
         <!-- Live Mission Details from Backend API jika ada -->
@@ -230,7 +248,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { Copy, Trash2, Plus, Settings, Loader2 } from 'lucide-vue-next'
+import { Copy, Trash2, Plus, Settings, Loader2, Edit3 } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
 import { useBuddyStore } from '~/stores/buddy.js'
 import { useToast } from '~/composables/useToast.js'
@@ -249,6 +267,7 @@ const props = defineProps({
 
 const emit = defineEmits([
   'open-create',
+  'open-edit',
   'open-add-mission',
   'open-add-indicator',
   'open-edit-indicator',

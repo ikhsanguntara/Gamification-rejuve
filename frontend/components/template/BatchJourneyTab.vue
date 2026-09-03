@@ -50,6 +50,14 @@
             <div class="flex items-center gap-1">
               <button
                 type="button"
+                @click.stop="$emit('open-edit', pkg)"
+                title="Edit Template Paket"
+                class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <Edit3 class="w-3 h-3" />
+              </button>
+              <button
+                type="button"
                 @click.stop="duplicatePackage(pkg.id)"
                 title="Duplikat Paket"
                 class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
@@ -94,14 +102,24 @@
             </p>
           </div>
 
-          <button
-            type="button"
-            @click="$emit('open-add-mission')"
-            class="px-3.5 py-2 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
-          >
-            <Plus class="w-3.5 h-3.5" />
-            <span>Tambah Butir SOP</span>
-          </button>
+          <div class="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+            <button
+              type="button"
+              @click="$emit('open-edit', activePackage)"
+              class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all"
+            >
+              <Edit3 class="w-3.5 h-3.5 text-slate-500" />
+              <span>Edit Template</span>
+            </button>
+            <button
+              type="button"
+              @click="$emit('open-add-mission')"
+              class="px-3.5 py-2 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
+            >
+              <Plus class="w-3.5 h-3.5" />
+              <span>Tambah Butir SOP</span>
+            </button>
+          </div>
         </div>
 
         <!-- Week Tabs via Reka UI dengan Dukungan Lebih dari 3 Week & Judul Week -->
@@ -241,7 +259,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from 'reka-ui'
-import { Copy, Trash2, Plus, Bookmark, Loader2 } from 'lucide-vue-next'
+import { Copy, Trash2, Plus, Bookmark, Loader2, Edit3 } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
 import { useToast } from '~/composables/useToast.js'
 import { confirmDeleteDialog } from '~/utils/dialog.js'
@@ -253,7 +271,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['open-create', 'open-apply', 'open-add-mission', 'update:loading'])
+const emit = defineEmits(['open-create', 'open-edit', 'open-apply', 'open-add-mission', 'update:loading'])
 
 const templateStore = useTemplateStore()
 const toast = useToast()
