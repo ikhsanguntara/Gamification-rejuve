@@ -63,119 +63,100 @@
       </div>
     </div>
 
-    <!-- Users Table -->
-    <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shadow-sm">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-400 font-semibold uppercase border-b border-slate-200/80 dark:border-slate-800">
-            <tr>
-              <th class="py-3.5 px-4">User</th>
-              <th class="py-3.5 px-4">Role & Jabatan</th>
-              <th class="py-3.5 px-4">Gerai & Batch</th>
-              <th class="py-3.5 px-4 text-center">⭐ Stars</th>
-              <th class="py-3.5 px-4 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
-            <tr
-              v-for="u in userStore.allUsers"
-              :key="u.id"
-              class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
-            >
-              <!-- User Info -->
-              <td class="py-3 px-4">
-                <div class="flex items-center gap-3">
-                  <img
-                    :src="u.avatar"
-                    :alt="u.name"
-                    class="w-9 h-9 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
-                  />
-                  <div>
-                    <h4 class="font-semibold text-slate-900 dark:text-white">{{ u.name }}</h4>
-                    <p class="text-xs text-slate-400">{{ u.email }}</p>
-                  </div>
-                </div>
-              </td>
+    <!-- Users TanStack Table -->
+    <TanStackTable
+      :data="userStore.allUsers"
+      :columns="userColumns"
+      :loading="isLoading"
+      empty-text="Tidak ada pengguna ditemukan"
+    >
+      <!-- Custom Cell: User Profile -->
+      <template #user="{ row }">
+        <div class="flex items-center gap-3">
+          <img
+            :src="row.avatar"
+            :alt="row.name"
+            class="w-9 h-9 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
+          />
+          <div>
+            <h4 class="font-semibold text-slate-900 dark:text-white">{{ row.name }}</h4>
+            <p class="text-xs text-slate-400">{{ row.email }}</p>
+          </div>
+        </div>
+      </template>
 
-              <!-- Role -->
-              <td class="py-3 px-4">
-                <span
-                  class="text-xs font-semibold px-2 py-0.5 rounded-full inline-block mb-0.5"
-                  :class="[
-                    u.role === 'CREW' ? 'bg-[#831843]/15 text-[#831843] dark:text-[#f472b6]' :
-                    u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
-                    u.role === 'DISTRICT_MANAGER' || u.role === 'HEAD' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' :
-                    'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
-                  ]"
-                >
-                  {{ u.role === 'STORE_LEADER' ? 'Store Leader' : u.role === 'DISTRICT_MANAGER' ? 'District Manager' : u.role }}
-                </span>
-                <p class="text-xs text-slate-500 dark:text-slate-400">{{ u.position }}</p>
-              </td>
+      <!-- Custom Cell: Role & Jabatan -->
+      <template #role="{ row }">
+        <span
+          class="text-xs font-semibold px-2 py-0.5 rounded-full inline-block mb-0.5"
+          :class="[
+            row.role === 'CREW' ? 'bg-[#831843]/15 text-[#831843] dark:text-[#f472b6]' :
+            row.role === 'STORE_LEADER' || row.role === 'SUPERVISOR' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
+            row.role === 'DISTRICT_MANAGER' || row.role === 'HEAD' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' :
+            'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
+          ]"
+        >
+          {{ row.role === 'STORE_LEADER' ? 'Store Leader' : row.role === 'DISTRICT_MANAGER' ? 'District Manager' : row.role }}
+        </span>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ row.position }}</p>
+      </template>
 
-              <!-- Assigned Store & Batch Display -->
-              <td class="py-3 px-4">
-                <div v-if="u.role === 'CREW'" class="space-y-0.5">
-                  <div class="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white">
-                    <Store class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6] flex-shrink-0" />
-                    <span class="truncate max-w-[150px]">{{ getStoreName(u.storeId) || u.storeLocation || 'Belum Ditugaskan' }}</span>
-                  </div>
-                  <span
-                    v-if="u.batchId"
-                    class="text-[11px] text-slate-500 dark:text-slate-400 block"
-                  >
-                    {{ getBatchName(u.batchId) }}
-                  </span>
-                </div>
-                <div v-else class="text-slate-500 dark:text-slate-400 text-xs">
-                  {{ u.storeLocation || 'Semua Cabang' }}
-                </div>
-              </td>
+      <!-- Custom Cell: Store & Batch -->
+      <template #store="{ row }">
+        <div v-if="row.role === 'CREW'" class="space-y-0.5">
+          <div class="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white">
+            <Store class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6] flex-shrink-0" />
+            <span class="truncate max-w-[150px]">{{ getStoreName(row.storeId) || row.storeLocation || 'Belum Ditugaskan' }}</span>
+          </div>
+          <span v-if="row.batchId" class="text-[11px] text-slate-500 dark:text-slate-400 block">
+            {{ getBatchName(row.batchId) }}
+          </span>
+        </div>
+        <div v-else class="text-slate-500 dark:text-slate-400 text-xs">
+          {{ row.storeLocation || 'Semua Cabang' }}
+        </div>
+      </template>
 
-              <!-- Stars -->
-              <td class="py-3 px-4 text-center">
-                <span v-if="u.role === 'CREW'" class="font-semibold text-amber-500">
-                  ⭐ {{ (u.stars || 0).toLocaleString() }}
-                </span>
-                <span v-else class="text-slate-400">—</span>
-              </td>
+      <!-- Custom Cell: Stars -->
+      <template #stars="{ row }">
+        <span v-if="row.role === 'CREW'" class="font-semibold text-amber-500">
+          ⭐ {{ (row.stars || 0).toLocaleString() }}
+        </span>
+        <span v-else class="text-slate-400">—</span>
+      </template>
 
-              <!-- Actions -->
-              <td class="py-3 px-4 text-right">
-                <div class="flex items-center justify-end gap-2">
-                  <NuxtLink
-                    :to="`/admin/users/${u.id}`"
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-[#831843] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-block"
-                    title="Edit User"
-                  >
-                    <Edit3 class="w-4 h-4" />
-                  </NuxtLink>
-                  <button
-                    type="button"
-                    @click="confirmDeleteUser(u)"
-                    :disabled="deletingUserId === (u.id || u.userId)"
-                    class="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer disabled:opacity-50"
-                    title="Hapus User"
-                  >
-                    <span v-if="deletingUserId === (u.id || u.userId)" class="w-4 h-4 border-2 border-rose-500/40 border-t-rose-600 rounded-full animate-spin inline-block"></span>
-                    <Trash2 v-else class="w-4 h-4" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <!-- Custom Cell: Actions -->
+      <template #actions="{ row }">
+        <div class="flex items-center justify-end gap-2">
+          <NuxtLink
+            :to="`/admin/users/${row.id}`"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-[#831843] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-block"
+            title="Edit User"
+          >
+            <Edit3 class="w-4 h-4" />
+          </NuxtLink>
+          <button
+            type="button"
+            @click="confirmDeleteUser(row)"
+            :disabled="deletingUserId === (row.id || row.userId)"
+            class="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer disabled:opacity-50"
+            title="Hapus User"
+          >
+            <span v-if="deletingUserId === (row.id || row.userId)" class="w-4 h-4 border-2 border-rose-500/40 border-t-rose-600 rounded-full animate-spin inline-block"></span>
+            <Trash2 v-else class="w-4 h-4" />
+          </button>
+        </div>
+      </template>
+    </TanStackTable>
 
-      <!-- App Pagination for Table List (10 Items / Page) -->
-      <div v-if="userStore.serverPagination.total > 0" class="p-4 border-t border-slate-100 dark:border-slate-800">
-        <AppPagination
-          v-model:current-page="currentPage"
-          :total-items="userStore.serverPagination.total"
-          :items-per-page="itemsPerPage"
-          item-label="pengguna"
-        />
-      </div>
+    <!-- App Pagination for Table List (10 Items / Page) -->
+    <div v-if="userStore.serverPagination.total > 0" class="p-4 border-t border-slate-100 dark:border-slate-800">
+      <AppPagination
+        v-model:current-page="currentPage"
+        :total-items="userStore.serverPagination.total"
+        :items-per-page="itemsPerPage"
+        item-label="pengguna"
+      />
     </div>
   </div>
 </template>
@@ -188,6 +169,7 @@ import { useStoreStore } from '~/stores/store.js'
 import { useToast } from '~/composables/useToast.js'
 import { userApi } from '~/services/api.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
+import TanStackTable from '~/components/ui/TanStackTable.vue'
 import { Plus, Edit3, Trash2, Search, Store } from 'lucide-vue-next'
 
 const userStore = useUserStore()
@@ -201,14 +183,51 @@ const userBatchFilter = ref('ALL')
 
 const currentPage = ref(1)
 const itemsPerPage = 10
+const isLoading = ref(false)
+
+// TanStack Column Definitions
+const userColumns = [
+  {
+    id: 'user',
+    header: 'User',
+    accessorKey: 'name'
+  },
+  {
+    id: 'role',
+    header: 'Role & Jabatan',
+    accessorKey: 'role'
+  },
+  {
+    id: 'store',
+    header: 'Gerai & Batch',
+    accessorKey: 'storeLocation'
+  },
+  {
+    id: 'stars',
+    header: '⭐ Stars',
+    accessorKey: 'stars',
+    meta: { align: 'center' }
+  },
+  {
+    id: 'actions',
+    header: 'Aksi',
+    enableSorting: false,
+    meta: { align: 'right' }
+  }
+]
 
 const loadUsers = async (page = 1) => {
-  await userStore.fetchUsersFromApi({
-    page,
-    limit: itemsPerPage,
-    search: searchQuery.value,
-    role: userRoleFilter.value
-  })
+  isLoading.value = true
+  try {
+    await userStore.fetchUsersFromApi({
+      page,
+      limit: itemsPerPage,
+      search: searchQuery.value,
+      role: userRoleFilter.value
+    })
+  } finally {
+    isLoading.value = false
+  }
 }
 
 onMounted(() => {

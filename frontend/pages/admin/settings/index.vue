@@ -39,77 +39,63 @@
       </div>
     </div>
 
-    <!-- Table Card -->
-    <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50/80 dark:bg-slate-800/60 text-slate-400 uppercase font-semibold border-b border-slate-100 dark:border-slate-800">
-            <tr>
-              <th class="py-3.5 px-6">Nama Pengaturan (Key)</th>
-              <th class="py-3.5 px-6">Nilai (Value)</th>
-              <th class="py-3.5 px-6">Object Code</th>
-              <th class="py-3.5 px-6 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
-            <tr
-              v-for="s in settings"
-              :key="s.settingId"
-              class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
-            >
-              <td class="py-3.5 px-6 font-mono font-bold text-slate-900 dark:text-white">
-                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[#831843] dark:text-[#f472b6]">
-                  {{ s.settingName }}
-                </span>
-              </td>
-              <td class="py-3.5 px-6 font-mono text-slate-800 dark:text-slate-200 font-medium">
-                {{ s.settingValue }}
-              </td>
-              <td class="py-3.5 px-6 text-slate-500">
-                <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px]">
-                  {{ s.objectCode || 'SETTING' }}
-                </span>
-              </td>
-              <td class="py-3.5 px-6 text-right">
-                <div class="inline-flex items-center gap-2">
-                  <button
-                    type="button"
-                    @click="openEditModal(s)"
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-[#831843] hover:bg-[#831843]/10 transition-colors cursor-pointer"
-                    title="Edit Pengaturan"
-                  >
-                    <Edit3 class="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    @click="confirmDelete(s)"
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                    title="Hapus Pengaturan"
-                  >
-                    <Trash2 class="w-4 h-4" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="settings.length === 0 && !isLoading">
-              <td colspan="4" class="py-12 text-center text-slate-400">
-                Tidak ada data pengaturan sistem ditemukan.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- Table Card with TanStack Table -->
+    <TanStackTable
+      :data="settings"
+      :columns="settingColumns"
+      :loading="isLoading"
+      empty-text="Tidak ada data pengaturan sistem ditemukan."
+    >
+      <template #settingName="{ row }">
+        <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[#831843] dark:text-[#f472b6] font-mono font-bold">
+          {{ row.settingName }}
+        </span>
+      </template>
 
-      <!-- App Pagination -->
-      <div v-if="totalSettings > 0" class="p-4 border-t border-slate-100 dark:border-slate-800">
-        <AppPagination
-          v-model:current-page="currentPage"
-          :total-items="totalSettings"
-          :items-per-page="itemsPerPage"
-          item-label="pengaturan"
-        />
-      </div>
+      <template #settingValue="{ row }">
+        <span class="font-mono text-slate-800 dark:text-slate-200 font-medium">
+          {{ row.settingValue }}
+        </span>
+      </template>
+
+      <template #objectCode="{ row }">
+        <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] text-slate-500">
+          {{ row.objectCode || 'SETTING' }}
+        </span>
+      </template>
+
+      <template #actions="{ row }">
+        <div class="inline-flex items-center gap-2">
+          <button
+            type="button"
+            @click="openEditModal(row)"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-[#831843] hover:bg-[#831843]/10 transition-colors cursor-pointer"
+            title="Edit Pengaturan"
+          >
+            <Edit3 class="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            @click="confirmDelete(row)"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+            title="Hapus Pengaturan"
+          >
+            <Trash2 class="w-4 h-4" />
+          </button>
+        </div>
+      </template>
+    </TanStackTable>
+
+    <!-- App Pagination -->
+    <div v-if="totalSettings > 0" class="p-4 border-t border-slate-100 dark:border-slate-800">
+      <AppPagination
+        v-model:current-page="currentPage"
+        :total-items="totalSettings"
+        :items-per-page="itemsPerPage"
+        item-label="pengaturan"
+      />
     </div>
+
 
     <!-- Modal Form Tambah/Edit Setting -->
     <div
@@ -185,6 +171,7 @@ import { adminApi } from '~/services/api.js'
 import { buildPrismaQuery } from '~/utils/queryBuilder.js'
 import { useToast } from '~/composables/useToast.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
+import TanStackTable from '~/components/ui/TanStackTable.vue'
 import ConfirmationModal from '~/components/ui/ConfirmationModal.vue'
 import { Plus, Search, Edit3, Trash2 } from 'lucide-vue-next'
 
@@ -194,6 +181,30 @@ const settings = ref([])
 const totalSettings = ref(0)
 const isLoading = ref(false)
 const isSaving = ref(false)
+
+const settingColumns = [
+  {
+    id: 'settingName',
+    header: 'Nama Pengaturan (Key)',
+    accessorKey: 'settingName'
+  },
+  {
+    id: 'settingValue',
+    header: 'Nilai (Value)',
+    accessorKey: 'settingValue'
+  },
+  {
+    id: 'objectCode',
+    header: 'Object Code',
+    accessorKey: 'objectCode'
+  },
+  {
+    id: 'actions',
+    header: 'Aksi',
+    enableSorting: false,
+    meta: { align: 'right' }
+  }
+]
 
 const searchQuery = ref('')
 const currentPage = ref(1)

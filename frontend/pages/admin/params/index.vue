@@ -118,66 +118,55 @@
             </span>
           </div>
 
-          <!-- Table Parameter Items -->
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50/80 dark:bg-slate-800/60 text-slate-400 uppercase font-semibold border-b border-slate-100 dark:border-slate-800">
-                <tr>
-                  <th class="py-3 px-5">Kode Parameter</th>
-                  <th class="py-3 px-5">Nilai / Label</th>
-                  <th class="py-3 px-5 text-center">Status</th>
-                  <th class="py-3 px-5 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
-                <tr
-                  v-for="p in paramsList"
-                  :key="p.paramId"
-                  class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
+          <!-- Table Parameter Items with TanStack Table -->
+          <TanStackTable
+            :data="paramsList"
+            :columns="paramColumns"
+            :loading="isLoadingParams"
+            empty-text="Belum ada butir parameter pada grup ini. Klik '+ Tambah Parameter'."
+          >
+            <template #code="{ row }">
+              <span class="font-mono font-bold text-slate-900 dark:text-white">
+                {{ row.code }}
+              </span>
+            </template>
+
+            <template #value="{ row }">
+              <span class="font-medium text-slate-700 dark:text-slate-300">
+                {{ row.value }}
+              </span>
+            </template>
+
+            <template #isActive="{ row }">
+              <span
+                class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block"
+                :class="row.isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-700'"
+              >
+                {{ row.isActive ? 'Aktif' : 'Non-Aktif' }}
+              </span>
+            </template>
+
+            <template #actions="{ row }">
+              <div class="inline-flex items-center gap-1.5">
+                <button
+                  type="button"
+                  @click="openParamModal(row)"
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-[#831843] hover:bg-[#831843]/10"
+                  title="Edit Param"
                 >
-                  <td class="py-3 px-5 font-mono font-bold text-slate-900 dark:text-white">
-                    {{ p.code }}
-                  </td>
-                  <td class="py-3 px-5 font-medium text-slate-700 dark:text-slate-300">
-                    {{ p.value }}
-                  </td>
-                  <td class="py-3 px-5 text-center">
-                    <span
-                      class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                      :class="p.isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-700'"
-                    >
-                      {{ p.isActive ? 'Aktif' : 'Non-Aktif' }}
-                    </span>
-                  </td>
-                  <td class="py-3 px-5 text-right">
-                    <div class="inline-flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        @click="openParamModal(p)"
-                        class="p-1.5 rounded-lg text-slate-400 hover:text-[#831843] hover:bg-[#831843]/10"
-                        title="Edit Param"
-                      >
-                        <Edit3 class="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        @click="confirmDeleteParam(p)"
-                        class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                        title="Hapus Param"
-                      >
-                        <Trash2 class="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr v-if="paramsList.length === 0 && !isLoadingParams">
-                  <td colspan="4" class="py-12 text-center text-slate-400">
-                    Belum ada butir parameter pada grup ini. Klik "+ Tambah Parameter".
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                  <Edit3 class="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  @click="confirmDeleteParam(row)"
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                  title="Hapus Param"
+                >
+                  <Trash2 class="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </template>
+          </TanStackTable>
         </div>
 
         <!-- Pagination Parameter Items -->
@@ -320,6 +309,7 @@ import { ref, watch, onMounted } from 'vue'
 import { paramApi } from '~/services/api.js'
 import { useToast } from '~/composables/useToast.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
+import TanStackTable from '~/components/ui/TanStackTable.vue'
 import ConfirmationModal from '~/components/ui/ConfirmationModal.vue'
 import { Plus, FolderPlus, Edit3, Trash2 } from 'lucide-vue-next'
 
@@ -333,6 +323,31 @@ const totalParams = ref(0)
 const paramPage = ref(1)
 const paramPerPage = 10
 const isLoadingParams = ref(false)
+
+const paramColumns = [
+  {
+    id: 'code',
+    header: 'Kode Parameter',
+    accessorKey: 'code'
+  },
+  {
+    id: 'value',
+    header: 'Nilai / Label',
+    accessorKey: 'value'
+  },
+  {
+    id: 'isActive',
+    header: 'Status',
+    accessorKey: 'isActive',
+    meta: { align: 'center' }
+  },
+  {
+    id: 'actions',
+    header: 'Aksi',
+    enableSorting: false,
+    meta: { align: 'right' }
+  }
+]
 
 const showGroupModal = ref(false)
 const isEditGroup = ref(false)

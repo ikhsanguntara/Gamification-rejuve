@@ -18,5 +18,8 @@
     "test:frontend": "npm --prefix frontend run test",
     "audit": "npm --prefix frontend run audit",
     "audit:frontend": "npm --prefix frontend run audit"
+  },
+  "dependencies": {
+    "@tanstack/vue-table": "^8.21.3"
   }
 }

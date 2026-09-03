@@ -39,88 +39,78 @@
       </div>
     </div>
 
-    <!-- Table Card -->
-    <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50/80 dark:bg-slate-800/60 text-slate-400 uppercase font-semibold border-b border-slate-100 dark:border-slate-800">
-            <tr>
-              <th class="py-3.5 px-6">Urutan</th>
-              <th class="py-3.5 px-6">Kode Kebijakan</th>
-              <th class="py-3.5 px-6">Isi Kebijakan</th>
-              <th class="py-3.5 px-6">Catatan Informasi</th>
-              <th class="py-3.5 px-6 text-center">Aturan Wajib</th>
-              <th class="py-3.5 px-6 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
-            <tr
-              v-for="p in policies"
-              :key="p.userpolicyId"
-              class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
-            >
-              <td class="py-3.5 px-6 font-bold text-slate-400">
-                #{{ p.displayOrder || 1 }}
-              </td>
-              <td class="py-3.5 px-6 font-mono font-bold text-slate-900 dark:text-white">
-                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[#831843] dark:text-[#f472b6]">
-                  {{ p.userpolicyCode }}
-                </span>
-              </td>
-              <td class="py-3.5 px-6 font-medium text-slate-800 dark:text-slate-200 max-w-xs truncate">
-                {{ p.userpolicyValue }}
-              </td>
-              <td class="py-3.5 px-6 text-slate-500">
-                {{ p.informationRemark || '-' }}
-              </td>
-              <td class="py-3.5 px-6 text-center">
-                <span
-                  class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                  :class="p.isRules ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-500'"
-                >
-                  {{ p.isRules ? 'WAJIB' : 'OPSIONAL' }}
-                </span>
-              </td>
-              <td class="py-3.5 px-6 text-right">
-                <div class="inline-flex items-center gap-2">
-                  <button
-                    type="button"
-                    @click="openEditModal(p)"
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-[#831843] hover:bg-[#831843]/10 transition-colors cursor-pointer"
-                    title="Edit Kebijakan"
-                  >
-                    <Edit3 class="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    @click="confirmDelete(p)"
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                    title="Hapus Kebijakan"
-                  >
-                    <Trash2 class="w-4 h-4" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="policies.length === 0 && !isLoading">
-              <td colspan="6" class="py-12 text-center text-slate-400">
-                Belum ada kebijakan pengguna yang didaftarkan.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- Table Card with TanStack Table -->
+    <TanStackTable
+      :data="policies"
+      :columns="policyColumns"
+      :loading="isLoading"
+      empty-text="Tidak ada data kebijakan pengguna ditemukan."
+    >
+      <template #displayOrder="{ row }">
+        <span class="font-bold text-slate-400">
+          #{{ row.displayOrder || 1 }}
+        </span>
+      </template>
 
-      <!-- App Pagination -->
-      <div v-if="totalPolicies > 0" class="p-4 border-t border-slate-100 dark:border-slate-800">
-        <AppPagination
-          v-model:current-page="currentPage"
-          :total-items="totalPolicies"
-          :items-per-page="itemsPerPage"
-          item-label="kebijakan"
-        />
-      </div>
+      <template #userpolicyCode="{ row }">
+        <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[#831843] dark:text-[#f472b6] font-mono font-bold">
+          {{ row.userpolicyCode }}
+        </span>
+      </template>
+
+      <template #userpolicyValue="{ row }">
+        <span class="font-medium text-slate-800 dark:text-slate-200 max-w-xs truncate block">
+          {{ row.userpolicyValue }}
+        </span>
+      </template>
+
+      <template #informationRemark="{ row }">
+        <span class="text-slate-500">
+          {{ row.informationRemark || '-' }}
+        </span>
+      </template>
+
+      <template #isRules="{ row }">
+        <span
+          class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+          :class="row.isRules ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-500'"
+        >
+          {{ row.isRules ? 'WAJIB' : 'OPSIONAL' }}
+        </span>
+      </template>
+
+      <template #actions="{ row }">
+        <div class="inline-flex items-center gap-2">
+          <button
+            type="button"
+            @click="openEditModal(row)"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-[#831843] hover:bg-[#831843]/10 transition-colors cursor-pointer"
+            title="Edit Kebijakan"
+          >
+            <Edit3 class="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            @click="confirmDelete(row)"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+            title="Hapus Kebijakan"
+          >
+            <Trash2 class="w-4 h-4" />
+          </button>
+        </div>
+      </template>
+    </TanStackTable>
+
+    <!-- App Pagination -->
+    <div v-if="totalPolicies > 0" class="p-4 border-t border-slate-100 dark:border-slate-800">
+      <AppPagination
+        v-model:current-page="currentPage"
+        :total-items="totalPolicies"
+        :items-per-page="itemsPerPage"
+        item-label="kebijakan"
+      />
     </div>
+
 
     <!-- Modal Form Tambah/Edit Policy -->
     <div
@@ -230,6 +220,7 @@ import { adminApi } from '~/services/api.js'
 import { buildPrismaQuery } from '~/utils/queryBuilder.js'
 import { useToast } from '~/composables/useToast.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
+import TanStackTable from '~/components/ui/TanStackTable.vue'
 import ConfirmationModal from '~/components/ui/ConfirmationModal.vue'
 import { Plus, Search, Edit3, Trash2 } from 'lucide-vue-next'
 
@@ -239,6 +230,41 @@ const policies = ref([])
 const totalPolicies = ref(0)
 const isLoading = ref(false)
 const isSaving = ref(false)
+
+const policyColumns = [
+  {
+    id: 'displayOrder',
+    header: 'Urutan',
+    accessorKey: 'displayOrder'
+  },
+  {
+    id: 'userpolicyCode',
+    header: 'Kode Kebijakan',
+    accessorKey: 'userpolicyCode'
+  },
+  {
+    id: 'userpolicyValue',
+    header: 'Isi Kebijakan',
+    accessorKey: 'userpolicyValue'
+  },
+  {
+    id: 'informationRemark',
+    header: 'Catatan Informasi',
+    accessorKey: 'informationRemark'
+  },
+  {
+    id: 'isRules',
+    header: 'Aturan Wajib',
+    accessorKey: 'isRules',
+    meta: { align: 'center' }
+  },
+  {
+    id: 'actions',
+    header: 'Aksi',
+    enableSorting: false,
+    meta: { align: 'right' }
+  }
+]
 
 const searchQuery = ref('')
 const currentPage = ref(1)
