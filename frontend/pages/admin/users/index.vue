@@ -153,10 +153,12 @@
                   <button
                     type="button"
                     @click="confirmDeleteUser(u)"
-                    class="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                    :disabled="deletingUserId === (u.id || u.userId)"
+                    class="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer disabled:opacity-50"
                     title="Hapus User"
                   >
-                    <Trash2 class="w-4 h-4" />
+                    <span v-if="deletingUserId === (u.id || u.userId)" class="w-4 h-4 border-2 border-rose-500/40 border-t-rose-600 rounded-full animate-spin inline-block"></span>
+                    <Trash2 v-else class="w-4 h-4" />
                   </button>
                 </div>
               </td>
@@ -184,6 +186,7 @@ import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useStoreStore } from '~/stores/store.js'
 import { useToast } from '~/composables/useToast.js'
+import { userApi } from '~/services/api.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
 import { Plus, Edit3, Trash2, Search, Store } from 'lucide-vue-next'
 
@@ -245,10 +248,39 @@ const getBatchName = (batchId) => {
   return b ? b.name : 'Belum Ditugaskan'
 }
 
-const confirmDeleteUser = (user) => {
-  if (confirm(`Apakah Anda yakin ingin menghapus user ${user.name}?`)) {
-    userStore.deleteUser(user.id)
-    toast.info('User Dihapus', `${user.name} telah dihapus dari direktori.`)
+import { confirmDeleteDialog } from '~/utils/dialog.js'
+
+const deletingUserId = ref(null)
+
+const confirmDeleteUser = async (user) => {
+  const targetId = user.id || user.userId
+  if (!targetId) {
+    toast.error('Error', 'ID pengguna tidak valid.')
+    return
+  }
+
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Hapus Pengguna?',
+    text: `Apakah Anda yakin ingin menghapus user "${user.name}"? Tindakan ini akan menghapus akun secara permanen dari server database.`,
+    confirmButtonText: 'Ya, Hapus User'
+  })
+
+  if (isConfirmed) {
+    deletingUserId.value = targetId
+    try {
+      const res = await userApi.delete(targetId)
+      if (res && (res.success || res.statusCode === 200 || res.data !== undefined)) {
+        toast.success('User Berhasil Dihapus', `Data pengguna ${user.name} telah dihapus dari backend REST API.`)
+      }
+      userStore.deleteUser(targetId)
+      await loadUsers(currentPage.value)
+    } catch (err) {
+      console.error('Delete user error:', err)
+      const errorMsg = err.data?.message || err.message || 'Tidak dapat menghapus data dari server.'
+      toast.error('Gagal Menghapus User', errorMsg)
+    } finally {
+      deletingUserId.value = null
+    }
   }
 }
 </script>

@@ -288,10 +288,12 @@
           </NuxtLink>
           <button
             type="submit"
-            class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#831843] hover:bg-[#9d174d] text-white text-xs font-semibold shadow-md shadow-[#831843]/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            :disabled="isSubmitting"
+            class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#831843] hover:bg-[#9d174d] text-white text-xs font-semibold shadow-md shadow-[#831843]/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50"
           >
-            <Check class="w-4 h-4" />
-            <span>Simpan & Daftarkan Gerai</span>
+            <Check v-if="!isSubmitting" class="w-4 h-4" />
+            <span v-if="isSubmitting" class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span>{{ isSubmitting ? 'Menyimpan ke Server...' : 'Simpan & Daftarkan Gerai' }}</span>
           </button>
         </div>
       </form>
@@ -350,13 +352,36 @@ const selectedDistrictManager = computed(() => {
   return userStore.userById(form.districtManagerId)
 })
 
-const handleSubmit = () => {
-  const newStore = storeStore.createStore({
-    ...form,
-    code: computedStoreCode.value
-  })
+import { departmentApi } from '~/services/api.js'
 
-  toast.success('Gerai Berhasil Didaftarkan', `Outlet ${newStore.name} (${newStore.code}) telah ditambahkan ke Master Gerai.`)
-  router.push('/admin/stores')
+const isSubmitting = ref(false)
+
+const handleSubmit = async () => {
+  isSubmitting.value = true
+  try {
+    const payload = {
+      departmentCode: computedStoreCode.value,
+      departmentName: form.name.trim(),
+      regionCode: form.region || 'JABODETABEK',
+      isActive: form.status === 'ACTIVE',
+      userSlId: (form.storeLeaderId && String(form.storeLeaderId).length > 20) ? form.storeLeaderId : null,
+      userDmId: (form.districtManagerId && String(form.districtManagerId).length > 20) ? form.districtManagerId : null
+    }
+
+    const res = await departmentApi.create(payload)
+    if (res && (res.success || res.data)) {
+      toast.success('Gerai Berhasil Didaftarkan', `Outlet ${form.name} (${payload.departmentCode}) telah disimpan ke backend.`)
+      // Refresh cache store
+      await storeStore.fetchStoresFromApi({ page: 1, limit: 9 })
+      router.push('/admin/stores')
+    } else {
+      throw new Error(res?.message || 'Gagal menyimpan gerai ke backend server.')
+    }
+  } catch (err) {
+    console.error('Create store error:', err)
+    toast.error('Gagal Menyimpan Gerai', err.message || 'Terjadi kesalahan saat memproses data ke server.')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>

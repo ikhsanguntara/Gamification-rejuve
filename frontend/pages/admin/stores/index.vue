@@ -244,6 +244,7 @@ import { ref, watch, onMounted } from 'vue'
 import { useStoreStore } from '~/stores/store.js'
 import { useUserStore } from '~/stores/user.js'
 import { useToast } from '~/composables/useToast.js'
+import { departmentApi } from '~/services/api.js'
 import ConfirmationModal from '~/components/ui/ConfirmationModal.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
 import AppPagination from '~/components/ui/AppPagination.vue'
@@ -308,17 +309,24 @@ watch([selectedRegion, selectedStatus], () => {
   loadStores(1)
 })
 
-const confirmDelete = (store) => {
-  storeToDelete.value = store
-  showDeleteModal.value = true
-}
+import { confirmDeleteDialog } from '~/utils/dialog.js'
 
-const handleDeleteStore = () => {
-  if (storeToDelete.value) {
-    storeStore.deleteStore(storeToDelete.value.id)
-    toast.success('Gerai Dihapus', `Outlet ${storeToDelete.value.name} telah berhasil dihapus.`)
-    showDeleteModal.value = false
-    storeToDelete.value = null
+const confirmDelete = async (store) => {
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Hapus Master Gerai?',
+    text: `Apakah Anda yakin ingin menghapus outlet "${store.name}" (${store.code})? Data gerai akan dihapus dari server backend.`,
+    confirmButtonText: 'Ya, Hapus Gerai'
+  })
+
+  if (isConfirmed) {
+    try {
+      await departmentApi.delete(store.id)
+      toast.success('Gerai Dihapus', `Outlet ${store.name} telah berhasil dihapus dari backend.`)
+      await loadStores(currentPage.value)
+    } catch (err) {
+      console.error('Delete store error:', err)
+      toast.error('Gagal Menghapus Gerai', err.message || 'Tidak dapat menghapus data dari server.')
+    }
   }
 }
 </script>

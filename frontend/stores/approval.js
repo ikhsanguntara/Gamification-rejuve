@@ -299,6 +299,15 @@ export const useApprovalStore = defineStore('approval', {
       item.revisionNote = revisionNote.trim()
       item.reviewedAt = now
 
+      // Sync ke backend REST API
+      if (item.userMissionId) {
+        evaluationApi.submitDmReview(item.userMissionId, {
+          action: 'REVISE',
+          notes: revisionNote.trim(),
+          dmNotes: revisionNote.trim()
+        }).catch(e => console.warn('API sync revise notice:', e.message))
+      }
+
       // 1. Update Mission
       const missionStore = useMissionStore()
       missionStore.updateMissionStatus(item.missionId, {

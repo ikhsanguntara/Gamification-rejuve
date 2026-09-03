@@ -144,9 +144,11 @@
           </NuxtLink>
           <button
             type="submit"
-            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#831843] hover:bg-[#701a40] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
+            :disabled="isSubmitting"
+            class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-[#831843] hover:bg-[#701a40] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer disabled:opacity-50 flex items-center gap-2"
           >
-            Simpan User Baru
+            <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span>{{ isSubmitting ? 'Menyimpan...' : 'Simpan User Baru' }}</span>
           </button>
         </div>
       </form>
@@ -155,11 +157,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
 import { useStoreStore } from '~/stores/store.js'
 import { useToast } from '~/composables/useToast.js'
+import { userApi, roleApi } from '~/services/api.js'
 import { ArrowLeft, UserPlus } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -167,12 +170,26 @@ const userStore = useUserStore()
 const storeStore = useStoreStore()
 const toast = useToast()
 
+const isSubmitting = ref(false)
+const availableRoles = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await roleApi.getAll({ limit: 20 })
+    if (res && res.data) {
+      availableRoles.value = res.data
+    }
+  } catch (err) {
+    console.warn('Gagal memuat roles:', err.message)
+  }
+})
+
 const form = ref({
   name: '',
   role: 'CREW',
   position: 'Store Specialist',
   email: '',
-  storeId: 'store-001',
+  storeId: '',
   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80'
 })
 
@@ -190,13 +207,41 @@ const handleStoreChange = () => {
   }
 }
 
-const handleSubmit = () => {
-  if (selectedStore.value) {
-    form.value.storeLocation = selectedStore.value.name
-    form.value.batchId = selectedStore.value.batchId || null
+const handleSubmit = async () => {
+  isSubmitting.value = true
+  try {
+    // Cari roleId dari database live yang sesuai dengan role code yang dipilih
+    let matchedRole = availableRoles.value.find(
+      r => r.roleCode?.toUpperCase() === form.value.role?.toUpperCase()
+    )
+    if (!matchedRole && availableRoles.value.length > 0) {
+      matchedRole = availableRoles.value[0]
+    }
+
+    const payload = {
+      name: form.value.name.trim(),
+      email: form.value.email.trim(),
+      password: 'password123',
+      roleId: matchedRole ? matchedRole.roleId : null,
+      departmentId: (form.value.storeId && String(form.value.storeId).length > 20) ? form.value.storeId : null,
+      isBuddy: false,
+      userBuddyId: null,
+      isActive: true
+    }
+
+    const res = await userApi.create(payload)
+    if (res && (res.success || res.data)) {
+      toast.success('User Berhasil Dibuat', `${form.value.name} telah didaftarkan ke dalam sistem live.`)
+      await userStore.fetchUsersFromApi({ page: 1, limit: 10 })
+      router.push('/admin/users')
+    } else {
+      throw new Error(res?.message || 'Gagal menyimpan user ke backend server.')
+    }
+  } catch (err) {
+    console.error('Create user error:', err)
+    toast.error('Gagal Membuat User', err.message || 'Terjadi kesalahan saat memproses data.')
+  } finally {
+    isSubmitting.value = false
   }
-  const newUser = userStore.createUser(form.value)
-  toast.success('User Berhasil Dibuat', `${newUser.name} telah didaftarkan ke dalam sistem.`)
-  router.push('/admin/users')
 }
 </script>

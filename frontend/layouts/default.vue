@@ -17,8 +17,6 @@
     <!-- Mobile Bottom Navigation Bar (Hidden for Crew Role) -->
     <MobileNavigation v-if="!userStore.isCrew" />
 
-    <!-- Global Toast Container -->
-    <ToastContainer />
   </div>
 </template>
 
@@ -27,7 +25,6 @@ import { useUserStore } from '~/stores/user.js'
 import AppSidebar from '~/components/layout/AppSidebar.vue'
 import AppHeader from '~/components/layout/AppHeader.vue'
 import MobileNavigation from '~/components/layout/MobileNavigation.vue'
-import ToastContainer from '~/components/ui/ToastContainer.vue'
 
 const userStore = useUserStore()
 </script>

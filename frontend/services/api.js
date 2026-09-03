@@ -9,7 +9,8 @@ export const authApi = {
     }
     return res
   },
-  me: () => apiFetch('/auth/me', { method: 'GET' })
+  me: () => apiFetch('/auth/me', { method: 'GET' }),
+  changePassword: (data) => apiFetch('/auth/change-password', { method: 'POST', body: data })
 }
 
 // ─── 2. Master Departments (Stores) Service ─────────────────────────────────

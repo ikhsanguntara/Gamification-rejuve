@@ -643,26 +643,48 @@ const selectAllCrew = () => {
   form.value.assignment.crewIds = allCrews.value.map(c => c.id)
 }
 
-const handleSubmit = () => {
-  const applyTemplate = form.value.templatePackageId !== 'NONE'
-  const newB = batchStore.createBatch({
-    ...form.value,
-    code: computedBatchCode.value,
-    buddyPackageId: form.value.buddyPackageId,
-    applyTemplatePackage: applyTemplate,
-    templatePackageId: form.value.templatePackageId
-  })
+import { batchApi, templateApi } from '~/services/api.js'
 
-  // Reassign selected crew members to this new batch
-  form.value.assignment.crewIds.forEach(cId => {
-    const crewUser = userStore.userById(cId)
-    userStore.assignUserToBatch(cId, newB.id, crewUser?.storeLocation || newB.name)
-  })
+const isSubmitting = ref(false)
 
-  toast.success(
-    'Batch Berhasil Dibuat!',
-    `Batch ${newB.name} (${newB.code}) aktif dengan program Buddy (${selectedBuddyPackage.value?.name || 'Tanpa Buddy'}) dan kurikulum ${templateTotalWeeks.value} minggu.`
-  )
-  router.push('/admin/batches')
+const handleSubmit = async () => {
+  isSubmitting.value = true
+  try {
+    // Dapatkan template journey dari backend
+    let journeyTplId = form.value.templatePackageId
+    if (!journeyTplId || journeyTplId === 'NONE' || String(journeyTplId).startsWith('pkg-')) {
+      const tmpls = await templateApi.getAll({ limit: 10 })
+      if (tmpls && tmpls.data && tmpls.data.length > 0) {
+        journeyTplId = tmpls.data[0].tplMissionId
+      }
+    }
+
+    const payload = {
+      code: computedBatchCode.value,
+      name: form.value.name.trim(),
+      startDate: form.value.startDate || new Date().toISOString().split('T')[0],
+      status: 'OPEN',
+      currentWeek: 1,
+      tplJourneyId: journeyTplId,
+      crewIds: form.value.assignment.crewIds.filter(id => String(id).length > 20)
+    }
+
+    const res = await batchApi.create(payload)
+    if (res && (res.success || res.data)) {
+      toast.success(
+        'Batch Berhasil Dibuat!',
+        `Batch ${form.value.name} (${payload.code}) telah disimpan ke backend dan misi aktif di-generate.`
+      )
+      await batchStore.fetchBatchesFromApi({ page: 1, limit: 9 })
+      router.push('/admin/batches')
+    } else {
+      throw new Error(res?.message || 'Gagal membuat batch di backend server.')
+    }
+  } catch (err) {
+    console.error('Create batch error:', err)
+    toast.error('Gagal Membuat Batch', err.message || 'Terjadi kesalahan saat memproses data.')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>

@@ -1356,14 +1356,22 @@ const handleAddNewWeek = () => {
   }
 }
 
-const handleRemoveCurrentWeek = () => {
+import { confirmDeleteDialog } from '~/utils/dialog.js'
+
+const handleRemoveCurrentWeek = async () => {
   if (!activePackage.value) return
-  if (confirm(`Hapus Week ${activeWeekTab.value} beserta seluruh misi di dalamnya?`)) {
+  const isConfirmed = await confirmDeleteDialog({
+    title: `Hapus Week ${activeWeekTab.value}?`,
+    text: `Seluruh butir misi di dalam Week ${activeWeekTab.value} akan ikut dihapus.`,
+    confirmButtonText: 'Ya, Hapus Week'
+  })
+
+  if (isConfirmed) {
     const success = templateStore.removeWeekFromPackage(activePackage.value.id, activeWeekTab.value)
     if (success) {
       activeWeekTab.value = 1
       syncWeekTitle()
-      toast.info('Week Dihapus', 'Minggu beserta seluruh butir SOP di dalamnya telah dihapus.')
+      toast.success('Week Dihapus', 'Minggu beserta seluruh butir SOP di dalamnya telah dihapus.')
     }
   }
 }
@@ -1429,10 +1437,16 @@ const duplicatePackage = (pkgId) => {
   }
 }
 
-const confirmDeletePackage = (pkg) => {
-  if (confirm(`Hapus paket master "${pkg.name}"?`)) {
+const confirmDeletePackage = async (pkg) => {
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Hapus Paket Master?',
+    text: `Apakah Anda yakin ingin menghapus paket master "${pkg.name}"?`,
+    confirmButtonText: 'Ya, Hapus Paket'
+  })
+
+  if (isConfirmed) {
     templateStore.deletePackage(pkg.id)
-    toast.info('Paket Dihapus', `Paket "${pkg.name}" telah dihapus.`)
+    toast.success('Paket Dihapus', `Paket "${pkg.name}" telah dihapus.`)
   }
 }
 
@@ -1463,10 +1477,16 @@ const executeAddMission = () => {
   toast.success('Butir SOP Ditambahkan', `Misi "${newMissionForm.value.title}" ditambahkan ke Week ${newMissionForm.value.week}.`)
 }
 
-const removeMission = (tmplId) => {
-  if (confirm('Hapus butir SOP ini?')) {
+const removeMission = async (tmplId) => {
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Hapus Butir SOP?',
+    text: 'Apakah Anda yakin ingin menghapus butir SOP ini dari kurikulum paket?',
+    confirmButtonText: 'Ya, Hapus'
+  })
+
+  if (isConfirmed) {
     templateStore.removeMissionFromPackage(activePackage.value.id, tmplId)
-    toast.info('Butir SOP Dihapus', 'Misi telah dihapus dari paket.')
+    toast.success('Butir SOP Dihapus', 'Misi telah dihapus dari paket.')
   }
 }
 
@@ -1512,11 +1532,17 @@ const duplicateBuddyPkg = (pkgId) => {
   }
 }
 
-const confirmDeleteBuddyPkg = (bpkg) => {
-  if (confirm(`Hapus paket template Rapor New Hire "${bpkg.name}"?`)) {
+const confirmDeleteBuddyPkg = async (bpkg) => {
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Hapus Paket Rapor?',
+    text: `Apakah Anda yakin ingin menghapus paket template Rapor New Hire "${bpkg.name}"?`,
+    confirmButtonText: 'Ya, Hapus Paket'
+  })
+
+  if (isConfirmed) {
     buddyStore.deleteBuddyPackage(bpkg.id)
     selectedBuddyPkgId.value = buddyStore.defaultPackage?.id || ''
-    toast.info('Paket Rapor Dihapus', `Paket "${bpkg.name}" telah dihapus.`)
+    toast.success('Paket Rapor Dihapus', `Paket "${bpkg.name}" telah dihapus.`)
   }
 }
 
@@ -1538,14 +1564,14 @@ const openEditBuddyIndicatorModal = (compId, ind) => {
   newBuddyIndicatorForm.value = {
     competencyId: compId,
     name: ind.name,
-    isStar: !!ind.isStar,
+    isStar: Boolean(ind.isStar),
     description: ind.description || ''
   }
   showAddBuddyMissionModal.value = true
 }
 
 const executeSaveBuddyIndicator = () => {
-  if (!activeBuddyPkg.value) return
+  if (!activeBuddyPkg.value || !newBuddyIndicatorForm.value.name.trim()) return
 
   if (isEditingBuddyMission.value) {
     buddyStore.updateIndicator(
@@ -1553,20 +1579,20 @@ const executeSaveBuddyIndicator = () => {
       newBuddyIndicatorForm.value.competencyId,
       editingBuddyMissionId.value,
       {
-        name: newBuddyIndicatorForm.value.name,
+        name: newBuddyIndicatorForm.value.name.trim(),
         isStar: newBuddyIndicatorForm.value.isStar,
-        description: newBuddyIndicatorForm.value.description
+        description: newBuddyIndicatorForm.value.description.trim()
       }
     )
-    toast.success('Indikator Diperbarui', `Perubahan indikator "${newBuddyIndicatorForm.value.name}" tersimpan.`)
+    toast.success('Indikator Diperbarui', `Indikator "${newBuddyIndicatorForm.value.name}" berhasil diupdate.`)
   } else {
-    buddyStore.addIndicatorToCompetency(
+    buddyStore.addIndicator(
       activeBuddyPkg.value.id,
       newBuddyIndicatorForm.value.competencyId,
       {
-        name: newBuddyIndicatorForm.value.name,
+        name: newBuddyIndicatorForm.value.name.trim(),
         isStar: newBuddyIndicatorForm.value.isStar,
-        description: newBuddyIndicatorForm.value.description
+        description: newBuddyIndicatorForm.value.description.trim()
       }
     )
     toast.success('Indikator Ditambahkan', `Indikator "${newBuddyIndicatorForm.value.name}" berhasil ditambahkan.`)
@@ -1575,11 +1601,17 @@ const executeSaveBuddyIndicator = () => {
   showAddBuddyMissionModal.value = false
 }
 
-const removeBuddyIndicator = (compId, indId) => {
+const removeBuddyIndicator = async (compId, indId) => {
   if (!activeBuddyPkg.value) return
-  if (confirm('Hapus indikator penilaian ini?')) {
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Hapus Indikator Penilaian?',
+    text: 'Apakah Anda yakin ingin menghapus indikator penilaian ini?',
+    confirmButtonText: 'Ya, Hapus'
+  })
+
+  if (isConfirmed) {
     buddyStore.removeIndicator(activeBuddyPkg.value.id, compId, indId)
-    toast.info('Indikator Dihapus', 'Indikator telah dihapus dari paket.')
+    toast.success('Indikator Dihapus', 'Indikator telah dihapus dari paket.')
   }
 }
 
@@ -1619,10 +1651,16 @@ const executeSaveSurveyQuestion = () => {
   showAddSurveyQuestionModal.value = false
 }
 
-const deleteSurveyQuestion = (id) => {
-  if (confirm('Hapus butir pertanyaan survei ini?')) {
+const deleteSurveyQuestion = async (id) => {
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Hapus Pertanyaan Survei?',
+    text: 'Apakah Anda yakin ingin menghapus butir pertanyaan survei ini?',
+    confirmButtonText: 'Ya, Hapus'
+  })
+
+  if (isConfirmed) {
     feedbackStore.deleteSurveyQuestion(id)
-    toast.info('Pertanyaan Dihapus', 'Butir pertanyaan telah dihapus dari survei.')
+    toast.success('Pertanyaan Dihapus', 'Butir pertanyaan telah dihapus dari survei.')
   }
 }
 
@@ -1642,10 +1680,16 @@ const executeSaveRaporIndicator = () => {
   toast.success('Indikator Ditambahkan', 'Indikator kompetensi berhasil ditambahkan ke Rapor New Hire.')
 }
 
-const deleteRaporIndicator = (compId, indId) => {
-  if (confirm('Hapus indikator kompetensi ini?')) {
+const deleteRaporIndicator = async (compId, indId) => {
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Hapus Indikator Kompetensi?',
+    text: 'Apakah Anda yakin ingin menghapus indikator kompetensi ini dari Rapor?',
+    confirmButtonText: 'Ya, Hapus'
+  })
+
+  if (isConfirmed) {
     feedbackStore.deleteRaporIndicator(compId, indId)
-    toast.info('Indikator Dihapus', 'Indikator telah dihapus dari Rapor.')
+    toast.success('Indikator Dihapus', 'Indikator telah dihapus dari Rapor.')
   }
 }
 </script>

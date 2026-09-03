@@ -3,9 +3,11 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+    <!-- Mount Global Toast Container di Root App -->
+    <ToastContainer />
   </div>
 </template>
 
 <script setup>
-// Root app component
+import ToastContainer from '~/components/ui/ToastContainer.vue'
 </script>

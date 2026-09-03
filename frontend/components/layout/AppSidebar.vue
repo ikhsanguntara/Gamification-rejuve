@@ -137,6 +137,91 @@
               ></span>
               <span>Template Misi</span>
             </NuxtLink>
+
+            <!-- Role Submenu -->
+            <NuxtLink
+              to="/admin/roles"
+              class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
+              :class="[
+                $route.path.startsWith('/admin/roles')
+                  ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-semibold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              ]"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full transition-colors"
+                :class="$route.path.startsWith('/admin/roles') ? 'bg-[#831843] dark:bg-[#f472b6]' : 'bg-slate-400 dark:bg-slate-600'"
+              ></span>
+              <span>Role</span>
+            </NuxtLink>
+
+            <!-- Bisnis Parameter Submenu -->
+            <NuxtLink
+              to="/admin/params"
+              class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
+              :class="[
+                $route.path.startsWith('/admin/params')
+                  ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-semibold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              ]"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full transition-colors"
+                :class="$route.path.startsWith('/admin/params') ? 'bg-[#831843] dark:bg-[#f472b6]' : 'bg-slate-400 dark:bg-slate-600'"
+              ></span>
+              <span>Bisnis Parameter</span>
+            </NuxtLink>
+
+            <!-- Pengaturan Sistem Submenu -->
+            <NuxtLink
+              to="/admin/settings"
+              class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
+              :class="[
+                $route.path.startsWith('/admin/settings')
+                  ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-semibold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              ]"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full transition-colors"
+                :class="$route.path.startsWith('/admin/settings') ? 'bg-[#831843] dark:bg-[#f472b6]' : 'bg-slate-400 dark:bg-slate-600'"
+              ></span>
+              <span>Pengaturan Sistem</span>
+            </NuxtLink>
+
+            <!-- Kebijakan Pengguna Submenu -->
+            <NuxtLink
+              to="/admin/user-policies"
+              class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
+              :class="[
+                $route.path.startsWith('/admin/user-policies')
+                  ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-semibold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              ]"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full transition-colors"
+                :class="$route.path.startsWith('/admin/user-policies') ? 'bg-[#831843] dark:bg-[#f472b6]' : 'bg-slate-400 dark:bg-slate-600'"
+              ></span>
+              <span>Kebijakan Pengguna</span>
+            </NuxtLink>
+
+            <!-- Lynx Sync Submenu -->
+            <NuxtLink
+              to="/admin/lynx-sync"
+              class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all group"
+              :class="[
+                $route.path.startsWith('/admin/lynx-sync')
+                  ? 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-semibold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              ]"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full transition-colors"
+                :class="$route.path.startsWith('/admin/lynx-sync') ? 'bg-[#831843] dark:bg-[#f472b6]' : 'bg-slate-400 dark:bg-slate-600'"
+              ></span>
+              <span>Sinkronisasi Lynx</span>
+            </NuxtLink>
           </div>
         </Transition>
       </div>

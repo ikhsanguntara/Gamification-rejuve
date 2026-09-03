@@ -213,14 +213,35 @@ watch(
   { immediate: true }
 )
 
-const handleUpdate = () => {
+import { userApi } from '~/services/api.js'
+
+const isUpdating = ref(false)
+
+const handleUpdate = async () => {
   if (!user.value) return
-  if (selectedStore.value) {
-    form.value.storeLocation = selectedStore.value.name
-    form.value.batchId = selectedStore.value.batchId || null
+  isUpdating.value = true
+  try {
+    const payload = {
+      name: form.value.name.trim(),
+      isActive: true
+    }
+    if (form.value.storeId && String(form.value.storeId).length > 20) {
+      payload.departmentId = form.value.storeId
+    }
+
+    const res = await userApi.update(user.value.id, payload)
+    if (res && (res.success || res.data)) {
+      toast.success('User Diperbarui', `Data ${form.value.name} telah berhasil disimpan ke database.`)
+      await userStore.fetchUsersFromApi({ page: 1, limit: 10 })
+      router.push('/admin/users')
+    } else {
+      throw new Error(res?.message || 'Gagal memperbarui data user.')
+    }
+  } catch (err) {
+    console.error('Update user error:', err)
+    toast.error('Gagal Memperbarui User', err.message || 'Terjadi kesalahan saat memproses data.')
+  } finally {
+    isUpdating.value = false
   }
-  userStore.updateUser(user.value.id, form.value)
-  toast.success('User Diperbarui', `Data ${form.value.name} telah berhasil disimpan.`)
-  router.push('/admin/users')
 }
 </script>

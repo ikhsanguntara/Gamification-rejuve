@@ -390,18 +390,51 @@ const selectedDistrictManager = computed(() => {
   return userStore.userById(form.districtManagerId)
 })
 
-const handleUpdate = () => {
-  const updated = storeStore.updateStore(storeId, form)
-  if (updated) {
-    toast.success('Gerai Diperbarui', `Informasi outlet ${updated.name} telah berhasil disimpan.`)
-    router.push('/admin/stores')
+import { departmentApi } from '~/services/api.js'
+
+const isUpdating = ref(false)
+
+const handleUpdate = async () => {
+  isUpdating.value = true
+  try {
+    const payload = {
+      departmentName: form.name.trim(),
+      regionCode: form.region || 'JABODETABEK',
+      isActive: form.status === 'ACTIVE',
+      userSlId: (form.storeLeaderId && String(form.storeLeaderId).length > 20) ? form.storeLeaderId : null,
+      userDmId: (form.districtManagerId && String(form.districtManagerId).length > 20) ? form.districtManagerId : null
+    }
+
+    const res = await departmentApi.update(storeId, payload)
+    if (res && (res.success || res.data)) {
+      toast.success('Gerai Diperbarui', `Informasi outlet ${form.name} telah berhasil disimpan ke backend.`)
+      await storeStore.fetchStoresFromApi({ page: 1, limit: 9 })
+      router.push('/admin/stores')
+    } else {
+      throw new Error(res?.message || 'Gagal memperbarui gerai di server.')
+    }
+  } catch (err) {
+    console.error('Update store error:', err)
+    toast.error('Gagal Memperbarui Gerai', err.message || 'Terjadi kesalahan saat memproses data.')
+  } finally {
+    isUpdating.value = false
   }
 }
 
-const handleDeleteStore = () => {
-  storeStore.deleteStore(storeId)
-  toast.success('Gerai Dihapus', `Outlet ${store.value?.name} telah dihapus.`)
-  showDeleteModal.value = false
-  router.push('/admin/stores')
+const handleDeleteStore = async () => {
+  try {
+    const res = await departmentApi.delete(storeId)
+    if (res && (res.success || res.data !== undefined)) {
+      toast.success('Gerai Dihapus', `Outlet ${store.value?.name || form.name} telah dihapus dari backend.`)
+      showDeleteModal.value = false
+      await storeStore.fetchStoresFromApi({ page: 1, limit: 9 })
+      router.push('/admin/stores')
+    } else {
+      throw new Error(res?.message || 'Gagal menghapus gerai di server.')
+    }
+  } catch (err) {
+    console.error('Delete store error:', err)
+    toast.error('Gagal Menghapus Gerai', err.message || 'Tidak dapat menghapus data.')
+  }
 }
 </script>

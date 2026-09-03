@@ -60,6 +60,52 @@
   text-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
 }
 
+/* Compact & Sleek SweetAlert2 Dialog Styling */
+.swal2-container {
+  padding: 1rem !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.swal2-popup {
+  width: 380px !important;
+  max-width: 90vw !important;
+  padding: 1.5rem !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.18), 0 10px 10px -5px rgba(0, 0, 0, 0.08) !important;
+}
+
+.swal2-icon {
+  width: 3.25rem !important;
+  height: 3.25rem !important;
+  margin: 0.5rem auto 0.75rem auto !important;
+  border-width: 2.5px !important;
+}
+
+.swal2-icon .swal2-icon-content {
+  font-size: 1.75rem !important;
+  line-height: 3.25rem !important;
+}
+
+.swal2-title {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  padding: 0 !important;
+  line-height: 1.35 !important;
+}
+
+.swal2-html-container {
+  font-size: 0.8125rem !important;
+  line-height: 1.45 !important;
+  margin: 0.5rem 0 1rem 0 !important;
+}
+
+.swal2-actions {
+  gap: 0.5rem !important;
+  margin: 0.5rem 0 0 0 !important;
+  width: 100% !important;
+  justify-content: flex-end !important;
+}
+
 .rejuve-text-glow {
   text-shadow: 0 0 12px rgba(131, 24, 67, 0.5);
 }

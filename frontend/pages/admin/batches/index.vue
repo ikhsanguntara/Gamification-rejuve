@@ -135,10 +135,26 @@ watch(currentPage, (newPage) => {
   loadBatches(newPage)
 })
 
-const confirmDeleteBatch = (batch) => {
-  if (confirm(`Apakah Anda yakin ingin menghapus cabang ${batch.name}?`)) {
-    batchStore.deleteBatch(batch.id)
-    toast.info('Gerai Dihapus', `Cabang ${batch.name} telah dihapus dari sistem.`)
+import { batchApi } from '~/services/api.js'
+
+import { confirmDeleteDialog } from '~/utils/dialog.js'
+
+const confirmDeleteBatch = async (batch) => {
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Hapus Batch Gerai?',
+    text: `Apakah Anda yakin ingin menghapus "${batch.name}"? Seluruh alokasi misi pada batch ini akan dihapus.`,
+    confirmButtonText: 'Ya, Hapus Batch'
+  })
+
+  if (isConfirmed) {
+    try {
+      await batchApi.delete(batch.id)
+      toast.success('Batch Dihapus', `Batch ${batch.name} telah dihapus dari backend server.`)
+      await loadBatches(currentPage.value)
+    } catch (err) {
+      console.error('Delete batch error:', err)
+      toast.error('Gagal Menghapus Batch', err.message || 'Tidak dapat menghapus data dari server.')
+    }
   }
 }
 </script>

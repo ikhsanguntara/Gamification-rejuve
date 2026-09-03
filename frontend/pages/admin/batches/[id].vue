@@ -682,21 +682,32 @@ const applyTemplateNow = () => {
   }
 }
 
-const handleUpdate = () => {
-  batchStore.updateBatch(route.params.id, form.value)
+import { batchApi } from '~/services/api.js'
 
-  // Apply template if selected
-  if (form.value.templatePackageId && form.value.templatePackageId !== 'NONE') {
-    templateStore.applyPackageToBatch(route.params.id, form.value.templatePackageId)
+const isUpdating = ref(false)
+
+const handleUpdate = async () => {
+  isUpdating.value = true
+  try {
+    const payload = {
+      name: form.value.name.trim(),
+      currentWeek: Number(form.value.currentWeek) || 1,
+      isLock: false
+    }
+
+    const res = await batchApi.update(route.params.id, payload)
+    if (res && (res.success || res.data)) {
+      toast.success('Batch Berhasil Diperbarui', `Perubahan data batch ${form.value.name} telah disimpan ke database.`)
+      await batchStore.fetchBatchesFromApi({ page: 1, limit: 9 })
+      router.push('/admin/batches')
+    } else {
+      throw new Error(res?.message || 'Gagal memperbarui batch di backend server.')
+    }
+  } catch (err) {
+    console.error('Update batch error:', err)
+    toast.error('Gagal Memperbarui Batch', err.message || 'Terjadi kesalahan saat memproses data.')
+  } finally {
+    isUpdating.value = false
   }
-
-  // Reassign selected crew members to this batch
-  form.value.assignment.crewIds.forEach(cId => {
-    const crewUser = userStore.userById(cId)
-    userStore.assignUserToBatch(cId, batch.value.id, crewUser?.storeLocation || batch.value.name)
-  })
-
-  toast.success('Batch Berhasil Diperbarui', `Perubahan data batch ${batch.value.name} tersimpan.`)
-  router.push('/admin/batches')
 }
 </script>

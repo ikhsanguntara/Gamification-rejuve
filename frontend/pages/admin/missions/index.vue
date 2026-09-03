@@ -184,10 +184,18 @@ const getBatchName = (batchId) => {
   return b ? (b.name.split('—')[1] || b.name) : 'Semua Gerai'
 }
 
-const confirmDeleteMission = (mission) => {
-  if (confirm(`Apakah Anda yakin ingin menghapus misi ${mission.title}?`)) {
+import { confirmDeleteDialog } from '~/utils/dialog.js'
+
+const confirmDeleteMission = async (mission) => {
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Hapus Misi Operasional?',
+    text: `Apakah Anda yakin ingin menghapus misi "${mission.title}"?`,
+    confirmButtonText: 'Ya, Hapus Misi'
+  })
+
+  if (isConfirmed) {
     missionStore.deleteMission(mission.id)
-    toast.info('Misi Dihapus', `Misi ${mission.title} telah dihapus.`)
+    toast.success('Misi Dihapus', `Misi ${mission.title} telah dihapus.`)
   }
 }
 </script>

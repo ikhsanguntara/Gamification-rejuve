@@ -366,8 +366,16 @@ const switchUser = (userId) => {
   toast.success('Beralih Pengguna', `Aktif sebagai ${userStore.currentUser.name} (${userStore.currentUser.roleTitle})`)
 }
 
-const handleResetData = () => {
-  if (confirm('Apakah Anda yakin ingin me-reset seluruh data ke data demo awal? Semua perubahan batch/user baru akan dikembalikan ke awal.')) {
+import { confirmDeleteDialog } from '~/utils/dialog.js'
+
+const handleResetData = async () => {
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Reset Seluruh Data Sistem?',
+    text: 'Apakah Anda yakin ingin me-reset seluruh data ke data demo awal? Semua perubahan batch/user baru akan dikembalikan ke awal.',
+    confirmButtonText: 'Ya, Reset Data Sistem'
+  })
+
+  if (isConfirmed) {
     clearAllStoredData()
     toast.info('Data Direset', 'Memuat ulang data awal sistem...')
     setTimeout(() => {
