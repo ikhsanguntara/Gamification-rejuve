@@ -75,7 +75,7 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Nilai Durasi *
+                Nilai Durasi (per Tab) *
               </label>
               <input
                 v-model.number="form.durationValue"
@@ -83,7 +83,7 @@
                 min="1"
                 max="52"
                 required
-                @change="handleDurationValueChange"
+                placeholder="Contoh: 1"
                 class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white font-semibold focus:ring-2 focus:ring-[#831843]"
               />
             </div>
@@ -153,19 +153,27 @@
             :key="period"
             type="button"
             @click="activePeriodTab = period"
-            class="px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5"
+            class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5"
             :class="[
               activePeriodTab === period
                 ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-xs font-bold'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
             ]"
           >
-            <span>{{ unitLabel }} {{ period }}</span>
+            <span>{{ getTabTitle(period) }}</span>
             <span
               class="text-[10px] px-1.5 py-0.2 rounded-full"
               :class="activePeriodTab === period ? 'bg-[#831843]/10 text-[#831843]' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'"
             >
               {{ getMissionsForPeriod(period).length }}
+            </span>
+            <span
+              v-if="totalPeriods > 1"
+              @click.stop="removePeriod(period)"
+              class="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/60 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer inline-flex items-center justify-center"
+              :title="`Hapus ${getTabTitle(period)}`"
+            >
+              <X class="w-3 h-3" />
             </span>
           </button>
         </div>
@@ -266,7 +274,7 @@
             v-if="getMissionsForPeriod(activePeriodTab).length === 0"
             class="py-8 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2"
           >
-            <p>Belum ada butir misi SOP di {{ unitLabel }} {{ activePeriodTab }}.</p>
+            <p>Belum ada butir misi SOP di {{ getTabTitle(activePeriodTab) }}.</p>
             <button
               type="button"
               @click="addNewMissionToCurrentPeriod"
@@ -285,7 +293,7 @@
               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-[#831843] text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-[#831843] transition-all cursor-pointer bg-white dark:bg-slate-900"
             >
               <Plus class="w-3.5 h-3.5 text-[#831843]" />
-              <span>Tambah Butir SOP di {{ unitLabel }} {{ activePeriodTab }}</span>
+              <span>Tambah Butir SOP di {{ getTabTitle(activePeriodTab) }}</span>
             </button>
           </div>
         </div>
@@ -318,7 +326,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import BaseModal from '~/components/ui/BaseModal.vue'
-import { Plus, Trash2, Loader2 } from 'lucide-vue-next'
+import { Plus, Trash2, Loader2, X } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
 import { useToast } from '~/composables/useToast.js'
 
@@ -340,6 +348,7 @@ const toast = useToast()
 const isSubmitting = ref(false)
 
 const activePeriodTab = ref(1)
+const periodCount = ref(3)
 
 const form = ref({
   type: 'JOURNEY',
@@ -348,7 +357,7 @@ const form = ref({
   category: 'Standar Operasional',
   targetType: 'Semua Gerai',
   durationCode: 'WEEK',
-  durationValue: 3,
+  durationValue: 1,
   description: '',
   details: []
 })
@@ -360,9 +369,13 @@ const unitLabel = computed(() => {
 })
 
 const totalPeriods = computed(() => {
-  const val = Number(form.value.durationValue) || 1
-  return Math.max(1, val)
+  const maxInDetails = form.value.details.reduce((max, d) => Math.max(max, Number(d.durationNumber || 1)), 1)
+  return Math.max(periodCount.value, maxInDetails, 1)
 })
+
+const getTabTitle = (period) => {
+  return `${unitLabel.value} ${period}`
+}
 
 const getMissionsForPeriod = (periodNum) => {
   return form.value.details.filter(m => Number(m.durationNumber) === Number(periodNum))
@@ -388,7 +401,8 @@ const resetForm = (type = 'JOURNEY') => {
     : (type === 'BUDDY' ? templateStore.buddyTemplates.length : templateStore.feedbackTemplates.length)
 
   const defaultDurationCode = type === 'JOURNEY' ? 'WEEK' : 'DAY'
-  const defaultDurationValue = type === 'JOURNEY' ? 3 : (type === 'BUDDY' ? 3 : 1)
+  const defaultDurationValue = 1
+  periodCount.value = 1
 
   form.value = {
     type,
@@ -419,16 +433,38 @@ const handleDurationCodeChange = () => {
   activePeriodTab.value = 1
 }
 
-const handleDurationValueChange = () => {
-  if (activePeriodTab.value > totalPeriods.value) {
-    activePeriodTab.value = totalPeriods.value
-  }
+const addNewUnitPeriod = () => {
+  periodCount.value = totalPeriods.value + 1
+  activePeriodTab.value = periodCount.value
+  toast.success('Tab Ditambahkan', `${getTabTitle(activePeriodTab.value)} siap diisi butir SOP.`)
 }
 
-const addNewUnitPeriod = () => {
-  form.value.durationValue = Number(form.value.durationValue || 1) + 1
-  activePeriodTab.value = form.value.durationValue
-  toast.success(`${unitLabel.value} Ditambahkan`, `${unitLabel.value} ${activePeriodTab.value} siap diisi butir SOP.`)
+const removePeriod = (periodToDelete) => {
+  if (totalPeriods.value <= 1) return
+
+  const tabLabel = getTabTitle(periodToDelete)
+
+  // 1. Hapus misi pada periode ini
+  form.value.details = form.value.details.filter(m => Number(m.durationNumber) !== Number(periodToDelete))
+
+  // 2. Geser nomor durationNumber misi setelahnya agar urutan rapi
+  form.value.details.forEach(m => {
+    if (Number(m.durationNumber) > Number(periodToDelete)) {
+      m.durationNumber = Number(m.durationNumber) - 1
+    }
+  })
+
+  // 3. Kurangi jumlah tab
+  periodCount.value = Math.max(1, totalPeriods.value - 1)
+
+  // 4. Sesuaikan tab aktif
+  if (activePeriodTab.value === periodToDelete) {
+    activePeriodTab.value = Math.min(periodToDelete, periodCount.value)
+  } else if (activePeriodTab.value > periodToDelete) {
+    activePeriodTab.value = activePeriodTab.value - 1
+  }
+
+  toast.success('Tab Dihapus', `${tabLabel} berhasil dihapus.`)
 }
 
 const addNewMissionToCurrentPeriod = () => {
@@ -479,7 +515,7 @@ const executeSavePackage = async () => {
     const m = form.value.details[i]
     if (!m.missionTitle?.trim()) {
       activePeriodTab.value = m.durationNumber
-      toast.error('Validasi Gagal', `Judul SOP pada ${unitLabel.value} ${m.durationNumber} masih kosong.`)
+      toast.error('Validasi Gagal', `Judul SOP pada ${getTabTitle(m.durationNumber)} masih kosong.`)
       return
     }
   }
@@ -503,6 +539,7 @@ const executeSavePackage = async () => {
 
   const dVal = Number(form.value.durationValue || 1)
   const dCode = form.value.durationCode || (form.value.type === 'JOURNEY' ? 'WEEK' : 'DAY')
+  const calcTotalWeeks = totalPeriods.value
 
   const createPayload = {
     code: form.value.code?.trim() || `TPL-${form.value.type}-${Date.now()}`,
@@ -510,7 +547,7 @@ const executeSavePackage = async () => {
     type: form.value.type,
     durationCode: dCode,
     durationValue: dVal,
-    totalWeeks: dCode === 'WEEK' ? dVal : (dCode === 'MONTH' ? dVal * 4 : Math.ceil(dVal / 7)),
+    totalWeeks: calcTotalWeeks,
     category: form.value.category || 'Standar Operasional',
     targetType: form.value.targetType || 'Semua Gerai',
     description: form.value.description?.trim() || '',

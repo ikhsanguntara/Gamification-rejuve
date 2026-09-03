@@ -32,7 +32,7 @@
               {{ pkg.code }}
             </span>
             <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-semibold">
-              <span>{{ (pkg.weeks || []).length || pkg.totalWeeks || 3 }} Minggu</span>
+              <span>{{ formatPackageDuration(pkg) }}</span>
               <span>•</span>
               <span>{{ pkg.templates.length }} Misi</span>
             </div>
@@ -116,10 +116,9 @@
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  Minggu {{ w.weekNumber }}
+                  {{ getWeekTabTitle(w.weekNumber) }}
                 </TabsTrigger>
               </TabsList>
-
             </div>
           </div>
 
@@ -145,21 +144,27 @@
                       {{ item.title }}
                     </span>
                   </div>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">
+                  <p class="text-xs text-slate-600 dark:text-slate-300">
                     {{ item.description }}
                   </p>
                 </div>
               </div>
 
-              <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/80">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                  Checklist & Poin SOP:
+              <!-- Checklist Standar Pelaksanaan -->
+              <div v-if="item.requirements && item.requirements.length > 0" class="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                  Standar Pelaksanaan (Checklist SOP)
                 </span>
-                <ul class="text-[11px] text-slate-600 dark:text-slate-300 space-y-0.5 list-disc list-inside">
-                  <li v-for="(req, rIdx) in item.requirements" :key="rIdx">
-                    {{ req }}
-                  </li>
-                </ul>
+                <div class="space-y-1">
+                  <div
+                    v-for="(req, rIdx) in item.requirements"
+                    :key="rIdx"
+                    class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#831843]/60 shrink-0"></span>
+                    <span>{{ req }}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -167,12 +172,10 @@
               v-if="!(activePackage?.templates || []).some(t => Number(t.week) === Number(w.weekNumber))"
               class="py-12 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl"
             >
-              Belum ada butir misi SOP di Minggu {{ w.weekNumber }}. Klik "Edit Template" di atas untuk mengelola butir SOP.
+              Belum ada butir misi SOP di {{ getWeekTabTitle(w.weekNumber) }}. Klik "Edit Template" di atas untuk mengelola butir SOP.
             </div>
           </TabsContent>
-
         </TabsRoot>
-
       </div>
     </div>
   </div>
@@ -210,6 +213,21 @@ const activePackageWeeks = computed(() => {
   if (!activePackage.value) return []
   return templateStore.packageWeeks(activePackage.value.id)
 })
+
+const formatPackageDuration = (pkg) => {
+  const tabsCount = (pkg.weeks || []).length || pkg.totalWeeks || 1
+  const code = (pkg.durationCode || 'WEEK').toUpperCase()
+  if (code === 'DAY') return `${tabsCount} Hari`
+  if (code === 'MONTH') return `${tabsCount} Bulan`
+  return `${tabsCount} Minggu`
+}
+
+const getWeekTabTitle = (weekNumber) => {
+  const code = (activePackage.value?.durationCode || 'WEEK').toUpperCase()
+  if (code === 'DAY') return `Hari ${weekNumber}`
+  if (code === 'MONTH') return `Bulan ${weekNumber}`
+  return `Minggu ${weekNumber}`
+}
 
 const syncWeekTitle = () => {
   const currentWeekObj = activePackageWeeks.value.find(w => Number(w.weekNumber) === Number(activeWeekTab.value))

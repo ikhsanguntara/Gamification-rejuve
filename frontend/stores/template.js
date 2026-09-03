@@ -11,12 +11,20 @@ import { buildPrismaQuery } from '../utils/queryBuilder.js'
  * Normalizes a package to ensure `weeks` array and `totalWeeks` exist
  */
 function normalizePackage(pkg) {
+  const maxDur = (pkg.templates || pkg.details || []).reduce((max, d) => Math.max(max, Number(d.week || d.durationNumber || 1)), 1)
+  const baseCount = Math.max(Number(pkg.totalWeeks) || 1, maxDur, (pkg.weeks || []).length || 1)
   if (!pkg.weeks || !Array.isArray(pkg.weeks) || pkg.weeks.length === 0) {
-    const totalWeeks = Number(pkg.totalWeeks) || 3
-    pkg.weeks = Array.from({ length: totalWeeks }, (_, i) => ({
+    pkg.weeks = Array.from({ length: baseCount }, (_, i) => ({
       weekNumber: i + 1,
       title: `Minggu ${i + 1}: Tema SOP Operasional`
     }))
+  } else if (pkg.weeks.length < maxDur) {
+    for (let i = pkg.weeks.length + 1; i <= maxDur; i++) {
+      pkg.weeks.push({
+        weekNumber: i,
+        title: `Minggu ${i}: Tema SOP Operasional`
+      })
+    }
   }
   pkg.totalWeeks = pkg.weeks.length
   return pkg
@@ -130,8 +138,11 @@ export const useTemplateStore = defineStore('template', {
               name: t.name,
               type: t.type,
               durationCode: t.durationCode || (t.type === 'JOURNEY' ? 'WEEK' : 'DAY'),
-              durationValue: t.durationValue || (t.type === 'JOURNEY' ? 3 : 1),
-              totalWeeks: t.type === 'JOURNEY' ? (t.durationValue || 3) : 1,
+              durationValue: Number(t.durationValue || 1),
+              totalWeeks: Math.max(
+                (t.details || []).reduce((max, d) => Math.max(max, Number(d.durationNumber || 1)), 1),
+                1
+              ),
               description: t.description || '',
               targetType: 'Semua Gerai',
               category: t.type === 'JOURNEY' ? 'Standar Operasional' : (t.type === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi'),
@@ -215,8 +226,10 @@ export const useTemplateStore = defineStore('template', {
             requirements: ['Verifikasi checklist standar operasional', 'Pemeriksaan kepatuhan & sanitasi']
           }))
 
-          const durationVal = Number(data.durationValue || (actualType === 'JOURNEY' ? 3 : 1))
-          const weeks = Array.from({ length: durationVal }, (_, i) => ({
+          const maxDur = (data.details || []).reduce((max, d) => Math.max(max, Number(d.durationNumber || 1)), 1)
+          const totalTabsCount = Math.max(maxDur, 1)
+          const durationVal = Number(data.durationValue || 1)
+          const weeks = Array.from({ length: totalTabsCount }, (_, i) => ({
             weekNumber: i + 1,
             title: actualType === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`
           }))
@@ -229,7 +242,7 @@ export const useTemplateStore = defineStore('template', {
             type: data.type || actualType,
             durationCode: data.durationCode || (actualType === 'JOURNEY' ? 'WEEK' : 'DAY'),
             durationValue: durationVal,
-            totalWeeks: durationVal,
+            totalWeeks: totalTabsCount,
             description: data.description || '',
             targetType: 'Semua Gerai',
             category: actualType === 'JOURNEY' ? 'Standar Operasional' : (actualType === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi'),
@@ -366,15 +379,18 @@ export const useTemplateStore = defineStore('template', {
     createPackage(payload) {
       const type = payload.type || 'JOURNEY'
       const durationCode = payload.durationCode || (type === 'JOURNEY' ? 'WEEK' : 'DAY')
-      const durationValue = Number(payload.durationValue || payload.totalWeeks || (type === 'JOURNEY' ? 3 : 1))
+      const durationValue = Number(payload.durationValue || 1)
+
+      const inputDetails = Array.isArray(payload.details) ? payload.details : []
+      const maxDur = inputDetails.reduce((max, d) => Math.max(max, Number(d.durationNumber || 1)), 1)
+      const totalTabs = Math.max(Number(payload.totalWeeks) || 1, maxDur, 1)
 
       const id = payload.id || payload.tplMissionId || `pkg-${Date.now()}`
-      const weeks = Array.from({ length: durationValue }, (_, i) => ({
+      const weeks = Array.from({ length: totalTabs }, (_, i) => ({
         weekNumber: i + 1,
         title: type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`
       }))
 
-      const inputDetails = Array.isArray(payload.details) ? payload.details : []
       const mappedTemplates = inputDetails.map((d, idx) => ({
         id: d.id || d.tempId || `mis-${Date.now()}-${idx}`,
         codePrefix: d.codePrefix || `M-W${d.durationNumber || 1}-${String(idx + 1).padStart(2, '0')}`,
@@ -400,7 +416,7 @@ export const useTemplateStore = defineStore('template', {
         targetType: payload.targetType || 'Semua Gerai',
         description: payload.description || '',
         totalMissions: mappedTemplates.length,
-        totalWeeks: durationValue,
+        totalWeeks: totalTabs,
         weeks,
         templates: mappedTemplates,
         details: inputDetails
@@ -616,37 +632,28 @@ export const useTemplateStore = defineStore('template', {
       if (payload.name) pkg.name = payload.name.trim()
       if (payload.description !== undefined) pkg.description = payload.description.trim()
       if (payload.durationCode) pkg.durationCode = payload.durationCode
-      if (payload.durationValue) {
-        pkg.durationValue = Number(payload.durationValue)
-        pkg.totalWeeks = pkg.durationCode === 'WEEK'
-          ? pkg.durationValue
-          : (pkg.durationCode === 'MONTH' ? pkg.durationValue * 4 : Math.ceil(pkg.durationValue / 7))
+      if (payload.durationValue !== undefined) {
+        pkg.durationValue = Number(payload.durationValue) || 1
       }
       if (payload.category) pkg.category = payload.category
       if (payload.targetType) pkg.targetType = payload.targetType
 
-      // Ensure weeks array matches durationValue if type is JOURNEY
-      if (pkg.type === 'JOURNEY' && pkg.durationCode === 'WEEK') {
-        const currentWeeks = pkg.weeks || []
-        const targetCount = Number(pkg.durationValue || 1)
-        if (currentWeeks.length < targetCount) {
-          for (let i = currentWeeks.length + 1; i <= targetCount; i++) {
-            currentWeeks.push({
-              weekNumber: i,
-              title: `Minggu ${i}: Tema SOP Lanjutan`
-            })
-          }
-        }
-        pkg.weeks = [...currentWeeks]
-      }
+      // Ensure weeks array matches max durationNumber in details
+      const sourceDetails = Array.isArray(payload.details) && payload.details.length > 0
+        ? payload.details
+        : (pkg.templates || pkg.details || [])
+
+      const maxDurationNum = sourceDetails.reduce((max, d) => Math.max(max, Number(d.week || d.durationNumber || 1)), 1)
+      const targetCount = Math.max(Number(payload.totalWeeks) || 1, maxDurationNum, 1)
+      pkg.weeks = Array.from({ length: targetCount }, (_, i) => ({
+        weekNumber: i + 1,
+        title: pkg.type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`
+      }))
+      pkg.totalWeeks = pkg.weeks.length
 
       // Prepare full JSON payload for backend API
       const validCategories = ['TECHNICAL', 'SOFT_SKILL', 'LEADERSHIP', 'PROJECT']
       const validInputs = ['SCALE', 'CHECKBOX', 'RADIO', 'TEXT']
-
-      const sourceDetails = Array.isArray(payload.details) && payload.details.length > 0
-        ? payload.details
-        : (pkg.templates || pkg.details || [])
 
       const mappedDetails = sourceDetails.map((item, idx) => {
         let cat = (item.category || 'TECHNICAL').toUpperCase()
