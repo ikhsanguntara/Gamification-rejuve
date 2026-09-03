@@ -34,8 +34,8 @@
             </label>
             <select
               v-model="form.type"
-              @change="onTypeChange"
-              class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-[#831843] cursor-pointer"
+              disabled
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-600 dark:text-slate-400 font-bold cursor-not-allowed"
             >
               <option value="JOURNEY">JOURNEY (Paket Misi Batch Onboarding)</option>
               <option value="BUDDY">BUDDY (Paket Misi Buddy 3 Hari)</option>
