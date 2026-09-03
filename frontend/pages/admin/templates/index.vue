@@ -21,7 +21,7 @@
         <template v-if="activeCatalogCategory === 'BATCH'">
           <button
             type="button"
-            @click="openCreatePackageModal"
+            @click="openCreatePackageModal('JOURNEY')"
             class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-xs cursor-pointer"
           >
             <Plus class="w-4 h-4 text-[#831843] dark:text-[#f472b6]" />
@@ -42,7 +42,7 @@
         <template v-else-if="activeCatalogCategory === 'BUDDY'">
           <button
             type="button"
-            @click="openCreateBuddyPackageModal"
+            @click="openCreatePackageModal('BUDDY')"
             class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-200 dark:border-purple-800 bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 text-xs font-bold hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all shadow-xs cursor-pointer"
           >
             <Plus class="w-4 h-4 text-purple-600" />
@@ -63,6 +63,15 @@
         <template v-else>
           <button
             type="button"
+            @click="openCreatePackageModal('FEEDBACK')"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-bold hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-all shadow-xs cursor-pointer"
+          >
+            <Plus class="w-4 h-4 text-blue-600" />
+            <span>Buat Paket Feedback Baru</span>
+          </button>
+
+          <button
+            type="button"
             @click="openAddSurveyQuestionModal"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer"
           >
@@ -77,7 +86,7 @@
     <div class="flex items-center gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 w-fit text-xs font-semibold flex-wrap">
       <button
         type="button"
-        @click="activeCatalogCategory = 'BATCH'"
+        @click="switchCatalogTab('BATCH')"
         class="px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-2"
         :class="[
           activeCatalogCategory === 'BATCH'
@@ -86,12 +95,12 @@
         ]"
       >
         <Layers class="w-4 h-4" />
-        <span>1. Paket Misi Batch ({{ templateStore.allPackages.length }})</span>
+        <span>1. Paket Misi Batch ({{ templateStore.journeyTemplates.length || templateStore.allPackages.length }})</span>
       </button>
 
       <button
         type="button"
-        @click="activeCatalogCategory = 'BUDDY'"
+        @click="switchCatalogTab('BUDDY')"
         class="px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-2"
         :class="[
           activeCatalogCategory === 'BUDDY'
@@ -100,12 +109,12 @@
         ]"
       >
         <Handshake class="w-4 h-4" />
-        <span>2. Paket Misi Buddy ({{ buddyStore.allPackages.length }})</span>
+        <span>2. Paket Misi Buddy ({{ templateStore.buddyTemplates.length }})</span>
       </button>
 
       <button
         type="button"
-        @click="activeCatalogCategory = 'FEEDBACK'"
+        @click="switchCatalogTab('FEEDBACK')"
         class="px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-2"
         :class="[
           activeCatalogCategory === 'FEEDBACK'
@@ -114,7 +123,7 @@
         ]"
       >
         <MessageSquareText class="w-4 h-4" />
-        <span>3. Feedback & Rapor New Hire</span>
+        <span>3. Feedback & Rapor New Hire ({{ templateStore.feedbackTemplates.length }})</span>
       </button>
     </div>
 
@@ -353,11 +362,11 @@
       <div class="lg:col-span-4 space-y-3">
         <div class="flex items-center justify-between px-1">
           <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            Daftar Template Rapor New Hire ({{ buddyStore.allPackages.length }})
+            Daftar Template Buddy ({{ (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages).length }})
           </h3>
           <button
             type="button"
-            @click="openCreateBuddyPackageModal"
+            @click="openCreatePackageModal('BUDDY')"
             class="text-[11px] text-purple-600 font-bold hover:underline cursor-pointer"
           >
             + Paket Baru
@@ -366,7 +375,7 @@
 
         <div class="space-y-2">
           <div
-            v-for="bpkg in buddyStore.allPackages"
+            v-for="bpkg in (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages)"
             :key="bpkg.id"
             @click="selectedBuddyPkgId = bpkg.id"
             class="p-4 rounded-2xl border transition-all cursor-pointer relative"
@@ -381,7 +390,7 @@
                 {{ bpkg.code }}
               </span>
               <span class="text-[10px] text-slate-400 font-semibold">
-                7 Kompetensi • 3 Hari
+                {{ bpkg.durationValue || 3 }} Hari • {{ (bpkg.templates || []).length || (bpkg.details || []).length || 7 }} Butir
               </span>
             </div>
 
@@ -389,25 +398,24 @@
               {{ bpkg.name }}
             </h4>
             <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-              {{ bpkg.description }}
+              {{ bpkg.description || 'Program orientasi dan pendampingan kru baru bersama Buddy' }}
             </p>
 
             <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
-              <span class="text-slate-400 font-medium">📋 Rapor 22 Indikator</span>
+              <span class="text-slate-400 font-medium">🎯 Target Kru Baru</span>
               <div class="flex items-center gap-1">
                 <button
                   type="button"
                   @click.stop="duplicateBuddyPkg(bpkg.id)"
-                  title="Duplikat Paket Rapor"
+                  title="Duplikat Paket"
                   class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
                 >
                   <Copy class="w-3 h-3" />
                 </button>
                 <button
-                  v-if="buddyStore.allPackages.length > 1"
                   type="button"
-                  @click.stop="confirmDeleteBuddyPkg(bpkg)"
-                  title="Hapus Paket Rapor"
+                  @click.stop="confirmDeletePackage(bpkg, 'BUDDY')"
+                  title="Hapus Paket"
                   class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"
                 >
                   <Trash2 class="w-3 h-3" />
@@ -418,7 +426,7 @@
         </div>
       </div>
 
-      <!-- Sisi Kanan: Detail 7 Pilar Kompetensi & Butir Indikator Rapor New Hire -->
+      <!-- Sisi Kanan: Detail Butir SOP & Kompetensi Buddy -->
       <div class="lg:col-span-8">
         <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
@@ -430,6 +438,9 @@
                 <span class="text-xs font-bold text-slate-900 dark:text-white">
                   {{ activeBuddyPkg?.name }}
                 </span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold">
+                  {{ activeBuddyPkg?.durationValue || 3 }} Hari
+                </span>
               </div>
               <p class="text-xs text-slate-500 dark:text-slate-400">
                 {{ activeBuddyPkg?.description }}
@@ -438,12 +449,51 @@
             
             <button
               type="button"
-              @click="openAddBuddyIndicatorModal()"
+              @click="openAddBuddyMissionModal()"
               class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
             >
               <Plus class="w-3.5 h-3.5" />
-              <span>Tambah Indikator</span>
+              <span>Tambah Butir SOP Buddy</span>
             </button>
+          </div>
+
+          <!-- Live Mission Details from Backend API jika ada -->
+          <div v-if="activeBuddyPkg?.templates && activeBuddyPkg.templates.length > 0" class="space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Butir Misi SOP Buddy ({{ activeBuddyPkg.templates.length }})
+              </h4>
+              <span class="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">Live Backend API</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div
+                v-for="(item, idx) in activeBuddyPkg.templates"
+                :key="item.id || idx"
+                class="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5"
+              >
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                    <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                    <h5 class="text-xs font-bold text-slate-900 dark:text-white">
+                      {{ item.title || item.missionTitle }}
+                    </h5>
+                    <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
+                      Hari {{ item.week || item.durationNumber || 1 }}
+                    </span>
+                  </div>
+                  <span class="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex-shrink-0">
+                    {{ item.category || 'TECHNICAL' }}
+                  </span>
+                </div>
+                <p v-if="item.description" class="text-[11px] text-slate-500 dark:text-slate-400">
+                  {{ item.description }}
+                </p>
+                <div class="text-[10px] text-purple-600 dark:text-purple-400 font-medium">
+                  Tipe Input: {{ item.inputType || 'SCALE' }}
+                  <span v-if="item.scaleConfig">({{ item.scaleConfig.min }} - {{ item.scaleConfig.max }})</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- 7 Competency Categories with Interactive CRUD on each Indicator -->
@@ -536,11 +586,68 @@
     <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Sisi Kiri: Selector Sub-Kategori Feedback & Rapor -->
       <div class="lg:col-span-4 space-y-3">
-        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
-          Kategori Dokumen Evaluasi
-        </h3>
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Template Feedback ({{ templateStore.feedbackTemplates.length }})
+          </h3>
+          <button
+            type="button"
+            @click="openCreatePackageModal('FEEDBACK')"
+            class="text-[11px] text-blue-600 font-bold hover:underline cursor-pointer"
+          >
+            + Paket Baru
+          </button>
+        </div>
 
         <div class="space-y-2">
+          <!-- Live Feedback Templates from Backend -->
+          <div
+            v-for="fpkg in templateStore.feedbackTemplates"
+            :key="fpkg.id"
+            @click="activeFeedbackSubTab = 'API_FEEDBACK'; selectedFeedbackPkgId = fpkg.id"
+            class="p-4 rounded-2xl border transition-all cursor-pointer relative"
+            :class="[
+              activeFeedbackSubTab === 'API_FEEDBACK' && selectedFeedbackPkgId === fpkg.id
+                ? 'border-blue-600 bg-white dark:bg-slate-900 ring-2 ring-blue-600/40 shadow-xs'
+                : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-slate-300'
+            ]"
+          >
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                {{ fpkg.code }}
+              </span>
+              <span class="text-[10px] text-slate-400 font-semibold">
+                {{ (fpkg.templates || []).length || (fpkg.details || []).length }} Butir Evaluasi
+              </span>
+            </div>
+
+            <h4 class="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+              {{ fpkg.name }}
+            </h4>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+              {{ fpkg.description || 'Kuesioner evaluasi program onboarding oleh Crew' }}
+            </p>
+
+            <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
+              <span class="text-slate-400 font-medium">📋 Kuesioner Feedback</span>
+              <button
+                type="button"
+                @click.stop="confirmDeletePackage(fpkg, 'FEEDBACK')"
+                title="Hapus Template"
+                class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"
+              >
+                <Trash2 class="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Divider Format Master -->
+          <div class="pt-2">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">
+              Bank Pertanyaan & Format Master
+            </span>
+          </div>
+
           <!-- Card 1: Rapor New Hire 7 Kompetensi -->
           <div
             @click="activeFeedbackSubTab = 'RAPOR'"
@@ -600,8 +707,73 @@
       <!-- Sisi Kanan: Detail & Pengaturan Template Feedback / Rapor -->
       <div class="lg:col-span-8">
         
+        <!-- SUB-TAB: LIVE API FEEDBACK -->
+        <div v-if="activeFeedbackSubTab === 'API_FEEDBACK'" class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-600 text-white">
+                  {{ activeFeedbackPkg?.code || 'TPL-FEEDBACK' }}
+                </span>
+                <span class="text-xs font-bold text-slate-900 dark:text-white">
+                  {{ activeFeedbackPkg?.name || 'Template Feedback' }}
+                </span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">
+                  {{ activeFeedbackPkg?.durationValue || 1 }} Hari
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                {{ activeFeedbackPkg?.description || 'Kuesioner evaluasi program onboarding oleh Crew' }}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              @click="openAddSurveyQuestionModal"
+              class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+            >
+              <Plus class="w-3.5 h-3.5" />
+              <span>Tambah Pertanyaan Survei</span>
+            </button>
+          </div>
+
+          <!-- Items in this Feedback Template -->
+          <div class="space-y-3">
+            <div
+              v-for="(item, idx) in (activeFeedbackPkg?.templates || [])"
+              :key="item.id || idx"
+              class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5"
+            >
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                  <h5 class="text-xs font-bold text-slate-900 dark:text-white">
+                    {{ item.title || item.missionTitle }}
+                  </h5>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">
+                    {{ item.category || 'SOFT_SKILL' }}
+                  </span>
+                </div>
+                <span class="text-[10px] text-slate-400 font-semibold">
+                  Tipe Input: {{ item.inputType || 'TEXT' }}
+                </span>
+              </div>
+              <p v-if="item.description" class="text-[11px] text-slate-500 dark:text-slate-400">
+                {{ item.description }}
+              </p>
+            </div>
+
+            <div
+              v-if="!activeFeedbackPkg?.templates || activeFeedbackPkg.templates.length === 0"
+              class="py-12 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl"
+            >
+              Belum ada butir evaluasi di template ini. Klik "+ Tambah Pertanyaan Survei" di atas.
+            </div>
+          </div>
+        </div>
+
         <!-- SUB-TAB 1: RAPOR NEW HIRE 7 KOMPETENSI -->
-        <div v-if="activeFeedbackSubTab === 'RAPOR'" class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
+        <div v-else-if="activeFeedbackSubTab === 'RAPOR'" class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div>
               <div class="flex items-center gap-2 mb-1">
@@ -760,23 +932,64 @@
       </div>
     </div>
 
-    <!-- MODAL 1: BUAT MASTER PAKET BARU -->
+    <!-- MODAL 1: BUAT MASTER PAKET / TEMPLATE BARU -->
     <BaseModal
       :modelValue="showCreatePackageModal"
-      title="Buat Master Paket Baru"
-      subtitle="Definisikan nama, jumlah minggu, dan format gerai untuk paket template ini"
+      :title="modalTitle"
+      :subtitle="modalSubtitle"
       max-width="sm"
       @update:modelValue="showCreatePackageModal = $event"
       @close="showCreatePackageModal = false"
     >
       <form @submit.prevent="executeCreatePackage" class="space-y-3 py-2">
+        <!-- Tipe Template (Defaulted per Tab Aktif) -->
         <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Paket *</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tipe Template *</label>
+          <select
+            v-model="newPkgForm.type"
+            @change="onTypeChange"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-[#831843]"
+          >
+            <option value="JOURNEY">JOURNEY (Paket Misi Batch Onboarding)</option>
+            <option value="BUDDY">BUDDY (Paket Misi Buddy 3 Hari)</option>
+            <option value="FEEDBACK">FEEDBACK (Kuesioner Feedback & Rapor)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Template *</label>
+            <input
+              v-model="newPkgForm.code"
+              type="text"
+              required
+              placeholder="Contoh: TPL-JOURNEY-01"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white uppercase focus:ring-2 focus:ring-[#831843]"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              {{ newPkgForm.type === 'JOURNEY' ? 'Durasi (Minggu) *' : 'Durasi (Hari) *' }}
+            </label>
+            <input
+              v-model.number="newPkgForm.totalWeeks"
+              type="number"
+              :min="1"
+              :max="newPkgForm.type === 'JOURNEY' ? 12 : 30"
+              required
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Paket / Template *</label>
           <input
             v-model="newPkgForm.name"
             type="text"
             required
-            placeholder="Contoh: Standar Gerai Bandara & Kiosk"
+            :placeholder="namePlaceholder"
             class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
           />
         </div>
@@ -793,26 +1006,14 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jumlah Minggu (Week)</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori</label>
             <input
-              v-model.number="newPkgForm.totalWeeks"
-              type="number"
-              min="1"
-              max="12"
-              required
+              v-model="newPkgForm.category"
+              type="text"
+              placeholder="Standar Operasional / Onboarding"
               class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori</label>
-          <input
-            v-model="newPkgForm.category"
-            type="text"
-            placeholder="Standar Operasional / Onboarding"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-          />
         </div>
 
         <div>
@@ -1275,16 +1476,49 @@ const feedbackStore = useFeedbackStore()
 const toast = useToast()
 
 const activeCatalogCategory = ref('BATCH') // 'BATCH' | 'BUDDY' | 'FEEDBACK'
-const activeFeedbackSubTab = ref('RAPOR') // 'RAPOR' | 'SURVEY'
+const activeFeedbackSubTab = ref('API_FEEDBACK') // 'API_FEEDBACK' | 'RAPOR' | 'SURVEY'
 
-const selectedBuddyPkgId = ref(buddyStore.defaultPackage?.id || 'pkg-buddy-standard')
+const selectedBuddyPkgId = ref('')
+const selectedFeedbackPkgId = ref('')
 
 onMounted(async () => {
-  await templateStore.fetchTemplatesFromApi()
+  await templateStore.fetchAllTemplateTypes()
+  if (templateStore.buddyTemplates.length > 0) {
+    selectedBuddyPkgId.value = templateStore.buddyTemplates[0].id
+  }
+  if (templateStore.feedbackTemplates.length > 0) {
+    selectedFeedbackPkgId.value = templateStore.feedbackTemplates[0].id
+  }
+  syncWeekTitle()
 })
 
+const switchCatalogTab = async (category) => {
+  activeCatalogCategory.value = category
+  const typeMap = { BATCH: 'JOURNEY', BUDDY: 'BUDDY', FEEDBACK: 'FEEDBACK' }
+  const currentType = typeMap[category] || 'JOURNEY'
+  await templateStore.fetchTemplatesByType(currentType, { limit: 10 })
+  if (category === 'BUDDY' && templateStore.buddyTemplates.length > 0 && !selectedBuddyPkgId.value) {
+    selectedBuddyPkgId.value = templateStore.buddyTemplates[0].id
+  }
+  if (category === 'FEEDBACK' && templateStore.feedbackTemplates.length > 0) {
+    activeFeedbackSubTab.value = 'API_FEEDBACK'
+    if (!selectedFeedbackPkgId.value) {
+      selectedFeedbackPkgId.value = templateStore.feedbackTemplates[0].id
+    }
+  }
+}
+
 const activeBuddyPkg = computed(() => {
-  return buddyStore.packageById(selectedBuddyPkgId.value) || buddyStore.defaultPackage
+  return templateStore.buddyTemplates.find(b => b.id === selectedBuddyPkgId.value)
+    || templateStore.buddyTemplates[0]
+    || buddyStore.packageById(selectedBuddyPkgId.value)
+    || buddyStore.defaultPackage
+})
+
+const activeFeedbackPkg = computed(() => {
+  return templateStore.feedbackTemplates.find(f => f.id === selectedFeedbackPkgId.value)
+    || templateStore.feedbackTemplates[0]
+    || null
 })
 
 const activeWeekTab = ref(1)
@@ -1378,11 +1612,32 @@ const handleRemoveCurrentWeek = async () => {
 
 // Package Creation Form
 const newPkgForm = ref({
+  type: 'JOURNEY',
+  code: '',
   name: '',
   category: 'Standar Operasional',
-  targetType: 'Gerai Flagship',
+  targetType: 'Semua Gerai',
+  durationCode: 'WEEK',
   totalWeeks: 3,
   description: ''
+})
+
+const modalTitle = computed(() => {
+  if (newPkgForm.value.type === 'BUDDY') return 'Buat Template Paket Buddy'
+  if (newPkgForm.value.type === 'FEEDBACK') return 'Buat Template Paket Feedback'
+  return 'Buat Master Paket Baru (Batch Journey)'
+})
+
+const modalSubtitle = computed(() => {
+  if (newPkgForm.value.type === 'BUDDY') return 'Definisikan nama, jumlah hari, dan deskripsi paket orientasi kru baru bersama Buddy'
+  if (newPkgForm.value.type === 'FEEDBACK') return 'Definisikan nama, format evaluasi, dan butir kuesioner feedback onboarding'
+  return 'Definisikan nama, jumlah minggu, dan format gerai untuk paket template kurikulum ini'
+})
+
+const namePlaceholder = computed(() => {
+  if (newPkgForm.value.type === 'BUDDY') return 'Contoh: Onboarding Buddy Barista 3 Hari'
+  if (newPkgForm.value.type === 'FEEDBACK') return 'Contoh: End-of-Journey Crew Feedback'
+  return 'Contoh: Standar Gerai Bandara & Kiosk'
 })
 
 // Mission Template Creation Form
@@ -1408,26 +1663,76 @@ const newBuddyIndicatorForm = ref({
   description: ''
 })
 
-const openCreatePackageModal = () => {
+const openCreatePackageModal = (overrideType = null) => {
+  const typeMap = { BATCH: 'JOURNEY', BUDDY: 'BUDDY', FEEDBACK: 'FEEDBACK' }
+  const currentType = overrideType || typeMap[activeCatalogCategory.value] || 'JOURNEY'
+
+  const count = currentType === 'JOURNEY'
+    ? templateStore.journeyTemplates.length
+    : (currentType === 'BUDDY' ? templateStore.buddyTemplates.length : templateStore.feedbackTemplates.length)
+
   newPkgForm.value = {
+    type: currentType,
+    code: `TPL-${currentType}-${String(count + 1).padStart(2, '0')}`,
     name: '',
-    category: 'Standar Operasional',
-    targetType: 'Gerai Flagship',
-    totalWeeks: 3,
+    category: currentType === 'JOURNEY' ? 'Standar Operasional' : (currentType === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi'),
+    targetType: 'Semua Gerai',
+    durationCode: currentType === 'JOURNEY' ? 'WEEK' : 'DAY',
+    totalWeeks: currentType === 'JOURNEY' ? 3 : (currentType === 'BUDDY' ? 3 : 1),
     description: ''
   }
   showCreatePackageModal.value = true
 }
 
-const executeCreatePackage = () => {
-  const created = templateStore.createPackage({
-    ...newPkgForm.value,
-    code: `PKG-0${templateStore.allPackages.length + 1}`
-  })
+const onTypeChange = () => {
+  const t = newPkgForm.value.type
+  const count = t === 'JOURNEY'
+    ? templateStore.journeyTemplates.length
+    : (t === 'BUDDY' ? templateStore.buddyTemplates.length : templateStore.feedbackTemplates.length)
+
+  newPkgForm.value.code = `TPL-${t}-${String(count + 1).padStart(2, '0')}`
+  newPkgForm.value.durationCode = t === 'JOURNEY' ? 'WEEK' : 'DAY'
+  newPkgForm.value.totalWeeks = t === 'JOURNEY' ? 3 : (t === 'BUDDY' ? 3 : 1)
+  newPkgForm.value.category = t === 'JOURNEY' ? 'Standar Operasional' : (t === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi')
+}
+
+const executeCreatePackage = async () => {
+  if (!newPkgForm.value.name?.trim()) {
+    toast.error('Validasi Gagal', 'Nama paket/template wajib diisi')
+    return
+  }
+
+  const payload = {
+    code: newPkgForm.value.code?.trim() || `TPL-${newPkgForm.value.type}-${Date.now()}`,
+    name: newPkgForm.value.name.trim(),
+    type: newPkgForm.value.type,
+    durationCode: newPkgForm.value.type === 'JOURNEY' ? 'WEEK' : (newPkgForm.value.durationCode || 'DAY'),
+    durationValue: Number(newPkgForm.value.totalWeeks || 1),
+    totalWeeks: Number(newPkgForm.value.totalWeeks || 1),
+    category: newPkgForm.value.category || 'Standar Operasional',
+    targetType: newPkgForm.value.targetType || 'Semua Gerai',
+    description: newPkgForm.value.description?.trim() || '',
+    details: []
+  }
+
+  const created = await templateStore.createPackage(payload)
   showCreatePackageModal.value = false
-  activeWeekTab.value = 1
-  syncWeekTitle()
-  toast.success('Paket Dibuat', `Paket "${created.name}" dengan ${created.totalWeeks} minggu siap digunakan.`)
+
+  // Pindahkan tab aktif ke tipe paket yang baru dibuat jika berbeda
+  if (payload.type === 'JOURNEY') {
+    activeCatalogCategory.value = 'BATCH'
+    activeWeekTab.value = 1
+    syncWeekTitle()
+  } else if (payload.type === 'BUDDY') {
+    activeCatalogCategory.value = 'BUDDY'
+    selectedBuddyPkgId.value = created?.id || created?.tplMissionId || ''
+  } else if (payload.type === 'FEEDBACK') {
+    activeCatalogCategory.value = 'FEEDBACK'
+    activeFeedbackSubTab.value = 'API_FEEDBACK'
+    selectedFeedbackPkgId.value = created?.id || created?.tplMissionId || ''
+  }
+
+  toast.success('Paket Dibuat', `Paket "${created?.name || payload.name}" (${payload.type}) siap digunakan.`)
 }
 
 const duplicatePackage = (pkgId) => {
@@ -1437,15 +1742,15 @@ const duplicatePackage = (pkgId) => {
   }
 }
 
-const confirmDeletePackage = async (pkg) => {
+const confirmDeletePackage = async (pkg, type = 'JOURNEY') => {
   const isConfirmed = await confirmDeleteDialog({
-    title: 'Hapus Paket Master?',
-    text: `Apakah Anda yakin ingin menghapus paket master "${pkg.name}"?`,
+    title: 'Hapus Paket Template?',
+    text: `Apakah Anda yakin ingin menghapus paket template "${pkg.name}" (${pkg.code})?`,
     confirmButtonText: 'Ya, Hapus Paket'
   })
 
   if (isConfirmed) {
-    templateStore.deletePackage(pkg.id)
+    await templateStore.deletePackage(pkg.id, type)
     toast.success('Paket Dihapus', `Paket "${pkg.name}" telah dihapus.`)
   }
 }

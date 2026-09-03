@@ -31,24 +31,52 @@ const initialPackages = rawPackages.map(normalizePackage)
 export const useTemplateStore = defineStore('template', {
   state: () => ({
     packages: initialPackages,
-    selectedPackageId: 'pkg-sop-standard'
+    journeyTemplates: [],
+    buddyTemplates: [],
+    feedbackTemplates: [],
+    selectedPackageId: 'pkg-sop-standard',
+    selectedBuddyId: '',
+    selectedFeedbackId: '',
+    isLoading: false
   }),
 
   getters: {
-    allPackages: (state) => state.packages,
-    currentPackage: (state) => state.packages.find(p => p.id === state.selectedPackageId) || state.packages[0],
-    packageById: (state) => (id) => state.packages.find(p => p.id === id),
+    allPackages: (state) => (state.journeyTemplates.length > 0 ? state.journeyTemplates : state.packages),
+    allJourneyTemplates: (state) => (state.journeyTemplates.length > 0 ? state.journeyTemplates : state.packages),
+    allBuddyTemplates: (state) => state.buddyTemplates,
+    allFeedbackTemplates: (state) => state.feedbackTemplates,
+    currentPackage: (state) => {
+      const list = state.journeyTemplates.length > 0 ? state.journeyTemplates : state.packages
+      return list.find(p => p.id === state.selectedPackageId) || list[0]
+    },
+    activeBuddyPackage: (state) => {
+      return state.buddyTemplates.find(b => b.id === state.selectedBuddyId) || state.buddyTemplates[0] || null
+    },
+    activeFeedbackPackage: (state) => {
+      return state.feedbackTemplates.find(f => f.id === state.selectedFeedbackId) || state.feedbackTemplates[0] || null
+    },
+    packageById: (state) => (id) => {
+      return (
+        state.journeyTemplates.find(p => p.id === id) ||
+        state.packages.find(p => p.id === id) ||
+        state.buddyTemplates.find(b => b.id === id) ||
+        state.feedbackTemplates.find(f => f.id === id)
+      )
+    },
     allTemplates: (state) => {
-      const pkg = state.packages.find(p => p.id === state.selectedPackageId) || state.packages[0]
+      const list = state.journeyTemplates.length > 0 ? state.journeyTemplates : state.packages
+      const pkg = list.find(p => p.id === state.selectedPackageId) || list[0]
       return pkg ? pkg.templates : []
     },
     templatesByWeek: (state) => (weekNumber) => {
-      const pkg = state.packages.find(p => p.id === state.selectedPackageId) || state.packages[0]
+      const list = state.journeyTemplates.length > 0 ? state.journeyTemplates : state.packages
+      const pkg = list.find(p => p.id === state.selectedPackageId) || list[0]
       if (!pkg || !pkg.templates) return []
       return pkg.templates.filter(t => t.week === Number(weekNumber))
     },
     packageWeeks: (state) => (pkgId) => {
-      const pkg = state.packages.find(p => p.id === pkgId) || state.packages.find(p => p.id === state.selectedPackageId) || state.packages[0]
+      const list = state.journeyTemplates.length > 0 ? state.journeyTemplates : state.packages
+      const pkg = list.find(p => p.id === pkgId) || list.find(p => p.id === state.selectedPackageId) || list[0]
       if (!pkg) return []
       if (!pkg.weeks || pkg.weeks.length === 0) {
         normalizePackage(pkg)
@@ -58,49 +86,101 @@ export const useTemplateStore = defineStore('template', {
   },
 
   actions: {
-    async fetchTemplatesFromApi(params = {}) {
+    /**
+     * Fetch master templates by type from live backend API
+     * Supports types: 'JOURNEY' | 'BUDDY' | 'FEEDBACK'
+     */
+    async fetchTemplatesByType(type = 'JOURNEY', params = {}) {
       try {
-        const contains = {}
+        const queryParams = {
+          type,
+          includeDetails: true,
+          page: params.page || 1,
+          limit: params.limit || 10
+        }
         if (params.search && params.search.trim()) {
-          contains.name = params.search.trim()
+          queryParams['name[contains]'] = params.search.trim()
         }
 
-        const query = buildPrismaQuery({
-          page: params.page || 1,
-          limit: params.limit || 10,
-          contains
-        })
-
-        const res = await templateApi.getAll(query)
-        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
-          const mappedPackages = res.data.map(t => {
+        const res = await templateApi.getAll(queryParams)
+        if (res && res.data && Array.isArray(res.data)) {
+          const mapped = res.data.map(t => {
             const templates = (t.details || []).map((d, idx) => ({
               id: d.tplMissionDetailId || `tmpl-${idx}`,
+              tplMissionDetailId: d.tplMissionDetailId,
               week: d.durationNumber || 1,
+              durationNumber: d.durationNumber || 1,
               title: d.missionTitle,
+              missionTitle: d.missionTitle,
               category: d.category || 'TECHNICAL',
+              inputType: d.inputType || 'SCALE',
+              scaleConfig: d.scaleConfig || null,
               description: d.description || '',
               requirements: ['Verifikasi checklist standar', 'Dokumentasi foto']
             }))
+
             return normalizePackage({
               id: t.tplMissionId,
+              tplMissionId: t.tplMissionId,
               code: t.code,
               name: t.name,
-              totalWeeks: t.durationValue || 3,
+              type: t.type,
+              durationCode: t.durationCode || (t.type === 'JOURNEY' ? 'WEEK' : 'DAY'),
+              durationValue: t.durationValue || (t.type === 'JOURNEY' ? 3 : 1),
+              totalWeeks: t.type === 'JOURNEY' ? (t.durationValue || 3) : 1,
               description: t.description || '',
+              targetType: 'Semua Gerai',
+              category: t.type === 'JOURNEY' ? 'Standar Operasional' : (t.type === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi'),
+              details: t.details || [],
               templates
             })
           })
-          this.packages = mappedPackages
-          if (this.packages.length > 0) {
-            this.selectedPackageId = this.packages[0].id
+
+          if (type === 'JOURNEY') {
+            this.journeyTemplates = mapped
+            this.packages = mapped
+            if (mapped.length > 0 && (!this.selectedPackageId || !mapped.find(p => p.id === this.selectedPackageId))) {
+              this.selectedPackageId = mapped[0].id
+            }
+          } else if (type === 'BUDDY') {
+            this.buddyTemplates = mapped
+            if (mapped.length > 0 && (!this.selectedBuddyId || !mapped.find(b => b.id === this.selectedBuddyId))) {
+              this.selectedBuddyId = mapped[0].id
+            }
+          } else if (type === 'FEEDBACK') {
+            this.feedbackTemplates = mapped
+            if (mapped.length > 0 && (!this.selectedFeedbackId || !mapped.find(f => f.id === this.selectedFeedbackId))) {
+              this.selectedFeedbackId = mapped[0].id
+            }
           }
-          setStoredData('rejuve_templates_v4', this.packages)
-          return this.packages
+
+          return mapped
         }
+        return []
       } catch (err) {
-        console.warn('fetchTemplatesFromApi failed:', err.message)
+        console.warn(`fetchTemplatesByType(${type}) failed:`, err.message)
+        return []
       }
+    },
+
+    /**
+     * Fetch all 3 template types in parallel on page load
+     */
+    async fetchAllTemplateTypes() {
+      this.isLoading = true
+      try {
+        await Promise.allSettled([
+          this.fetchTemplatesByType('JOURNEY', { limit: 10 }),
+          this.fetchTemplatesByType('BUDDY', { limit: 10 }),
+          this.fetchTemplatesByType('FEEDBACK', { limit: 10 })
+        ])
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async fetchTemplatesFromApi(params = {}) {
+      return this.fetchTemplatesByType(params.type || 'JOURNEY', params)
     },
 
     selectPackage(pkgId) {
@@ -185,32 +265,69 @@ export const useTemplateStore = defineStore('template', {
     },
 
     /**
-     * Create a new Master Template Package
+     * Create a new Master Template Package (JOURNEY, BUDDY, or FEEDBACK)
      */
     createPackage(payload) {
+      const type = payload.type || 'JOURNEY'
+      const durationCode = payload.durationCode || (type === 'JOURNEY' ? 'WEEK' : 'DAY')
+      const durationValue = Number(payload.durationValue || payload.totalWeeks || (type === 'JOURNEY' ? 3 : 1))
+
       const id = `pkg-${Date.now()}`
-      const totalWeeks = Number(payload.totalWeeks) || 3
-      const weeks = Array.from({ length: totalWeeks }, (_, i) => ({
+      const weeks = Array.from({ length: durationValue }, (_, i) => ({
         weekNumber: i + 1,
-        title: `Minggu ${i + 1}: Tema SOP Operasional`
+        title: type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`
       }))
 
-      const newPkg = {
+      const newPkg = normalizePackage({
         id,
+        tplMissionId: id,
         name: payload.name,
         code: payload.code || `PKG-${String(this.packages.length + 1).padStart(2, '0')}`,
+        type,
+        durationCode,
+        durationValue,
         category: payload.category || 'Operasional',
         targetType: payload.targetType || 'Semua Gerai',
         description: payload.description || '',
         totalMissions: 0,
-        totalWeeks,
+        totalWeeks: durationValue,
         weeks,
-        templates: []
+        templates: [],
+        details: []
+      })
+
+      if (type === 'JOURNEY') {
+        this.packages.push(newPkg)
+        this.journeyTemplates.push(newPkg)
+        this.selectedPackageId = id
+      } else if (type === 'BUDDY') {
+        this.buddyTemplates.push(newPkg)
+        this.selectedBuddyId = id
+      } else if (type === 'FEEDBACK') {
+        this.feedbackTemplates.push(newPkg)
+        this.selectedFeedbackId = id
       }
 
-      this.packages.push(newPkg)
-      this.selectedPackageId = id
       setStoredData('rejuve_templates_v4', this.packages)
+
+      // Background API sync if available
+      templateApi.create({
+        code: newPkg.code,
+        name: newPkg.name,
+        type,
+        durationCode,
+        durationValue,
+        description: newPkg.description || '',
+        details: []
+      }).then(res => {
+        if (res?.data?.tplMissionId) {
+          newPkg.tplMissionId = res.data.tplMissionId
+          this.fetchTemplatesByType(type, { limit: 10 }).catch(() => {})
+        }
+      }).catch(err => {
+        console.warn('templateApi.create background sync warning:', err.message)
+      })
+
       return newPkg
     },
 
@@ -328,19 +445,33 @@ export const useTemplateStore = defineStore('template', {
     },
 
     /**
-     * Delete a Master Package
+     * Delete a Master Package (JOURNEY, BUDDY, or FEEDBACK)
      */
-    deletePackage(id) {
+    deletePackage(id, type = 'JOURNEY') {
+      const list = type === 'JOURNEY' ? this.journeyTemplates : (type === 'BUDDY' ? this.buddyTemplates : this.feedbackTemplates)
+      const listIdx = list.findIndex(p => p.id === id)
+      if (listIdx !== -1) {
+        list.splice(listIdx, 1)
+      }
+
       const idx = this.packages.findIndex(p => p.id === id)
+      let removed = null
       if (idx !== -1) {
-        const removed = this.packages.splice(idx, 1)[0]
+        removed = this.packages.splice(idx, 1)[0]
         if (this.selectedPackageId === id) {
           this.selectedPackageId = this.packages[0]?.id || ''
         }
         setStoredData('rejuve_templates_v4', this.packages)
-        return removed
       }
-      return null
+
+      // Background API sync if available
+      templateApi.delete(id).then(() => {
+        this.fetchTemplatesByType(type, { limit: 10 }).catch(() => {})
+      }).catch(err => {
+        console.warn('Background templateApi.delete failed:', err.message)
+      })
+
+      return removed
     },
 
     /**
