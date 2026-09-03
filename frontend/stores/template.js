@@ -183,10 +183,102 @@ export const useTemplateStore = defineStore('template', {
       return this.fetchTemplatesByType(params.type || 'JOURNEY', params)
     },
 
-    selectPackage(pkgId) {
-      if (this.packages.find(p => p.id === pkgId)) {
-        this.selectedPackageId = pkgId
+    /**
+     * Fetch a single template by ID from live backend API
+     * Updates details, templates, and weeks dynamically across all 3 types (JOURNEY, BUDDY, FEEDBACK)
+     */
+    async fetchTemplateById(id, type = null) {
+      if (!id) return null
+      this.isLoading = true
+      try {
+        const res = await templateApi.getById(id)
+        const data = res?.data?.data || res?.data
+        if (data && (data.tplMissionId || data.id)) {
+          const actualId = data.tplMissionId || data.id
+          const actualType = type || data.type || 'JOURNEY'
+          const templates = (data.details || []).map((d, idx) => ({
+            id: d.tplMissionDetailId || `tmpl-${idx}`,
+            tplMissionDetailId: d.tplMissionDetailId,
+            week: Number(d.durationNumber) || 1,
+            durationNumber: Number(d.durationNumber) || 1,
+            codePrefix: `M-W${d.durationNumber || 1}-0${idx + 1}`,
+            title: d.missionTitle,
+            missionTitle: d.missionTitle,
+            category: d.category || (actualType === 'FEEDBACK' ? 'SOFT_SKILL' : 'TECHNICAL'),
+            inputType: d.inputType || 'SCALE',
+            scaleConfig: d.scaleConfig || null,
+            description: d.description || '',
+            requirements: ['Verifikasi checklist standar operasional', 'Pemeriksaan kepatuhan & sanitasi']
+          }))
+
+          const durationVal = Number(data.durationValue || (actualType === 'JOURNEY' ? 3 : 1))
+          const weeks = Array.from({ length: durationVal }, (_, i) => ({
+            weekNumber: i + 1,
+            title: actualType === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`
+          }))
+
+          const mapped = normalizePackage({
+            id: actualId,
+            tplMissionId: actualId,
+            code: data.code,
+            name: data.name,
+            type: data.type || actualType,
+            durationCode: data.durationCode || (actualType === 'JOURNEY' ? 'WEEK' : 'DAY'),
+            durationValue: durationVal,
+            totalWeeks: durationVal,
+            description: data.description || '',
+            targetType: 'Semua Gerai',
+            category: actualType === 'JOURNEY' ? 'Standar Operasional' : (actualType === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi'),
+            details: data.details || [],
+            weeks,
+            templates
+          })
+
+          if (mapped.type === 'JOURNEY') {
+            const idx = this.journeyTemplates.findIndex(p => p.id === actualId)
+            if (idx !== -1) {
+              this.journeyTemplates[idx] = mapped
+            } else {
+              this.journeyTemplates.push(mapped)
+            }
+            const pkgIdx = this.packages.findIndex(p => p.id === actualId)
+            if (pkgIdx !== -1) {
+              this.packages[pkgIdx] = mapped
+            } else {
+              this.packages.push(mapped)
+            }
+            this.selectedPackageId = actualId
+          } else if (mapped.type === 'BUDDY') {
+            const idx = this.buddyTemplates.findIndex(b => b.id === actualId)
+            if (idx !== -1) {
+              this.buddyTemplates[idx] = mapped
+            } else {
+              this.buddyTemplates.push(mapped)
+            }
+            this.selectedBuddyId = actualId
+          } else if (mapped.type === 'FEEDBACK') {
+            const idx = this.feedbackTemplates.findIndex(f => f.id === actualId)
+            if (idx !== -1) {
+              this.feedbackTemplates[idx] = mapped
+            } else {
+              this.feedbackTemplates.push(mapped)
+            }
+            this.selectedFeedbackId = actualId
+          }
+
+          return mapped
+        }
+      } catch (err) {
+        console.warn(`fetchTemplateById(${id}) failed:`, err.message)
+      } finally {
+        this.isLoading = false
       }
+      return this.packageById(id) || null
+    },
+
+    selectPackage(pkgId) {
+      this.selectedPackageId = pkgId
+      this.fetchTemplateById(pkgId, 'JOURNEY').catch(() => {})
     },
 
     /**

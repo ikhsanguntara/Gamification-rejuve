@@ -133,12 +133,12 @@
       <!-- KOLOM KIRI: DAFTAR PAKET MASTER (4/12) -->
       <div class="lg:col-span-4 space-y-3">
         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
-          Daftar Paket Template ({{ templateStore.allPackages.length }})
+          Daftar Paket Template ({{ (templateStore.journeyTemplates.length > 0 ? templateStore.journeyTemplates : templateStore.allPackages).length }})
         </h3>
 
         <div class="space-y-2">
           <div
-            v-for="pkg in templateStore.allPackages"
+            v-for="pkg in (templateStore.journeyTemplates.length > 0 ? templateStore.journeyTemplates : templateStore.allPackages)"
             :key="pkg.id"
             @click="selectPackageTab(pkg.id)"
             class="p-4 rounded-2xl border transition-all cursor-pointer relative"
@@ -199,12 +199,15 @@
           <!-- Package Header Summary -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div>
-              <div class="flex items-center gap-2 mb-1">
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
                 <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-[#831843] text-white">
                   {{ activePackage?.code }}
                 </span>
                 <span class="text-xs font-bold text-slate-900 dark:text-white">
                   {{ activePackage?.name }}
+                </span>
+                <span v-if="isCardLoading" class="inline-flex items-center gap-1 text-[10px] text-[#831843] dark:text-[#f472b6] font-semibold animate-pulse">
+                  <Loader2 class="w-3 h-3 animate-spin" /> Memuat detail...
                 </span>
               </div>
               <p class="text-xs text-slate-500 dark:text-slate-400">
@@ -377,7 +380,7 @@
           <div
             v-for="bpkg in (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages)"
             :key="bpkg.id"
-            @click="selectedBuddyPkgId = bpkg.id"
+            @click="selectBuddyPackageTab(bpkg.id)"
             class="p-4 rounded-2xl border transition-all cursor-pointer relative"
             :class="[
               selectedBuddyPkgId === bpkg.id
@@ -431,7 +434,7 @@
         <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div>
-              <div class="flex items-center gap-2 mb-1">
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
                 <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-purple-600 text-white">
                   {{ activeBuddyPkg?.code }}
                 </span>
@@ -440,6 +443,9 @@
                 </span>
                 <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold">
                   {{ activeBuddyPkg?.durationValue || 3 }} Hari
+                </span>
+                <span v-if="isCardLoading" class="inline-flex items-center gap-1 text-[10px] text-purple-600 dark:text-purple-400 font-semibold animate-pulse">
+                  <Loader2 class="w-3 h-3 animate-spin" /> Memuat detail...
                 </span>
               </div>
               <p class="text-xs text-slate-500 dark:text-slate-400">
@@ -604,7 +610,7 @@
           <div
             v-for="fpkg in templateStore.feedbackTemplates"
             :key="fpkg.id"
-            @click="activeFeedbackSubTab = 'API_FEEDBACK'; selectedFeedbackPkgId = fpkg.id"
+            @click="selectFeedbackPackageTab(fpkg.id)"
             class="p-4 rounded-2xl border transition-all cursor-pointer relative"
             :class="[
               activeFeedbackSubTab === 'API_FEEDBACK' && selectedFeedbackPkgId === fpkg.id
@@ -711,7 +717,7 @@
         <div v-if="activeFeedbackSubTab === 'API_FEEDBACK'" class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div>
-              <div class="flex items-center gap-2 mb-1">
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
                 <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-600 text-white">
                   {{ activeFeedbackPkg?.code || 'TPL-FEEDBACK' }}
                 </span>
@@ -720,6 +726,9 @@
                 </span>
                 <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">
                   {{ activeFeedbackPkg?.durationValue || 1 }} Hari
+                </span>
+                <span v-if="isCardLoading" class="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 font-semibold animate-pulse">
+                  <Loader2 class="w-3 h-3 animate-spin" /> Memuat detail...
                 </span>
               </div>
               <p class="text-xs text-slate-500 dark:text-slate-400">
@@ -956,28 +965,42 @@
           </select>
         </div>
 
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Template *</label>
+          <input
+            v-model="newPkgForm.code"
+            type="text"
+            required
+            placeholder="Contoh: TPL-JOURNEY-01"
+            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white uppercase focus:ring-2 focus:ring-[#831843]"
+          />
+        </div>
+
+        <!-- Dua Field Durasi: durationCode (DAYS, WEEK, MONTH) & durationValue -->
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Template *</label>
-            <input
-              v-model="newPkgForm.code"
-              type="text"
-              required
-              placeholder="Contoh: TPL-JOURNEY-01"
-              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white uppercase focus:ring-2 focus:ring-[#831843]"
-            />
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Satuan Durasi (Code) *</label>
+            <select
+              v-model="newPkgForm.durationCode"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-[#831843]"
+            >
+              <option value="DAY">DAYS (Hari)</option>
+              <option value="WEEK">WEEK (Minggu)</option>
+              <option value="MONTH">MONTH (Bulan)</option>
+            </select>
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {{ newPkgForm.type === 'JOURNEY' ? 'Durasi (Minggu) *' : 'Durasi (Hari) *' }}
+              Nilai Durasi (Value) *
             </label>
             <input
-              v-model.number="newPkgForm.totalWeeks"
+              v-model.number="newPkgForm.durationValue"
               type="number"
-              :min="1"
-              :max="newPkgForm.type === 'JOURNEY' ? 12 : 30"
+              min="1"
+              :max="newPkgForm.durationCode === 'MONTH' ? 12 : (newPkgForm.durationCode === 'WEEK' ? 52 : 365)"
               required
+              placeholder="Contoh: 1"
               class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
@@ -1465,7 +1488,8 @@ import {
   Layers,
   Handshake,
   Settings,
-  MessageSquareText
+  MessageSquareText,
+  Loader2
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -1480,14 +1504,22 @@ const activeFeedbackSubTab = ref('API_FEEDBACK') // 'API_FEEDBACK' | 'RAPOR' | '
 
 const selectedBuddyPkgId = ref('')
 const selectedFeedbackPkgId = ref('')
+const isCardLoading = ref(false)
 
 onMounted(async () => {
   await templateStore.fetchAllTemplateTypes()
+  if (templateStore.journeyTemplates.length > 0) {
+    const firstJourneyId = templateStore.journeyTemplates[0].id
+    templateStore.selectedPackageId = firstJourneyId
+    await templateStore.fetchTemplateById(firstJourneyId, 'JOURNEY')
+  }
   if (templateStore.buddyTemplates.length > 0) {
     selectedBuddyPkgId.value = templateStore.buddyTemplates[0].id
+    await templateStore.fetchTemplateById(templateStore.buddyTemplates[0].id, 'BUDDY')
   }
   if (templateStore.feedbackTemplates.length > 0) {
     selectedFeedbackPkgId.value = templateStore.feedbackTemplates[0].id
+    await templateStore.fetchTemplateById(templateStore.feedbackTemplates[0].id, 'FEEDBACK')
   }
   syncWeekTitle()
 })
@@ -1497,14 +1529,22 @@ const switchCatalogTab = async (category) => {
   const typeMap = { BATCH: 'JOURNEY', BUDDY: 'BUDDY', FEEDBACK: 'FEEDBACK' }
   const currentType = typeMap[category] || 'JOURNEY'
   await templateStore.fetchTemplatesByType(currentType, { limit: 10 })
-  if (category === 'BUDDY' && templateStore.buddyTemplates.length > 0 && !selectedBuddyPkgId.value) {
-    selectedBuddyPkgId.value = templateStore.buddyTemplates[0].id
-  }
-  if (category === 'FEEDBACK' && templateStore.feedbackTemplates.length > 0) {
+  if (category === 'BATCH' && templateStore.journeyTemplates.length > 0) {
+    const targetId = templateStore.selectedPackageId || templateStore.journeyTemplates[0].id
+    templateStore.selectedPackageId = targetId
+    await templateStore.fetchTemplateById(targetId, 'JOURNEY')
+    syncWeekTitle()
+  } else if (category === 'BUDDY' && templateStore.buddyTemplates.length > 0) {
+    if (!selectedBuddyPkgId.value || !templateStore.buddyTemplates.find(b => b.id === selectedBuddyPkgId.value)) {
+      selectedBuddyPkgId.value = templateStore.buddyTemplates[0].id
+    }
+    await templateStore.fetchTemplateById(selectedBuddyPkgId.value, 'BUDDY')
+  } else if (category === 'FEEDBACK' && templateStore.feedbackTemplates.length > 0) {
     activeFeedbackSubTab.value = 'API_FEEDBACK'
-    if (!selectedFeedbackPkgId.value) {
+    if (!selectedFeedbackPkgId.value || !templateStore.feedbackTemplates.find(f => f.id === selectedFeedbackPkgId.value)) {
       selectedFeedbackPkgId.value = templateStore.feedbackTemplates[0].id
     }
+    await templateStore.fetchTemplateById(selectedFeedbackPkgId.value, 'FEEDBACK')
   }
 }
 
@@ -1568,10 +1608,37 @@ watch([activeWeekTab, activePackage], () => {
   syncWeekTitle()
 }, { immediate: true })
 
-const selectPackageTab = (pkgId) => {
-  templateStore.selectPackage(pkgId)
+const selectPackageTab = async (pkgId) => {
+  templateStore.selectedPackageId = pkgId
   activeWeekTab.value = 1
-  syncWeekTitle()
+  isCardLoading.value = true
+  try {
+    await templateStore.fetchTemplateById(pkgId, 'JOURNEY')
+  } finally {
+    isCardLoading.value = false
+    syncWeekTitle()
+  }
+}
+
+const selectBuddyPackageTab = async (bpkgId) => {
+  selectedBuddyPkgId.value = bpkgId
+  isCardLoading.value = true
+  try {
+    await templateStore.fetchTemplateById(bpkgId, 'BUDDY')
+  } finally {
+    isCardLoading.value = false
+  }
+}
+
+const selectFeedbackPackageTab = async (fpkgId) => {
+  activeFeedbackSubTab.value = 'API_FEEDBACK'
+  selectedFeedbackPkgId.value = fpkgId
+  isCardLoading.value = true
+  try {
+    await templateStore.fetchTemplateById(fpkgId, 'FEEDBACK')
+  } finally {
+    isCardLoading.value = false
+  }
 }
 
 const saveCurrentWeekTitle = () => {
@@ -1618,6 +1685,7 @@ const newPkgForm = ref({
   category: 'Standar Operasional',
   targetType: 'Semua Gerai',
   durationCode: 'WEEK',
+  durationValue: 3,
   totalWeeks: 3,
   description: ''
 })
@@ -1631,7 +1699,7 @@ const modalTitle = computed(() => {
 const modalSubtitle = computed(() => {
   if (newPkgForm.value.type === 'BUDDY') return 'Definisikan nama, jumlah hari, dan deskripsi paket orientasi kru baru bersama Buddy'
   if (newPkgForm.value.type === 'FEEDBACK') return 'Definisikan nama, format evaluasi, dan butir kuesioner feedback onboarding'
-  return 'Definisikan nama, jumlah minggu, dan format gerai untuk paket template kurikulum ini'
+  return 'Definisikan nama, durasi (hari/minggu/bulan), dan format gerai untuk paket template kurikulum ini'
 })
 
 const namePlaceholder = computed(() => {
@@ -1671,14 +1739,18 @@ const openCreatePackageModal = (overrideType = null) => {
     ? templateStore.journeyTemplates.length
     : (currentType === 'BUDDY' ? templateStore.buddyTemplates.length : templateStore.feedbackTemplates.length)
 
+  const defaultDurationCode = currentType === 'JOURNEY' ? 'WEEK' : 'DAY'
+  const defaultDurationValue = currentType === 'JOURNEY' ? 3 : (currentType === 'BUDDY' ? 3 : 1)
+
   newPkgForm.value = {
     type: currentType,
     code: `TPL-${currentType}-${String(count + 1).padStart(2, '0')}`,
     name: '',
     category: currentType === 'JOURNEY' ? 'Standar Operasional' : (currentType === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi'),
     targetType: 'Semua Gerai',
-    durationCode: currentType === 'JOURNEY' ? 'WEEK' : 'DAY',
-    totalWeeks: currentType === 'JOURNEY' ? 3 : (currentType === 'BUDDY' ? 3 : 1),
+    durationCode: defaultDurationCode,
+    durationValue: defaultDurationValue,
+    totalWeeks: defaultDurationValue,
     description: ''
   }
   showCreatePackageModal.value = true
@@ -1690,9 +1762,13 @@ const onTypeChange = () => {
     ? templateStore.journeyTemplates.length
     : (t === 'BUDDY' ? templateStore.buddyTemplates.length : templateStore.feedbackTemplates.length)
 
+  const defaultDurationCode = t === 'JOURNEY' ? 'WEEK' : 'DAY'
+  const defaultDurationValue = t === 'JOURNEY' ? 3 : (t === 'BUDDY' ? 3 : 1)
+
   newPkgForm.value.code = `TPL-${t}-${String(count + 1).padStart(2, '0')}`
-  newPkgForm.value.durationCode = t === 'JOURNEY' ? 'WEEK' : 'DAY'
-  newPkgForm.value.totalWeeks = t === 'JOURNEY' ? 3 : (t === 'BUDDY' ? 3 : 1)
+  newPkgForm.value.durationCode = defaultDurationCode
+  newPkgForm.value.durationValue = defaultDurationValue
+  newPkgForm.value.totalWeeks = defaultDurationValue
   newPkgForm.value.category = t === 'JOURNEY' ? 'Standar Operasional' : (t === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi')
 }
 
@@ -1702,13 +1778,16 @@ const executeCreatePackage = async () => {
     return
   }
 
+  const dVal = Number(newPkgForm.value.durationValue || 1)
+  const dCode = newPkgForm.value.durationCode || (newPkgForm.value.type === 'JOURNEY' ? 'WEEK' : 'DAY')
+
   const payload = {
     code: newPkgForm.value.code?.trim() || `TPL-${newPkgForm.value.type}-${Date.now()}`,
     name: newPkgForm.value.name.trim(),
     type: newPkgForm.value.type,
-    durationCode: newPkgForm.value.type === 'JOURNEY' ? 'WEEK' : (newPkgForm.value.durationCode || 'DAY'),
-    durationValue: Number(newPkgForm.value.totalWeeks || 1),
-    totalWeeks: Number(newPkgForm.value.totalWeeks || 1),
+    durationCode: dCode,
+    durationValue: dVal,
+    totalWeeks: dCode === 'WEEK' ? dVal : (dCode === 'MONTH' ? dVal * 4 : Math.ceil(dVal / 7)),
     category: newPkgForm.value.category || 'Standar Operasional',
     targetType: newPkgForm.value.targetType || 'Semua Gerai',
     description: newPkgForm.value.description?.trim() || '',
