@@ -175,12 +175,15 @@ const availableRoles = ref([])
 
 onMounted(async () => {
   try {
-    const res = await roleApi.getAll({ limit: 20 })
-    if (res && res.data) {
-      availableRoles.value = res.data
+    const [rolesRes] = await Promise.all([
+      roleApi.getAll({ limit: 50 }),
+      storeStore.fetchStoresFromApi({ page: 1, limit: 100 })
+    ])
+    if (rolesRes && rolesRes.data) {
+      availableRoles.value = rolesRes.data
     }
   } catch (err) {
-    console.warn('Gagal memuat roles:', err.message)
+    console.warn('Gagal memuat roles/stores:', err.message)
   }
 })
 

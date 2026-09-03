@@ -172,10 +172,10 @@
               </label>
               <select
                 v-model="form.storeLeaderId"
-                required
-                class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 shadow-xs"
+                :disabled="isLoadingData"
+                class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 shadow-xs disabled:opacity-50"
               >
-                <option :value="null" disabled>Pilih Store Leader...</option>
+                <option :value="null">-- Belum Ditugaskan / Kosongkan --</option>
                 <option
                   v-for="sl in userStore.storeLeaders"
                   :key="sl.id"
@@ -210,10 +210,10 @@
               </label>
               <select
                 v-model="form.districtManagerId"
-                required
-                class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                :disabled="isLoadingData"
+                class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 shadow-xs disabled:opacity-50"
               >
-                <option :value="null" disabled>Pilih District Manager...</option>
+                <option :value="null">-- Belum Ditugaskan / Kosongkan --</option>
                 <option
                   v-for="dm in userStore.districtManagers"
                   :key="dm.id"
@@ -366,19 +366,36 @@ const form = reactive({
   status: 'ACTIVE'
 })
 
-onMounted(() => {
-  if (store.value) {
-    form.name = store.value.name
-    form.code = store.value.code
-    form.region = store.value.region
-    form.mallName = store.value.mallName || ''
-    form.address = store.value.address || ''
-    form.phone = store.value.phone || ''
-    form.openingHours = store.value.openingHours || '10:00 - 22:00'
-    form.storeLeaderId = store.value.storeLeaderId
-    form.districtManagerId = store.value.districtManagerId
-    form.batchId = store.value.batchId || null
-    form.status = store.value.status || 'ACTIVE'
+const isLoadingData = ref(false)
+
+onMounted(async () => {
+  isLoadingData.value = true
+  try {
+    // 1. Ambil seluruh data master user dari live API backend
+    await userStore.fetchUsersFromApi({ limit: 100 })
+
+    // 2. Pastikan data store tersedia dari backend
+    if (!store.value) {
+      await storeStore.fetchStoresFromApi({ page: 1, limit: 100 })
+    }
+
+    if (store.value) {
+      form.name = store.value.name
+      form.code = store.value.code
+      form.region = store.value.region
+      form.mallName = store.value.mallName || ''
+      form.address = store.value.address || ''
+      form.phone = store.value.phone || ''
+      form.openingHours = store.value.openingHours || '10:00 - 22:00'
+      form.storeLeaderId = store.value.storeLeaderId || null
+      form.districtManagerId = store.value.districtManagerId || null
+      form.batchId = store.value.batchId || null
+      form.status = store.value.status || 'ACTIVE'
+    }
+  } catch (err) {
+    console.error('Failed to load store/users:', err)
+  } finally {
+    isLoadingData.value = false
   }
 })
 

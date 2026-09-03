@@ -597,12 +597,27 @@ watch(
   }
 )
 
-onMounted(() => {
+const isLoadingData = ref(false)
+
+onMounted(async () => {
   // Initialize weeks and end date from the default selected package
   onTemplatePackageChange()
 
+  isLoadingData.value = true
+  try {
+    // Selalu hit live API backend untuk User dan Store saat halaman dibuka
+    await Promise.all([
+      userStore.fetchUsersFromApi({ limit: 100 }),
+      storeStore.fetchStoresFromApi({ page: 1, limit: 100 })
+    ])
+  } catch (err) {
+    console.error('Error fetching live users/stores for batch create:', err)
+  } finally {
+    isLoadingData.value = false
+  }
+
   // Preselect fresh unassigned crews
-  if (unassignedCrews.value.length > 0) {
+  if (unassignedCrews.value.length > 0 && form.value.assignment.crewIds.length === 0) {
     form.value.assignment.crewIds = unassignedCrews.value.slice(0, 6).map(c => c.id)
   }
 })

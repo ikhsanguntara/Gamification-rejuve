@@ -491,8 +491,9 @@ export const useUserStore = defineStore('user', {
               avatar: apiU.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
               department: apiU.department?.departmentName || 'Store Operations',
               position: apiU.position || resolveRoleTitle(apiU),
+              storeId: apiU.departmentId || null,
               storeLocation: apiU.department?.departmentName || 'Re.juve Store',
-              batchId: apiU.batchId || 'batch-alpha',
+              batchId: apiU.batchId || null,
               stars: apiU.stars || 0,
               level: apiU.level || 1,
               isBuddy: Boolean(apiU.isBuddy)

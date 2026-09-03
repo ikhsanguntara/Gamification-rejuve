@@ -164,10 +164,9 @@
               </label>
               <select
                 v-model="form.storeLeaderId"
-                required
                 class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 shadow-xs"
               >
-                <option :value="null" disabled>Pilih Store Leader...</option>
+                <option :value="null">-- Belum Ditugaskan / Kosongkan --</option>
                 <option
                   v-for="sl in userStore.storeLeaders"
                   :key="sl.id"
@@ -202,10 +201,9 @@
               </label>
               <select
                 v-model="form.districtManagerId"
-                required
                 class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 shadow-xs"
               >
-                <option :value="null" disabled>Pilih District Manager...</option>
+                <option :value="null">-- Belum Ditugaskan / Kosongkan --</option>
                 <option
                   v-for="dm in userStore.districtManagers"
                   :key="dm.id"
@@ -302,7 +300,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStoreStore } from '~/stores/store.js'
 import { useUserStore } from '~/stores/user.js'
@@ -327,10 +325,25 @@ const form = reactive({
   address: '',
   phone: '',
   openingHours: '10:00 - 22:00',
-  storeLeaderId: userStore.storeLeaders[0]?.id || null,
-  districtManagerId: userStore.districtManagers[0]?.id || null,
+  storeLeaderId: null,
+  districtManagerId: null,
   batchId: null,
   status: 'ACTIVE'
+})
+
+onMounted(async () => {
+  try {
+    // Ambil data user dari live API backend
+    await userStore.fetchUsersFromApi({ limit: 100 })
+    if (userStore.storeLeaders.length > 0 && !form.storeLeaderId) {
+      form.storeLeaderId = userStore.storeLeaders[0].id
+    }
+    if (userStore.districtManagers.length > 0 && !form.districtManagerId) {
+      form.districtManagerId = userStore.districtManagers[0].id
+    }
+  } catch (err) {
+    console.error('Error fetching live users in create store:', err)
+  }
 })
 
 const computedStoreCode = computed(() => {
