@@ -270,11 +270,72 @@
           </div>
         </div>
 
-        <!-- 4. Desentralisasi Penanggung Jawab Evaluasi & Approval (Otomatis Mengikuti Master Store Masing-Masing Kru) -->
+        <!-- 4. Pilihan Paket Template Feedback Onboarding (End-of-Journey) -->
+        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                4. Pilihan Paket Template Feedback Onboarding (End-of-Journey)
+              </h3>
+              <p class="text-[11px] text-slate-400">
+                Survei evaluasi pengalaman kru (skala 0–10 & esai) di akhir masa orientasi/onboarding.
+              </p>
+            </div>
+            <span v-if="selectedFeedbackPackage" class="text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full">
+              📋 Periode Feedback: Akhir Siklus ({{ selectedFeedbackPackage.durationValue || 1 }} {{ selectedFeedbackPackage.durationCode === 'MONTH' ? 'Bulan' : 'Hari' }})
+            </span>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40 space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                Pilih Kurikulum Template Feedback Onboarding *
+              </label>
+              <select
+                v-model="form.feedbackPackageId"
+                class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 cursor-pointer shadow-2xs"
+              >
+                <option v-for="fpkg in templateStore.feedbackTemplates" :key="fpkg.id" :value="fpkg.id">
+                  {{ fpkg.name }} ({{ getFeedbackQuestionsCount(fpkg) }} Butir • {{ fpkg.code }})
+                </option>
+                <option value="NONE">-- Lewati / Tanpa Template Feedback --</option>
+              </select>
+            </div>
+
+            <!-- Pratinjau Kuesioner Feedback -->
+            <div v-if="selectedFeedbackPackage" class="pt-2 border-t border-blue-200/60 dark:border-blue-800/40">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                  📋 Pratinjau Kuesioner ({{ getFeedbackQuestionsCount(selectedFeedbackPackage) }} Butir Pertanyaan Evaluasi):
+                </div>
+                <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold font-mono">
+                  tplFeedbackId: {{ selectedFeedbackPackage.id }}
+                </span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div
+                  v-for="(item, idx) in feedbackPreviewList"
+                  :key="item.id || idx"
+                  class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-900/60 text-xs space-y-0.5"
+                >
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 flex-shrink-0"></span>
+                    <span class="font-bold text-blue-700 dark:text-blue-300 truncate text-[11px]">{{ item.title }}</span>
+                  </div>
+                  <span class="text-[10px] text-slate-400 font-semibold block">
+                    {{ item.inputType === 'TEXT' ? 'Esai Kualitatif' : 'Skala 0–10' }} • {{ item.topic || 'Umum' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Desentralisasi Penanggung Jawab Evaluasi & Approval (Otomatis Mengikuti Master Store Masing-Masing Kru) -->
         <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              4. Desentralisasi Penanggung Jawab Evaluasi & Approval
+              5. Desentralisasi Penanggung Jawab Evaluasi & Approval
             </h3>
             <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full">
               ⚡ Otomatis per-Store Penugasan Kru
@@ -319,7 +380,7 @@
             <div>
               <div class="flex items-center gap-2">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  5. Anggota Kru yang Ditugaskan ({{ form.assignment.crewIds.length }} Terpilih)
+                  6. Anggota Kru yang Ditugaskan ({{ form.assignment.crewIds.length }} Terpilih)
                 </h3>
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
                   ✨ {{ unassignedCrews.length }} Kru Belum Pernah Ikut
@@ -503,6 +564,7 @@ const form = ref({
   description: 'Siklus gamifikasi dan pelatihan standar operasional multi-gerai.',
   buddyPackageId: 'pkg-buddy-standard',
   templatePackageId: templateStore.allPackages[0]?.id || 'pkg-sop-standard',
+  feedbackPackageId: '',
   weeks: [],
   assignment: {
     crewIds: []
@@ -518,6 +580,29 @@ const form = ref({
 const selectedBuddyPackage = computed(() => {
   if (form.value.buddyPackageId === 'NONE') return null
   return buddyStore.packageById(form.value.buddyPackageId) || buddyStore.defaultPackage
+})
+
+const getFeedbackQuestionsCount = (fpkg) => {
+  if (!fpkg) return 0
+  if (fpkg.details && fpkg.details.length > 0) return fpkg.details.length
+  if (fpkg.templates && fpkg.templates.length > 0) return fpkg.templates.length
+  return 0
+}
+
+const selectedFeedbackPackage = computed(() => {
+  if (!form.value.feedbackPackageId || form.value.feedbackPackageId === 'NONE') return null
+  return templateStore.feedbackTemplates.find(f => f.id === form.value.feedbackPackageId) || null
+})
+
+const feedbackPreviewList = computed(() => {
+  if (!selectedFeedbackPackage.value) return []
+  const details = selectedFeedbackPackage.value.details || selectedFeedbackPackage.value.templates || []
+  return details.slice(0, 8).map((d, idx) => ({
+    id: d.id || idx,
+    title: d.missionTitle || d.title || `Pertanyaan #${idx + 1}`,
+    inputType: d.inputType || 'SCALE',
+    topic: d.scaleConfig?.categoryName || d.scaleConfig?.topic || d.description || 'Umum'
+  }))
 })
 
 // Pre-batch Buddy date calculation: (startDate - totalDays) to (startDate - 1 day)
@@ -605,11 +690,17 @@ onMounted(async () => {
 
   isLoadingData.value = true
   try {
-    // Selalu hit live API backend untuk User dan Store saat halaman dibuka
+    // Selalu hit live API backend untuk User, Store, dan Master Templates saat halaman dibuka
     await Promise.all([
       userStore.fetchUsersFromApi({ limit: 100 }),
-      storeStore.fetchStoresFromApi({ page: 1, limit: 100 })
+      storeStore.fetchStoresFromApi({ page: 1, limit: 100 }),
+      templateStore.fetchAllTemplateTypes()
     ])
+
+    // Otomatis pilih template Feedback pertama jika ada
+    if (templateStore.feedbackTemplates.length > 0 && (!form.value.feedbackPackageId || form.value.feedbackPackageId === 'NONE')) {
+      form.value.feedbackPackageId = templateStore.feedbackTemplates[0].id
+    }
   } catch (err) {
     console.error('Error fetching live users/stores for batch create:', err)
   } finally {
@@ -668,9 +759,27 @@ const handleSubmit = async () => {
     // Dapatkan template journey dari backend
     let journeyTplId = form.value.templatePackageId
     if (!journeyTplId || journeyTplId === 'NONE' || String(journeyTplId).startsWith('pkg-')) {
-      const tmpls = await templateApi.getAll({ limit: 10 })
+      const tmpls = await templateApi.getAll({ limit: 10, type: 'JOURNEY' })
       if (tmpls && tmpls.data && tmpls.data.length > 0) {
         journeyTplId = tmpls.data[0].tplMissionId
+      }
+    }
+
+    // Dapatkan template feedback (type FEEDBACK)
+    let feedbackTplId = null
+    if (form.value.feedbackPackageId && form.value.feedbackPackageId !== 'NONE') {
+      const foundFeedback = templateStore.feedbackTemplates.find(f => f.id === form.value.feedbackPackageId)
+      feedbackTplId = foundFeedback ? foundFeedback.id : form.value.feedbackPackageId
+    }
+
+    // Dapatkan template buddy (type BUDDY)
+    let buddyTplId = null
+    if (form.value.buddyPackageId && form.value.buddyPackageId !== 'NONE') {
+      const foundBuddy = templateStore.buddyTemplates.find(b => b.id === form.value.buddyPackageId)
+      if (foundBuddy) {
+        buddyTplId = foundBuddy.id
+      } else if (!String(form.value.buddyPackageId).startsWith('pkg-')) {
+        buddyTplId = form.value.buddyPackageId
       }
     }
 
@@ -681,6 +790,8 @@ const handleSubmit = async () => {
       status: 'OPEN',
       currentWeek: 1,
       tplJourneyId: journeyTplId,
+      tplBuddyId: buddyTplId,
+      tplFeedbackId: feedbackTplId,
       crewIds: form.value.assignment.crewIds.filter(id => String(id).length > 20)
     }
 
