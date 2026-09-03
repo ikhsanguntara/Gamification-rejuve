@@ -212,11 +212,16 @@ const initialDirectory = [
 ]
 
 import { getStoredData, setStoredData } from '../utils/storage.js'
+import { authApi, userApi } from '../services/api.js'
+import { getAuthToken, setAuthToken } from '../composables/useApi.js'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     isAuthenticated: true,
     currentUserId: 'sl-001',
+    token: getAuthToken(),
+    apiUser: null,
+    isLiveApi: false,
     userDirectory: getStoredData('rejuve_users_v3', initialDirectory),
     notifications: [
       {
@@ -240,6 +245,24 @@ export const useUserStore = defineStore('user', {
 
   getters: {
     currentUser: (state) => {
+      if (state.apiUser) {
+        const roleCode = state.apiUser.role || state.apiUser.roleDetails?.roleCode || 'CREW'
+        return {
+          id: state.apiUser.userId,
+          name: state.apiUser.name,
+          role: roleCode,
+          roleTitle: state.apiUser.roleDetails?.roleName || roleCode,
+          email: state.apiUser.email,
+          avatar: state.apiUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+          department: state.apiUser.department?.departmentName || 'Store Operations',
+          position: state.apiUser.position || state.apiUser.roleDetails?.roleName || 'Crew Specialist',
+          storeLocation: state.apiUser.department?.departmentName || 'Re.juve Store',
+          batchId: state.apiUser.batchId || 'batch-alpha',
+          stars: state.apiUser.stars || 0,
+          level: state.apiUser.level || 1,
+          isBuddy: Boolean(state.apiUser.isBuddy)
+        }
+      }
       const found = state.userDirectory.find(u => u.id === state.currentUserId)
       if (found) return found
       if (state.currentUserId === 'spv-001') return state.userDirectory.find(u => u.id === 'sl-001') || state.userDirectory[3] || state.userDirectory[0]
@@ -262,32 +285,35 @@ export const useUserStore = defineStore('user', {
       }
     },
     currentRole: (state) => {
+      if (state.apiUser) {
+        return state.apiUser.role || state.apiUser.roleDetails?.roleCode || 'CREW'
+      }
       const u = state.userDirectory.find(u => u.id === state.currentUserId)
       return u ? u.role : 'STORE_LEADER'
     },
     isCrew: (state) => {
-      const u = state.userDirectory.find(u => u.id === state.currentUserId)
-      return u?.role === 'CREW'
+      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
+      return r === 'CREW'
     },
     isStoreLeader: (state) => {
-      const u = state.userDirectory.find(u => u.id === state.currentUserId)
-      return u?.role === 'STORE_LEADER' || u?.role === 'SUPERVISOR'
+      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
+      return r === 'STORE_LEADER' || r === 'SUPERVISOR'
     },
     isDistrictManager: (state) => {
-      const u = state.userDirectory.find(u => u.id === state.currentUserId)
-      return u?.role === 'DISTRICT_MANAGER' || u?.role === 'HEAD'
+      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
+      return r === 'DISTRICT_MANAGER' || r === 'HEAD'
     },
     isSupervisor: (state) => {
-      const u = state.userDirectory.find(u => u.id === state.currentUserId)
-      return u?.role === 'STORE_LEADER' || u?.role === 'SUPERVISOR'
+      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
+      return r === 'STORE_LEADER' || r === 'SUPERVISOR'
     },
     isHead: (state) => {
-      const u = state.userDirectory.find(u => u.id === state.currentUserId)
-      return u?.role === 'DISTRICT_MANAGER' || u?.role === 'HEAD'
+      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
+      return r === 'DISTRICT_MANAGER' || r === 'HEAD'
     },
     isSuperadmin: (state) => {
-      const u = state.userDirectory.find(u => u.id === state.currentUserId)
-      return u?.role === 'SUPERADMIN'
+      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
+      return r === 'SUPERADMIN'
     },
 
     allUsers: (state) => state.userDirectory,
@@ -310,7 +336,7 @@ export const useUserStore = defineStore('user', {
   },
 
   actions: {
-    initAuth() {
+    async initAuth() {
       if (!this.userDirectory || this.userDirectory.length === 0) {
         this.userDirectory = initialDirectory
       }
@@ -318,7 +344,115 @@ export const useUserStore = defineStore('user', {
         this.currentUserId = this.currentUser.id
       }
       this.isAuthenticated = true
+
+      // Cek sesi token API yang tersimpan
+      const savedToken = getAuthToken()
+      if (savedToken) {
+        this.token = savedToken
+        await this.fetchMe()
+      }
       return true
+    },
+
+    async loginWithApi(credentials) {
+      try {
+        const res = await authApi.login(credentials)
+        if (res && res.data && res.data.token) {
+          setAuthToken(res.data.token)
+          this.token = res.data.token
+          this.apiUser = res.data.user
+          this.isLiveApi = true
+          this.isAuthenticated = true
+
+          const apiU = res.data.user
+          const mappedRole = apiU.role || apiU.roleDetails?.roleCode || 'CREW'
+          let localRole = mappedRole
+          if (mappedRole === 'STORE_LEADER') localRole = 'STORE_LEADER'
+          else if (mappedRole === 'DISTRICT_MANAGER') localRole = 'DISTRICT_MANAGER'
+          else if (mappedRole === 'SUPERADMIN') localRole = 'SUPERADMIN'
+          else localRole = 'CREW'
+
+          const existing = this.userDirectory.find(u => u.id === apiU.userId || u.email === apiU.email)
+          if (existing) {
+            existing.id = apiU.userId
+            existing.name = apiU.name
+            existing.role = localRole
+            existing.email = apiU.email
+            this.currentUserId = existing.id
+          } else {
+            const newUser = {
+              id: apiU.userId,
+              name: apiU.name,
+              role: localRole,
+              roleTitle: apiU.roleDetails?.roleName || localRole,
+              email: apiU.email,
+              avatar: apiU.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+              department: apiU.department?.departmentName || 'Store Operations',
+              position: apiU.roleDetails?.roleName || 'Specialist',
+              storeLocation: apiU.department?.departmentName || 'Re.juve Store',
+              batchId: apiU.batchId || 'batch-alpha',
+              stars: apiU.stars || 0,
+              level: apiU.level || 1
+            }
+            this.userDirectory.push(newUser)
+            this.currentUserId = newUser.id
+          }
+
+          setStoredData('rejuve_users_v3', this.userDirectory)
+          return { success: true, user: this.currentUser, data: res.data }
+        }
+      } catch (err) {
+        console.warn('API login failed:', err.message)
+        return { success: false, error: err.message }
+      }
+    },
+
+    async fetchMe() {
+      try {
+        const res = await authApi.me()
+        if (res && res.data) {
+          this.apiUser = res.data
+          this.isLiveApi = true
+          return res.data
+        }
+      } catch (err) {
+        console.warn('fetchMe failed:', err.message)
+      }
+    },
+
+    async fetchUsersFromApi() {
+      try {
+        const res = await userApi.getAll({ limit: 100 })
+        if (res && res.data && Array.isArray(res.data)) {
+          this.isLiveApi = true
+          res.data.forEach(apiU => {
+            const idx = this.userDirectory.findIndex(u => u.id === apiU.userId || u.email === apiU.email)
+            const roleCode = apiU.role?.roleCode || apiU.role || 'CREW'
+            const mapped = {
+              id: apiU.userId,
+              name: apiU.name,
+              role: roleCode,
+              roleTitle: apiU.role?.roleName || roleCode,
+              email: apiU.email,
+              avatar: apiU.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+              department: apiU.department?.departmentName || 'Store Operations',
+              position: apiU.position || apiU.role?.roleName || 'Crew',
+              storeLocation: apiU.department?.departmentName || 'Re.juve Store',
+              batchId: apiU.batchId || 'batch-alpha',
+              stars: apiU.stars || 0,
+              level: apiU.level || 1
+            }
+            if (idx >= 0) {
+              this.userDirectory[idx] = { ...this.userDirectory[idx], ...mapped }
+            } else {
+              this.userDirectory.push(mapped)
+            }
+          })
+          setStoredData('rejuve_users_v3', this.userDirectory)
+        }
+      } catch (e) {
+        console.warn('fetchUsersFromApi error:', e.message)
+      }
     },
 
     loginAsUser(userId) {
@@ -366,8 +500,15 @@ export const useUserStore = defineStore('user', {
     },
 
     logout() {
-      this.currentUserId = 'sl-001'
-      this.isAuthenticated = true
+      setAuthToken(null)
+      this.token = null
+      this.apiUser = null
+      this.isAuthenticated = false
+      this.currentUserId = null
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('rejuve_token')
+        localStorage.removeItem('token')
+      }
     },
 
     markNotificationsAsRead() {

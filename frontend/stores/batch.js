@@ -3,6 +3,7 @@ import { mockBatches } from '../mocks/batches.js'
 import { useTemplateStore } from './template.js'
 import { useUserStore } from './user.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
+import { batchApi } from '../services/api.js'
 
 /**
  * Helper: Format date to short readable string e.g. "01 Sep"
@@ -90,7 +91,8 @@ export const useBatchStore = defineStore('batch', {
   state: () => ({
     batches: getStoredData('rejuve_batches_v4', mockBatches),
     selectedBatchId: 'batch-alpha',
-    customSelectedWeek: null // Follows batch's active week if not manually clicked
+    customSelectedWeek: null, // Follows batch's active week if not manually clicked
+    isLiveApi: false
   }),
 
   getters: {
@@ -187,6 +189,53 @@ export const useBatchStore = defineStore('batch', {
           batch.totalStars += starsIncrement
         }
         setStoredData('rejuve_batches_v4', this.batches)
+      }
+    },
+
+    async fetchBatchesFromApi() {
+      try {
+        const res = await batchApi.getAll()
+        if (res && res.data && Array.isArray(res.data)) {
+          this.isLiveApi = true
+          res.data.forEach(b => {
+            const idx = this.batches.findIndex(localB => localB.id === b.batchId || localB.code === b.code)
+            const startDate = b.startDate ? b.startDate.split('T')[0] : new Date().toISOString().split('T')[0]
+            const endDate = b.endDate ? b.endDate.split('T')[0] : new Date().toISOString().split('T')[0]
+            const mapped = {
+              id: b.batchId,
+              code: b.code,
+              name: b.name,
+              storeLocation: b.name,
+              description: b.name,
+              currentWeek: b.currentWeek || 1,
+              totalWeeks: 3,
+              startDate,
+              endDate,
+              status: b.status === 'OPEN' ? 'ACTIVE' : (b.status || 'ACTIVE'),
+              totalCrew: b._count?.users || 4,
+              totalMissions: b._count?.missions || 12,
+              completedMissions: 0,
+              averageScore: 90,
+              totalStars: 100,
+              assignment: {
+                storeLeaderId: 'sl-001',
+                storeLeaderName: 'Budi Santoso',
+                districtManagerId: 'dm-001',
+                districtManagerName: 'Ahmad Dahlan',
+                crewIds: ['crew-001', 'crew-002']
+              },
+              weeks: computeWeeksLifecycle(startDate)
+            }
+            if (idx >= 0) {
+              this.batches[idx] = { ...this.batches[idx], ...mapped }
+            } else {
+              this.batches.push(mapped)
+            }
+          })
+          setStoredData('rejuve_batches_v4', this.batches)
+        }
+      } catch (err) {
+        console.warn('fetchBatchesFromApi error:', err.message)
       }
     },
 

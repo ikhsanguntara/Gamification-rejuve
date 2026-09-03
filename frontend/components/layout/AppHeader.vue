@@ -66,6 +66,18 @@
 
     <!-- Right Controls: Persona Badge, Theme Toggle, Notifications, Profile Menu -->
     <div class="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
+      <!-- REST API Live Status Indicator -->
+      <div
+        class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-colors"
+        :class="userStore.isLiveApi || userStore.token
+          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-800/60'
+          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'"
+        title="REST API Backend Status"
+      >
+        <span class="w-2 h-2 rounded-full" :class="userStore.isLiveApi || userStore.token ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'"></span>
+        <span>{{ userStore.isLiveApi || userStore.token ? 'API Live (ngrok)' : 'API Standby' }}</span>
+      </div>
+
       <!-- Active Role Badge (Desktop) -->
       <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
         <span class="w-2 h-2 rounded-full" :class="roleDotClass"></span>
@@ -171,72 +183,17 @@
               </span>
             </div>
 
-            <!-- Fast Persona Testing Switcher -->
-            <div class="px-3 py-2 space-y-1.5 bg-slate-50/50 dark:bg-slate-800/30">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1">
-                Ganti Akun Pengujian:
-              </span>
-
-              <div class="grid grid-cols-2 gap-1.5">
-                <button
-                  type="button"
-                  @click="switchAccount('sl-001')"
-                  class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
-                  :class="userStore.currentUserId === 'sl-001' || userStore.currentUserId === 'spv-001' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
-                >
-                  <span>👔 SL 1: Budi</span>
-                  <span class="block text-[9px] text-slate-400">Batch 1 & 2</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="switchAccount('sl-002')"
-                  class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
-                  :class="userStore.currentUserId === 'sl-002' || userStore.currentUserId === 'spv-002' ? 'border-[#831843] bg-[#831843]/10 text-[#831843] font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
-                >
-                  <span>👔 SL 2: Dewi</span>
-                  <span class="block text-[9px] text-slate-400">Batch 3 (PIM)</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="switchAccount('dm-001')"
-                  class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
-                  :class="userStore.currentUserId === 'dm-001' || userStore.currentUserId === 'head-001' ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
-                >
-                  <span>👑 DM 1: Ahmad</span>
-                  <span class="block text-[9px] text-slate-400">Pusat (B1 & B2)</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="switchAccount('dm-002')"
-                  class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
-                  :class="userStore.currentUserId === 'dm-002' || userStore.currentUserId === 'head-002' ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
-                >
-                  <span>👑 DM 2: Citra</span>
-                  <span class="block text-[9px] text-slate-400">Selatan (B3 PIM)</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="switchAccount('crew-001')"
-                  class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
-                  :class="userStore.currentUserId === 'crew-001' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
-                >
-                  <span>👤 Crew: Andi</span>
-                  <span class="block text-[9px] text-slate-400">Batch 1 (GI)</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="switchAccount('admin-001')"
-                  class="p-1.5 rounded-lg text-left text-[11px] border transition-all cursor-pointer"
-                  :class="userStore.currentUserId === 'admin-001' ? 'border-slate-700 dark:border-slate-300 bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white font-bold' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'"
-                >
-                  <span>⚙️ Superadmin</span>
-                  <span class="block text-[9px] text-slate-400">Siti Rahma</span>
-                </button>
+            <!-- Active Account Info Box -->
+            <div class="px-3 py-2 space-y-1 bg-slate-50/50 dark:bg-slate-800/30 border-y border-slate-100 dark:border-slate-800 text-[11px]">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-semibold">Status Sesi:</span>
+                <span class="text-emerald-600 dark:text-emerald-400 font-bold">● Terverifikasi (JWT)</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-semibold">Gerai / Dept:</span>
+                <span class="text-slate-700 dark:text-slate-300 font-medium truncate max-w-[140px]">
+                  {{ userStore.currentUser?.storeLocation || 'Re.juve Operations' }}
+                </span>
               </div>
             </div>
 
@@ -343,10 +300,6 @@ const handleBatchChange = (batchId) => {
   toast.info('Cabang Berubah', `Melihat data untuk ${batchStore.currentBatch?.name || 'Batch'}`)
 }
 
-const switchAccount = (userId) => {
-  userStore.loginAsUser(userId)
-  toast.success('Beralih Akun', `Aktif sebagai ${userStore.currentUser.name} (${userStore.currentUser.roleTitle})`)
-}
 
 const handleLogout = () => {
   userStore.logout()

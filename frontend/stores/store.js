@@ -3,6 +3,7 @@ import { mockStores } from '../mocks/stores.js'
 import { useUserStore } from './user.js'
 import { useBatchStore } from './batch.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
+import { departmentApi } from '../services/api.js'
 
 /**
  * Store Store: Manage Master Stores/Outlets, Location, Store Leader & District Manager Assignments
@@ -11,7 +12,8 @@ import { getStoredData, setStoredData } from '../utils/storage.js'
 export const useStoreStore = defineStore('store', {
   state: () => ({
     stores: getStoredData('rejuve_stores_v1', mockStores),
-    selectedStoreId: 'store-001'
+    selectedStoreId: 'store-001',
+    isLiveApi: false
   }),
 
   getters: {
@@ -62,6 +64,42 @@ export const useStoreStore = defineStore('store', {
       this.selectedStoreId = id
     },
 
+    async fetchStoresFromApi() {
+      try {
+        const res = await departmentApi.getAll({ limit: 100 })
+        if (res && res.data && Array.isArray(res.data)) {
+          this.isLiveApi = true
+          res.data.forEach(d => {
+            const idx = this.stores.findIndex(s => s.id === d.departmentId || s.code === d.departmentCode)
+            const mapped = {
+              id: d.departmentId,
+              name: d.departmentName,
+              code: d.departmentCode,
+              region: d.regionCode || 'JABODETABEK',
+              mallName: d.departmentName,
+              address: d.departmentName,
+              phone: '021-29465000',
+              storeLeaderId: d.userSlId,
+              districtManagerId: d.userDmId,
+              batchId: null,
+              totalCrews: 4,
+              status: d.isActive ? 'ACTIVE' : 'INACTIVE',
+              openingHours: '10:00 - 22:00',
+              createdAt: d.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
+            }
+            if (idx >= 0) {
+              this.stores[idx] = { ...this.stores[idx], ...mapped }
+            } else {
+              this.stores.push(mapped)
+            }
+          })
+          setStoredData('rejuve_stores_v1', this.stores)
+        }
+      } catch (err) {
+        console.warn('fetchStoresFromApi failed:', err.message)
+      }
+    },
+
     createStore(payload) {
       const id = payload.id || `store-${Date.now()}`
       const existingCodes = this.stores.map(s => s.code)
@@ -90,6 +128,17 @@ export const useStoreStore = defineStore('store', {
 
       this.stores.unshift(newStore)
       setStoredData('rejuve_stores_v1', this.stores)
+
+      // Sync ke backend API jika online
+      departmentApi.create({
+        departmentCode: newStore.code,
+        departmentName: newStore.name,
+        regionCode: newStore.region,
+        isActive: newStore.status === 'ACTIVE',
+        userSlId: newStore.storeLeaderId,
+        userDmId: newStore.districtManagerId
+      }).catch(e => console.warn('API sync department create failed:', e.message))
+
       return newStore
     },
 
@@ -107,6 +156,14 @@ export const useStoreStore = defineStore('store', {
           updatedAt: new Date().toISOString()
         }
         setStoredData('rejuve_stores_v1', this.stores)
+
+        // Sync ke backend API jika online
+        departmentApi.update(id, {
+          departmentName: this.stores[index].name,
+          regionCode: this.stores[index].region,
+          isActive: this.stores[index].status === 'ACTIVE'
+        }).catch(e => console.warn('API sync department update failed:', e.message))
+
         return this.stores[index]
       }
       return null
@@ -117,6 +174,10 @@ export const useStoreStore = defineStore('store', {
       if (index !== -1) {
         const removed = this.stores.splice(index, 1)[0]
         setStoredData('rejuve_stores_v1', this.stores)
+
+        // Sync ke backend API jika online
+        departmentApi.delete(id).catch(e => console.warn('API sync department delete failed:', e.message))
+
         return removed
       }
       return null
