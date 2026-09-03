@@ -707,7 +707,12 @@ watch([selectedCrewId, () => batchStore.selectedWeek, () => batchStore.selectedB
   loadCrewScores()
 }, { immediate: true })
 
-onMounted(() => {
+onMounted(async () => {
+  await Promise.allSettled([
+    batchStore.fetchBatchesFromApi(),
+    missionStore.fetchMissionsFromApi(),
+    evalStore.fetchEvaluationsFromApi()
+  ])
   if (batchCrews.value.length > 0) {
     selectedCrewId.value = batchCrews.value[0].id
   }

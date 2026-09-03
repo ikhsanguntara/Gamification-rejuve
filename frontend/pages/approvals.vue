@@ -164,7 +164,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from 'reka-ui'
 import { useApprovalStore } from '~/stores/approval.js'
 import { useToast } from '~/composables/useToast.js'
@@ -180,6 +180,10 @@ import {
 
 const approvalStore = useApprovalStore()
 const toast = useToast()
+
+onMounted(async () => {
+  await approvalStore.fetchApprovalsFromApi()
+})
 
 const activeTab = ref('PENDING')
 const isApproveModalOpen = ref(false)

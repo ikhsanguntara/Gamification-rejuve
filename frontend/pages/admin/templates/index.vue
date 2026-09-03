@@ -1240,7 +1240,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   TabsRoot,
@@ -1278,6 +1278,10 @@ const activeCatalogCategory = ref('BATCH') // 'BATCH' | 'BUDDY' | 'FEEDBACK'
 const activeFeedbackSubTab = ref('RAPOR') // 'RAPOR' | 'SURVEY'
 
 const selectedBuddyPkgId = ref(buddyStore.defaultPackage?.id || 'pkg-buddy-standard')
+
+onMounted(async () => {
+  await templateStore.fetchTemplatesFromApi()
+})
 
 const activeBuddyPkg = computed(() => {
   return buddyStore.packageById(selectedBuddyPkgId.value) || buddyStore.defaultPackage

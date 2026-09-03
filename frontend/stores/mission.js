@@ -3,6 +3,7 @@ import { mockMissions } from '../mocks/missions.js'
 import { calculateStars } from '../utils/star.js'
 import { useGamificationStore } from './gamification.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
+import { batchApi, evaluationApi } from '../services/api.js'
 
 /**
  * Mission Store: Manages store-wide missions across batches and weeks, and Superadmin CRUD
@@ -38,6 +39,67 @@ export const useMissionStore = defineStore('mission', {
   },
 
   actions: {
+    async fetchMissionsFromApi() {
+      try {
+        const [batchRes, missionRes] = await Promise.allSettled([
+          batchApi.getAll(),
+          evaluationApi.getUserMissions()
+        ])
+
+        const userMissions = (missionRes.status === 'fulfilled' && missionRes.value?.data && Array.isArray(missionRes.value.data))
+          ? missionRes.value.data
+          : []
+        const batches = (batchRes.status === 'fulfilled' && batchRes.value?.data && Array.isArray(batchRes.value.data))
+          ? batchRes.value.data
+          : []
+
+        if (userMissions.length > 0) {
+          this.missions = userMissions.map((um, idx) => {
+            const m = um.mission || {}
+            let status = 'IN_PROGRESS'
+            if (um.status === 'LOCKED') status = 'LOCKED'
+            else if (um.status === 'SCORED_BY_TL') status = 'PENDING_REVIEW'
+            else if (um.status === 'APPROVED_BY_DM' || um.status === 'COMPLETED') status = 'COMPLETED'
+            else if (um.status === 'OPEN') status = 'IN_PROGRESS'
+
+            const score = Number(um.finalScore || um.tlScore || 0)
+            return {
+              id: um.userMissionId || m.missionId || `msn-${idx}`,
+              batchId: m.batchId || (batches[0]?.batchId) || 'batch-alpha',
+              week: m.weekOrDayNumber || 1,
+              code: m.code || `MSN-0${idx + 1}`,
+              title: m.missionTitle || 'Misi Standar Operasional',
+              category: m.category || 'TECHNICAL',
+              description: m.description || `Evaluasi standar operasional ${m.missionTitle || 'misi'}`,
+              assignedCrewIds: [um.userId],
+              crewEvaluations: [{
+                crewId: um.userId,
+                score: score,
+                calculatedStars: calculateStars(score),
+                awardedStars: calculateStars(score),
+                status
+              }],
+              status,
+              averageScore: score,
+              calculatedStars: calculateStars(score),
+              awardedStars: calculateStars(score),
+              deadline: m.endDate?.split('T')[0] || '2026-09-24',
+              requirements: [
+                'Verifikasi standar kepatuhan operasional Re.juve.',
+                'Dokumentasikan bukti foto kebersihan dan sanitasi.'
+              ],
+              supervisorId: um.tlId || 'sl-001',
+              createdAt: um.createdAt || new Date().toISOString()
+            }
+          })
+          setStoredData('rejuve_missions_v4', this.missions)
+          return this.missions
+        }
+      } catch (err) {
+        console.warn('fetchMissionsFromApi error:', err.message)
+      }
+    },
+
     updateMissionStatus(missionId, { status, averageScore, calculatedStars, awardedStars, crewScores = [] } = {}) {
       const mission = this.missions.find(m => m.id === missionId)
       if (!mission) return

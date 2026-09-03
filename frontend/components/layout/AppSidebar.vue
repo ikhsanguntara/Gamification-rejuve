@@ -18,22 +18,6 @@
             SOP
           </span>
         </div>
-     
-      </div>
-    </div>
-
-    <!-- Active Role Indicator Badge -->
-    <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 flex-shrink-0">
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-semibold tracking-wider uppercase text-slate-400 dark:text-slate-500">
-          Current Persona
-        </span>
-        <span
-          class="text-xs font-semibold px-2 py-0.5 rounded-md"
-          :class="roleBadgeStyle"
-        >
-          {{ userStore.currentUser.roleTitle }}
-        </span>
       </div>
     </div>
 
@@ -299,23 +283,6 @@ const handleLogout = () => {
   toast.info('Logged Out', 'You have been signed out.')
   router.push('/login')
 }
-
-const roleBadgeStyle = computed(() => {
-  switch (userStore.currentRole) {
-    case 'CREW':
-      return 'bg-[#831843]/15 text-[#831843] dark:text-[#f472b6]'
-    case 'STORE_LEADER':
-    case 'SUPERVISOR':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-    case 'DISTRICT_MANAGER':
-    case 'HEAD':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
-    case 'SUPERADMIN':
-      return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
-    default:
-      return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
-  }
-})
 
 const navItems = computed(() => {
   const role = userStore.currentRole

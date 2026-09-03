@@ -93,6 +93,7 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { useToast } from '~/composables/useToast.js'
@@ -101,6 +102,10 @@ import { Plus, Edit3, Trash2, MapPin } from 'lucide-vue-next'
 const batchStore = useBatchStore()
 const gamificationStore = useGamificationStore()
 const toast = useToast()
+
+onMounted(async () => {
+  await batchStore.fetchBatchesFromApi()
+})
 
 const confirmDeleteBatch = (batch) => {
   if (confirm(`Apakah Anda yakin ingin menghapus cabang ${batch.name}?`)) {

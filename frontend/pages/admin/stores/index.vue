@@ -280,7 +280,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStoreStore } from '~/stores/store.js'
 import { useUserStore } from '~/stores/user.js'
 import { useToast } from '~/composables/useToast.js'
@@ -310,6 +310,10 @@ const selectedStatus = ref('ALL')
 
 const showDeleteModal = ref(false)
 const storeToDelete = ref(null)
+
+onMounted(async () => {
+  await storeStore.fetchStoresFromApi()
+})
 
 const filteredStores = computed(() => {
   let list = storeStore.allStores

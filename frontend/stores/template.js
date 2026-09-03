@@ -4,6 +4,7 @@ import { useMissionStore } from './mission.js'
 import { useBatchStore } from './batch.js'
 import { useGamificationStore } from './gamification.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
+import { templateApi } from '../services/api.js'
 
 /**
  * Normalizes a package to ensure `weeks` array and `totalWeeks` exist
@@ -56,6 +57,40 @@ export const useTemplateStore = defineStore('template', {
   },
 
   actions: {
+    async fetchTemplatesFromApi() {
+      try {
+        const res = await templateApi.getAll()
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+          const mappedPackages = res.data.map(t => {
+            const templates = (t.details || []).map((d, idx) => ({
+              id: d.tplMissionDetailId || `tmpl-${idx}`,
+              week: d.durationNumber || 1,
+              title: d.missionTitle,
+              category: d.category || 'TECHNICAL',
+              description: d.description || '',
+              requirements: ['Verifikasi checklist standar', 'Dokumentasi foto']
+            }))
+            return normalizePackage({
+              id: t.tplMissionId,
+              code: t.code,
+              name: t.name,
+              totalWeeks: t.durationValue || 3,
+              description: t.description || '',
+              templates
+            })
+          })
+          this.packages = mappedPackages
+          if (this.packages.length > 0) {
+            this.selectedPackageId = this.packages[0].id
+          }
+          setStoredData('rejuve_templates_v4', this.packages)
+          return this.packages
+        }
+      } catch (err) {
+        console.warn('fetchTemplatesFromApi failed:', err.message)
+      }
+    },
+
     selectPackage(pkgId) {
       if (this.packages.find(p => p.id === pkgId)) {
         this.selectedPackageId = pkgId

@@ -7,6 +7,7 @@ import { useBatchStore } from './batch.js'
 import { useUserStore } from './user.js'
 import { calculateStars } from '../utils/star.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
+import { evaluationApi } from '../services/api.js'
 
 function loadSafeApprovals() {
   const data = getStoredData('rejuve_approvals_v4', mockApprovals)
@@ -60,6 +61,51 @@ export const useApprovalStore = defineStore('approval', {
   },
 
   actions: {
+    async fetchApprovalsFromApi() {
+      try {
+        const res = await evaluationApi.getUserMissions()
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+          this.approvals = res.data.map(m => {
+            const isApproved = m.status === 'APPROVED_BY_DM' || m.status === 'COMPLETED'
+            const isPending = m.status === 'SCORED_BY_TL' || m.status === 'PENDING_REVIEW' || m.status === 'OPEN'
+            const status = isApproved ? 'APPROVED' : (isPending ? 'PENDING_REVIEW' : 'PENDING_REVIEW')
+            const slScore = Number(m.tlScore) || 85
+            const dmScore = Number(m.dmScore) || slScore
+            const finalScore = Number(m.finalScore) || Math.round((slScore + dmScore) / 2)
+            return {
+              id: m.userMissionId,
+              userMissionId: m.userMissionId,
+              evaluationId: `eval-${m.userMissionId}`,
+              batchId: m.mission?.batchId || 'batch-alpha',
+              batchName: 'Batch Onboarding September 2026',
+              missionId: m.missionId,
+              missionTitle: m.mission?.missionTitle || 'Evaluasi Standar Operasional',
+              week: m.mission?.weekOrDayNumber || 1,
+              crewId: m.userId,
+              crewName: m.user?.name || 'Kru Gerai',
+              crewAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+              supervisorId: m.tlId || 'sl-001',
+              supervisorName: m.tl?.name || 'Store Leader',
+              slScore,
+              dmScore,
+              score: finalScore,
+              averageScore: finalScore,
+              calculatedStars: calculateStars(finalScore),
+              status,
+              submittedAt: m.tlScoredAt || m.createdAt,
+              reviewedAt: m.dmReviewedAt,
+              comment: m.tlNotes || 'Standar operasional telah diverifikasi.',
+              evidence: m.evidenceUrl ? [{ url: m.evidenceUrl, caption: 'Bukti Foto Operasional' }] : []
+            }
+          })
+          setStoredData('rejuve_approvals_v4', this.approvals)
+          return this.approvals
+        }
+      } catch (err) {
+        console.warn('fetchApprovalsFromApi failed:', err.message)
+      }
+    },
+
     approveMission(approvalId, overridePayload = {}) {
       const item = this.approvals.find(a => a.id === approvalId)
       if (!item) return { success: false, error: 'Approval item not found' }
@@ -94,6 +140,17 @@ export const useApprovalStore = defineStore('approval', {
 
       item.status = 'APPROVED'
       item.reviewedAt = now
+
+      // Sync ke backend REST API jika ada userMissionId
+      if (item.userMissionId) {
+        evaluationApi.submitDmReview(item.userMissionId, {
+          action: 'APPROVE',
+          score: finalScore,
+          notes: item.dmNote || 'Disetujui oleh District Manager',
+          dmScore: finalScore,
+          dmNotes: item.dmNote || 'Disetujui oleh District Manager'
+        }).catch(e => console.warn('API sync submitDmReview notice:', e.message))
+      }
 
       const awardedStars = finalStars
 

@@ -302,7 +302,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useMissionStore } from '~/stores/mission.js'
@@ -333,8 +333,16 @@ const batchStore = useBatchStore()
 const missionStore = useMissionStore()
 const approvalStore = useApprovalStore()
 const gamificationStore = useGamificationStore()
-
 const pendingReviewCount = computed(() => approvalStore.pendingApprovals.length)
+
+onMounted(async () => {
+  await Promise.allSettled([
+    batchStore.fetchBatchesFromApi(),
+    missionStore.fetchMissionsFromApi(),
+    approvalStore.fetchApprovalsFromApi(),
+    userStore.fetchUsersFromApi()
+  ])
+})
 
 // Personal Crew stats
 const myCrewData = computed(() => {

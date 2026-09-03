@@ -215,27 +215,55 @@ import { getStoredData, setStoredData } from '../utils/storage.js'
 import { authApi, userApi } from '../services/api.js'
 import { getAuthToken, setAuthToken } from '../composables/useApi.js'
 
+function extractRoleCode(raw) {
+  if (!raw) return ''
+  if (typeof raw === 'string') return raw.toUpperCase()
+  if (typeof raw === 'object') {
+    return (raw.roleCode || raw.code || raw.name || raw.role || '').toUpperCase()
+  }
+  return ''
+}
+
+function resolveRoleTitle(apiUser) {
+  if (!apiUser) return 'Specialist'
+  if (apiUser.roleDetails && typeof apiUser.roleDetails === 'object' && apiUser.roleDetails.roleName) {
+    return apiUser.roleDetails.roleName
+  }
+  if (apiUser.role && typeof apiUser.role === 'object' && apiUser.role.roleName) {
+    return apiUser.role.roleName
+  }
+  const rawRole = extractRoleCode(apiUser.role) || extractRoleCode(apiUser.roleDetails)
+  const map = {
+    SUPERADMIN: 'Super Administrator',
+    STORE_LEADER: 'Store Leader',
+    DISTRICT_MANAGER: 'District Manager',
+    CREW: 'Crew Specialist',
+    BUDDY: 'Buddy Mentor'
+  }
+  return map[rawRole] || rawRole || 'Specialist'
+}
+
 export const useUserStore = defineStore('user', {
   state: () => ({
-    isAuthenticated: true,
-    currentUserId: 'sl-001',
     token: getAuthToken(),
+    isAuthenticated: Boolean(getAuthToken()),
     apiUser: null,
     isLiveApi: false,
+    currentUserId: 'spv-001',
     userDirectory: getStoredData('rejuve_users_v3', initialDirectory),
     notifications: [
       {
         id: 'notif-1',
-        title: 'Evaluasi Disubmit',
-        message: 'Store Leader Budi Santoso mengirim evaluasi untuk kru.',
-        time: '10m ago',
+        title: 'New Star Awarded',
+        message: 'Andi Pratama earned 5 stars for Chiller Calibration',
+        time: '5m ago',
         isRead: false,
-        type: 'info'
+        type: 'star'
       },
       {
         id: 'notif-2',
-        title: 'Persetujuan / Revisi',
-        message: 'District Manager Ahmad Dahlan meninjau evaluasi siklus.',
+        title: 'Pending Review Alert',
+        message: 'Week 2 Station Sanitizing awaits Head verification',
         time: '1h ago',
         isRead: false,
         type: 'warning'
@@ -246,16 +274,19 @@ export const useUserStore = defineStore('user', {
   getters: {
     currentUser: (state) => {
       if (state.apiUser) {
-        const roleCode = state.apiUser.role || state.apiUser.roleDetails?.roleCode || 'CREW'
+        const roleCode = typeof state.apiUser.role === 'string'
+          ? state.apiUser.role
+          : (state.apiUser.roleDetails?.roleCode || state.apiUser.role?.roleCode || 'CREW')
+        const title = resolveRoleTitle(state.apiUser)
         return {
           id: state.apiUser.userId,
           name: state.apiUser.name,
           role: roleCode,
-          roleTitle: state.apiUser.roleDetails?.roleName || roleCode,
+          roleTitle: title,
           email: state.apiUser.email,
           avatar: state.apiUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
           department: state.apiUser.department?.departmentName || 'Store Operations',
-          position: state.apiUser.position || state.apiUser.roleDetails?.roleName || 'Crew Specialist',
+          position: title,
           storeLocation: state.apiUser.department?.departmentName || 'Re.juve Store',
           batchId: state.apiUser.batchId || 'batch-alpha',
           stars: state.apiUser.stars || 0,
@@ -286,33 +317,33 @@ export const useUserStore = defineStore('user', {
     },
     currentRole: (state) => {
       if (state.apiUser) {
-        return state.apiUser.role || state.apiUser.roleDetails?.roleCode || 'CREW'
+        return extractRoleCode(state.apiUser.role) || extractRoleCode(state.apiUser.roleDetails) || 'CREW'
       }
       const u = state.userDirectory.find(u => u.id === state.currentUserId)
-      return u ? u.role : 'STORE_LEADER'
+      return extractRoleCode(u?.role) || 'STORE_LEADER'
     },
     isCrew: (state) => {
-      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
+      const r = state.currentRole
       return r === 'CREW'
     },
     isStoreLeader: (state) => {
-      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
+      const r = state.currentRole
       return r === 'STORE_LEADER' || r === 'SUPERVISOR'
     },
     isDistrictManager: (state) => {
-      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
-      return r === 'DISTRICT_MANAGER' || r === 'HEAD'
+      const r = state.currentRole
+      return r === 'DISTRICT_MANAGER' || r === 'HEAD' || r === 'OPS_DM'
     },
     isSupervisor: (state) => {
-      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
+      const r = state.currentRole
       return r === 'STORE_LEADER' || r === 'SUPERVISOR'
     },
     isHead: (state) => {
-      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
-      return r === 'DISTRICT_MANAGER' || r === 'HEAD'
+      const r = state.currentRole
+      return r === 'DISTRICT_MANAGER' || r === 'HEAD' || r === 'OPS_DM'
     },
     isSuperadmin: (state) => {
-      const r = state.apiUser?.role || state.apiUser?.roleDetails?.roleCode || state.userDirectory.find(u => u.id === state.currentUserId)?.role
+      const r = state.currentRole
       return r === 'SUPERADMIN'
     },
 
@@ -365,10 +396,10 @@ export const useUserStore = defineStore('user', {
           this.isAuthenticated = true
 
           const apiU = res.data.user
-          const mappedRole = apiU.role || apiU.roleDetails?.roleCode || 'CREW'
+          const mappedRole = extractRoleCode(apiU.role) || extractRoleCode(apiU.roleDetails) || 'CREW'
           let localRole = mappedRole
-          if (mappedRole === 'STORE_LEADER') localRole = 'STORE_LEADER'
-          else if (mappedRole === 'DISTRICT_MANAGER') localRole = 'DISTRICT_MANAGER'
+          if (mappedRole === 'STORE_LEADER' || mappedRole === 'SUPERVISOR') localRole = 'STORE_LEADER'
+          else if (mappedRole === 'DISTRICT_MANAGER' || mappedRole === 'HEAD' || mappedRole === 'OPS_DM') localRole = 'DISTRICT_MANAGER'
           else if (mappedRole === 'SUPERADMIN') localRole = 'SUPERADMIN'
           else localRole = 'CREW'
 
@@ -423,12 +454,11 @@ export const useUserStore = defineStore('user', {
     async fetchUsersFromApi() {
       try {
         const res = await userApi.getAll({ limit: 100 })
-        if (res && res.data && Array.isArray(res.data)) {
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
           this.isLiveApi = true
-          res.data.forEach(apiU => {
-            const idx = this.userDirectory.findIndex(u => u.id === apiU.userId || u.email === apiU.email)
+          this.userDirectory = res.data.map(apiU => {
             const roleCode = apiU.role?.roleCode || apiU.role || 'CREW'
-            const mapped = {
+            return {
               id: apiU.userId,
               name: apiU.name,
               role: roleCode,
@@ -436,19 +466,16 @@ export const useUserStore = defineStore('user', {
               email: apiU.email,
               avatar: apiU.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
               department: apiU.department?.departmentName || 'Store Operations',
-              position: apiU.position || apiU.role?.roleName || 'Crew',
+              position: apiU.position || apiU.role?.roleName || 'Crew Specialist',
               storeLocation: apiU.department?.departmentName || 'Re.juve Store',
               batchId: apiU.batchId || 'batch-alpha',
               stars: apiU.stars || 0,
-              level: apiU.level || 1
-            }
-            if (idx >= 0) {
-              this.userDirectory[idx] = { ...this.userDirectory[idx], ...mapped }
-            } else {
-              this.userDirectory.push(mapped)
+              level: apiU.level || 1,
+              isBuddy: Boolean(apiU.isBuddy)
             }
           })
           setStoredData('rejuve_users_v3', this.userDirectory)
+          return this.userDirectory
         }
       } catch (e) {
         console.warn('fetchUsersFromApi error:', e.message)

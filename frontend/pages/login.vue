@@ -155,6 +155,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
+import { useStoreStore } from '~/stores/store.js'
+import { useBatchStore } from '~/stores/batch.js'
+import { useMissionStore } from '~/stores/mission.js'
+import { useApprovalStore } from '~/stores/approval.js'
+import { useEvaluationStore } from '~/stores/evaluation.js'
+import { useTemplateStore } from '~/stores/template.js'
 import { useToast } from '~/composables/useToast.js'
 import { Mail, Key, LogIn, Eye, EyeOff } from 'lucide-vue-next'
 
@@ -198,6 +204,24 @@ const handleLogin = async () => {
         'Login Berhasil!',
         `Selamat datang ${userStore.currentUser.name} (${userStore.currentUser.role}) • Sesi JWT Aktif 🎉`
       )
+
+      // Sedot seluruh data riil dari REST API backend live
+      const storeStore = useStoreStore()
+      const batchStore = useBatchStore()
+      const missionStore = useMissionStore()
+      const approvalStore = useApprovalStore()
+      const evaluationStore = useEvaluationStore()
+      const templateStore = useTemplateStore()
+
+      await Promise.allSettled([
+        userStore.fetchUsersFromApi(),
+        storeStore.fetchStoresFromApi(),
+        batchStore.fetchBatchesFromApi(),
+        missionStore.fetchMissionsFromApi(),
+        approvalStore.fetchApprovalsFromApi(),
+        evaluationStore.fetchEvaluationsFromApi(),
+        templateStore.fetchTemplatesFromApi()
+      ])
 
       // Navigasi sesuai role dari database API
       if (userStore.isSuperadmin) {

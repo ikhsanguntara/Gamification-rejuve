@@ -67,33 +67,29 @@ export const useStoreStore = defineStore('store', {
     async fetchStoresFromApi() {
       try {
         const res = await departmentApi.getAll({ limit: 100 })
-        if (res && res.data && Array.isArray(res.data)) {
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
           this.isLiveApi = true
-          res.data.forEach(d => {
-            const idx = this.stores.findIndex(s => s.id === d.departmentId || s.code === d.departmentCode)
-            const mapped = {
-              id: d.departmentId,
-              name: d.departmentName,
-              code: d.departmentCode,
-              region: d.regionCode || 'JABODETABEK',
-              mallName: d.departmentName,
-              address: d.departmentName,
-              phone: '021-29465000',
-              storeLeaderId: d.userSlId,
-              districtManagerId: d.userDmId,
-              batchId: null,
-              totalCrews: 4,
-              status: d.isActive ? 'ACTIVE' : 'INACTIVE',
-              openingHours: '10:00 - 22:00',
-              createdAt: d.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
-            }
-            if (idx >= 0) {
-              this.stores[idx] = { ...this.stores[idx], ...mapped }
-            } else {
-              this.stores.push(mapped)
-            }
-          })
+          this.stores = res.data.map(d => ({
+            id: d.departmentId,
+            name: d.departmentName,
+            code: d.departmentCode,
+            region: d.regionCode || 'JABODETABEK',
+            mallName: d.departmentName,
+            address: d.departmentName,
+            phone: '021-29465000',
+            storeLeaderId: d.userSlId,
+            districtManagerId: d.userDmId,
+            batchId: null,
+            totalCrews: 4,
+            status: d.isActive ? 'ACTIVE' : 'INACTIVE',
+            openingHours: '10:00 - 22:00',
+            createdAt: d.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
+          }))
+          if (this.stores.length > 0 && (!this.selectedStoreId || !this.stores.find(s => s.id === this.selectedStoreId))) {
+            this.selectedStoreId = this.stores[0].id
+          }
           setStoredData('rejuve_stores_v1', this.stores)
+          return this.stores
         }
       } catch (err) {
         console.warn('fetchStoresFromApi failed:', err.message)

@@ -4,6 +4,7 @@ import { calculateStars } from '../utils/star.js'
 import { useMissionStore } from './mission.js'
 import { useApprovalStore } from './approval.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
+import { evaluationApi } from '../services/api.js'
 
 /**
  * Evaluation Store: Manages Supervisor Evaluations, Drafts, Multi-Crew Scores, Evidence & Comments
@@ -21,6 +22,45 @@ export const useEvaluationStore = defineStore('evaluation', {
   },
 
   actions: {
+    async fetchEvaluationsFromApi() {
+      try {
+        const res = await evaluationApi.getUserMissions()
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+          this.evaluations = res.data.map(m => {
+            const isApproved = m.status === 'APPROVED_BY_DM' || m.status === 'COMPLETED'
+            const isPending = m.status === 'SCORED_BY_TL' || m.status === 'PENDING_REVIEW'
+            const status = isApproved ? 'APPROVED' : (isPending ? 'PENDING_REVIEW' : 'DRAFT')
+            const score = Number(m.tlScore) || Number(m.finalScore) || 85
+            return {
+              id: `eval-${m.userMissionId}`,
+              userMissionId: m.userMissionId,
+              missionId: m.missionId,
+              missionTitle: m.mission?.missionTitle || 'Evaluasi Standar Operasional',
+              supervisorId: m.tlId || 'sl-001',
+              supervisorName: m.tl?.name || 'Store Leader',
+              averageScore: score,
+              calculatedStars: calculateStars(score),
+              crewScores: [{
+                crewId: m.userId,
+                name: m.user?.name || 'Kru Gerai',
+                score: score,
+                calculatedStars: calculateStars(score)
+              }],
+              status,
+              comment: m.tlNotes || '',
+              evidence: m.evidenceUrl ? [{ url: m.evidenceUrl, caption: 'Bukti Foto' }] : [],
+              evaluatedAt: m.tlScoredAt || m.createdAt,
+              submittedAt: m.tlScoredAt || m.createdAt
+            }
+          })
+          setStoredData('rejuve_evaluations_v3', this.evaluations)
+          return this.evaluations
+        }
+      } catch (err) {
+        console.warn('fetchEvaluationsFromApi failed:', err.message)
+      }
+    },
+
     saveDraft(payload) {
       const { missionId, supervisorId, supervisorName, crewScores = [], comment, evidence } = payload
       
@@ -155,6 +195,18 @@ export const useEvaluationStore = defineStore('evaluation', {
       // 2. Add / Update in Approval Queue
       const approvalStore = useApprovalStore()
       approvalStore.syncEvaluationToQueue(evalItem)
+
+      // Sync ke backend REST API jika ada userMissionId
+      const targetUserMissionId = evalItem.userMissionId || payload.userMissionId
+      if (targetUserMissionId) {
+        evaluationApi.submitSlScore(targetUserMissionId, {
+          score: evalItem.averageScore,
+          notes: evalItem.comment || 'Penilaian oleh Store Leader',
+          evidenceUrl: evalItem.evidence?.[0]?.url || null,
+          tlScore: evalItem.averageScore,
+          tlNotes: evalItem.comment || 'Penilaian oleh Store Leader'
+        }).catch(e => console.warn('API sync submitSlScore notice:', e.message))
+      }
 
       setStoredData('rejuve_evaluations_v3', this.evaluations)
       return evalItem

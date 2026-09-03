@@ -195,18 +195,17 @@ export const useBatchStore = defineStore('batch', {
     async fetchBatchesFromApi() {
       try {
         const res = await batchApi.getAll()
-        if (res && res.data && Array.isArray(res.data)) {
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
           this.isLiveApi = true
-          res.data.forEach(b => {
-            const idx = this.batches.findIndex(localB => localB.id === b.batchId || localB.code === b.code)
+          this.batches = res.data.map(b => {
             const startDate = b.startDate ? b.startDate.split('T')[0] : new Date().toISOString().split('T')[0]
             const endDate = b.endDate ? b.endDate.split('T')[0] : new Date().toISOString().split('T')[0]
-            const mapped = {
+            return {
               id: b.batchId,
               code: b.code,
               name: b.name,
               storeLocation: b.name,
-              description: b.name,
+              description: b.name || `Siklus onboarding ${b.name}`,
               currentWeek: b.currentWeek || 1,
               totalWeeks: 3,
               startDate,
@@ -226,13 +225,12 @@ export const useBatchStore = defineStore('batch', {
               },
               weeks: computeWeeksLifecycle(startDate)
             }
-            if (idx >= 0) {
-              this.batches[idx] = { ...this.batches[idx], ...mapped }
-            } else {
-              this.batches.push(mapped)
-            }
           })
+          if (this.batches.length > 0 && (!this.selectedBatchId || !this.batches.find(b => b.id === this.selectedBatchId))) {
+            this.selectedBatchId = this.batches[0].id
+          }
           setStoredData('rejuve_batches_v4', this.batches)
+          return this.batches
         }
       } catch (err) {
         console.warn('fetchBatchesFromApi error:', err.message)

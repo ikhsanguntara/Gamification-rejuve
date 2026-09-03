@@ -45,9 +45,20 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
+import { useBatchStore } from '~/stores/batch.js'
+import { useMissionStore } from '~/stores/mission.js'
 import WorldMapJourney from '~/components/gamification/WorldMapJourney.vue'
 import { Target, Trophy } from 'lucide-vue-next'
 
 const router = useRouter()
 const userStore = useUserStore()
+const batchStore = useBatchStore()
+const missionStore = useMissionStore()
+
+onMounted(async () => {
+  await Promise.allSettled([
+    batchStore.fetchBatchesFromApi(),
+    missionStore.fetchMissionsFromApi()
+  ])
+})
 </script>

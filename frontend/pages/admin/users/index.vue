@@ -169,7 +169,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useStoreStore } from '~/stores/store.js'
@@ -184,6 +184,10 @@ const toast = useToast()
 const searchQuery = ref('')
 const userRoleFilter = ref('ALL')
 const userBatchFilter = ref('ALL')
+
+onMounted(async () => {
+  await userStore.fetchUsersFromApi()
+})
 
 const filteredUsers = computed(() => {
   return userStore.allUsers.filter(u => {
