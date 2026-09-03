@@ -214,6 +214,7 @@ const initialDirectory = [
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { authApi, userApi } from '../services/api.js'
 import { getAuthToken, setAuthToken } from '../composables/useApi.js'
+import { buildPrismaQuery } from '../utils/queryBuilder.js'
 
 function extractRoleCode(raw) {
   if (!raw) return ''
@@ -459,16 +460,22 @@ export const useUserStore = defineStore('user', {
 
     async fetchUsersFromApi(params = {}) {
       try {
-        const page = params.page || 1
-        const limit = params.limit || 10
-        const query = { page, limit }
+        const contains = {}
+        const exact = {}
 
         if (params.search && params.search.trim()) {
-          query['name[contains]'] = params.search.trim()
+          contains.name = params.search.trim()
         }
         if (params.role && params.role !== 'ALL') {
-          query['role'] = params.role
+          exact.role = params.role
         }
+
+        const query = buildPrismaQuery({
+          page: params.page || 1,
+          limit: params.limit || 10,
+          contains,
+          exact
+        })
 
         const res = await userApi.getAll(query)
         if (res && res.data && Array.isArray(res.data)) {

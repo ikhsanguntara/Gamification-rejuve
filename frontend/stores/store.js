@@ -4,6 +4,7 @@ import { useUserStore } from './user.js'
 import { useBatchStore } from './batch.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { departmentApi } from '../services/api.js'
+import { buildPrismaQuery } from '../utils/queryBuilder.js'
 
 /**
  * Store Store: Manage Master Stores/Outlets, Location, Store Leader & District Manager Assignments
@@ -74,19 +75,25 @@ export const useStoreStore = defineStore('store', {
     async fetchStoresFromApi(params = {}) {
       this.isLoading = true
       try {
-        const page = params.page || 1
-        const limit = params.limit || 9
-        const query = { page, limit }
+        const contains = {}
+        const exact = {}
 
         if (params.search && params.search.trim()) {
-          query['departmentName[contains]'] = params.search.trim()
+          contains.departmentName = params.search.trim()
         }
         if (params.region && params.region !== 'ALL') {
-          query['regionCode'] = params.region
+          exact.regionCode = params.region
         }
         if (params.status && params.status !== 'ALL') {
-          query['isActive'] = params.status === 'ACTIVE'
+          exact.isActive = params.status === 'ACTIVE'
         }
+
+        const query = buildPrismaQuery({
+          page: params.page || 1,
+          limit: params.limit || 9,
+          contains,
+          exact
+        })
 
         const res = await departmentApi.getAll(query)
         if (res && res.data && Array.isArray(res.data)) {

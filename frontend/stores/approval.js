@@ -8,6 +8,7 @@ import { useUserStore } from './user.js'
 import { calculateStars } from '../utils/star.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { evaluationApi } from '../services/api.js'
+import { buildPrismaQuery } from '../utils/queryBuilder.js'
 
 function loadSafeApprovals() {
   const data = getStoredData('rejuve_approvals_v4', mockApprovals)
@@ -69,13 +70,17 @@ export const useApprovalStore = defineStore('approval', {
   actions: {
     async fetchApprovalsFromApi(params = {}) {
       try {
-        const page = params.page || 1
-        const limit = params.limit || 9
-        const query = { page, limit }
+        const exact = {}
 
         if (params.status && params.status !== 'ALL') {
-          query.status = params.status
+          exact.status = params.status
         }
+
+        const query = buildPrismaQuery({
+          page: params.page || 1,
+          limit: params.limit || 9,
+          exact
+        })
 
         const res = await evaluationApi.getUserMissions(query)
         if (res && res.data && Array.isArray(res.data)) {

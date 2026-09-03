@@ -5,6 +5,7 @@ import { useBatchStore } from './batch.js'
 import { useGamificationStore } from './gamification.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { templateApi } from '../services/api.js'
+import { buildPrismaQuery } from '../utils/queryBuilder.js'
 
 /**
  * Normalizes a package to ensure `weeks` array and `totalWeeks` exist
@@ -57,9 +58,20 @@ export const useTemplateStore = defineStore('template', {
   },
 
   actions: {
-    async fetchTemplatesFromApi() {
+    async fetchTemplatesFromApi(params = {}) {
       try {
-        const res = await templateApi.getAll()
+        const contains = {}
+        if (params.search && params.search.trim()) {
+          contains.name = params.search.trim()
+        }
+
+        const query = buildPrismaQuery({
+          page: params.page || 1,
+          limit: params.limit || 10,
+          contains
+        })
+
+        const res = await templateApi.getAll(query)
         if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
           const mappedPackages = res.data.map(t => {
             const templates = (t.details || []).map((d, idx) => ({

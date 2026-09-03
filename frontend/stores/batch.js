@@ -4,6 +4,7 @@ import { useTemplateStore } from './template.js'
 import { useUserStore } from './user.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { batchApi } from '../services/api.js'
+import { buildPrismaQuery } from '../utils/queryBuilder.js'
 
 /**
  * Helper: Format date to short readable string e.g. "01 Sep"
@@ -200,16 +201,22 @@ export const useBatchStore = defineStore('batch', {
 
     async fetchBatchesFromApi(params = {}) {
       try {
-        const page = params.page || 1
-        const limit = params.limit || 9
-        const query = { page, limit }
+        const contains = {}
+        const exact = {}
 
         if (params.search && params.search.trim()) {
-          query['name[contains]'] = params.search.trim()
+          contains.name = params.search.trim()
         }
         if (params.status && params.status !== 'ALL') {
-          query['status'] = params.status
+          exact.status = params.status
         }
+
+        const query = buildPrismaQuery({
+          page: params.page || 1,
+          limit: params.limit || 9,
+          contains,
+          exact
+        })
 
         const res = await batchApi.getAll(query)
         if (res && res.data && Array.isArray(res.data)) {
