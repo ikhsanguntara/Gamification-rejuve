@@ -291,6 +291,8 @@ const getWorkstationCrews = async (currentUser, query = {}) => {
       storeLocation: crew.department?.departmentName || 'Standby Gerai',
       departmentCode: crew.department?.departmentCode,
       departmentId: crew.departmentId,
+      batchId: crew.batchId || null,
+      hasBatch: Boolean(crew.batchId),
       totalMissionsCount,
       evaluatedCount,
       status,

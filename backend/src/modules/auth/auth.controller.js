@@ -152,6 +152,7 @@ const login = async (req, res, next) => {
           userBuddyId:  user.userBuddyId,
           userBuddy:    user.userBuddy,
           batchId:      user.batchId,
+          hasBatch:     Boolean(user.batchId),
           createdAt:    user.createdAt
         }
       }
@@ -226,6 +227,7 @@ const getMe = async (req, res, next) => {
         userBuddyId:  user.userBuddyId,
         userBuddy:    user.userBuddy,
         batchId:      user.batchId,
+        hasBatch:     Boolean(user.batchId),
         createdAt:    user.createdAt
       }
     });

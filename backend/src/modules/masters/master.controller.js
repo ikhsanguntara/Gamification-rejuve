@@ -157,8 +157,24 @@ const getUsers = async (req, res, next) => {
     delete queryClone.page;
     delete queryClone.limit;
 
+    // Filter khusus hasBatch: true / false
+    let hasBatchFilter = undefined;
+    if (queryClone.hasBatch !== undefined) {
+      const val = String(queryClone.hasBatch).toLowerCase();
+      if (val === 'true') {
+        hasBatchFilter = { not: null };
+      } else if (val === 'false') {
+        hasBatchFilter = null;
+      }
+      delete queryClone.hasBatch;
+    }
+
     // Searchable: name, email
     const where = parsePrismaQuery(queryClone, ['name', 'email']);
+
+    if (hasBatchFilter !== undefined) {
+      where.batchId = hasBatchFilter;
+    }
 
     // Alias convenience: ?role=CREW atau ?roleCode=CREW dipetakan otomatis ke { role: { roleCode: ... } }
     if (where.role && typeof where.role === 'string') {
@@ -190,6 +206,15 @@ const getUsers = async (req, res, next) => {
           departmentId: true,
           department: true,
           batchId: true,
+          batch: {
+            select: {
+              batchId: true,
+              code: true,
+              name: true,
+              status: true,
+              currentWeek: true
+            }
+          },
           activeBatchId: true,
           createdAt: true,
           updatedAt: true
@@ -199,9 +224,14 @@ const getUsers = async (req, res, next) => {
       prisma.user.count({ where })
     ]);
 
+    const formattedData = data.map(user => ({
+      ...user,
+      hasBatch: Boolean(user.batchId)
+    }));
+
     return sendPaginated(res, {
       message: 'Daftar user berhasil diambil.',
-      data,
+      data: formattedData,
       total,
       page,
       limit
@@ -231,6 +261,15 @@ const getUserById = async (req, res, next) => {
         departmentId: true,
         department: true,
         batchId: true,
+        batch: {
+          select: {
+            batchId: true,
+            code: true,
+            name: true,
+            status: true,
+            currentWeek: true
+          }
+        },
         activeBatchId: true,
         createdAt: true,
         updatedAt: true
@@ -244,7 +283,10 @@ const getUserById = async (req, res, next) => {
     return sendSuccess(res, {
       statusCode: 200,
       message: 'Detail user berhasil diambil.',
-      data: user
+      data: {
+        ...user,
+        hasBatch: Boolean(user.batchId)
+      }
     });
   } catch (error) {
     next(error);
@@ -278,7 +320,10 @@ const createUser = async (req, res, next) => {
     // Sinkronkan mutasi user ke Lynx
     await pushToLynx('/gamification/webhook/users', [user], 'POST');
 
-    const userResponse = { ...user };
+    const userResponse = {
+      ...user,
+      hasBatch: Boolean(user.batchId)
+    };
     delete userResponse.password;
 
     return sendSuccess(res, {
@@ -326,7 +371,10 @@ const updateUser = async (req, res, next) => {
     // Sinkronkan mutasi user ke Lynx (Upsert via POST)
     await pushToLynx('/gamification/webhook/users', [user], 'POST');
 
-    const userResponse = { ...user };
+    const userResponse = {
+      ...user,
+      hasBatch: Boolean(user.batchId)
+    };
     delete userResponse.password;
 
     return sendSuccess(res, {
