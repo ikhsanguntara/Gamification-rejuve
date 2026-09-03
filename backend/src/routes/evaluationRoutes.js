@@ -11,6 +11,8 @@ const evaluationController = require('../controllers/evaluationController');
 const { authenticate } = require('../middlewares/auth');
 const { authorizeRole } = require('../middlewares/role');
 
+const { uploadMiddleware } = require('../utils/minioStorage');
+
 // Pasang authenticate untuk seluruh rute evaluasi
 router.use(authenticate);
 
@@ -21,6 +23,7 @@ router.get('/user-missions/:id', evaluationController.getUserMissionById);
 // ─── Buddy Evaluation ─────────────────────────────────────────────────────────
 router.post(
   '/user-missions/:id/buddy-score',
+  uploadMiddleware.single('evidence'),
   evaluationController.evaluateBuddy
 );
 
@@ -28,6 +31,7 @@ router.post(
 router.post(
   '/user-missions/:id/sl-score',
   authorizeRole(['STORE_LEADER', 'SUPERADMIN', 'HEAD']),
+  uploadMiddleware.single('evidence'),
   evaluationController.evaluateJourneyBySL
 );
 

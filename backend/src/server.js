@@ -3,6 +3,7 @@
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const path = require('path');
 const dotenv = require('dotenv');
 
 // Load environment variables
@@ -22,6 +23,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ─── Health Check ──────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
@@ -61,9 +63,13 @@ app.use((req, res) => {
 // ─── HTTP Server ──────────────────────────────────────────────────────────────
 const httpServer = http.createServer(app);
 
-// Socket.io akan diintegrasikan di Phase 5
-// const { initSocket } = require('./config/socket');
-// initSocket(httpServer);
+// ─── WebSocket (Socket.IO) ───────────────────────────────────────────────────
+const { initSocket } = require('./config/socket');
+initSocket(httpServer);
+
+// ─── MinIO Storage Initialization ────────────────────────────────────────────
+const { initMinIO } = require('./config/minio');
+initMinIO();
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;

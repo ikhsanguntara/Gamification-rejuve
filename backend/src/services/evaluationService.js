@@ -12,6 +12,7 @@
 const prisma = require('../config/db');
 const gamificationService = require('./gamificationService');
 const { parsePrismaQuery } = require('../utils/queryParser');
+const { emitToUser, emitToRole, emitToDepartment } = require('../utils/socketEmitter');
 
 /**
  * Ambil daftar user missions dengan dynamic query filter.
@@ -182,6 +183,18 @@ const evaluateBuddyMission = async (userMissionId, evaluatorId, { score, notes, 
     };
   });
 
+  // Emit event perolehan bintang ke Crew
+  if (result.gamification) {
+    emitToUser(userMission.userId, 'crew:stars_earned', {
+      userMissionId,
+      missionTitle: userMission.mission?.title,
+      starsEarned: result.gamification.starsEarned,
+      totalStars: result.gamification.totalStars,
+      level: result.gamification.level,
+      bonusMultiplier: result.gamification.bonusMultiplier
+    });
+  }
+
   return result;
 };
 
@@ -237,6 +250,24 @@ const evaluateJourneyBySL = async (userMissionId, slId, { score, notes, evidence
     }
   });
 
+  // Emit event ke DM toko atau room role DISTRICT_MANAGER bahwa misi menunggu review
+  const dmPayload = {
+    userMissionId,
+    crewId: userMission.userId,
+    crewName: userMission.user?.name,
+    slId,
+    tlScore: numScore,
+    missionTitle: userMission.mission?.title,
+    evidenceUrl: updated.evidenceUrl,
+    departmentId: userMission.user?.departmentId
+  };
+
+  if (userMission.dmId) {
+    emitToUser(userMission.dmId, 'evaluation:scored', dmPayload);
+  } else {
+    emitToRole('DISTRICT_MANAGER', 'evaluation:scored', dmPayload);
+  }
+
   return updated;
 };
 
@@ -287,6 +318,21 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
         status: 'REVISED_BY_DM'
       }
     });
+
+    // Emit event revisi ke Store Leader penilai
+    const revisePayload = {
+      userMissionId,
+      crewId: userMission.userId,
+      crewName: userMission.user?.name,
+      missionTitle: userMission.mission?.title,
+      dmNotes: notes,
+      status: 'REVISED_BY_DM'
+    };
+    if (userMission.tlId) {
+      emitToUser(userMission.tlId, 'evaluation:revised', revisePayload);
+    } else {
+      emitToRole('STORE_LEADER', 'evaluation:revised', revisePayload);
+    }
 
     return updated;
   }
@@ -381,6 +427,30 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
         gamification: starReward
       };
     });
+
+    // Emit event approved ke SL dan Crew
+    const approvePayload = {
+      userMissionId,
+      crewId: userMission.userId,
+      crewName: userMission.user?.name,
+      finalScore,
+      status: 'APPROVED_BY_DM',
+      missionTitle: userMission.mission?.title
+    };
+    if (userMission.tlId) emitToUser(userMission.tlId, 'evaluation:approved', approvePayload);
+    emitToUser(userMission.userId, 'evaluation:approved', approvePayload);
+
+    // Emit perolehan bintang real-time ke Crew
+    if (result.gamification) {
+      emitToUser(userMission.userId, 'crew:stars_earned', {
+        userMissionId,
+        missionTitle: userMission.mission?.title,
+        starsEarned: result.gamification.starsEarned,
+        totalStars: result.gamification.totalStars,
+        level: result.gamification.level,
+        bonusMultiplier: result.gamification.bonusMultiplier
+      });
+    }
 
     return result;
   }

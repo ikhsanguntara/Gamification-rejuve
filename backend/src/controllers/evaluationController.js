@@ -7,6 +7,7 @@
 
 const evaluationService = require('../services/evaluationService');
 const { sendSuccess, sendError, sendPaginated } = require('../utils/responseWrapper');
+const { uploadFileToStorage } = require('../utils/minioStorage');
 
 /**
  * GET /api/evaluations/user-missions
@@ -31,20 +32,11 @@ const getUserMissions = async (req, res, next) => {
  */
 const getUserMissionById = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const data = await evaluationService.getUserMissionById(id);
-
-    if (!data) {
-      return sendError(res, {
-        message: `Misi dengan id "${id}" tidak ditemukan.`,
-        statusCode: 404
-      });
+    const userMission = await evaluationService.getUserMissionById(req.params.id);
+    if (!userMission) {
+      return sendError(res, { statusCode: 404, message: 'User mission tidak ditemukan' });
     }
-
-    return sendSuccess(res, {
-      message: 'Detail misi berhasil diambil.',
-      data
-    });
+    return sendSuccess(res, { data: userMission });
   } catch (error) {
     next(error);
   }
@@ -58,7 +50,12 @@ const evaluateBuddy = async (req, res, next) => {
   try {
     const { id } = req.params;
     const evaluatorId = req.user?.id || req.user?.userId;
-    const { score, notes, evidenceUrl } = req.body;
+    let { score, notes, evidenceUrl } = req.body;
+
+    // Jika ada upload file evidence (multipart/form-data)
+    if (req.file) {
+      evidenceUrl = await uploadFileToStorage(req.file, 'evidence');
+    }
 
     const result = await evaluationService.evaluateBuddyMission(id, evaluatorId, {
       score,
@@ -83,7 +80,12 @@ const evaluateJourneyBySL = async (req, res, next) => {
   try {
     const { id } = req.params;
     const slId = req.user?.id || req.user?.userId;
-    const { score, notes, evidenceUrl } = req.body;
+    let { score, notes, evidenceUrl } = req.body;
+
+    // Jika ada upload file evidence (multipart/form-data)
+    if (req.file) {
+      evidenceUrl = await uploadFileToStorage(req.file, 'evidence');
+    }
 
     const data = await evaluationService.evaluateJourneyBySL(id, slId, {
       score,
