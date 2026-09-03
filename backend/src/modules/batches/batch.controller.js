@@ -10,7 +10,7 @@ const { sendSuccess, sendError, sendPaginated } = require('../../utils/responseW
 
 const getBatches = async (req, res, next) => {
   try {
-    const { batches, total, page, limit } = await batchService.getBatches(req.query);
+    const { batches, total, page, limit } = await batchService.getBatches(req.query, req.user);
     return sendPaginated(res, {
       message: 'Daftar batch berhasil diambil.',
       data: batches,

@@ -501,9 +501,142 @@ const generateBatch = async (batchId, creatorId = null) => {
 };
 
 /**
- * Ambil daftar batch dengan dynamic query parser & pagination.
+ * Helper untuk membatasi query Batch berdasarkan wewenang Role.
+ * - SUPERADMIN / HEAD: Melihat semua batch.
+ * - STORE_LEADER: Hanya batch yang memiliki user dari departemen yang dipimpinnya, atau activeBatchId dia.
+ * - DISTRICT_MANAGER: Hanya batch yang memiliki user dari departemen-departemen di bawah distriknya, atau activeBatchId dia.
+ * - CREW: Hanya batch tempat dia terdaftar (batchId).
  */
-const getBatches = async (query = {}) => {
+const getScopedBatchWhere = async (currentUser, baseWhere = {}) => {
+  const where = { ...baseWhere };
+  if (!currentUser) return where;
+
+  const roleCode = (currentUser.role?.roleCode || currentUser.role || '').toUpperCase();
+
+  // Superadmin & Head dapat melihat seluruh batch
+  if (roleCode === 'SUPERADMIN' || roleCode === 'HEAD') {
+    return where;
+  }
+
+  const userId = currentUser.userId || currentUser.id;
+
+  if (roleCode === 'STORE_LEADER') {
+    const depts = await prisma.department.findMany({
+      where: {
+        OR: [
+          { userSlId: userId },
+          ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
+        ]
+      },
+      select: { departmentId: true }
+    });
+    const deptIds = depts.map(d => d.departmentId);
+
+    const scopingConditions = [];
+    if (deptIds.length > 0) {
+      scopingConditions.push({
+        users: { some: { departmentId: { in: deptIds } } }
+      });
+    }
+    if (currentUser.activeBatchId) {
+      scopingConditions.push({ batchId: currentUser.activeBatchId });
+    }
+
+    if (scopingConditions.length > 0) {
+      if (where.OR) {
+        where.AND = [
+          ...(where.AND || []),
+          { OR: scopingConditions }
+        ];
+      } else {
+        where.OR = scopingConditions;
+      }
+    } else {
+      where.batchId = '00000000-0000-0000-0000-000000000000';
+    }
+  } else if (roleCode === 'DISTRICT_MANAGER') {
+    const depts = await prisma.department.findMany({
+      where: {
+        OR: [
+          { userDmId: userId },
+          ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
+        ]
+      },
+      select: { departmentId: true }
+    });
+    const deptIds = depts.map(d => d.departmentId);
+
+    const scopingConditions = [];
+    if (deptIds.length > 0) {
+      scopingConditions.push({
+        users: { some: { departmentId: { in: deptIds } } }
+      });
+    }
+    if (currentUser.activeBatchId) {
+      scopingConditions.push({ batchId: currentUser.activeBatchId });
+    }
+
+    if (scopingConditions.length > 0) {
+      if (where.OR) {
+        where.AND = [
+          ...(where.AND || []),
+          { OR: scopingConditions }
+        ];
+      } else {
+        where.OR = scopingConditions;
+      }
+    } else {
+      where.batchId = '00000000-0000-0000-0000-000000000000';
+    }
+  } else if (roleCode === 'CREW') {
+    if (currentUser.batchId) {
+      where.batchId = currentUser.batchId;
+    } else {
+      where.batchId = '00000000-0000-0000-0000-000000000000';
+    }
+  }
+
+  return where;
+};
+
+/**
+ * Ambil daftar ringkas batch yang dapat dipilih oleh pengguna (untuk dropdown FE / session).
+ */
+const getUserAvailableBatches = async (currentUser) => {
+  if (!currentUser) return [];
+
+  const scopedWhere = await getScopedBatchWhere(currentUser, {});
+
+  // Untuk non-superadmin, sembunyikan batch bertatus DRAFT (belum di-generate)
+  const roleCode = (currentUser.role?.roleCode || currentUser.role || '').toUpperCase();
+  if (roleCode !== 'SUPERADMIN' && roleCode !== 'HEAD') {
+    scopedWhere.status = { not: 'DRAFT' };
+  }
+
+  const batches = await prisma.batch.findMany({
+    where: scopedWhere,
+    select: {
+      batchId: true,
+      code: true,
+      name: true,
+      status: true,
+      currentWeek: true,
+      startDate: true,
+      endDate: true
+    },
+    orderBy: [
+      { status: 'asc' }, // OPEN first, then COMPLETED
+      { startDate: 'desc' }
+    ]
+  });
+
+  return batches;
+};
+
+/**
+ * Ambil daftar batch dengan dynamic query parser & pagination serta role-scoping.
+ */
+const getBatches = async (query = {}, currentUser = null) => {
   const page = Math.max(1, parseInt(query.page, 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 10));
   const skip = (page - 1) * limit;
@@ -513,7 +646,8 @@ const getBatches = async (query = {}) => {
   delete queryClone.limit;
 
   // Searchable: name, code
-  const where = parsePrismaQuery(queryClone, ['name', 'code']);
+  const baseWhere = parsePrismaQuery(queryClone, ['name', 'code']);
+  const where = await getScopedBatchWhere(currentUser, baseWhere);
 
   const [total, batches] = await Promise.all([
     prisma.batch.count({ where }),
@@ -652,5 +786,7 @@ module.exports = {
   getBatches,
   getBatchById,
   updateBatch,
-  deleteBatch
+  deleteBatch,
+  getUserAvailableBatches,
+  getScopedBatchWhere
 };

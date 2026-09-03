@@ -8,6 +8,7 @@
 const bcrypt = require('bcryptjs');
 const jwt    = require('jsonwebtoken');
 const prisma = require('../../config/db');
+const batchService = require('../batches/batch.service');
 const { sendSuccess, sendError } = require('../../utils/responseWrapper');
 
 /**
@@ -107,6 +108,24 @@ const login = async (req, res, next) => {
       });
     }
 
+    // Auto-resolve activeBatchId if null & fetch availableBatches
+    let availableBatches = await batchService.getUserAvailableBatches(user);
+    let activeBatchId = user.activeBatchId;
+    let activeBatch = user.activeBatch;
+
+    if (!activeBatchId && availableBatches.length > 0) {
+      const defaultBatch = availableBatches.find(b => b.status === 'OPEN') || availableBatches[0];
+      if (defaultBatch) {
+        activeBatchId = defaultBatch.batchId;
+        activeBatch = defaultBatch;
+        await prisma.user.update({
+          where: { userId: user.userId },
+          data: { activeBatchId: defaultBatch.batchId }
+        });
+        user.activeBatchId = defaultBatch.batchId;
+      }
+    }
+
     const token = generateToken(user);
 
     return sendSuccess(res, {
@@ -126,8 +145,9 @@ const login = async (req, res, next) => {
           level:        user.level,
           departmentId: user.departmentId,
           department:   user.department,
-          activeBatchId: user.activeBatchId,
-          activeBatch:  user.activeBatch,
+          activeBatchId: activeBatchId || null,
+          activeBatch:  activeBatch || null,
+          availableBatches: availableBatches || [],
           isBuddy:      user.isBuddy,
           userBuddyId:  user.userBuddyId,
           userBuddy:    user.userBuddy,
@@ -167,6 +187,23 @@ const getMe = async (req, res, next) => {
       });
     }
 
+    // Auto-resolve activeBatchId if null & fetch availableBatches
+    let availableBatches = await batchService.getUserAvailableBatches(user);
+    let activeBatchId = user.activeBatchId;
+    let activeBatch = user.activeBatch;
+
+    if (!activeBatchId && availableBatches.length > 0) {
+      const defaultBatch = availableBatches.find(b => b.status === 'OPEN') || availableBatches[0];
+      if (defaultBatch) {
+        activeBatchId = defaultBatch.batchId;
+        activeBatch = defaultBatch;
+        await prisma.user.update({
+          where: { userId: user.userId },
+          data: { activeBatchId: defaultBatch.batchId }
+        });
+      }
+    }
+
     return sendSuccess(res, {
       message: 'Data profil berhasil diambil.',
       data: {
@@ -182,8 +219,9 @@ const getMe = async (req, res, next) => {
         level:        user.level,
         departmentId: user.departmentId,
         department:   user.department,
-        activeBatchId: user.activeBatchId,
-        activeBatch:  user.activeBatch,
+        activeBatchId: activeBatchId || null,
+        activeBatch:  activeBatch || null,
+        availableBatches: availableBatches || [],
         isBuddy:      user.isBuddy,
         userBuddyId:  user.userBuddyId,
         userBuddy:    user.userBuddy,
@@ -229,12 +267,15 @@ const setActiveBatch = async (req, res, next) => {
       include: USER_INCLUDE
     });
 
+    const availableBatches = await batchService.getUserAvailableBatches(updatedUser);
+
     return sendSuccess(res, {
       message: `Active batch berhasil diatur ke "${batch.name}".`,
       data: {
         userId: updatedUser.userId,
         activeBatchId: updatedUser.activeBatchId,
-        activeBatch: updatedUser.activeBatch
+        activeBatch: updatedUser.activeBatch,
+        availableBatches: availableBatches || []
       }
     });
   } catch (error) {

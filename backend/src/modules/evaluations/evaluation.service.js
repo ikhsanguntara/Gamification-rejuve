@@ -12,6 +12,7 @@
  */
 
 const prisma = require('../../config/db');
+const batchService = require('../batches/batch.service');
 const gamificationService = require('../gamification/gamification.service');
 const { parsePrismaQuery } = require('../../utils/queryParser');
 const { emitToUser, emitToRole } = require('../../utils/socketEmitter');
@@ -110,11 +111,9 @@ const getUserMissionById = async (userMissionId) => {
 const getWorkstationCrews = async (currentUser, query = {}) => {
   // 1. Resolve Active Batch
   let batchId = query.batchId || currentUser?.activeBatchId;
-  if (!batchId) {
-    const openBatch = await prisma.batch.findFirst({
-      where: { status: 'OPEN' },
-      orderBy: { startDate: 'desc' }
-    });
+  if (!batchId && currentUser) {
+    const batches = await batchService.getUserAvailableBatches(currentUser);
+    const openBatch = batches.find(b => b.status === 'OPEN') || batches[0];
     batchId = openBatch ? openBatch.batchId : null;
   }
 
