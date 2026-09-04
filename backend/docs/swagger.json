@@ -10,12 +10,7 @@
   },
   "servers": [
     {
-      "url": "/api",
-      "description": "Current Origin / Proxy Host (Cocok untuk Ngrok & Localhost)"
-    },
-    {
-      "url": "http://localhost:3000/api",
-      "description": "Localhost Direct"
+      "url": "/api"
     }
   ],
   "components": {
