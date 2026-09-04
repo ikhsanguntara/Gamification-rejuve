@@ -1,0 +1,2250 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Re.juve Gamification REST API",
+    "description": "Dokumentasi resmi REST API untuk platform Re.juve Gamification Monorepo (Express.js + Prisma + PostgreSQL).\nDilengkapi otentikasi JWT Bearer, dynamic filtering, upload foto bukti evaluasi via MinIO, dan WebSocket real-time events.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Re.juve Development Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Current Origin / Proxy Host (Cocok untuk Ngrok & Localhost)"
+    },
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Localhost Direct"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Masukkan Token JWT dari endpoint POST /auth/login. Contoh: Bearer eyJhbGciOi..."
+      }
+    },
+    "schemas": {
+      "StandardResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "statusCode": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Operasi berhasil dilakukan."
+          },
+          "data": {
+            "type": "object"
+          },
+          "meta": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      },
+      "PaginatedResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "statusCode": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Data berhasil diambil."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "example": 1
+              },
+              "limit": {
+                "type": "integer",
+                "example": 10
+              },
+              "total": {
+                "type": "integer",
+                "example": 42
+              },
+              "totalPages": {
+                "type": "integer",
+                "example": 5
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "statusCode": {
+            "type": "integer",
+            "example": 400
+          },
+          "message": {
+            "type": "string",
+            "example": "Terjadi kesalahan pada request."
+          },
+          "data": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "1. Authentication",
+      "description": "Otentikasi, profil pengguna, ganti password"
+    },
+    {
+      "name": "2. Master Departments",
+      "description": "Manajemen Toko / Outlet"
+    },
+    {
+      "name": "3. Master Users",
+      "description": "Manajemen Pengguna & Sinkronisasi ke Lynx"
+    },
+    {
+      "name": "4. Master Roles",
+      "description": "Manajemen Peran & Wewenang"
+    },
+    {
+      "name": "5. Business Parameters",
+      "description": "Kelompok Parameter & Item Parameter (Dropdown)"
+    },
+    {
+      "name": "6. Administration",
+      "description": "Pengaturan Sistem & User Policies (Kebijakan)"
+    },
+    {
+      "name": "7. Unified Master Templates",
+      "description": "Template Misi Onboarding (Buddy, Journey, Feedback)"
+    },
+    {
+      "name": "8. Batch Generator",
+      "description": "Pembuatan Batch Onboarding & Generator Misi Sekuensial"
+    },
+    {
+      "name": "9. Evaluations",
+      "description": "Alur Penilaian Terpadu (Buddy, SL + Upload Foto, DM Review, Crew Feedback)"
+    },
+    {
+      "name": "10. Lynx Sync",
+      "description": "Webhook penerima & sinkronisasi manual dengan Lynx ERP"
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "1. Authentication"
+        ],
+        "summary": "Login Pengguna",
+        "description": "Login dengan email dan password untuk mendapatkan JWT token.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "superadmin@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Admin123!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login berhasil, mengembalikan token dan data user."
+          },
+          "401": {
+            "description": "Email atau password salah."
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "1. Authentication"
+        ],
+        "summary": "Ambil Profil Pengguna Saat Ini",
+        "description": "Mengambil data profil lengkap user yang sedang login dari token JWT.",
+        "responses": {
+          "200": {
+            "description": "Data profil berhasil diambil."
+          },
+          "401": {
+            "description": "Token tidak valid atau kedaluwarsa."
+          }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "tags": [
+          "1. Authentication"
+        ],
+        "summary": "Ubah Password Pengguna",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "oldPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "oldPassword": {
+                    "type": "string",
+                    "example": "Admin123!"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "example": "NewSecret123!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password berhasil diubah."
+          }
+        }
+      }
+    },
+    "/masters/departments": {
+      "get": {
+        "tags": [
+          "2. Master Departments"
+        ],
+        "summary": "Daftar Departemen / Toko (Mendukung Filter Dinamis)",
+        "parameters": [
+          {
+            "name": "departmentCode[contains]",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter kode toko mengandung"
+          },
+          {
+            "name": "isActive",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter status aktif"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar departemen berhasil diambil."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "2. Master Departments"
+        ],
+        "summary": "Buat Departemen / Toko Baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "departmentCode",
+                  "departmentName"
+                ],
+                "properties": {
+                  "departmentCode": {
+                    "type": "string",
+                    "example": "STORE_BKI"
+                  },
+                  "departmentName": {
+                    "type": "string",
+                    "example": "Re.juve Bintaro Jaya Xchange"
+                  },
+                  "regionCode": {
+                    "type": "string",
+                    "example": "JABODETABEK"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Departemen berhasil dibuat."
+          }
+        }
+      }
+    },
+    "/masters/departments/{id}": {
+      "get": {
+        "tags": [
+          "2. Master Departments"
+        ],
+        "summary": "Detail Departemen by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail departemen."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "2. Master Departments"
+        ],
+        "summary": "Update Departemen by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "departmentName": {
+                    "type": "string",
+                    "example": "Re.juve Bintaro Jaya Xchange Rev"
+                  },
+                  "regionCode": {
+                    "type": "string",
+                    "example": "JABODETABEK"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Departemen berhasil diperbarui."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "2. Master Departments"
+        ],
+        "summary": "Hapus Departemen by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Departemen berhasil dihapus."
+          }
+        }
+      }
+    },
+    "/masters/users": {
+      "get": {
+        "tags": [
+          "3. Master Users"
+        ],
+        "summary": "Daftar Pengguna (Mendukung Filter Dinamis & Relasi Role)",
+        "parameters": [
+          {
+            "name": "roleCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter role: SUPERADMIN, DISTRICT_MANAGER, STORE_LEADER, CREW"
+          },
+          {
+            "name": "role.roleCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter relasi role bertingkat"
+          },
+          {
+            "name": "name[contains]",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Pencarian nama user"
+          },
+          {
+            "name": "isActive",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar pengguna berhasil diambil."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "3. Master Users"
+        ],
+        "summary": "Buat User Baru (Otomatis Disinkronkan ke Lynx Webhook)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "email",
+                  "password",
+                  "roleId"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Ahmad Barista Baru"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "ahmad.barista@rejuve.co.id"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Secret123!"
+                  },
+                  "roleId": {
+                    "type": "string",
+                    "example": "45513f00-ed49-4c6a-a0f8-ec8a3842c4dc"
+                  },
+                  "departmentId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User berhasil dibuat dan disinkronkan ke Lynx."
+          }
+        }
+      }
+    },
+    "/masters/users/{id}": {
+      "get": {
+        "tags": [
+          "3. Master Users"
+        ],
+        "summary": "Detail User by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail user."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "3. Master Users"
+        ],
+        "summary": "Update User by ID (Otomatis Disinkronkan ke Lynx)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "roleId": {
+                    "type": "string"
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User berhasil diperbarui."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "3. Master Users"
+        ],
+        "summary": "Hapus User by ID (Otomatis Disinkronkan ke Lynx Delete)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User berhasil dihapus."
+          }
+        }
+      }
+    },
+    "/masters/roles": {
+      "get": {
+        "tags": [
+          "4. Master Roles"
+        ],
+        "summary": "Daftar Peran / Roles",
+        "parameters": [
+          {
+            "name": "roleCode[contains]",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar roles."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "4. Master Roles"
+        ],
+        "summary": "Buat Role Baru (Khusus Superadmin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "roleCode",
+                  "roleName"
+                ],
+                "properties": {
+                  "roleCode": {
+                    "type": "string",
+                    "example": "AREA_MANAGER"
+                  },
+                  "roleName": {
+                    "type": "string",
+                    "example": "Area Manager Re.juve"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Role berhasil dibuat."
+          }
+        }
+      }
+    },
+    "/masters/roles/{id}": {
+      "get": {
+        "tags": [
+          "4. Master Roles"
+        ],
+        "summary": "Detail Role by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail role."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "4. Master Roles"
+        ],
+        "summary": "Update Role by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "roleName": {
+                    "type": "string",
+                    "example": "Area Manager Senior"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role berhasil diperbarui."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "4. Master Roles"
+        ],
+        "summary": "Hapus Role by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Role berhasil dihapus."
+          }
+        }
+      }
+    },
+    "/params/groups": {
+      "get": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Daftar Kelompok Parameter (ParamGroup)",
+        "parameters": [
+          {
+            "name": "code[contains]",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar ParamGroup."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Buat Kelompok Parameter Baru (ParamGroup)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "EVALUATION_SCALE"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Skala Penilaian Evaluasi"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "ParamGroup berhasil dibuat."
+          }
+        }
+      }
+    },
+    "/params/groups/{id}": {
+      "get": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Detail ParamGroup beserta seluruh Param itemnya",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail ParamGroup."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Update ParamGroup by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Skala Penilaian Evaluasi Updated"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ParamGroup berhasil diperbarui."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Hapus ParamGroup by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ParamGroup berhasil dihapus."
+          }
+        }
+      }
+    },
+    "/params": {
+      "get": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Daftar Parameter Items",
+        "parameters": [
+          {
+            "name": "paramgroupId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code[contains]",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar params."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Buat Param Item Baru",
+        "description": "Bisa mengisi paramgroupId (UUID) atau paramgroupCode (Kode Group).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "value"
+                ],
+                "properties": {
+                  "paramgroupCode": {
+                    "type": "string",
+                    "example": "EVALUATION_SCALE"
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "SCALE_20"
+                  },
+                  "value": {
+                    "type": "string",
+                    "example": "Kelipatan 20 (Max 5 Bintang)"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Param berhasil dibuat."
+          }
+        }
+      }
+    },
+    "/params/group-code/{groupCode}": {
+      "get": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Ambil Opsi Dropdown Form Berdasarkan Group Code (Bisa Diakses Semua Role)",
+        "parameters": [
+          {
+            "name": "groupCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "EVALUATION_SCALE"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mengembalikan format dictionary { options: { [code]: value } } untuk dropdown frontend."
+          }
+        }
+      }
+    },
+    "/admin/settings": {
+      "get": {
+        "tags": [
+          "6. Administration"
+        ],
+        "summary": "Daftar System Settings",
+        "responses": {
+          "200": {
+            "description": "Daftar settings."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "6. Administration"
+        ],
+        "summary": "Buat Setting Baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "settingName",
+                  "settingValue"
+                ],
+                "properties": {
+                  "settingName": {
+                    "type": "string",
+                    "example": "APP_SESSION_TIMEOUT"
+                  },
+                  "settingValue": {
+                    "type": "string",
+                    "example": "3600"
+                  },
+                  "objectCode": {
+                    "type": "string",
+                    "example": "SETTING"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Setting berhasil dibuat."
+          }
+        }
+      }
+    },
+    "/admin/user-policies": {
+      "get": {
+        "tags": [
+          "6. Administration"
+        ],
+        "summary": "Daftar User Policies (Syarat & Ketentuan / Tata Tertib)",
+        "parameters": [
+          {
+            "name": "isRules",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter boolean: true atau false"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar policies."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "6. Administration"
+        ],
+        "summary": "Buat User Policy Baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "userpolicyCode",
+                  "userpolicyValue"
+                ],
+                "properties": {
+                  "userpolicyCode": {
+                    "type": "string",
+                    "example": "PRIVACY_POLICY_2026"
+                  },
+                  "userpolicyValue": {
+                    "type": "string",
+                    "example": "Kebijakan Privasi Karyawan Re.juve 2026"
+                  },
+                  "informationRemark": {
+                    "type": "string",
+                    "example": "Wajib disetujui saat onboarding"
+                  },
+                  "isRules": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "displayOrder": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "objectCode": {
+                    "type": "string",
+                    "example": "USERPOLICY"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Policy berhasil dibuat."
+          }
+        }
+      }
+    },
+    "/templates": {
+      "get": {
+        "tags": [
+          "7. Unified Master Templates"
+        ],
+        "summary": "Daftar Master Template Misi (Mendukung Filter Dinamis)",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BUDDY",
+                "JOURNEY",
+                "FEEDBACK"
+              ]
+            }
+          },
+          {
+            "name": "name[contains]",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar template misi."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "7. Unified Master Templates"
+        ],
+        "summary": "Buat Master Template Beserta Butir Misi Details",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "TPL-JOURNEY-BARISTA"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Core Barista Onboarding 3 Weeks"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "BUDDY",
+                      "JOURNEY",
+                      "FEEDBACK"
+                    ],
+                    "example": "JOURNEY"
+                  },
+                  "durationCode": {
+                    "type": "string",
+                    "enum": [
+                      "DAY",
+                      "WEEK",
+                      "MONTH",
+                      "YEAR"
+                    ],
+                    "example": "WEEK"
+                  },
+                  "durationValue": {
+                    "type": "integer",
+                    "example": 3
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Template onboarding barista 3 minggu"
+                  },
+                  "details": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "missionTitle"
+                      ],
+                      "properties": {
+                        "missionTitle": {
+                          "type": "string",
+                          "example": "Week 1: Hygiene & Bar SOP"
+                        },
+                        "category": {
+                          "type": "string",
+                          "enum": [
+                            "TECHNICAL",
+                            "SOFT_SKILL",
+                            "LEADERSHIP",
+                            "PROJECT"
+                          ],
+                          "example": "TECHNICAL"
+                        },
+                        "durationNumber": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "inputType": {
+                          "type": "string",
+                          "enum": [
+                            "SCALE",
+                            "CHECKBOX",
+                            "RADIO",
+                            "TEXT"
+                          ],
+                          "example": "SCALE"
+                        },
+                        "scaleConfig": {
+                          "type": "object",
+                          "properties": {
+                            "min": {
+                              "type": "integer",
+                              "example": 0
+                            },
+                            "max": {
+                              "type": "integer",
+                              "example": 100
+                            },
+                            "step": {
+                              "type": "integer",
+                              "example": 20
+                            },
+                            "starPerStep": {
+                              "type": "integer",
+                              "example": 1
+                            }
+                          }
+                        },
+                        "sopChecklist": {
+                          "type": "array",
+                          "description": "Standar Pelaksanaan Checklist SOP (khusus tipe JOURNEY)",
+                          "items": {
+                            "type": "string"
+                          },
+                          "example": [
+                            "Verifikasi checklist standar operasional",
+                            "Pemeriksaan kepatuhan & sanitasi"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "code": "TPL-JOURNEY-CORE",
+                "name": "Core Barista Journey",
+                "type": "JOURNEY",
+                "durationCode": "WEEK",
+                "durationValue": 3,
+                "description": "Program akselerasi onboarding barista 3 minggu",
+                "details": [
+                  {
+                    "missionTitle": "Week 1 : JCUY 01",
+                    "description": "Desc WEEK 1 : JCUY 01",
+                    "durationNumber": 1,
+                    "category": "TECHNICAL",
+                    "inputType": "SCALE",
+                    "scaleConfig": {
+                      "min": 0,
+                      "max": 100,
+                      "step": 10,
+                      "starPerStep": 1
+                    },
+                    "sopChecklist": [
+                      "Verifikasi checklist standar operasional",
+                      "Pemeriksaan kepatuhan & sanitasi"
+                    ]
+                  },
+                  {
+                    "missionTitle": "Week 2 : JCUY 02",
+                    "description": "Desc WEEK 2 : JCUY 02",
+                    "durationNumber": 2,
+                    "category": "TECHNICAL",
+                    "inputType": "SCALE",
+                    "scaleConfig": {
+                      "min": 0,
+                      "max": 100,
+                      "step": 10,
+                      "starPerStep": 1
+                    },
+                    "sopChecklist": [
+                      "Verifikasi checklist standar operasional",
+                      "Pemeriksaan kepatuhan & sanitasi"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Template misi berhasil dibuat."
+          }
+        }
+      }
+    },
+    "/templates/{id}": {
+      "get": {
+        "tags": [
+          "7. Unified Master Templates"
+        ],
+        "summary": "Detail Template Misi by ID (Include Details)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail template."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "7. Unified Master Templates"
+        ],
+        "summary": "Update Template Misi & Details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "durationCode": {
+                    "type": "string"
+                  },
+                  "durationValue": {
+                    "type": "integer"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "details": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "name": "Core Barista Journey Updated",
+                "durationCode": "WEEK",
+                "durationValue": 3,
+                "description": "Program akselerasi onboarding barista 3 minggu terupdate",
+                "details": [
+                  {
+                    "missionTitle": "Week 1 : JCUY 01 Updated",
+                    "description": "Desc WEEK 1 : JCUY 01 Updated",
+                    "durationNumber": 1,
+                    "category": "TECHNICAL",
+                    "inputType": "SCALE",
+                    "scaleConfig": {
+                      "min": 0,
+                      "max": 100,
+                      "step": 10,
+                      "starPerStep": 1
+                    },
+                    "sopChecklist": [
+                      "Verifikasi checklist standar operasional",
+                      "Pemeriksaan kepatuhan & sanitasi"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Template berhasil diperbarui."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "7. Unified Master Templates"
+        ],
+        "summary": "Hapus Template Misi by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template berhasil dihapus."
+          }
+        }
+      }
+    },
+    "/batches": {
+      "get": {
+        "tags": [
+          "8. Batch Generator"
+        ],
+        "summary": "Daftar Batch Onboarding",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "OPEN",
+                "COMPLETED",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "name[contains]",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar batch."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "8. Batch Generator"
+        ],
+        "summary": "Buat Batch Baru (Status DRAFT atau Langsung OPEN)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "startDate",
+                  "tplJourneyId",
+                  "crewIds"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Batch Barista Onboarding September 2026"
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-09-01"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "DRAFT",
+                      "OPEN"
+                    ],
+                    "default": "DRAFT",
+                    "example": "DRAFT"
+                  },
+                  "tplBuddyId": {
+                    "type": "string",
+                    "nullable": true,
+                    "example": "UUID-TPL-BUDDY"
+                  },
+                  "tplJourneyId": {
+                    "type": "string",
+                    "example": "UUID-TPL-JOURNEY"
+                  },
+                  "tplFeedbackId": {
+                    "type": "string",
+                    "nullable": true,
+                    "example": "UUID-TPL-FEEDBACK"
+                  },
+                  "crewIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "UUID-USER-CREW-1"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Batch berhasil dibuat."
+          }
+        }
+      }
+    },
+    "/batches/{id}/generate": {
+      "post": {
+        "tags": [
+          "8. Batch Generator"
+        ],
+        "summary": "Generate Misi Batch dari DRAFT ke OPEN",
+        "description": "Membaca template, menghitung timeline tanggal sekuensial, membuat penugasan misi crew (UserMission), dan mengubah status batch menjadi OPEN.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Misi batch berhasil di-generate."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions": {
+      "get": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Daftar Penugasan Misi (User Missions) untuk Evaluasi",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter ID Crew"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LOCKED",
+                "ACTIVE",
+                "SCORED_BY_TL",
+                "REVISED_BY_DM",
+                "APPROVED_BY_DM",
+                "COMPLETED"
+              ]
+            }
+          },
+          {
+            "name": "mission.type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BUDDY",
+                "JOURNEY",
+                "FEEDBACK"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar user missions."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions/{id}": {
+      "get": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Detail Penugasan Misi by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail user mission."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions/{id}/buddy-score": {
+      "post": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Penilaian Misi Buddy (Buddy -> Langsung COMPLETED & Auto-unlock Journey W1)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "score"
+                ],
+                "properties": {
+                  "score": {
+                    "type": "number",
+                    "example": 85
+                  },
+                  "notes": {
+                    "type": "string",
+                    "example": "Orientasi kebersihan dan bar berjalan sangat baik."
+                  },
+                  "evidenceUrl": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Misi Buddy selesai dinilai."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions/{id}/sl-score": {
+      "post": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Penilaian Misi Journey oleh Store Leader (+ Upload Foto MinIO)",
+        "description": "Mendukung multipart/form-data (upload file foto bukti langsung ke MinIO) atau JSON standar.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "score"
+                ],
+                "properties": {
+                  "score": {
+                    "type": "number",
+                    "example": 95
+                  },
+                  "notes": {
+                    "type": "string",
+                    "example": "Sanitasi bar dan mesin cold press sangat bersih."
+                  },
+                  "evidence": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File gambar bukti foto (JPEG, PNG, WEBP)"
+                  }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "score"
+                ],
+                "properties": {
+                  "score": {
+                    "type": "number",
+                    "example": 90
+                  },
+                  "notes": {
+                    "type": "string",
+                    "example": "Pembersihan bar sesuai SOP."
+                  },
+                  "evidenceUrl": {
+                    "type": "string",
+                    "example": "http://minio.local/evidence/w1.jpg"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Penilaian Store Leader disimpan (SCORED_BY_TL)."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions/{id}/dm-review": {
+      "post": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Review Misi Journey oleh District Manager (APPROVE / REVISE / REJECT)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "APPROVE",
+                      "REVISE",
+                      "REJECT"
+                    ],
+                    "example": "APPROVE"
+                  },
+                  "score": {
+                    "type": "number",
+                    "description": "Wajib jika action APPROVE",
+                    "example": 90
+                  },
+                  "notes": {
+                    "type": "string",
+                    "description": "Wajib jika action REVISE",
+                    "example": "Luar biasa, disetujui."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Review DM berhasil diproses."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions/{id}/crew-feedback": {
+      "post": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Pengisian Feedback Onboarding oleh Crew",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "submissionNotes"
+                ],
+                "properties": {
+                  "submissionNotes": {
+                    "type": "string",
+                    "example": "Pengalaman onboarding Re.juve sangat menyenangkan dan terstruktur!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feedback berhasil dikirim (COMPLETED)."
+          }
+        }
+      }
+    },
+    "/sync/departments/pull-all": {
+      "post": {
+        "tags": [
+          "10. Lynx Sync"
+        ],
+        "summary": "Tarik Seluruh Toko / Departemen dari Lynx (Soft Deactivate Missing)",
+        "responses": {
+          "200": {
+            "description": "Berhasil pull dan sync departemen."
+          }
+        }
+      }
+    },
+    "/sync/users/pull-all": {
+      "post": {
+        "tags": [
+          "10. Lynx Sync"
+        ],
+        "summary": "Tarik Seluruh Pengguna dari Lynx (Auto-map Role UUID & Department)",
+        "responses": {
+          "200": {
+            "description": "Berhasil pull dan sync pengguna."
+          }
+        }
+      }
+    },
+    "/auth/active-batch": {
+      "patch": {
+        "tags": [
+          "1. Authentication"
+        ],
+        "summary": "Ganti Active Batch Pengguna (SL / DM / Superadmin)",
+        "description": "Menyimpan preferensi batch aktif di database pengguna (kolom activeBatchId). Seluruh endpoint evaluasi otomatis memfilter berdasarkan batch ini.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "batchId"
+                ],
+                "properties": {
+                  "batchId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "d3b07384-d113-40a2-9721-e380e2270929"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Active batch berhasil diupdate."
+          },
+          "400": {
+            "description": "Field batchId wajib diisi."
+          },
+          "404": {
+            "description": "Batch tidak ditemukan."
+          }
+        }
+      }
+    },
+    "/evaluations/crews": {
+      "get": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Daftar Crew Gerai untuk Workstation Evaluasi (Sidebar)",
+        "description": "Mengembalikan daftar seluruh kru di gerai Store Leader / District Manager lengkap dengan indikator status (NEEDS_SCORING / COMPLETED), jumlah misi terisi, dan rata-rata skor pekan ini.",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Batch UUID opsional (otomatis fallback ke activeBatchId pengguna)"
+          },
+          {
+            "name": "week",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Pekan evaluasi (1, 2, 3)"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "JOURNEY",
+                "BUDDY",
+                "FEEDBACK"
+              ],
+              "default": "JOURNEY"
+            },
+            "description": "Tipe misi"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Pencarian bebas nama atau email kru"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar kru workstation berhasil diambil."
+          }
+        }
+      }
+    },
+    "/evaluations/crews/{userId}/missions": {
+      "get": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Daftar Kartu Misi untuk Kru Tertentu (Saat Card Diklik)",
+        "description": "Mengembalikan seluruh kartu misi untuk kru tersebut pada batch & week aktif lengkap dengan status, nilai SL, review DM, evidence foto, dan kalkulasi bintang desimal.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID Kru yang dipilih"
+          },
+          {
+            "name": "batchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Batch UUID opsional"
+          },
+          {
+            "name": "week",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Pekan misi (1, 2, 3)"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "JOURNEY",
+                "BUDDY",
+                "FEEDBACK"
+              ]
+            },
+            "description": "Tipe misi opsional"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar misi kru berhasil diambil."
+          },
+          "404": {
+            "description": "User tidak ditemukan."
+          }
+        }
+      }
+    },
+    "/masters/users/template": {
+      "get": {
+        "tags": [
+          "4. Master Users & Bulking"
+        ],
+        "summary": "Download Template Excel Import User (.xlsx)",
+        "description": "Menghasilkan dan mengunduh file binary spreadsheet Excel template impor akun pengguna beserta contoh data.",
+        "responses": {
+          "200": {
+            "description": "File spreadsheet template berhasil diunduh.",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/masters/users/bulk-preview": {
+      "post": {
+        "tags": [
+          "4. Master Users & Bulking"
+        ],
+        "summary": "Preview Validasi Bulk User Import (Dry Run)",
+        "description": "Membaca dan memvalidasi file Excel/CSV user secara dry-run (tanpa mutasi database). Menghasilkan laporan baris valid, duplikat, dan invalid dengan pesan error detail.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File spreadsheet (.xlsx / .xls / .csv)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preview data import berhasil diproses."
+          }
+        }
+      }
+    },
+    "/masters/users/bulk-commit": {
+      "post": {
+        "tags": [
+          "4. Master Users & Bulking"
+        ],
+        "summary": "Commit Bulk Users ke Database",
+        "description": "Menyimpan daftar akun pengguna yang sudah divalidasi ke database dengan password awal \"password123\". Mendukung opsi onDuplicate: SKIP atau UPDATE.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "users"
+                ],
+                "properties": {
+                  "onDuplicate": {
+                    "type": "string",
+                    "enum": [
+                      "SKIP",
+                      "UPDATE"
+                    ],
+                    "default": "SKIP"
+                  },
+                  "users": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "email"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "example": "Budi Santoso"
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "budi.santoso@rejuve.co.id"
+                        },
+                        "roleCode": {
+                          "type": "string",
+                          "example": "CREW"
+                        },
+                        "departmentCode": {
+                          "type": "string",
+                          "example": "BKI_01"
+                        },
+                        "isBuddy": {
+                          "type": "boolean",
+                          "example": false
+                        },
+                        "buddyEmail": {
+                          "type": "string",
+                          "example": null
+                        },
+                        "batchCode": {
+                          "type": "string",
+                          "example": null
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "onDuplicate": "SKIP",
+                "users": [
+                  {
+                    "name": "Budi Santoso",
+                    "email": "budi.santoso@rejuve.co.id",
+                    "roleCode": "CREW",
+                    "departmentCode": "BKI_01",
+                    "isBuddy": false,
+                    "buddyEmail": null,
+                    "batchCode": null
+                  },
+                  {
+                    "name": "Anita Wijaya",
+                    "email": "anita.wijaya@rejuve.co.id",
+                    "roleCode": "STORE_LEADER",
+                    "departmentCode": "BKI_01",
+                    "isBuddy": true,
+                    "buddyEmail": null,
+                    "batchCode": null
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User massal berhasil diimpor."
+          }
+        }
+      }
+    }
+  }
+}
