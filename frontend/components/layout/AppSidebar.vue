@@ -453,6 +453,7 @@ const handleLogout = () => {
 
 const navItems = computed(() => {
   const role = userStore.currentRole
+  const isBuddy = Boolean(userStore.currentUser?.isBuddy)
 
   if (role === 'SUPERADMIN') {
     return [
@@ -496,15 +497,22 @@ const navItems = computed(() => {
     ]
   }
 
-  if (role === 'STORE_LEADER' || role === 'SUPERVISOR') {
-    return [
+  if (role === 'STORE_LEADER' || role === 'SUPERVISOR' || role === 'SL') {
+    const items = [
       { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      { label: 'Batch Misi', path: '/batches', icon: Layers },
-      {
+      { label: 'Batch Misi', path: '/batches', icon: Layers }
+    ]
+
+    // Menu Penilaian Buddy HANYA bisa dilihat role SL jika isBuddy bernilai true
+    if (isBuddy) {
+      items.push({
         label: 'Penilaian Buddy',
         path: '/buddy',
         icon: Handshake
-      },
+      })
+    }
+
+    items.push(
       {
         label: 'Penilaian Kru',
         path: '/evaluations',
@@ -515,10 +523,12 @@ const navItems = computed(() => {
       { label: 'Missions', path: '/missions', icon: Target },
       { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
       { label: 'Achievements', path: '/achievements', icon: Trophy }
-    ]
+    )
+
+    return items
   }
 
-  // DISTRICT_MANAGER / HEAD Role (has both Approvals and Direct Evaluation!)
+  // DISTRICT_MANAGER / HEAD Role (Approvals DM, TANPA Penilaian Kru & TANPA Penilaian Buddy)
   return [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Batch Misi', path: '/batches', icon: Layers },
@@ -528,16 +538,6 @@ const navItems = computed(() => {
       icon: ShieldCheck,
       badge: approvalStore.pendingApprovals.length > 0 ? `${approvalStore.pendingApprovals.length}` : null,
       badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-    },
-    {
-      label: 'Penilaian Buddy',
-      path: '/buddy',
-      icon: Handshake
-    },
-    {
-      label: 'Penilaian Kru',
-      path: '/evaluations',
-      icon: ClipboardCheck
     },
     { label: 'Missions', path: '/missions', icon: Target },
     { label: 'Leaderboard', path: '/leaderboard', icon: Medal },

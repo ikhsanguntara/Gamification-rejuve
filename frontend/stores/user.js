@@ -61,7 +61,8 @@ export const mockUsers = {
     storeLocation: 'Grand Indonesia & Senayan City',
     batchId: 'batch-alpha',
     stars: 0,
-    level: 0
+    level: 0,
+    isBuddy: true
   },
   STORE_LEADER_2: {
     id: 'sl-002',
@@ -75,7 +76,8 @@ export const mockUsers = {
     storeLocation: 'Pondok Indah Mall',
     batchId: 'batch-gamma',
     stars: 0,
-    level: 0
+    level: 0,
+    isBuddy: false
   },
   // Backward compatibility alias for supervisor
   SUPERVISOR_1: {
@@ -387,6 +389,7 @@ export const useUserStore = defineStore('user', {
             existing.name = apiU.name
             existing.role = localRole
             existing.email = apiU.email
+            existing.isBuddy = Boolean(apiU.isBuddy)
             this.currentUserId = existing.id
           } else {
             const newUser = {
@@ -401,7 +404,8 @@ export const useUserStore = defineStore('user', {
               storeLocation: apiU.department?.departmentName || 'Re.juve Store',
               batchId: apiU.batchId || 'batch-alpha',
               stars: apiU.stars || 0,
-              level: apiU.level || 1
+              level: apiU.level || 1,
+              isBuddy: Boolean(apiU.isBuddy)
             }
             this.userDirectory.push(newUser)
             this.currentUserId = newUser.id
