@@ -1,7 +1,19 @@
 <template>
   <header class="h-16 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-3.5 sm:px-6 w-full">
     <!-- Left: Brand Logo & Batch / Gerai Quick Selector -->
-    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+      <!-- Mobile Hamburger Menu Button (Hidden on lg+, Hidden for Crew) -->
+      <button
+        v-if="!userStore.isCrew"
+        type="button"
+        @click="toggleMobile"
+        class="lg:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-hidden cursor-pointer flex-shrink-0"
+        aria-label="Buka Menu Sidebar"
+        title="Buka Menu Sidebar"
+      >
+        <Menu class="w-5 h-5" />
+      </button>
+
       <!-- Mobile Brand Logo -->
       <NuxtLink to="/dashboard" class="lg:hidden flex items-center gap-2 flex-shrink-0">
         <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shadow-sm ring-2 ring-[#831843]/30">
@@ -234,6 +246,7 @@ import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useTheme } from '~/composables/useTheme.js'
 import { useToast } from '~/composables/useToast.js'
+import { useSidebar } from '~/composables/useSidebar.js'
 import {
   Layers,
   ChevronDown,
@@ -242,7 +255,8 @@ import {
   Bell,
   User,
   Settings,
-  LogOut
+  LogOut,
+  Menu
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -250,6 +264,7 @@ const userStore = useUserStore()
 const batchStore = useBatchStore()
 const { isDark, toggleTheme } = useTheme()
 const toast = useToast()
+const { toggleMobile } = useSidebar()
 
 const currentBatchTotalWeeks = computed(() => {
   return batchStore.currentBatch?.weeks?.length || batchStore.currentBatch?.totalWeeks || 3

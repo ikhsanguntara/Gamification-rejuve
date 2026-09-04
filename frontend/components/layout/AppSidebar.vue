@@ -1,25 +1,62 @@
 <template>
-  <aside class="hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 z-20 overflow-hidden">
-    <!-- Brand Logo & App Name -->
-    <div class="h-16 flex items-center px-5 gap-3 border-b border-slate-100 dark:border-slate-800/80 flex-shrink-0">
-      <div class="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 shadow-md ring-2 ring-[#831843]/30">
-        <img
-          src="/images/logo.png"
-          alt="Re.juve Logo"
-          class="w-full h-full object-cover"
-        />
-      </div>
-      <div>
-        <div class="flex items-center gap-1.5">
-          <h1 class="font-bold text-base text-slate-900 dark:text-white leading-tight">
-            Re.juve
-          </h1>
-          <span class="text-xs font-semibold px-1.5 py-0.2 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
-            SOP
-          </span>
+  <div>
+    <!-- Mobile Backdrop Overlay (< lg) -->
+    <Transition
+      enter-active-class="transition-opacity duration-300 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="isMobileOpen"
+        @click="closeMobile"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 lg:hidden"
+        aria-hidden="true"
+      />
+    </Transition>
+
+    <!-- Sidebar Element (Sticky on lg+, Off-canvas Drawer on < lg) -->
+    <aside
+      class="flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 overflow-hidden transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:translate-x-0 lg:z-20 fixed inset-y-0 left-0 w-72 max-w-[85vw] h-full z-50 shadow-2xl lg:shadow-none"
+      :class="[
+        isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      ]"
+    >
+      <!-- Brand Logo & App Name -->
+      <div class="h-16 flex items-center justify-between px-5 gap-3 border-b border-slate-100 dark:border-slate-800/80 flex-shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 shadow-md ring-2 ring-[#831843]/30">
+            <img
+              src="/images/logo.png"
+              alt="Re.juve Logo"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h1 class="font-bold text-base text-slate-900 dark:text-white leading-tight">
+                Re.juve
+              </h1>
+              <span class="text-xs font-semibold px-1.5 py-0.2 rounded bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
+                SOP
+              </span>
+            </div>
+          </div>
         </div>
+
+        <!-- Mobile Close Button (Hidden on lg+) -->
+        <button
+          type="button"
+          @click="closeMobile"
+          class="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          aria-label="Tutup Menu Sidebar"
+          title="Tutup Menu"
+        >
+          <X class="w-5 h-5" />
+        </button>
       </div>
-    </div>
 
     <!-- Navigation Links -->
     <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto min-h-0">
@@ -314,16 +351,18 @@
       </div>
     </div>
   </aside>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useApprovalStore } from '~/stores/approval.js'
 import { useMissionStore } from '~/stores/mission.js'
 import { useToast } from '~/composables/useToast.js'
+import { useSidebar } from '~/composables/useSidebar.js'
 import {
   LayoutDashboard,
   Layers,
@@ -340,7 +379,8 @@ import {
   ChevronUp,
   Compass,
   Handshake,
-  MessageSquareText
+  MessageSquareText,
+  X
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -350,7 +390,49 @@ const batchStore = useBatchStore()
 const approvalStore = useApprovalStore()
 const missionStore = useMissionStore()
 const toast = useToast()
+const { isMobileOpen, closeMobile } = useSidebar()
 
+// Tutup drawer mobile secara otomatis setiap kali rute/halaman berpindah
+watch(
+  () => route.fullPath,
+  () => {
+    closeMobile()
+  }
+)
+
+// Kunci scroll background body saat drawer mobile terbuka
+watch(
+  isMobileOpen,
+  (open) => {
+    if (typeof document !== 'undefined') {
+      if (open && window.innerWidth < 1024) {
+        document.body.style.overflow = 'hidden'
+      } else {
+        document.body.style.overflow = ''
+      }
+    }
+  }
+)
+
+// Tangani tombol keyboard Escape untuk menutup drawer
+const handleKeyDown = (e) => {
+  if (e.key === 'Escape' && isMobileOpen.value) {
+    closeMobile()
+  }
+}
+
+onMounted(() => {
+  if (typeof document !== 'undefined') {
+    document.addEventListener('keydown', handleKeyDown)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('keydown', handleKeyDown)
+    document.body.style.overflow = ''
+  }
+})
 const isAdminOpen = ref(true)
 
 const isAdminActive = computed(() => {
