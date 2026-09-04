@@ -5,9 +5,15 @@
 # ==============================================================================
 set -e
 
-# Pastikan script berpindah ke direktori repository di mana script ini berada
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+# Pastikan script berpindah ke direktori asli repository (mendukung pemanggilan via symlink di ~)
+REAL_SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "$REAL_SCRIPT_PATH")" && pwd)"
+
+if [ -d "/opt/rejuve-gamification" ]; then
+  cd "/opt/rejuve-gamification"
+else
+  cd "$SCRIPT_DIR"
+fi
 
 echo "=================================================================="
 echo "🚀 [1/4] Mengambil pembaruan kode backend terbaru dari Git..."
