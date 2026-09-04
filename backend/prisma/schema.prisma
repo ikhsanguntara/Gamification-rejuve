@@ -251,6 +251,7 @@ model TplMissionDetail {
   durationNumber     Int              @default(1)                   @map("duration_number")
   inputType          MissionInputType @default(SCALE)               @map("input_type")
   scaleConfig        Json?                                          @map("scale_config")
+  sopChecklist       Json?                                          @map("sop_checklist")
 
   tplMission         TplMission       @relation(fields: [tplMissionId], references: [tplMissionId], onDelete: Cascade)
 
@@ -317,6 +318,7 @@ model Mission {
   type             TypeMissions
   inputType        MissionInputType @default(SCALE)               @map("input_type")
   scaleConfig      Json?                                          @map("scale_config")
+  sopChecklist     Json?                                          @map("sop_checklist")
   
   startDate        DateTime                                       @map("start_date") @db.Date
   endDate          DateTime                                       @map("end_date") @db.Date

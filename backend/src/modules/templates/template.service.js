@@ -118,7 +118,8 @@ const createTemplate = async (payload, userId = null) => {
         category: d.category || 'TECHNICAL',
         durationNumber: Number(d.durationNumber) || 1,
         inputType: d.inputType || 'SCALE',
-        scaleConfig: d.scaleConfig || (d.inputType === 'SCALE' ? defaultScaleConfig : null)
+        scaleConfig: d.scaleConfig || (d.inputType === 'SCALE' ? defaultScaleConfig : null),
+        sopChecklist: d.sopChecklist || null
       }));
 
       await tx.tplMissionDetail.createMany({ data: detailData });
@@ -190,7 +191,8 @@ const updateTemplate = async (id, payload, userId = null) => {
           category: d.category || 'TECHNICAL',
           durationNumber: Number(d.durationNumber) || 1,
           inputType: d.inputType || 'SCALE',
-          scaleConfig: d.scaleConfig || (d.inputType === 'SCALE' ? defaultScaleConfig : null)
+          scaleConfig: d.scaleConfig || (d.inputType === 'SCALE' ? defaultScaleConfig : null),
+          sopChecklist: d.sopChecklist || null
         }));
 
         await tx.tplMissionDetail.createMany({ data: detailData });

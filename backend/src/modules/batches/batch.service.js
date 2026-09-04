@@ -155,6 +155,7 @@ const executeBatchGeneration = async (tx, {
           type: 'BUDDY',
           inputType: detail.inputType || 'SCALE',
           scaleConfig: detail.scaleConfig || null,
+          sopChecklist: detail.sopChecklist || null,
           startDate: mStart,
           endDate: mEnd
         }
@@ -192,6 +193,7 @@ const executeBatchGeneration = async (tx, {
         type: 'JOURNEY',
         inputType: detail.inputType || 'SCALE',
         scaleConfig: detail.scaleConfig || null,
+        sopChecklist: detail.sopChecklist || null,
         startDate: mStart,
         endDate: mEnd
       }
@@ -229,6 +231,7 @@ const executeBatchGeneration = async (tx, {
           type: 'FEEDBACK',
           inputType: detail.inputType || 'TEXT',
           scaleConfig: detail.scaleConfig || null,
+          sopChecklist: detail.sopChecklist || null,
           startDate: mStart,
           endDate: mEnd
         }
