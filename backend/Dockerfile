@@ -14,7 +14,7 @@ COPY prisma.config.js ./
 COPY prisma ./prisma/
 
 # Install dependencies (termasuk prisma CLI untuk migrasi & generate)
-RUN npm ci
+RUN npm install
 
 # Generate Prisma Client v7
 RUN npx prisma generate
