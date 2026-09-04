@@ -65,7 +65,31 @@ assert(updatedUser.position === 'Senior Barista Lead' && updatedUser.name === 'B
 userStore.assignUserToBatch(newUser.id, 'batch-beta', 'Senayan City')
 assert(updatedUser.batchId === 'batch-beta', 'Reassign User: Berhasil memindahkan crew ke batch/cabang lain')
 
-// 1.5 DELETE USER
+// 1.5 CREATE USER SL DENGAN ISBUDDY
+const slUser = userStore.createUser({
+  name: 'Dimas Wicaksono',
+  role: 'STORE_LEADER',
+  position: 'Store Leader',
+  email: 'dimas.w@rejuve.co.id',
+  isBuddy: true
+})
+assert(slUser && slUser.isBuddy === true, 'Create User: Berhasil mendaftarkan SL dengan flag isBuddy aktif')
+
+// 1.6 ASSIGN CREW TO SL BUDDY
+const crewWithBuddy = userStore.createUser({
+  name: 'Siti Rahma',
+  role: 'CREW',
+  position: 'Barista Apprentice',
+  email: 'siti.rahma@rejuve.co.id',
+  userBuddyId: slUser.id
+})
+assert(crewWithBuddy && crewWithBuddy.userBuddyId === slUser.id, 'Create User: Berhasil menugaskan Crew ke Store Leader Buddy')
+assert(userStore.buddyStoreLeaders.some(b => b.id === slUser.id), 'Filter SL Buddy: Berhasil menemukan SL Buddy aktif')
+
+userStore.deleteUser(crewWithBuddy.id)
+userStore.deleteUser(slUser.id)
+
+// 1.6 DELETE USER
 userStore.deleteUser(newUser.id)
 assert(userStore.allUsers.find(u => u.id === newUser.id) === undefined, 'Delete User: Berhasil menghapus user dari direktori')
 assert(gamificationStore.crewById(newUser.id) === undefined, 'Delete User: Otomatis terhapus dari roster gamifikasi')

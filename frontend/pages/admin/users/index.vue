@@ -87,17 +87,26 @@
 
       <!-- Custom Cell: Role & Jabatan -->
       <template #role="{ row }">
-        <span
-          class="text-xs font-semibold px-2 py-0.5 rounded-full inline-block mb-0.5"
-          :class="[
-            row.role === 'CREW' ? 'bg-[#831843]/15 text-[#831843] dark:text-[#f472b6]' :
-            row.role === 'STORE_LEADER' || row.role === 'SUPERVISOR' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
-            row.role === 'DISTRICT_MANAGER' || row.role === 'HEAD' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' :
-            'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
-          ]"
-        >
-          {{ row.role === 'STORE_LEADER' ? 'Store Leader' : row.role === 'DISTRICT_MANAGER' ? 'District Manager' : row.role }}
-        </span>
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span
+            class="text-xs font-semibold px-2 py-0.5 rounded-full inline-block mb-0.5"
+            :class="[
+              row.role === 'CREW' ? 'bg-[#831843]/15 text-[#831843] dark:text-[#f472b6]' :
+              row.role === 'STORE_LEADER' || row.role === 'SUPERVISOR' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
+              row.role === 'DISTRICT_MANAGER' || row.role === 'HEAD' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' :
+              'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
+            ]"
+          >
+            {{ row.role === 'STORE_LEADER' ? 'Store Leader' : row.role === 'DISTRICT_MANAGER' ? 'District Manager' : row.role }}
+          </span>
+          <span
+            v-if="row.isBuddy"
+            class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-200 dark:border-pink-800"
+            title="Bertindak sebagai Buddy / Mentor New Hire"
+          >
+            Buddy
+          </span>
+        </div>
         <p class="text-xs text-slate-500 dark:text-slate-400">{{ row.position }}</p>
       </template>
 
@@ -110,6 +119,9 @@
           </div>
           <span v-if="row.batchId" class="text-[11px] text-slate-500 dark:text-slate-400 block">
             {{ getBatchName(row.batchId) }}
+          </span>
+          <span v-if="row.userBuddyId" class="text-[10px] text-pink-600 dark:text-pink-400 font-medium block">
+            🤝 Buddy: {{ getBuddyName(row.userBuddyId) || 'SL Buddy' }}
           </span>
         </div>
         <div v-else class="text-slate-500 dark:text-slate-400 text-xs">
@@ -265,6 +277,12 @@ const getBatchName = (batchId) => {
   if (!batchId) return 'Belum Ditugaskan'
   const b = batchStore.batchById(batchId)
   return b ? b.name : 'Belum Ditugaskan'
+}
+
+const getBuddyName = (buddyId) => {
+  if (!buddyId) return null
+  const u = userStore.allUsers.find(user => user.id === buddyId)
+  return u ? u.name : null
 }
 
 import { confirmDeleteDialog } from '~/utils/dialog.js'

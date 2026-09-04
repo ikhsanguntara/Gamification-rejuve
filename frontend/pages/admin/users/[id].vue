@@ -70,6 +70,36 @@
           </div>
         </div>
 
+        <!-- Checkbox isBuddy khusus Role Store Leader (SL) -->
+        <div
+          v-if="form.role === 'STORE_LEADER'"
+          class="p-4 rounded-2xl bg-pink-500/5 dark:bg-pink-500/10 border border-pink-300/40 dark:border-pink-700/40 transition-all duration-200"
+        >
+          <label class="flex items-start gap-3 cursor-pointer select-none">
+            <input
+              v-model="form.isBuddy"
+              type="checkbox"
+              class="mt-0.5 w-4 h-4 rounded text-[#831843] border-slate-300 dark:border-slate-700 focus:ring-[#831843] focus:ring-offset-0 cursor-pointer"
+            />
+            <div class="space-y-0.5">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-900 dark:text-white">
+                  isBuddy (Ditugaskan sebagai Mentor / Buddy New Hire)
+                </span>
+                <span
+                  class="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                  :class="form.isBuddy ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'"
+                >
+                  {{ form.isBuddy ? 'true' : 'false' }}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                Centang opsi ini jika Store Leader ini bertindak sebagai Buddy untuk mendampingi dan menilai program 3 hari kru baru (Pre-Batch).
+              </p>
+            </div>
+          </label>
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Perusahaan</label>
@@ -91,30 +121,60 @@
         </div>
 
         <!-- Store Assignment for CREW -->
-        <div v-if="form.role === 'CREW'" class="p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-300/40 dark:border-amber-700/40 space-y-3">
+        <div v-if="form.role === 'CREW'" class="p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-300/40 dark:border-amber-700/40 space-y-4">
           <div class="flex items-center justify-between">
             <label class="block text-xs font-bold text-amber-800 dark:text-amber-300">
-              🏪 Penugasan Gerai (Store Outlet) *
+              🏪 Penugasan Gerai & Mentor Buddy *
             </label>
             <span class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
               Khusus Role Crew
             </span>
           </div>
 
-          <select
-            v-model="form.storeId"
-            @change="handleStoreChange"
-            class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 shadow-xs"
-          >
-            <option :value="null">Belum Ditugaskan (Standby / Cadangan)</option>
-            <option
-              v-for="st in storeStore.allStores"
-              :key="st.id"
-              :value="st.id"
+          <!-- Outlet Gerai Selector -->
+          <div class="space-y-1.5">
+            <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+              Cabang Gerai (Store Outlet)
+            </label>
+            <SearchableSelect
+              v-model="form.storeId"
+              :options="storeOptions"
+              placeholder="Pilih atau cari gerai penugasan..."
+              search-placeholder="Ketik nama gerai, kode (e.g. 9BIC), atau wilayah..."
+              variant="amber"
+              @change="handleStoreChange"
             >
-              {{ st.name }} ({{ st.code }}) — {{ st.region }}
-            </option>
-          </select>
+              <template #icon>
+                <Store class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+              </template>
+            </SearchableSelect>
+          </div>
+
+          <!-- Mentor Buddy (SL dengan isBuddy = true) Selector -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                Mentor Buddy (Store Leader dengan isBuddy aktif)
+              </label>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400">
+                {{ buddyOptions.length - 1 }} SL Buddy Tersedia
+              </span>
+            </div>
+            <SearchableSelect
+              v-model="form.userBuddyId"
+              :options="buddyOptions"
+              placeholder="Pilih atau cari Store Leader Buddy..."
+              search-placeholder="Cari nama Store Leader Buddy atau email..."
+              variant="amber"
+            >
+              <template #icon>
+                <UserCheck class="w-3.5 h-3.5 text-pink-600 dark:text-pink-400 flex-shrink-0" />
+              </template>
+            </SearchableSelect>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              Store Leader yang ditugaskan sebagai Buddy akan mendampingi dan mengisi Rapor 7 Kompetensi Kru selama masa orientasi (Pre-Batch).
+            </p>
+          </div>
 
           <!-- Preview Selected Store Info -->
           <div v-if="selectedStore" class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-amber-200/60 dark:border-amber-800/60 text-xs space-y-1.5">
@@ -154,12 +214,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
 import { useStoreStore } from '~/stores/store.js'
 import { useToast } from '~/composables/useToast.js'
-import { ArrowLeft } from 'lucide-vue-next'
+import SearchableSelect from '~/components/ui/SearchableSelect.vue'
+import { ArrowLeft, Store, UserCheck } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -177,7 +238,83 @@ const form = ref({
   position: '',
   email: '',
   storeId: null,
-  avatar: ''
+  userBuddyId: null,
+  avatar: '',
+  isBuddy: false
+})
+
+// Reset isBuddy jika admin berganti role selain Store Leader (SL), reset userBuddyId jika bukan CREW
+watch(
+  () => form.value.role,
+  (newRole) => {
+    if (newRole !== 'STORE_LEADER') {
+      form.value.isBuddy = false
+    }
+    if (newRole !== 'CREW') {
+      form.value.userBuddyId = null
+    }
+  }
+)
+
+const storeOptions = computed(() => {
+  const list = [
+    {
+      value: null,
+      label: 'Belum Ditugaskan (Standby / Cadangan)',
+      code: '',
+      sublabel: ''
+    }
+  ]
+  storeStore.allStores.forEach(st => {
+    list.push({
+      value: st.id,
+      label: st.name,
+      code: st.code || '',
+      sublabel: st.region || st.address || ''
+    })
+  })
+  return list
+})
+
+// Daftar Store Leader yang memiliki isBuddy === true
+const buddyOptions = computed(() => {
+  const list = [
+    {
+      value: null,
+      label: 'Belum Ditugaskan Mentor Buddy (Standby)',
+      code: '',
+      sublabel: ''
+    }
+  ]
+  const buddies = userStore.allUsers.filter(u =>
+    (u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR') && Boolean(u.isBuddy)
+  )
+  buddies.forEach(b => {
+    list.push({
+      value: b.id,
+      label: b.name,
+      code: 'SL BUDDY',
+      sublabel: b.storeLocation || b.department || b.email || ''
+    })
+  })
+  return list
+})
+
+onMounted(async () => {
+  try {
+    const promises = []
+    if (storeStore.allStores.length === 0) {
+      promises.push(storeStore.fetchStoresFromApi({ page: 1, limit: 100 }))
+    }
+    if (userStore.allUsers.length === 0) {
+      promises.push(userStore.fetchUsersFromApi({ page: 1, limit: 100 }))
+    }
+    if (promises.length > 0) {
+      await Promise.all(promises)
+    }
+  } catch (e) {
+    console.warn('Gagal memuat stores/users:', e.message)
+  }
 })
 
 const selectedStore = computed(() => {
@@ -206,7 +343,9 @@ watch(
         storeId: u.storeId || (u.batchId === 'batch-alpha' ? 'store-001' : u.batchId === 'batch-beta' ? 'store-002' : u.batchId === 'batch-gamma' ? 'store-003' : null),
         storeLocation: u.storeLocation || '',
         batchId: u.batchId || null,
-        avatar: u.avatar || ''
+        userBuddyId: u.userBuddyId || null,
+        avatar: u.avatar || '',
+        isBuddy: Boolean(u.isBuddy)
       }
     }
   },
@@ -223,7 +362,9 @@ const handleUpdate = async () => {
   try {
     const payload = {
       name: form.value.name.trim(),
-      isActive: true
+      isActive: true,
+      isBuddy: form.value.role === 'STORE_LEADER' ? Boolean(form.value.isBuddy) : false,
+      userBuddyId: (form.value.role === 'CREW' && form.value.userBuddyId) ? form.value.userBuddyId : null
     }
     if (form.value.storeId && String(form.value.storeId).length > 20) {
       payload.departmentId = form.value.storeId

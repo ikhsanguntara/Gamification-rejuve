@@ -327,6 +327,7 @@ export const useUserStore = defineStore('user', {
     },
 
     storeLeaders: (state) => state.userDirectory.filter(u => u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR'),
+    buddyStoreLeaders: (state) => state.userDirectory.filter(u => (u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR') && Boolean(u.isBuddy)),
     districtManagers: (state) => state.userDirectory.filter(u => u.role === 'DISTRICT_MANAGER' || u.role === 'HEAD'),
     crews: (state) => state.userDirectory.filter(u => u.role === 'CREW'),
 
@@ -465,7 +466,9 @@ export const useUserStore = defineStore('user', {
               batchId: apiU.batchId || null,
               stars: apiU.stars || 0,
               level: apiU.level || 1,
-              isBuddy: Boolean(apiU.isBuddy)
+              isBuddy: Boolean(apiU.isBuddy),
+              userBuddyId: apiU.userBuddyId || null,
+              userBuddy: apiU.userBuddy || null
             }
           })
 
@@ -578,7 +581,9 @@ export const useUserStore = defineStore('user', {
         storeLocation,
         batchId,
         stars: 0,
-        level: 1
+        level: 1,
+        isBuddy: Boolean(payload.isBuddy),
+        userBuddyId: payload.userBuddyId || null
       }
 
       this.userDirectory.push(newUser)
