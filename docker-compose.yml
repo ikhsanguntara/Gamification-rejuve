@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # BACKEND SERVICE (Express.js API) — Port Host 3005
+  # ============================================================================
+  gamification-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gamification-backend
+    restart: unless-stopped
+    ports:
+      - "3005:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      # Menghubungkan ke asco-postgres via host port 5433 (user: postgres, pass: postgres, db: gamification)
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@host.docker.internal:5433/gamification?schema=public}
+      JWT_SECRET: ${JWT_SECRET:-rejuve_super_secret_jwt_key_2026_gamification_api}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-localhost}
+      MINIO_PORT: ${MINIO_PORT:-9000}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-gamification}
+    volumes:
+      - gamification_backend_uploads:/app/uploads
+
+
+volumes:
+  gamification_backend_uploads:
