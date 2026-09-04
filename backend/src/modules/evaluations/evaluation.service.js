@@ -32,9 +32,18 @@ const getUserMissions = async (query = {}, currentUser = null) => {
   const where = parsePrismaQuery(queryClone, ['submissionNotes', 'tlNotes', 'dmNotes']);
 
   // Jika batchId tidak ditentukan secara eksplisit di query, gunakan activeBatchId user jika ada
-  if (!query.batchId && !where.mission?.batchId && currentUser?.activeBatchId) {
+  let userActiveBatchId = currentUser?.activeBatchId;
+  if (!query.batchId && !where.mission?.batchId && currentUser?.userId) {
+    const freshUser = await prisma.user.findUnique({
+      where: { userId: currentUser.userId },
+      select: { activeBatchId: true }
+    });
+    userActiveBatchId = freshUser?.activeBatchId || userActiveBatchId;
+  }
+
+  if (!query.batchId && !where.mission?.batchId && userActiveBatchId) {
     where.mission = where.mission || {};
-    where.mission.batchId = currentUser.activeBatchId;
+    where.mission.batchId = userActiveBatchId;
   }
 
   const [total, userMissions] = await Promise.all([
@@ -110,7 +119,17 @@ const getUserMissionById = async (userMissionId) => {
  */
 const getWorkstationCrews = async (currentUser, query = {}) => {
   // 1. Resolve Active Batch
-  let batchId = query.batchId || currentUser?.activeBatchId;
+  let batchId = query.batchId;
+  if (!batchId && currentUser?.userId) {
+    const freshUser = await prisma.user.findUnique({
+      where: { userId: currentUser.userId },
+      select: { activeBatchId: true }
+    });
+    batchId = freshUser?.activeBatchId || currentUser?.activeBatchId;
+  } else if (!batchId) {
+    batchId = currentUser?.activeBatchId;
+  }
+
   if (!batchId && currentUser) {
     const batches = await batchService.getUserAvailableBatches(currentUser);
     const openBatch = batches.find(b => b.status === 'OPEN') || batches[0];
@@ -315,7 +334,17 @@ const getWorkstationCrews = async (currentUser, query = {}) => {
  */
 const getCrewMissions = async (targetUserId, currentUser, query = {}) => {
   // 1. Resolve Active Batch
-  let batchId = query.batchId || currentUser?.activeBatchId;
+  let batchId = query.batchId;
+  if (!batchId && currentUser?.userId) {
+    const freshUser = await prisma.user.findUnique({
+      where: { userId: currentUser.userId },
+      select: { activeBatchId: true }
+    });
+    batchId = freshUser?.activeBatchId || currentUser?.activeBatchId;
+  } else if (!batchId) {
+    batchId = currentUser?.activeBatchId;
+  }
+
   if (!batchId) {
     const targetUser = await prisma.user.findUnique({
       where: { userId: targetUserId },

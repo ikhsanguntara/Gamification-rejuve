@@ -540,6 +540,308 @@ const deleteRole = async (req, res, next) => {
   }
 };
 
+// =============================================================================
+// BULK USER IMPORT (TWO-PHASE: TEMPLATE -> PREVIEW -> COMMIT)
+// =============================================================================
+
+const { generateUserImportTemplate, parseUserImportFile } = require('../../utils/excelParser');
+
+const downloadUserTemplate = async (req, res, next) => {
+  try {
+    const buffer = generateUserImportTemplate();
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="template_import_user.xlsx"');
+    return res.send(buffer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const bulkPreviewUsers = async (req, res, next) => {
+  try {
+    if (!req.file || !req.file.buffer) {
+      return sendError(res, { statusCode: 400, message: 'File Excel/CSV wajib diunggah (field: "file").' });
+    }
+
+    const parsedRows = parseUserImportFile(req.file.buffer);
+    if (!parsedRows || parsedRows.length === 0) {
+      return sendError(res, { statusCode: 400, message: 'File Excel tidak memiliki baris data atau kosong.' });
+    }
+
+    // Cache Master Data untuk validasi cepat (In-Memory Lookup)
+    const [roles, departments, batches] = await Promise.all([
+      prisma.role.findMany({ select: { roleId: true, roleCode: true, roleName: true } }),
+      prisma.department.findMany({ select: { departmentId: true, departmentCode: true, departmentName: true } }),
+      prisma.batch.findMany({ select: { batchId: true, code: true, name: true } })
+    ]);
+
+    const roleMap = new Map();
+    roles.forEach(r => roleMap.set(r.roleCode.toUpperCase(), r));
+
+    const deptMap = new Map();
+    departments.forEach(d => deptMap.set(d.departmentCode.toUpperCase(), d));
+
+    const batchMap = new Map();
+    batches.forEach(b => batchMap.set(b.code.toUpperCase(), b));
+
+    // Kumpulkan seluruh email dalam file untuk pengecekan duplikasi di DB
+    const emailsInFile = parsedRows.map(r => r.email).filter(Boolean);
+    const existingUsers = await prisma.user.findMany({
+      where: { email: { in: emailsInFile } },
+      select: { userId: true, email: true, name: true }
+    });
+    const existingEmailMap = new Map();
+    existingUsers.forEach(u => existingEmailMap.set(u.email.toLowerCase(), u));
+
+    // Ambil seluruh email buddy yang direferensikan
+    const buddyEmails = parsedRows.map(r => r.buddyEmail).filter(Boolean);
+    let buddyUsers = [];
+    if (buddyEmails.length > 0) {
+      buddyUsers = await prisma.user.findMany({
+        where: { email: { in: buddyEmails } },
+        select: { userId: true, email: true, name: true }
+      });
+    }
+    const buddyMap = new Map();
+    buddyUsers.forEach(u => buddyMap.set(u.email.toLowerCase(), u));
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const seenEmailsInFile = new Set();
+    const evaluatedRows = [];
+
+    for (const row of parsedRows) {
+      const errors = [];
+      const rowEmail = (row.email || '').toLowerCase();
+
+      // 1. Validasi Nama
+      if (!row.name || row.name.trim().length === 0) {
+        errors.push('Nama Lengkap wajib diisi.');
+      }
+
+      // 2. Validasi Email
+      if (!rowEmail) {
+        errors.push('Email wajib diisi.');
+      } else if (!emailRegex.test(rowEmail)) {
+        errors.push(`Format email "${row.email}" tidak valid.`);
+      } else if (seenEmailsInFile.has(rowEmail)) {
+        errors.push(`Email "${row.email}" duplikat dalam file spreadsheet ini.`);
+      } else {
+        seenEmailsInFile.add(rowEmail);
+      }
+
+      // 3. Validasi Role
+      let matchedRole = null;
+      if (!row.roleCode) {
+        errors.push('Role Code wajib diisi.');
+      } else {
+        matchedRole = roleMap.get(row.roleCode.toUpperCase());
+        if (!matchedRole) {
+          errors.push(`Role Code "${row.roleCode}" tidak terdaftar di sistem.`);
+        }
+      }
+
+      // 4. Validasi Department
+      let matchedDept = null;
+      if (row.departmentCode) {
+        matchedDept = deptMap.get(row.departmentCode.toUpperCase());
+        if (!matchedDept) {
+          errors.push(`Department Code "${row.departmentCode}" tidak ditemukan.`);
+        }
+      }
+
+      // 5. Validasi Batch (Opsional)
+      let matchedBatch = null;
+      if (row.batchCode) {
+        matchedBatch = batchMap.get(row.batchCode.toUpperCase());
+        if (!matchedBatch) {
+          errors.push(`Batch Code "${row.batchCode}" tidak ditemukan.`);
+        }
+      }
+
+      // 6. Validasi Buddy (Opsional)
+      let matchedBuddy = null;
+      if (row.buddyEmail) {
+        matchedBuddy = buddyMap.get(row.buddyEmail.toLowerCase());
+        if (!matchedBuddy) {
+          errors.push(`Buddy Email "${row.buddyEmail}" tidak ditemukan di database user.`);
+        }
+      }
+
+      // 7. Cek apakah email sudah terdaftar di DB
+      const existsInDb = Boolean(existingEmailMap.get(rowEmail));
+      const status = errors.length === 0 ? 'VALID' : 'INVALID';
+
+      evaluatedRows.push({
+        rowNumber: row.rowNumber,
+        name: row.name,
+        email: rowEmail,
+        roleCode: matchedRole ? matchedRole.roleCode : row.roleCode,
+        roleId: matchedRole ? matchedRole.roleId : null,
+        roleName: matchedRole ? matchedRole.roleName : null,
+        departmentCode: matchedDept ? matchedDept.departmentCode : row.departmentCode,
+        departmentId: matchedDept ? matchedDept.departmentId : null,
+        departmentName: matchedDept ? matchedDept.departmentName : null,
+        isBuddy: Boolean(row.isBuddy),
+        buddyEmail: matchedBuddy ? matchedBuddy.email : row.buddyEmail,
+        userBuddyId: matchedBuddy ? matchedBuddy.userId : null,
+        batchCode: matchedBatch ? matchedBatch.code : row.batchCode,
+        batchId: matchedBatch ? matchedBatch.batchId : null,
+        batchName: matchedBatch ? matchedBatch.name : null,
+        status,
+        existsInDb,
+        action: status === 'INVALID' ? 'REJECT' : (existsInDb ? 'EXISTS' : 'INSERT'),
+        errors
+      });
+    }
+
+    const totalRows = evaluatedRows.length;
+    const validCount = evaluatedRows.filter(r => r.status === 'VALID').length;
+    const invalidCount = evaluatedRows.filter(r => r.status === 'INVALID').length;
+    const existingCount = evaluatedRows.filter(r => r.existsInDb).length;
+    const newCount = evaluatedRows.filter(r => !r.existsInDb && r.status === 'VALID').length;
+
+    return sendSuccess(res, {
+      statusCode: 200,
+      message: 'Preview data import berhasil diproses.',
+      data: {
+        summary: {
+          totalRows,
+          validCount,
+          invalidCount,
+          newCount,
+          existingCount
+        },
+        rows: evaluatedRows
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const bulkCommitUsers = async (req, res, next) => {
+  try {
+    const { users, onDuplicate = 'SKIP' } = req.body;
+
+    if (!Array.isArray(users) || users.length === 0) {
+      return sendError(res, { statusCode: 400, message: 'Daftar user yang akan di-commit wajib berupa array dan tidak boleh kosong.' });
+    }
+
+    const currentUserId = req.user?.id || req.user?.userId || null;
+    const defaultPasswordHash = await bcrypt.hash('password123', 10);
+
+    // Kumpulkan email dan data yang akan diproses
+    const incomingEmails = users.map(u => (u.email || '').toLowerCase()).filter(Boolean);
+    const existingUsers = await prisma.user.findMany({
+      where: { email: { in: incomingEmails } }
+    });
+    const existingMap = new Map();
+    existingUsers.forEach(u => existingMap.set(u.email.toLowerCase(), u));
+
+    // Cache lookup jika ada payload yang mengirim code alih-alih ID
+    const [roles, departments, batches] = await Promise.all([
+      prisma.role.findMany(),
+      prisma.department.findMany(),
+      prisma.batch.findMany()
+    ]);
+    const roleCodeMap = new Map();
+    roles.forEach(r => roleCodeMap.set(r.roleCode.toUpperCase(), r.roleId));
+    const deptCodeMap = new Map();
+    departments.forEach(d => deptCodeMap.set(d.departmentCode.toUpperCase(), d.departmentId));
+    const batchCodeMap = new Map();
+    batches.forEach(b => batchCodeMap.set(b.code.toUpperCase(), b.batchId));
+
+    let insertedCount = 0;
+    let updatedCount = 0;
+    let skippedCount = 0;
+    const createdUsersList = [];
+
+    await prisma.$transaction(async (tx) => {
+      for (const item of users) {
+        const email = (item.email || '').toLowerCase();
+        if (!email || !item.name) {
+          skippedCount++;
+          continue;
+        }
+
+        const roleId = item.roleId || roleCodeMap.get((item.roleCode || '').toUpperCase());
+        if (!roleId) {
+          skippedCount++;
+          continue;
+        }
+
+        const departmentId = item.departmentId || (item.departmentCode ? deptCodeMap.get(item.departmentCode.toUpperCase()) : null) || null;
+        const batchId = item.batchId || (item.batchCode ? batchCodeMap.get(item.batchCode.toUpperCase()) : null) || null;
+        const userBuddyId = item.userBuddyId || null;
+        const isBuddy = Boolean(item.isBuddy);
+
+        const existingUser = existingMap.get(email);
+
+        if (existingUser) {
+          if (onDuplicate.toUpperCase() === 'UPDATE') {
+            await tx.user.update({
+              where: { userId: existingUser.userId },
+              data: {
+                name: item.name,
+                roleId,
+                departmentId,
+                batchId,
+                userBuddyId,
+                isBuddy,
+                updatedBy: currentUserId
+              }
+            });
+            updatedCount++;
+          } else {
+            skippedCount++;
+          }
+        } else {
+          const newUser = await tx.user.create({
+            data: {
+              name: item.name,
+              email,
+              password: defaultPasswordHash,
+              roleId,
+              departmentId,
+              batchId,
+              userBuddyId,
+              isBuddy,
+              isActive: true,
+              createdBy: currentUserId
+            },
+            include: {
+              role: true,
+              department: true
+            }
+          });
+          insertedCount++;
+          createdUsersList.push(newUser);
+        }
+      }
+    });
+
+    // Lynx ERP push synchronization in background
+    if (createdUsersList.length > 0) {
+      pushToLynx('/gamification/webhook/users', createdUsersList, 'POST').catch(err => {
+        console.error('[Lynx User Sync Error]:', err.message);
+      });
+    }
+
+    return sendSuccess(res, {
+      statusCode: 201,
+      message: `Proses impor selesai. ${insertedCount} user baru berhasil dibuat, ${updatedCount} diperbarui, ${skippedCount} dilewati.`,
+      data: {
+        totalProcessed: users.length,
+        insertedCount,
+        updatedCount,
+        skippedCount
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDepartments,
   getDepartmentById,
@@ -555,5 +857,8 @@ module.exports = {
   getRoleById,
   createRole,
   updateRole,
-  deleteRole
+  deleteRole,
+  downloadUserTemplate,
+  bulkPreviewUsers,
+  bulkCommitUsers
 };

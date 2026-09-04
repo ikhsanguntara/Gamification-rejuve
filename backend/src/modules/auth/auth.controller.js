@@ -2,11 +2,11 @@
 
 /**
  * @file auth.controller.js
- * @description Controller untuk autentikasi, profil user, dan pergantian activeBatch.
+ * @description Controller untuk proses Authentication (Login, Profil Me, Active Batch, Change Password).
  */
 
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const jwt    = require('jsonwebtoken');
 const prisma = require('../../config/db');
 const batchService = require('../batches/batch.service');
 const { sendSuccess, sendError } = require('../../utils/responseWrapper');
@@ -80,7 +80,7 @@ const login = async (req, res, next) => {
       });
     }
 
-    const user = await prisma.user.findUnique({ 
+    const user = await prisma.user.findUnique({
       where: { email },
       include: USER_INCLUDE
     });
@@ -133,27 +133,27 @@ const login = async (req, res, next) => {
       data: {
         token,
         user: {
-          userId:       user.userId,
-          name:         user.name,
-          email:        user.email,
-          roleId:       user.roleId,
-          role:         user.role?.roleCode,
-          roleDetails:  user.role,
-          isActive:     user.isActive,
-          stars:        user.stars,
-          points:       user.points,
-          level:        user.level,
+          userId: user.userId,
+          name: user.name,
+          email: user.email,
+          roleId: user.roleId,
+          role: user.role?.roleCode,
+          roleDetails: user.role,
+          isActive: user.isActive,
+          stars: user.stars,
+          points: user.points,
+          level: user.level,
           departmentId: user.departmentId,
-          department:   user.department,
+          department: user.department,
           activeBatchId: activeBatchId || null,
-          activeBatch:  activeBatch || null,
+          activeBatch: activeBatch || null,
           availableBatches: availableBatches || [],
-          isBuddy:      user.isBuddy,
-          userBuddyId:  user.userBuddyId,
-          userBuddy:    user.userBuddy,
-          batchId:      user.batchId,
-          hasBatch:     Boolean(user.batchId),
-          createdAt:    user.createdAt
+          isBuddy: user.isBuddy,
+          userBuddyId: user.userBuddyId,
+          userBuddy: user.userBuddy,
+          batchId: user.batchId,
+          hasBatch: Boolean(user.batchId),
+          createdAt: user.createdAt
         }
       }
     });
@@ -208,27 +208,27 @@ const getMe = async (req, res, next) => {
     return sendSuccess(res, {
       message: 'Data profil berhasil diambil.',
       data: {
-        userId:       user.userId,
-        name:         user.name,
-        email:        user.email,
-        roleId:       user.roleId,
-        role:         user.role?.roleCode,
-        roleDetails:  user.role,
-        isActive:     user.isActive,
-        stars:        user.stars,
-        points:       user.points,
-        level:        user.level,
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        roleId: user.roleId,
+        role: user.role?.roleCode,
+        roleDetails: user.role,
+        isActive: user.isActive,
+        stars: user.stars,
+        points: user.points,
+        level: user.level,
         departmentId: user.departmentId,
-        department:   user.department,
+        department: user.department,
         activeBatchId: activeBatchId || null,
-        activeBatch:  activeBatch || null,
+        activeBatch: activeBatch || null,
         availableBatches: availableBatches || [],
-        isBuddy:      user.isBuddy,
-        userBuddyId:  user.userBuddyId,
-        userBuddy:    user.userBuddy,
-        batchId:      user.batchId,
-        hasBatch:     Boolean(user.batchId),
-        createdAt:    user.createdAt
+        isBuddy: user.isBuddy,
+        userBuddyId: user.userBuddyId,
+        userBuddy: user.userBuddy,
+        batchId: user.batchId,
+        hasBatch: Boolean(user.batchId),
+        createdAt: user.createdAt
       }
     });
   } catch (error) {
@@ -269,8 +269,8 @@ const setActiveBatch = async (req, res, next) => {
       include: USER_INCLUDE
     });
 
-    const availableBatches = await batchService.getUserAvailableBatches(updatedUser);
     const token = generateToken(updatedUser);
+    const availableBatches = await batchService.getUserAvailableBatches(updatedUser);
 
     return sendSuccess(res, {
       message: `Active batch berhasil diatur ke "${batch.name}".`,

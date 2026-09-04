@@ -5,6 +5,13 @@ const masterController = require('./master.controller');
 const { authenticate } = require('../../middlewares/auth');
 const { authorizeRole } = require('../../middlewares/role');
 
+const multer = require('multer');
+
+const uploadExcel = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+});
+
 router.use(authenticate);
 router.use(authorizeRole(['SUPERADMIN']));
 
@@ -15,7 +22,10 @@ router.post('/departments', masterController.createDepartment);
 router.put('/departments/:id', masterController.updateDepartment);
 router.delete('/departments/:id', masterController.deleteDepartment);
 
-// ─── Users ───────────────────────────────────────────────────────────────────
+// ─── Users & Bulk Import ─────────────────────────────────────────────────────
+router.get('/users/template', masterController.downloadUserTemplate);
+router.post('/users/bulk-preview', uploadExcel.single('file'), masterController.bulkPreviewUsers);
+router.post('/users/bulk-commit', masterController.bulkCommitUsers);
 router.get('/users', masterController.getUsers);
 router.get('/users/:id', masterController.getUserById);
 router.post('/users', masterController.createUser);
