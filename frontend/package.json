@@ -16,8 +16,9 @@
     "deploy:prod": "nuxt generate --dotenv .env.production && npx --yes firebase-tools deploy --only hosting --non-interactive",
     "preview": "nuxt preview",
     "preview:stg": "nuxt preview --dotenv .env.staging",
-    "preview:prod": "nuxt preview --dotenv .env.production",
-    "test": "node test_all_cruds.mjs",
+    "test": "node test_all_cruds.mjs && node test_unit_tester_suite.mjs",
+    "test:cruds": "node test_all_cruds.mjs",
+    "test:qa": "node test_unit_tester_suite.mjs",
     "audit": "node audit_all_pages.mjs",
     "postinstall": "nuxt prepare"
   },

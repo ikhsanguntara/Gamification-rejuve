@@ -23,6 +23,16 @@ const approvalStore = useApprovalStore()
 const gamificationStore = useGamificationStore()
 const storeStore = useStoreStore()
 
+// Fixture user untuk kebutuhan pengetesan terisolasi
+;[
+  { id: 'sl-001', name: 'Budi Santoso', role: 'STORE_LEADER', isBuddy: true, email: 'budi.santoso@rejuve.co.id' },
+  { id: 'sl-002', name: 'Dewi Lestari', role: 'STORE_LEADER', isBuddy: false, email: 'dewi.lestari@rejuve.co.id' },
+  { id: 'dm-001', name: 'Ahmad Dahlan', role: 'DISTRICT_MANAGER', email: 'ahmad.dahlan@rejuve.co.id' },
+  { id: 'dm-002', name: 'Citra Dewi', role: 'DISTRICT_MANAGER', email: 'citra.dewi@rejuve.co.id' },
+  { id: 'crew-001', name: 'Andi Pratama', role: 'CREW', email: 'andi.pratama@rejuve.co.id', stars: 100 },
+  { id: 'crew-002', name: 'Budi Crew', role: 'CREW', email: 'budi.crew@rejuve.co.id' }
+].forEach(u => userStore.createUser(u))
+
 let totalTests = 0
 let passedTests = 0
 

@@ -85,10 +85,10 @@ export function computeWeeksLifecycle(startDateStr, customWeeks = []) {
 
 export const EMPTY_BATCH_FALLBACK = {
   id: '',
-  code: 'BTH-01',
-  name: 'Memuat Gerai / Batch...',
-  storeLocation: 'Re.juve Store',
-  description: 'Belum ada batch aktif yang dipilih.',
+  code: '',
+  name: '',
+  storeLocation: '',
+  description: '',
   currentWeek: 1,
   totalWeeks: 3,
   startDate: new Date().toISOString().split('T')[0],
@@ -110,11 +110,7 @@ export const EMPTY_BATCH_FALLBACK = {
     headName: '-',
     crewIds: []
   },
-  weeks: [
-    { weekNumber: 1, title: 'Minggu 1: Operasional Dasar', completionRate: 0, status: 'ACTIVE', isLocked: false },
-    { weekNumber: 2, title: 'Minggu 2: Penilaian Mutu', completionRate: 0, status: 'LOCKED', isLocked: true },
-    { weekNumber: 3, title: 'Minggu 3: Evaluasi Akhir', completionRate: 0, status: 'LOCKED', isLocked: true }
-  ]
+  weeks: []
 }
 
 /**
@@ -144,8 +140,7 @@ export const useBatchStore = defineStore('batch', {
         const my = state.batches.filter(b => 
           b.assignment?.storeLeaderId === userStore.currentUserId ||
           b.assignment?.supervisorId === userStore.currentUserId ||
-          (userStore.currentUserId === 'sl-001' && (b.id === 'batch-alpha' || b.id === 'batch-beta')) ||
-          (userStore.currentUserId === 'sl-002' && b.id === 'batch-gamma')
+          b.storeLeaderId === userStore.currentUserId
         )
         return my.length > 0 ? my : state.batches
       }
@@ -153,14 +148,13 @@ export const useBatchStore = defineStore('batch', {
         const my = state.batches.filter(b => 
           b.assignment?.districtManagerId === userStore.currentUserId ||
           b.assignment?.headId === userStore.currentUserId ||
-          (userStore.currentUserId === 'dm-001' && (b.id === 'batch-alpha' || b.id === 'batch-beta')) ||
-          (userStore.currentUserId === 'dm-002' && b.id === 'batch-gamma')
+          b.districtManagerId === userStore.currentUserId
         )
         return my.length > 0 ? my : state.batches
       }
       if (userStore.isCrew) {
         const cBatch = userStore.currentUser?.batchId
-        const my = state.batches.filter(b => b.id === cBatch)
+        const my = state.batches.filter(b => b.id === cBatch || b.assignment?.crewIds?.includes(userStore.currentUserId))
         return my.length > 0 ? my : state.batches
       }
       return state.batches
@@ -291,17 +285,21 @@ export const useBatchStore = defineStore('batch', {
               startDate,
               endDate,
               status: b.status === 'OPEN' ? 'ACTIVE' : (b.status || 'ACTIVE'),
-              totalCrew: b._count?.users || 4,
-              totalMissions: b._count?.missions || 12,
-              completedMissions: 0,
-              averageScore: 90,
-              totalStars: 100,
+              totalCrew: b._count?.users || b.members?.length || 0,
+              totalMissions: b._count?.missions || 0,
+              completedMissions: b._count?.completedMissions || 0,
+              averageScore: Number(b.averageScore) || 0,
+              totalStars: Number(b.totalStars) || 0,
               assignment: {
-                storeLeaderId: 'sl-001',
-                storeLeaderName: 'Budi Santoso',
-                districtManagerId: 'dm-001',
-                districtManagerName: 'Ahmad Dahlan',
-                crewIds: ['crew-001', 'crew-002']
+                storeLeaderId: b.storeLeaderId || b.leaderUserId || '',
+                storeLeaderName: b.storeLeader?.name || b.leaderUser?.name || b.storeLeaderName || '-',
+                districtManagerId: b.districtManagerId || b.districtManagerUserId || '',
+                districtManagerName: b.districtManager?.name || b.districtManagerUser?.name || b.districtManagerName || '-',
+                supervisorId: b.storeLeaderId || b.leaderUserId || '',
+                supervisorName: b.storeLeader?.name || b.leaderUser?.name || b.storeLeaderName || '-',
+                headId: b.districtManagerId || b.districtManagerUserId || '',
+                headName: b.districtManager?.name || b.districtManagerUser?.name || b.districtManagerName || '-',
+                crewIds: Array.isArray(b.crewIds) ? b.crewIds : Array.isArray(b.users) ? b.users.map(u => u.userId || u.id) : []
               },
               weeks: computeWeeksLifecycle(startDate)
             }
@@ -371,15 +369,15 @@ export const useBatchStore = defineStore('batch', {
         averageScore: 0,
         totalStars: 0,
         assignment: {
-          storeLeaderId: payload.assignment?.storeLeaderId || payload.storeLeaderId || payload.assignment?.supervisorId || payload.supervisorId || 'sl-001',
-          storeLeaderName: payload.assignment?.storeLeaderName || payload.storeLeaderName || payload.assignment?.supervisorName || payload.supervisorName || 'Budi Santoso',
-          districtManagerId: payload.assignment?.districtManagerId || payload.districtManagerId || payload.assignment?.headId || payload.headId || 'dm-001',
-          districtManagerName: payload.assignment?.districtManagerName || payload.districtManagerName || payload.assignment?.headName || payload.headName || 'Ahmad Dahlan',
+          storeLeaderId: payload.assignment?.storeLeaderId || payload.storeLeaderId || payload.assignment?.supervisorId || payload.supervisorId || '',
+          storeLeaderName: payload.assignment?.storeLeaderName || payload.storeLeaderName || payload.assignment?.supervisorName || payload.supervisorName || '-',
+          districtManagerId: payload.assignment?.districtManagerId || payload.districtManagerId || payload.assignment?.headId || payload.headId || '',
+          districtManagerName: payload.assignment?.districtManagerName || payload.districtManagerName || payload.assignment?.headName || payload.headName || '-',
           // Backwards compatibility alias
-          supervisorId: payload.assignment?.storeLeaderId || payload.storeLeaderId || payload.assignment?.supervisorId || payload.supervisorId || 'sl-001',
-          supervisorName: payload.assignment?.storeLeaderName || payload.storeLeaderName || payload.assignment?.supervisorName || payload.supervisorName || 'Budi Santoso',
-          headId: payload.assignment?.districtManagerId || payload.districtManagerId || payload.assignment?.headId || payload.headId || 'dm-001',
-          headName: payload.assignment?.districtManagerName || payload.districtManagerName || payload.assignment?.headName || payload.headName || 'Ahmad Dahlan',
+          supervisorId: payload.assignment?.storeLeaderId || payload.storeLeaderId || payload.assignment?.supervisorId || payload.supervisorId || '',
+          supervisorName: payload.assignment?.storeLeaderName || payload.storeLeaderName || payload.assignment?.supervisorName || payload.supervisorName || '-',
+          headId: payload.assignment?.districtManagerId || payload.districtManagerId || payload.assignment?.headId || payload.headId || '',
+          headName: payload.assignment?.districtManagerName || payload.districtManagerName || payload.assignment?.headName || payload.headName || '-',
           crewIds: crewIds
         },
         approvalConfig: {

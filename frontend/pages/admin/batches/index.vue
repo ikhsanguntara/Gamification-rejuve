@@ -57,11 +57,11 @@
             </div>
             <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
               <span class="text-slate-400">👤 Store Leader:</span>
-              <span class="font-semibold">{{ b.assignment?.storeLeaderName || 'Budi Santoso' }}</span>
+              <span class="font-semibold">{{ b.assignment?.storeLeaderName || '-' }}</span>
             </div>
             <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
               <span class="text-slate-400">👑 Head Approver:</span>
-              <span class="font-semibold">{{ b.assignment?.headName || 'Ahmad Dahlan' }}</span>
+              <span class="font-semibold">{{ b.assignment?.headName || b.assignment?.districtManagerName || '-' }}</span>
             </div>
             <div class="flex items-center justify-between text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-100 dark:border-slate-800/60">
               <span class="text-slate-400">👥 Total Kru:</span>

@@ -57,9 +57,9 @@ export function clearAllStoredData() {
 // Auto-purge residual mock data once on client load
 if (typeof window !== 'undefined' && window.localStorage) {
   try {
-    if (localStorage.getItem('rejuve_mock_purged_v1') !== 'true') {
+    if (localStorage.getItem('rejuve_mock_purged_v3') !== 'true') {
       clearAllStoredData()
-      localStorage.setItem('rejuve_mock_purged_v1', 'true')
+      localStorage.setItem('rejuve_mock_purged_v3', 'true')
     }
   } catch (e) {
     // Ignore storage errors in restricted contexts

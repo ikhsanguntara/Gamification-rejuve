@@ -698,7 +698,7 @@ const batchCrews = computed(() => {
       starsEarned: c.starsEarned || 0
     }))
   }
-  return gamificationStore.crewsByBatch(batchStore.currentBatch?.id || 'batch-alpha')
+  return gamificationStore.crewsByBatch(batchStore.currentBatch?.id || '')
 })
 
 const selectedCrewId = ref(null)
@@ -754,7 +754,7 @@ const currentWeekMissions = computed(() => {
     })
   }
 
-  return missionStore.missionsByWeek(batchStore.currentBatch?.id || 'batch-alpha', batchStore.selectedWeek)
+  return missionStore.missionsByWeek(batchStore.currentBatch?.id || '', batchStore.selectedWeek)
 })
 
 // Mission scores map for selected crew: { [missionId]: score }

@@ -172,14 +172,14 @@
               <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-1">
                 <span class="text-[10px] font-bold uppercase text-slate-400">Store Training:</span>
                 <p class="font-bold text-slate-900 dark:text-white">
-                  {{ selectedCrew.storeLocation || batchStore.currentBatch?.name || 'Re.juve Grand Indonesia' }}
+                  {{ selectedCrew.storeLocation || batchStore.currentBatch?.name || 'Gerai Re.juve' }}
                 </p>
               </div>
 
               <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-1">
                 <span class="text-[10px] font-bold uppercase text-slate-400">Store Captain / Buddy:</span>
                 <p class="font-bold text-slate-900 dark:text-white">
-                  {{ userStore.currentUser?.name || 'Budi Santoso' }} (Store Leader)
+                  {{ userStore.currentUser?.name || '-' }} (Store Leader)
                 </p>
               </div>
 
@@ -1086,8 +1086,8 @@ const saveCurrentRapor = async () => {
     crewId: selectedCrew.value.id,
     crewName: selectedCrew.value.name,
     storeTraining: selectedCrew.value.storeLocation || batchStore.currentBatch.name,
-    storeCaptain: `${userStore.currentUser?.name || 'Budi Santoso'} (Store Leader)`,
-    evaluatorId: userStore.currentUser?.id || 'sl-001',
+    storeCaptain: `${userStore.currentUser?.name || 'Store Leader'} (Store Leader)`,
+    evaluatorId: userStore.currentUser?.id || userStore.currentUserId || '',
     trainingPeriod: raporForm.value.trainingPeriod,
     indicatorRatings: raporForm.value.indicatorRatings,
     recommendationNote: raporForm.value.recommendationNote,

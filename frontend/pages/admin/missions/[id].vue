@@ -186,7 +186,7 @@ const form = ref({
   title: '',
   code: '',
   category: 'Quality Control',
-  batchId: 'batch-alpha',
+  batchId: batchStore.selectedBatchId || '',
   week: 2,
   description: '',
   requirements: ['Pemeriksaan standar mutu gerai']
@@ -200,7 +200,7 @@ watch(
         title: m.title || '',
         code: m.code || '',
         category: m.category || 'Quality Control',
-        batchId: m.batchId || 'batch-alpha',
+        batchId: m.batchId || batchStore.selectedBatchId || '',
         week: m.week || 2,
         description: m.description || '',
         requirements: m.requirements && m.requirements.length > 0 ? [...m.requirements] : ['Pemeriksaan standar mutu gerai']

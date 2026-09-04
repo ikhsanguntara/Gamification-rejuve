@@ -254,8 +254,8 @@ const isBuddyModalOpen = ref(false)
 const isFeedbackModalOpen = ref(false)
 
 // Crew Buddy Evaluation Info
-const currentCrewId = computed(() => userStore.currentUser?.id || 'crew-001')
-const currentBatchId = computed(() => batchStore.currentBatch?.id || 'batch-alpha')
+const currentCrewId = computed(() => userStore.currentUser?.id || '')
+const currentBatchId = computed(() => batchStore.currentBatch?.id || '')
 
 const crewBuddyEval = computed(() => {
   return buddyStore.evaluationForCrew(currentBatchId.value, currentCrewId.value)

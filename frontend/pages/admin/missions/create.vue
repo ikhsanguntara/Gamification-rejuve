@@ -219,7 +219,7 @@ const form = ref({
   title: '',
   code: `MSN-W2-0${missionStore.allMissions.length + 1}`,
   category: 'Quality Control',
-  batchId: batchStore.selectedBatchId || 'batch-alpha',
+  batchId: batchStore.selectedBatchId || batchStore.allBatches[0]?.id || '',
   week: 2,
   description: '',
   requirements: [

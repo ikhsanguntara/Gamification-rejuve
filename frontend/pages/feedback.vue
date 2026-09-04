@@ -165,9 +165,9 @@ const feedbackStore = useFeedbackStore()
 const toast = useToast()
 
 const surveyForm = ref({
-  crewName: userStore.currentUser?.name || 'Kru Rejuve',
-  storeLocation: userStore.currentUser?.storeLocation || 'Gerai Grand Indonesia',
-  buddyName: 'Budi Santoso (Store Leader)',
+  crewName: userStore.currentUser?.name || 'Kru',
+  storeLocation: userStore.currentUser?.storeLocation || userStore.currentUser?.department || 'Gerai Re.juve',
+  buddyName: userStore.currentUser?.buddyName || 'Store Leader / Mentor',
   ratings: {},
   essayAnswer: ''
 })
@@ -197,7 +197,7 @@ onMounted(() => {
 })
 
 const submitFeedback = () => {
-  const currentCrewId = userStore.currentUserId || 'crew-001'
+  const currentCrewId = userStore.currentUserId || ''
 
   feedbackStore.submitCrewFeedback({
     crewId: currentCrewId,

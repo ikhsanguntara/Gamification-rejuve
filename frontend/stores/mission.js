@@ -64,7 +64,7 @@ export const useMissionStore = defineStore('mission', {
             const score = Number(um.finalScore || um.tlScore || 0)
             return {
               id: um.userMissionId || m.missionId || `msn-${idx}`,
-              batchId: m.batchId || (batches[0]?.batchId) || 'batch-alpha',
+              batchId: m.batchId || (batches[0]?.batchId) || (batches[0]?.id) || '',
               week: m.weekOrDayNumber || 1,
               code: m.code || `MSN-0${idx + 1}`,
               title: m.missionTitle || 'Misi Standar Operasional',
@@ -82,12 +82,12 @@ export const useMissionStore = defineStore('mission', {
               averageScore: score,
               calculatedStars: calculateStars(score),
               awardedStars: calculateStars(score),
-              deadline: m.endDate?.split('T')[0] || '2026-09-24',
+              deadline: m.endDate?.split('T')[0] || '',
               requirements: [
                 'Verifikasi standar kepatuhan operasional Re.juve.',
                 'Dokumentasikan bukti foto kebersihan dan sanitasi.'
               ],
-              supervisorId: um.tlId || 'sl-001',
+              supervisorId: um.tlId || '',
               createdAt: um.createdAt || new Date().toISOString()
             }
           })
@@ -158,7 +158,7 @@ export const useMissionStore = defineStore('mission', {
         description: payload.description || 'Misi kepatuhan operasional dan standar mutu gerai Re.juve.',
         category: payload.category || 'Quality Control',
         week: Number(payload.week) || 1,
-        batchId: payload.batchId || 'batch-alpha',
+        batchId: payload.batchId || null,
         assignedCrewIds,
         crewEvaluations: assignedCrewIds.map(cId => ({
           crewId: cId,

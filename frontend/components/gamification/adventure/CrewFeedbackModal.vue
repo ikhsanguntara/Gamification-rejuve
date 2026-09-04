@@ -150,7 +150,7 @@ import { MessageSquareText, Send } from 'lucide-vue-next'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   crew: { type: Object, default: null },
-  batchName: { type: String, default: 'Batch 1 - Grand Indonesia' }
+  batchName: { type: String, default: 'Batch Operasional' }
 })
 
 const emit = defineEmits(['update:modelValue', 'close'])
@@ -179,9 +179,9 @@ const initForm = () => {
 
   if (existing) {
     form.value = {
-      crewName: existing.crewName || c?.name || 'Andi Pratama',
-      storeLocation: existing.storeLocation || c?.storeLocation || 'Grand Indonesia',
-      buddyName: existing.buddyName || 'Budi Santoso',
+      crewName: existing.crewName || c?.name || 'Kru',
+      storeLocation: existing.storeLocation || c?.storeLocation || 'Gerai Re.juve',
+      buddyName: existing.buddyName || 'Store Leader',
       ratings: { ...(existing.ratings || {}) },
       essayAnswer: existing.essayAnswer || ''
     }
@@ -195,11 +195,11 @@ const initForm = () => {
     })
 
     form.value = {
-      crewName: c?.name || 'Andi Pratama',
-      storeLocation: c?.storeLocation || 'Grand Indonesia',
-      buddyName: 'Budi Santoso (Store Leader)',
+      crewName: c?.name || 'Kru',
+      storeLocation: c?.storeLocation || 'Gerai Re.juve',
+      buddyName: 'Store Leader / Mentor',
       ratings: defaultRatings,
-      essayAnswer: 'Program onboarding sangat jelas dan Store Leader mendampingi dengan penuh kesabaran.'
+      essayAnswer: 'Program onboarding sangat jelas dan mentor mendampingi dengan baik.'
     }
   }
 }
@@ -212,7 +212,7 @@ watch(() => [props.modelValue, props.crew], () => {
 
 const handleSubmit = () => {
   feedbackStore.submitCrewFeedback({
-    crewId: props.crew?.id || 'crew-001',
+    crewId: props.crew?.id || '',
     crewName: form.value.crewName,
     storeLocation: form.value.storeLocation,
     buddyName: form.value.buddyName,

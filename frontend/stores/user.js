@@ -6,180 +6,7 @@ import { useBatchStore } from './batch.js'
  * User Store: Master Directory, Multi-Store Leader/District Manager Personas & Batch Permissions
  */
 
-export const mockUsers = {
-  CREW_1: {
-    id: 'crew-001',
-    name: 'Andi Pratama',
-    role: 'CREW',
-    roleTitle: 'Kru Operasional (Batch 1 - 3 Minggu)',
-    email: 'andi.pratama@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
-    department: 'Store Operations',
-    position: 'Store Specialist',
-    storeLocation: 'Grand Indonesia, Jakarta Pusat',
-    batchId: 'batch-alpha',
-    stars: 1850,
-    level: 8
-  },
-  CREW_2: {
-    id: 'crew-008',
-    name: 'Hadi Saputra',
-    role: 'CREW',
-    roleTitle: 'Kru Operasional (Batch 2 - 4 Minggu)',
-    email: 'hadi.saputra@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=256&q=80',
-    department: 'Store Operations',
-    position: 'Senior Barista',
-    storeLocation: 'Senayan City, Jakarta Pusat',
-    batchId: 'batch-beta',
-    stars: 1610,
-    level: 6
-  },
-  CREW_3: {
-    id: 'crew-013',
-    name: 'Muhammad Ridwan',
-    role: 'CREW',
-    roleTitle: 'Kru Operasional (Batch 3 - 5 Minggu)',
-    email: 'muhammad.ridwan@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
-    department: 'Store Operations',
-    position: 'Barista Specialist',
-    storeLocation: 'Pondok Indah Mall, Jakarta Selatan',
-    batchId: 'batch-gamma',
-    stars: 1510,
-    level: 6
-  },
-  STORE_LEADER_1: {
-    id: 'sl-001',
-    name: 'Budi Santoso',
-    role: 'STORE_LEADER',
-    roleTitle: 'Store Leader (Batch 1 & 2)',
-    email: 'budi.santoso@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
-    department: 'Store Operations',
-    position: 'Store Leader Pusat',
-    storeLocation: 'Grand Indonesia & Senayan City',
-    batchId: 'batch-alpha',
-    stars: 0,
-    level: 0,
-    isBuddy: true
-  },
-  STORE_LEADER_2: {
-    id: 'sl-002',
-    name: 'Dewi Lestari',
-    role: 'STORE_LEADER',
-    roleTitle: 'Store Leader (Batch 3)',
-    email: 'dewi.lestari@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=256&q=80',
-    department: 'Store Operations',
-    position: 'Store Leader Selatan',
-    storeLocation: 'Pondok Indah Mall',
-    batchId: 'batch-gamma',
-    stars: 0,
-    level: 0,
-    isBuddy: false
-  },
-  // Backward compatibility alias for supervisor
-  SUPERVISOR_1: {
-    id: 'sl-001',
-    name: 'Budi Santoso',
-    role: 'STORE_LEADER',
-    roleTitle: 'Store Leader (Batch 1 & 2)',
-    email: 'budi.santoso@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
-    department: 'Store Operations',
-    position: 'Store Leader Pusat',
-    storeLocation: 'Grand Indonesia & Senayan City',
-    batchId: 'batch-alpha',
-    stars: 0,
-    level: 0
-  },
-  SUPERVISOR_2: {
-    id: 'sl-002',
-    name: 'Dewi Lestari',
-    role: 'STORE_LEADER',
-    roleTitle: 'Store Leader (Batch 3)',
-    email: 'dewi.lestari@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=256&q=80',
-    department: 'Store Operations',
-    position: 'Store Leader Selatan',
-    storeLocation: 'Pondok Indah Mall',
-    batchId: 'batch-gamma',
-    stars: 0,
-    level: 0
-  },
-  DISTRICT_MANAGER_1: {
-    id: 'dm-001',
-    name: 'Ahmad Dahlan',
-    role: 'DISTRICT_MANAGER',
-    roleTitle: 'District Manager (Pusat)',
-    email: 'ahmad.dahlan@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=256&q=80',
-    department: 'District Operations',
-    position: 'District Manager Wilayah Pusat',
-    storeLocation: 'Grand Indonesia & Senayan City',
-    batchId: 'batch-alpha',
-    stars: 0,
-    level: 0
-  },
-  DISTRICT_MANAGER_2: {
-    id: 'dm-002',
-    name: 'Citra Dewi',
-    role: 'DISTRICT_MANAGER',
-    roleTitle: 'District Manager (Selatan)',
-    email: 'citra.dewi@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=256&q=80',
-    department: 'District Operations',
-    position: 'District Manager Wilayah Selatan',
-    storeLocation: 'Pondok Indah Mall',
-    batchId: 'batch-gamma',
-    stars: 0,
-    level: 0
-  },
-  // Backward compatibility alias for head
-  HEAD_1: {
-    id: 'dm-001',
-    name: 'Ahmad Dahlan',
-    role: 'DISTRICT_MANAGER',
-    roleTitle: 'District Manager (Pusat)',
-    email: 'ahmad.dahlan@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=256&q=80',
-    department: 'District Operations',
-    position: 'District Manager Wilayah Pusat',
-    storeLocation: 'Grand Indonesia & Senayan City',
-    batchId: 'batch-alpha',
-    stars: 0,
-    level: 0
-  },
-  HEAD_2: {
-    id: 'dm-002',
-    name: 'Citra Dewi',
-    role: 'DISTRICT_MANAGER',
-    roleTitle: 'District Manager (Selatan)',
-    email: 'citra.dewi@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=256&q=80',
-    department: 'District Operations',
-    position: 'District Manager Wilayah Selatan',
-    storeLocation: 'Pondok Indah Mall',
-    batchId: 'batch-gamma',
-    stars: 0,
-    level: 0
-  },
-  SUPERADMIN: {
-    id: 'admin-001',
-    name: 'Siti Rahmawati',
-    role: 'SUPERADMIN',
-    roleTitle: 'System Superadmin',
-    email: 'admin@rejuve.co.id',
-    avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=256&q=80',
-    department: 'IT & Master Ops',
-    position: 'Master Controller',
-    storeLocation: 'Semua Cabang',
-    batchId: 'batch-alpha',
-    stars: 0,
-    level: 0
-  }
-}
+export const mockUsers = {}
 
 // Initial full user directory
 const initialDirectory = []
@@ -224,24 +51,7 @@ export const useUserStore = defineStore('user', {
       limit: 10,
       totalPages: 1
     },
-    notifications: [
-      {
-        id: 'notif-1',
-        title: 'New Star Awarded',
-        message: 'Andi Pratama earned 5 stars for Chiller Calibration',
-        time: '5m ago',
-        isRead: false,
-        type: 'star'
-      },
-      {
-        id: 'notif-2',
-        title: 'Pending Review Alert',
-        message: 'Week 2 Station Sanitizing awaits Head verification',
-        time: '1h ago',
-        isRead: false,
-        type: 'warning'
-      }
-    ]
+    notifications: []
   }),
 
   getters: {
@@ -262,7 +72,7 @@ export const useUserStore = defineStore('user', {
           position: title,
           storeLocation: state.apiUser.department?.departmentName || 'Re.juve Store',
           activeBatchId: state.apiUser.activeBatchId || null,
-          batchId: state.apiUser.activeBatchId || state.apiUser.batchId || 'batch-alpha',
+          batchId: state.apiUser.activeBatchId || state.apiUser.batchId || null,
           stars: state.apiUser.stars || 0,
           level: state.apiUser.level || 1,
           isBuddy: Boolean(state.apiUser.isBuddy)
@@ -270,23 +80,20 @@ export const useUserStore = defineStore('user', {
       }
       const found = state.userDirectory.find(u => u.id === state.currentUserId)
       if (found) return found
-      if (state.currentUserId === 'spv-001') return state.userDirectory.find(u => u.id === 'sl-001') || state.userDirectory[3] || state.userDirectory[0]
-      if (state.currentUserId === 'spv-002') return state.userDirectory.find(u => u.id === 'sl-002') || state.userDirectory[4] || state.userDirectory[0]
-      if (state.currentUserId === 'head-001') return state.userDirectory.find(u => u.id === 'dm-001') || state.userDirectory[1] || state.userDirectory[0]
-      if (state.currentUserId === 'head-002') return state.userDirectory.find(u => u.id === 'dm-002') || state.userDirectory[2] || state.userDirectory[0]
-      return state.userDirectory[3] || state.userDirectory[0] || {
-        id: 'sl-001',
-        name: 'Budi Santoso',
-        role: 'STORE_LEADER',
-        roleTitle: 'Store Leader',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
-        email: 'budi.santoso@rejuve.co.id',
-        department: 'Store Operations',
-        position: 'Store Leader Pusat',
-        storeLocation: 'Grand Indonesia & Senayan City',
-        batchId: 'batch-alpha',
+      return {
+        id: '',
+        name: '',
+        role: '',
+        roleTitle: '',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+        email: '',
+        department: '',
+        position: '',
+        storeLocation: '',
+        batchId: null,
         stars: 0,
-        level: 0
+        level: 1,
+        isBuddy: false
       }
     },
     currentRole: (state) => {
@@ -294,7 +101,7 @@ export const useUserStore = defineStore('user', {
         return extractRoleCode(state.apiUser.role) || extractRoleCode(state.apiUser.roleDetails) || 'CREW'
       }
       const u = state.userDirectory.find(u => u.id === state.currentUserId)
-      return extractRoleCode(u?.role) || 'STORE_LEADER'
+      return extractRoleCode(u?.role) || ''
     },
     isCrew: (state) => {
       const r = state.currentRole
@@ -324,9 +131,7 @@ export const useUserStore = defineStore('user', {
     allUsers: (state) => state.userDirectory,
     userById: (state) => (id) => {
       const found = state.userDirectory.find(u => u.id === id)
-      if (found) return found
-      const persona = Object.values(mockUsers).find(p => p.id === id)
-      return persona || null
+      return found || null
     },
 
     storeLeaders: (state) => state.userDirectory.filter(u => u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR'),
@@ -340,7 +145,7 @@ export const useUserStore = defineStore('user', {
 
     assignedBatchId: (state) => {
       const u = state.userDirectory.find(u => u.id === state.currentUserId)
-      return u?.batchId || 'batch-alpha'
+      return u?.batchId || null
     },
 
     unreadNotificationCount: (state) => state.notifications.filter(n => !n.isRead).length
@@ -402,7 +207,7 @@ export const useUserStore = defineStore('user', {
               department: apiU.department?.departmentName || 'Store Operations',
               position: apiU.roleDetails?.roleName || 'Specialist',
               storeLocation: apiU.department?.departmentName || 'Re.juve Store',
-              batchId: apiU.batchId || 'batch-alpha',
+              batchId: apiU.batchId || null,
               stars: apiU.stars || 0,
               level: apiU.level || 1,
               isBuddy: Boolean(apiU.isBuddy)
@@ -502,21 +307,7 @@ export const useUserStore = defineStore('user', {
     },
 
     loginAsUser(userId) {
-      let targetId = userId
-      if (userId === 'spv-001') targetId = 'sl-001'
-      else if (userId === 'spv-002') targetId = 'sl-002'
-      else if (userId === 'head-001') targetId = 'dm-001'
-      else if (userId === 'head-002') targetId = 'dm-002'
-
-      let user = this.userDirectory.find(u => u.id === targetId) || this.userDirectory.find(u => u.id === userId)
-      if (!user) {
-        const personaKey = Object.keys(mockUsers).find(k => mockUsers[k].id === targetId || mockUsers[k].id === userId)
-        if (personaKey) {
-          user = { ...mockUsers[personaKey] }
-          this.userDirectory.push(user)
-        }
-      }
-
+      const user = this.userDirectory.find(u => u.id === userId)
       if (user) {
         this.currentUserId = user.id
         this.isAuthenticated = true
@@ -535,21 +326,15 @@ export const useUserStore = defineStore('user', {
 
     // Backward compatibility login alias
     loginAsRole(role) {
-      switch (role) {
-        case 'CREW':
-          this.loginAsUser('crew-001')
-          break
-        case 'STORE_LEADER':
-        case 'SUPERVISOR':
-          this.loginAsUser('sl-001')
-          break
-        case 'DISTRICT_MANAGER':
-        case 'HEAD':
-          this.loginAsUser('dm-001')
-          break
-        case 'SUPERADMIN':
-          this.loginAsUser('admin-001')
-          break
+      const user = this.userDirectory.find(u => {
+        if (role === 'CREW') return u.role === 'CREW'
+        if (role === 'STORE_LEADER' || role === 'SUPERVISOR') return u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR'
+        if (role === 'DISTRICT_MANAGER' || role === 'HEAD') return u.role === 'DISTRICT_MANAGER' || u.role === 'HEAD'
+        if (role === 'SUPERADMIN') return u.role === 'SUPERADMIN'
+        return u.role === role
+      })
+      if (user) {
+        this.loginAsUser(user.id)
       }
     },
 
@@ -572,7 +357,7 @@ export const useUserStore = defineStore('user', {
     // ==================== USER MANAGEMENT ACTIONS ====================
 
     createUser(payload) {
-      const id = `user-${Date.now()}`
+      const id = payload.id || `user-${Date.now()}`
       let roleTitle = 'Store Specialist'
       if (payload.role === 'STORE_LEADER' || payload.role === 'SUPERVISOR') roleTitle = 'Store Leader'
       else if (payload.role === 'DISTRICT_MANAGER' || payload.role === 'HEAD') roleTitle = 'District Manager'

@@ -90,8 +90,8 @@ export const useApprovalStore = defineStore('approval', {
               id: m.userMissionId,
               userMissionId: m.userMissionId,
               evaluationId: `eval-${m.userMissionId}`,
-              batchId: m.mission?.batchId || 'batch-alpha',
-              batchName: 'Batch Onboarding September 2026',
+              batchId: m.mission?.batchId || '',
+              batchName: m.mission?.batch?.name || 'Batch Operasional',
               missionId: m.missionId,
               missionTitle: m.mission?.missionTitle || 'Evaluasi Standar Operasional',
               missionCategory: m.mission?.category || 'TECHNICAL',
@@ -101,7 +101,7 @@ export const useApprovalStore = defineStore('approval', {
               crewAvatar: m.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(m.user?.name || 'crew')}`,
               crewRole: m.user?.position || 'Crew Specialist',
               storeLocation: m.user?.department?.departmentName || m.user?.storeLocation || 'Gerai Re.juve',
-              supervisorId: m.tlId || 'sl-001',
+              supervisorId: m.tlId || '',
               supervisorName: m.tl?.name || 'Store Leader',
               slScore,
               dmScore,
@@ -278,7 +278,7 @@ export const useApprovalStore = defineStore('approval', {
 
       setStoredData('rejuve_approvals_v4', this.approvals)
       return {
-        success: true,
+        success: approvedCount > 0,
         approvedCount,
         totalStarsAwarded
       }
@@ -322,7 +322,7 @@ export const useApprovalStore = defineStore('approval', {
         evalItem.revisionHistory.push({
           id: `rev-${Date.now()}`,
           revisionNumber: evalItem.revisionHistory.length + 1,
-          requestedBy: 'Ahmad Dahlan (Head)',
+          requestedBy: 'District Manager',
           requestedAt: now,
           note: revisionNote.trim(),
           status: 'PENDING_SUPERVISOR_ACTION'
@@ -332,7 +332,7 @@ export const useApprovalStore = defineStore('approval', {
       // 3. Prepend to Live Activity Feed
       this.activities.unshift({
         id: `act-${Date.now()}`,
-        actor: 'Ahmad Dahlan (Head)',
+        actor: 'District Manager',
         action: 'requested revision on',
         target: item.missionTitle,
         details: revisionNote.trim(),
@@ -353,7 +353,7 @@ export const useApprovalStore = defineStore('approval', {
       const mission = missionStore.missionById(evalItem.missionId)
       const gamificationStore = useGamificationStore()
       const batchStore = useBatchStore()
-      const targetBatch = batchStore.batchById(mission ? mission.batchId : 'batch-alpha')
+      const targetBatch = batchStore.batchById(mission?.batchId || '')
 
       const crewScores = evalItem.crewScores && evalItem.crewScores.length > 0 
         ? evalItem.crewScores 
@@ -385,7 +385,7 @@ export const useApprovalStore = defineStore('approval', {
             missionTitle: mission ? mission.title : 'Misi Operasional',
             missionCategory: mission ? mission.category : 'SOP Gerai',
             week: mission ? mission.week : 1,
-            batchId: mission ? mission.batchId : 'batch-alpha',
+            batchId: mission?.batchId || (targetBatch ? targetBatch.id : ''),
             batchName: targetBatch ? targetBatch.name : 'Batch Gerai',
             supervisorId: evalItem.supervisorId,
             supervisorName: evalItem.supervisorName || 'Store Leader',

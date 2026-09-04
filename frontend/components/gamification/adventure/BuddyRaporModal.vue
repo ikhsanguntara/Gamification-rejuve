@@ -33,7 +33,7 @@
                 </span>
               </div>
               <p class="text-xs text-purple-200/80 mt-0.5">
-                🏪 {{ evaluation?.storeTraining || 'Re.juve Grand Indonesia' }} • Buddy: <strong>{{ evaluation?.storeCaptain || 'Budi Santoso (Store Leader)' }}</strong>
+                🏪 {{ evaluation?.storeTraining || 'Gerai Pelatihan' }} • Buddy: <strong>{{ evaluation?.storeCaptain || 'Store Leader / Mentor' }}</strong>
               </p>
             </div>
           </div>

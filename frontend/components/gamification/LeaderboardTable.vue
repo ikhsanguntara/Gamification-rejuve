@@ -317,20 +317,26 @@ const userStore = useUserStore()
 const batchStore = useBatchStore()
 const gamificationStore = useGamificationStore()
 
-const selectedBatch = ref(userStore.isCrew ? (userStore.currentUser.batchId || 'batch-alpha') : 'ALL')
+const selectedBatch = ref(userStore.isCrew ? (userStore.currentUser.batchId || 'ALL') : 'ALL')
 
 const currentPage = ref(1)
 const itemsPerPage = 10
 
-const batchOptions = [
-  { id: 'ALL', label: 'All Store Batches' },
-  { id: 'batch-alpha', label: 'Grand Indonesia (6)' },
-  { id: 'batch-beta', label: 'Senayan City (5)' },
-  { id: 'batch-gamma', label: 'Pondok Indah Mall (5)' }
-]
+const batchOptions = computed(() => {
+  const list = [{ id: 'ALL', label: 'Semua Batch Gerai' }]
+  const batches = batchStore.allBatches || []
+  batches.forEach(b => {
+    const crewCount = b.totalCrew || b.assignment?.crewIds?.length || 0
+    list.push({
+      id: b.id,
+      label: `${b.name || b.storeLocation || b.code || 'Batch'}${crewCount ? ` (${crewCount})` : ''}`
+    })
+  })
+  return list
+})
 
 const displayedLeaderboard = computed(() => {
-  const batchId = userStore.isCrew ? (userStore.currentUser.batchId || 'batch-alpha') : selectedBatch.value
+  const batchId = userStore.isCrew ? (userStore.currentUser.batchId || '') : selectedBatch.value
   return gamificationStore.leaderboardByBatch(batchId)
 })
 

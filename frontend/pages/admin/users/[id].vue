@@ -361,7 +361,7 @@ watch(
         role: u.role || 'CREW',
         position: u.position || '',
         email: u.email || '',
-        storeId: u.storeId || (u.batchId === 'batch-alpha' ? 'store-001' : u.batchId === 'batch-beta' ? 'store-002' : u.batchId === 'batch-gamma' ? 'store-003' : null),
+        storeId: u.storeId || null,
         storeLocation: u.storeLocation || '',
         batchId: u.batchId || null,
         userBuddyId: u.userBuddyId || null,
