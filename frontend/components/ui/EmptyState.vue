@@ -28,11 +28,11 @@ import {
 const props = defineProps({
   title: {
     type: String,
-    default: 'No items found'
+    default: 'Tidak ada data ditemukan'
   },
   description: {
     type: String,
-    default: 'There are no records available for this section at the moment.'
+    default: 'Belum ada data atau catatan yang tersedia saat ini.'
   },
   icon: {
     type: String,

@@ -4,16 +4,16 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
         <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-          Store Mission Catalog
+          Katalog Misi Gerai
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          Standard operational store assignments, audit criteria, and star milestones.
+          Standar penugasan operasional gerai, kriteria audit SOP, dan perolehan bintang.
         </p>
       </div>
 
       <div class="flex items-center gap-2">
         <span class="text-xs font-semibold px-3 py-1 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
-          {{ filteredMissions.length }} Missions Listed
+          {{ filteredMissions.length }} Misi Terdaftar
         </span>
       </div>
     </div>
@@ -26,7 +26,7 @@
           <input
             v-model="search"
             type="text"
-            placeholder="Search mission title or code..."
+            placeholder="Cari judul atau kode misi..."
             class="w-full text-xs font-medium rounded-xl bg-slate-100 dark:bg-slate-800 border-none pl-9 pr-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#831843]"
           />
           <Search class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -38,10 +38,10 @@
             v-model="selectedWeekFilter"
             class="w-full appearance-none bg-slate-100 dark:bg-slate-800 border-none text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:ring-2 focus:ring-[#831843] cursor-pointer"
           >
-            <option value="ALL">All Weeks (1, 2, 3)</option>
-            <option value="1">Week 1 (Completed)</option>
-            <option value="2">Week 2 (Active Cycle)</option>
-            <option value="3">Week 3 (Locked)</option>
+            <option value="ALL">Semua Minggu (1, 2, 3)</option>
+            <option value="1">Week 1 (Selesai)</option>
+            <option value="2">Week 2 (Siklus Aktif)</option>
+            <option value="3">Week 3 (Terkunci)</option>
           </select>
           <ChevronDown class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
@@ -52,13 +52,13 @@
             v-model="selectedStatusFilter"
             class="w-full appearance-none bg-slate-100 dark:bg-slate-800 border-none text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:ring-2 focus:ring-[#831843] cursor-pointer"
           >
-            <option value="ALL">All Statuses</option>
-            <option value="PENDING_REVIEW">Pending Review</option>
-            <option value="REVISION_REQUIRED">Revision Required</option>
-            <option value="COMPLETED">Completed / Approved</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="DRAFT">Draft</option>
-            <option value="LOCKED">Locked</option>
+            <option value="ALL">Semua Status</option>
+            <option value="PENDING_REVIEW">Menunggu Review DM</option>
+            <option value="REVISION_REQUIRED">Perlu Revisi</option>
+            <option value="COMPLETED">Selesai / Disetujui</option>
+            <option value="IN_PROGRESS">Sedang Berjalan</option>
+            <option value="DRAFT">Draf Disimpan</option>
+            <option value="LOCKED">Terkunci</option>
           </select>
           <ChevronDown class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
@@ -69,13 +69,13 @@
             v-model="selectedCategoryFilter"
             class="w-full appearance-none bg-slate-100 dark:bg-slate-800 border-none text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:ring-2 focus:ring-[#831843] cursor-pointer"
           >
-            <option value="ALL">All Categories</option>
+            <option value="ALL">Semua Kategori</option>
             <option value="Cold Chain">Cold Chain</option>
             <option value="Quality Control">Quality Control</option>
-            <option value="Sanitation">Sanitation</option>
-            <option value="Service">Service</option>
-            <option value="Compliance">Compliance</option>
-            <option value="Logistics">Logistics</option>
+            <option value="Sanitation">Sanitasi & Kebersihan</option>
+            <option value="Service">Pelayanan & Kasir</option>
+            <option value="Compliance">Kepatuhan SOP</option>
+            <option value="Logistics">Logistik & Stok</option>
           </select>
           <ChevronDown class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
@@ -106,8 +106,8 @@
     <!-- Empty State -->
     <EmptyState
       v-else
-      title="No missions match your filter criteria"
-      description="Try clearing search keywords or choosing a different week or status filter."
+      title="Tidak ada misi yang sesuai filter"
+      description="Coba bersihkan kata kunci pencarian atau pilih minggu dan status yang berbeda."
       icon="Search"
     >
       <template #action>
@@ -116,7 +116,7 @@
           @click="resetFilters"
           class="px-4 py-2 text-xs font-semibold rounded-xl bg-[#831843] text-white hover:bg-[#701a40] transition-colors cursor-pointer"
         >
-          Reset All Filters
+          Reset Semua Filter
         </button>
       </template>
     </EmptyState>

@@ -14,8 +14,8 @@
       </main>
     </div>
 
-    <!-- Mobile Bottom Navigation Bar (Hidden for Crew Role) -->
-    <MobileNavigation v-if="!userStore.isCrew" />
+    <!-- Mobile Bottom Navigation Bar (Active for all roles) -->
+    <MobileNavigation />
 
   </div>
 </template>

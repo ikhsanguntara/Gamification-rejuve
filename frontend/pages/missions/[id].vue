@@ -4,16 +4,16 @@
     <div class="flex items-center gap-2 text-xs font-semibold text-slate-400">
       <NuxtLink to="/missions" class="hover:text-slate-600 dark:hover:text-slate-200 flex items-center gap-1">
         <ArrowLeft class="w-3.5 h-3.5" />
-        <span>{{ userStore.isCrew ? 'Kembali ke Misi Saya' : 'Back to Missions' }}</span>
+        <span>{{ userStore.isCrew ? 'Kembali ke Misi Saya' : 'Kembali ke Katalog Misi' }}</span>
       </NuxtLink>
       <span>/</span>
-      <span class="text-slate-800 dark:text-slate-200">{{ mission?.code || 'Mission Detail' }}</span>
+      <span class="text-slate-800 dark:text-slate-200">{{ mission?.code || 'Detail Misi' }}</span>
     </div>
 
     <!-- Error State if Mission Not Found -->
     <div v-if="!mission" class="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-      <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Mission not found</p>
-      <NuxtLink to="/missions" class="text-xs text-[#831843] mt-2 inline-block font-bold">Return to Catalog</NuxtLink>
+      <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Misi tidak ditemukan.</p>
+      <NuxtLink to="/missions" class="text-xs text-[#831843] mt-2 inline-block font-bold">Kembali ke Katalog</NuxtLink>
     </div>
 
     <template v-else>
@@ -69,7 +69,7 @@
             <!-- NON-CREW View -->
             <template v-else>
               <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Average Store Score
+                Rata-rata Skor Gerai
               </span>
               <div class="my-1.5">
                 <StarReward
@@ -80,10 +80,10 @@
               </div>
               <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <span v-if="mission.awardedStars" class="text-emerald-600 dark:text-emerald-400">
-                  ⭐ {{ mission.awardedStars }} Stars Awarded to All Crew
+                  ⭐ {{ mission.awardedStars }} Stars Dicairkan ke Seluruh Kru
                 </span>
                 <span v-else-if="mission.calculatedStars" class="text-amber-600 dark:text-amber-400">
-                  ⭐ {{ mission.calculatedStars }} Stars (Calculated)
+                  ⭐ {{ mission.calculatedStars }} Stars (Dihitung)
                 </span>
                 <span v-else>
                   Hingga 5 Bintang per Kru
@@ -198,14 +198,14 @@
             <div class="flex items-center justify-between">
               <div>
                 <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
-                  Store Crew Performance Breakdown ({{ participatingCrews.length }} Members)
+                  Rincian Kinerja Kru Gerai ({{ participatingCrews.length }} Anggota)
                 </h3>
                 <p class="text-xs text-slate-400 mt-0.5">
-                  Evaluated by {{ evaluation ? evaluation.supervisorName : 'Supervisor' }}
+                  Dinilai oleh {{ evaluation ? evaluation.supervisorName : 'Store Leader' }}
                 </p>
               </div>
               <span v-if="evaluation?.averageScore" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                Avg Score: <strong class="text-slate-900 dark:text-white font-semibold">{{ evaluation.averageScore }}/100</strong>
+                Rata-rata Skor: <strong class="text-slate-900 dark:text-white font-semibold">{{ evaluation.averageScore }}/100</strong>
               </span>
             </div>
 
@@ -245,10 +245,10 @@
             <div v-if="evaluation" class="pt-2">
               <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                  Supervisor Observations & Notes
+                  Catatan & Observasi Store Leader
                 </p>
                 <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed italic">
-                  "{{ evaluation.comment || 'No comment provided.' }}"
+                  "{{ evaluation.comment || 'Pemeriksaan operasional cold-chain & sanitasi gerai berjalan sesuai SOP.' }}"
                 </p>
               </div>
             </div>
@@ -256,7 +256,7 @@
             <!-- Evidence Gallery -->
             <div v-if="evaluation?.evidence?.length" class="pt-2">
               <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Evidence Photos ({{ evaluation.evidence.length }})
+                Foto Bukti Inspeksi Gerai ({{ evaluation.evidence.length }})
               </p>
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div
@@ -325,7 +325,7 @@
                   {{ batchStore.currentBatch?.name || 'Re.juve Store' }}
                 </h4>
                 <p class="text-xs text-slate-400">
-                  {{ participatingCrews.length }} Active Store Crew Members
+                  {{ participatingCrews.length }} Anggota Kru Gerai Aktif
                 </p>
               </div>
             </div>
@@ -334,12 +334,12 @@
           <!-- Mission Audit Timeline -->
           <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6">
             <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
-              Audit Lifecycle Trail
+              Jejak Audit Siklus Misi
             </h3>
             <MissionTimeline
               :mission="mission"
               :evaluation="evaluation"
-              crew-name="All Store Crew Members"
+              crew-name="Seluruh Anggota Kru Gerai"
             />
           </div>
         </div>
@@ -355,6 +355,7 @@ import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useMissionStore } from '~/stores/mission.js'
 import { useEvaluationStore } from '~/stores/evaluation.js'
+import { useApprovalStore } from '~/stores/approval.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { calculateStars } from '~/utils/star.js'
 import MissionStatus from '~/components/mission/MissionStatus.vue'

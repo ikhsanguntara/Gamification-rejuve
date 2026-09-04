@@ -6,7 +6,7 @@
       class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm"
     >
       <div class="flex items-center gap-2">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Store Branch:</span>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Cabang Gerai:</span>
         <div class="flex items-center gap-1.5 overflow-x-auto">
           <button
             v-for="b in batchOptions"
@@ -26,7 +26,7 @@
       </div>
 
       <span class="text-xs font-semibold text-slate-400">
-        {{ displayedLeaderboard.length }} Crew Members Ranked
+        {{ displayedLeaderboard.length }} Anggota Kru Terdaftar
       </span>
     </div>
 
@@ -176,22 +176,22 @@
     <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shadow-sm">
       <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
         <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
-          Store Crew Standings
+          Peringkat Kru Gerai
         </h3>
-        <span class="text-xs text-slate-400">Ranked by Total Star Accumulation</span>
+        <span class="text-xs text-slate-400">Diurutkan berdasarkan akumulasi bintang tertinggi</span>
       </div>
 
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
           <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-400 font-semibold uppercase text-xs tracking-wider border-b border-slate-100 dark:border-slate-800">
             <tr>
-              <th class="py-3 px-4 w-16 text-center">Rank</th>
-              <th class="py-3 px-4">Crew Member</th>
-              <th class="py-3 px-4">Store Location</th>
-              <th class="py-3 px-4 text-center">Star Level</th>
-              <th class="py-3 px-4 text-center">Completed</th>
-              <th class="py-3 px-4 text-center">Avg Score</th>
-              <th class="py-3 px-4 text-right">Stars & Points</th>
+              <th class="py-3 px-4 w-16 text-center">Peringkat</th>
+              <th class="py-3 px-4">Anggota Kru</th>
+              <th class="py-3 px-4">Lokasi Gerai</th>
+              <th class="py-3 px-4 text-center">Level Bintang</th>
+              <th class="py-3 px-4 text-center">Misi Selesai</th>
+              <th class="py-3 px-4 text-center">Rata-rata Skor</th>
+              <th class="py-3 px-4 text-right">Bintang & Poin</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-normal">

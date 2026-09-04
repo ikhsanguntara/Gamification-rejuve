@@ -60,10 +60,10 @@
           <div class="star-row">
             <div class="star-display">
               <span
-                v-for="i in 10"
+                v-for="i in 5"
                 :key="i"
                 class="star-item"
-                :class="{ 'star-earned': i <= earnedStars, 'star-max': i <= 10 }"
+                :class="{ 'star-earned': i <= earnedStars, 'star-max': i <= 5 }"
               >★</span>
             </div>
             <span class="star-label">{{ starLabel }}</span>
@@ -141,15 +141,16 @@ const isRevision = computed(() => props.mission?.status === 'REVISION_REQUIRED')
 const isLocked = computed(() => props.mission?.status === 'LOCKED' || props.mission?.weekLocked)
 
 const earnedStars = computed(() => {
-  if (isCompleted.value) return props.mission?.awardedStars || 10
-  if (props.mission?.awardedStars) return props.mission.awardedStars
+  if (isCompleted.value) return Number(props.mission?.awardedStars || props.mission?.calculatedStars || 5)
+  if (props.mission?.awardedStars) return Number(props.mission.awardedStars)
+  if (props.mission?.calculatedStars) return Number(props.mission.calculatedStars)
   return 0
 })
 
 const starLabel = computed(() => {
-  if (isCompleted.value) return `${earnedStars.value}/10 Bintang Diraih`
-  if (isLocked.value) return 'Hingga 10 Bintang'
-  return 'Hingga 10 Bintang'
+  if (isCompleted.value) return `${earnedStars.value}/5 Bintang Diraih`
+  if (isLocked.value) return 'Hingga 5 Bintang'
+  return 'Hingga 5 Bintang'
 })
 
 const statusLabel = computed(() => {

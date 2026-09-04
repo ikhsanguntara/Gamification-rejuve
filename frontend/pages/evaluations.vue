@@ -890,6 +890,9 @@ watch(selectedCrewId, async (newId) => {
       type: 'JOURNEY'
     })
     loadCrewScores()
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 120, behavior: 'smooth' })
+    }
   }
 })
 

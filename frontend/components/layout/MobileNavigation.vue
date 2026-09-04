@@ -46,7 +46,8 @@ import {
   Medal,
   Trophy,
   User,
-  Compass
+  Compass,
+  MessageSquareText
 } from 'lucide-vue-next'
 
 const userStore = useUserStore()
@@ -59,11 +60,11 @@ const navItems = computed(() => {
   if (role === 'SUPERADMIN') {
     return [
       { label: 'Admin', path: '/admin', icon: Sliders },
-      { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
+      { label: 'Beranda', path: '/dashboard', icon: LayoutDashboard },
       { label: 'Batch', path: '/batches', icon: Layers },
-      { label: 'Missions', path: '/missions', icon: Target },
+      { label: 'Misi', path: '/missions', icon: Target },
       {
-        label: 'Approvals',
+        label: 'Approval',
         path: '/approvals',
         icon: ShieldCheck,
         hasBadge: approvalStore.pendingApprovals.length > 0
@@ -73,41 +74,41 @@ const navItems = computed(() => {
 
   if (role === 'CREW') {
     return [
-      { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
-      { label: 'Journey', path: '/journey', icon: Compass },
-      { label: 'Missions', path: '/missions', icon: Target },
-      { label: 'Ranking', path: '/leaderboard', icon: Medal },
-      { label: 'Profile', path: '/profile', icon: User }
+      { label: 'Petualangan', path: '/journey', icon: Compass },
+      { label: 'Misi', path: '/missions', icon: Target },
+      { label: 'Survei', path: '/feedback', icon: MessageSquareText },
+      { label: 'Peringkat', path: '/leaderboard', icon: Medal },
+      { label: 'Profil', path: '/profile', icon: User }
     ]
   }
 
-  if (role === 'SUPERVISOR') {
+  if (role === 'STORE_LEADER' || role === 'SUPERVISOR' || role === 'SL') {
     return [
-      { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
+      { label: 'Beranda', path: '/dashboard', icon: LayoutDashboard },
       { label: 'Batch', path: '/batches', icon: Layers },
-      { label: 'Missions', path: '/missions', icon: Target },
       {
-        label: 'Evaluate',
+        label: 'Penilaian',
         path: '/evaluations',
         icon: ClipboardCheck,
         hasBadge: missionStore.revisionCount > 0
       },
-      { label: 'Ranking', path: '/leaderboard', icon: Medal }
+      { label: 'Misi', path: '/missions', icon: Target },
+      { label: 'Peringkat', path: '/leaderboard', icon: Medal }
     ]
   }
 
-  // HEAD
+  // DISTRICT_MANAGER / HEAD
   return [
-    { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
+    { label: 'Beranda', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Batch', path: '/batches', icon: Layers },
     {
-      label: 'Approvals',
+      label: 'Approval',
       path: '/approvals',
       icon: ShieldCheck,
       hasBadge: approvalStore.pendingApprovals.length > 0
     },
-    { label: 'Ranking', path: '/leaderboard', icon: Medal },
-    { label: 'Badges', path: '/achievements', icon: Trophy }
+    { label: 'Peringkat', path: '/leaderboard', icon: Medal },
+    { label: 'Lencana', path: '/achievements', icon: Trophy }
   ]
 })
 </script>

@@ -89,13 +89,13 @@
 
         <!-- Rating Scale 0 to 10 for SCALE_0_10 Questions -->
         <div v-if="q.type === 'SCALE_0_10'" class="pt-2 space-y-2">
-          <div class="grid grid-cols-11 gap-1 sm:gap-2">
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-2 pt-1 px-0.5 sm:grid sm:grid-cols-11 sm:gap-2 sm:overflow-visible no-scrollbar">
             <button
               v-for="val in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
               :key="val"
               type="button"
               @click="surveyForm.ratings[q.id] = val"
-              class="h-9 sm:h-10 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center"
+              class="min-w-[40px] h-10 sm:min-w-0 sm:h-10 flex-shrink-0 sm:flex-shrink rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center shadow-2xs active:scale-95"
               :class="[
                 surveyForm.ratings[q.id] === val
                   ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-600/30 scale-105'
@@ -108,7 +108,7 @@
 
           <div class="flex items-center justify-between text-[11px] font-semibold text-slate-400 px-1 pt-1">
             <span>Sangat Tidak Setuju (0)</span>
-            <span>Netral (5)</span>
+            <span class="hidden sm:inline">Netral (5)</span>
             <span>Sangat Setuju (10)</span>
           </div>
         </div>

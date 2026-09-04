@@ -31,11 +31,11 @@
       <div class="grid grid-cols-2 gap-2 mt-4 text-xs">
         <div class="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
           <Users class="w-3.5 h-3.5 text-slate-400" />
-          <span>{{ batch.totalCrew }} Crew Members</span>
+          <span>{{ batch.totalCrew }} Anggota Kru</span>
         </div>
         <div class="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
           <Calendar class="w-3.5 h-3.5 text-slate-400" />
-          <span>Week {{ batch.currentWeek }} of {{ batch.totalWeeks }}</span>
+          <span>Week {{ batch.currentWeek }} dari {{ batch.totalWeeks }}</span>
         </div>
       </div>
     </div>
@@ -45,7 +45,7 @@
       <!-- Progress Bar -->
       <div>
         <div class="flex items-center justify-between text-xs mb-1.5">
-          <span class="font-medium text-slate-600 dark:text-slate-400">Mission Progress</span>
+          <span class="font-medium text-slate-600 dark:text-slate-400">Progres Misi</span>
           <span class="font-semibold text-slate-900 dark:text-white">
             {{ batch.completedMissions }} / {{ batch.totalMissions }} ({{ completionPercentage }}%)
           </span>
@@ -61,15 +61,15 @@
       <!-- Average Score & Total Stars -->
       <div class="flex items-center justify-between text-xs pt-1">
         <div class="flex items-center gap-1.5">
-          <span class="text-slate-400">Avg Score:</span>
+          <span class="text-slate-400">Rata-rata Skor:</span>
           <span class="font-semibold text-slate-800 dark:text-slate-200">
-            {{ batch.averageScore > 0 ? `${batch.averageScore}%` : 'N/A' }}
+            {{ batch.averageScore > 0 ? `${batch.averageScore}%` : '—' }}
           </span>
         </div>
 
         <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-semibold text-xs">
           <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-          <span>{{ batch.totalStars.toLocaleString() }} Stars</span>
+          <span>{{ batch.totalStars.toLocaleString() }} Bintang</span>
         </div>
       </div>
 
@@ -78,7 +78,7 @@
         :to="`/batches/${batch.id}`"
         class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 transition-all group"
       >
-        <span>Open Batch Dashboard</span>
+        <span>Buka Detail Batch</span>
         <ChevronRight class="w-4 h-4 transition-transform group-hover:translate-x-1" />
       </NuxtLink>
     </div>

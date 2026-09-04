@@ -16,17 +16,11 @@
         </p>
       </div>
 
-      <!-- Quick Action: Direct Evaluate as DM -->
+      <!-- Quick Action: Direct Summary for DM -->
       <div class="flex items-center gap-2.5 flex-wrap">
-        <NuxtLink
-          to="/evaluations"
-          class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5"
-        >
-          <ClipboardEdit class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
-          <span>Form Penilaian Kru (DM)</span>
-        </NuxtLink>
-        <span class="text-xs font-semibold px-3 py-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-          {{ approvalStore.pendingApprovals.length }} Menunggu Keputusan
+        <span class="text-xs font-semibold px-3.5 py-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1.5 shadow-xs">
+          <Hourglass class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+          <span>{{ approvalStore.pendingApprovals.length }} Menunggu Keputusan</span>
         </span>
       </div>
     </div>
@@ -186,11 +180,11 @@ import ApprovalCard from '~/components/approval/ApprovalCard.vue'
 import ApprovalModal from '~/components/approval/ApprovalModal.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
 import AppPagination from '~/components/ui/AppPagination.vue'
+import { confirmActionDialog } from '~/utils/dialog.js'
 import {
   Hourglass,
   CheckCircle2,
-  Sparkles,
-  ClipboardEdit
+  Sparkles
 } from 'lucide-vue-next'
 
 const approvalStore = useApprovalStore()
@@ -254,10 +248,20 @@ function toggleSelectItem(id) {
   }
 }
 
-function handleBulkApprove() {
+async function handleBulkApprove() {
   if (selectedIds.value.length === 0) return
 
   const count = selectedIds.value.length
+  const confirmed = await confirmActionDialog({
+    title: `Setujui ${count} Evaluasi Sekaligus?`,
+    text: `Persetujuan massal akan memfinalisasi evaluasi dan otomatis mencairkan bintang ke ${count} kru terkait. Lanjutkan?`,
+    icon: 'question',
+    confirmButtonText: `Ya, Setujui ${count} Misi`,
+    cancelButtonText: 'Batal'
+  })
+
+  if (!confirmed) return
+
   const res = approvalStore.bulkApprove(selectedIds.value)
   selectedIds.value = []
 

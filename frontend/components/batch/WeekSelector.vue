@@ -106,7 +106,7 @@
       </div>
       <div class="text-xs space-y-0.5">
         <p class="font-semibold text-slate-900 dark:text-white">
-          🔒 Week {{ selectedWeek }} is Locked (Read-Only)
+          🔒 Week {{ selectedWeek }} Terkunci (Hanya Lihat)
         </p>
         <p class="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
           <span v-if="selectedWeek < activeWeekNumber">
@@ -137,9 +137,9 @@ const selectWeek = (weekNumber) => {
 }
 
 const getWeekStatusLabel = (weekNumber) => {
-  if (weekNumber < activeWeekNumber.value) return 'Completed'
-  if (weekNumber === activeWeekNumber.value) return 'Active'
-  return 'Locked'
+  if (weekNumber < activeWeekNumber.value) return 'Selesai'
+  if (weekNumber === activeWeekNumber.value) return 'Aktif'
+  return 'Terkunci'
 }
 
 const getWeekStatusBadge = (weekNumber) => {

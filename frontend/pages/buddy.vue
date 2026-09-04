@@ -998,6 +998,9 @@ watch(selectedCrewId, async (newId) => {
     await buddyStore.fetchBuddyMissions(newId, { batchId })
     loadBuddyScores()
     loadSelectedCrewRapor()
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 120, behavior: 'smooth' })
+    }
   }
 })
 
