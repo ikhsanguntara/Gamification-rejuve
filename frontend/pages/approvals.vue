@@ -209,7 +209,7 @@ const itemsPerPage = 9
 const loadApprovals = async (page = 1) => {
   await approvalStore.fetchApprovalsFromApi({
     page,
-    limit: itemsPerPage
+    limit: 50
   })
 }
 

@@ -163,29 +163,29 @@
                 v-model="form.buddyPackageId"
                 class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 cursor-pointer shadow-2xs"
               >
-                <option v-for="bpkg in buddyStore.allPackages" :key="bpkg.id" :value="bpkg.id">
-                  {{ bpkg.name }} (7 Kompetensi • {{ bpkg.code }})
+                <option v-for="bpkg in (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages)" :key="bpkg.id" :value="bpkg.id">
+                  {{ bpkg.name }} ({{ (bpkg.templates || bpkg.details || bpkg.competencies)?.length || 0 }} Misi • {{ bpkg.code }})
                 </option>
                 <option value="NONE">-- Lewati / Tanpa Program Buddy --</option>
               </select>
             </div>
 
-            <!-- Pratinjau Rapor New Hire 7 Kompetensi -->
+            <!-- Pratinjau Rapor New Hire / Misi Buddy -->
             <div v-if="selectedBuddyPackage" class="pt-2 border-t border-purple-200/60 dark:border-purple-800/40">
               <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-2">
-                📋 Pratinjau Rapor New Hire ({{ selectedBuddyPackage.competencies?.length || 7 }} Kompetensi • 3 Hari Pra-Batch):
+                📋 Pratinjau Misi Buddy ({{ (selectedBuddyPackage.templates || selectedBuddyPackage.details || selectedBuddyPackage.competencies)?.length || 0 }} Misi/Kompetensi • {{ selectedBuddyPackage.durationValue || 3 }} Hari Pra-Batch):
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div
-                  v-for="comp in selectedBuddyPackage.competencies"
+                  v-for="comp in (selectedBuddyPackage.templates || selectedBuddyPackage.details || selectedBuddyPackage.competencies || [])"
                   :key="comp.id"
                   class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/60 text-xs space-y-0.5"
                 >
                   <div class="flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-purple-600 flex-shrink-0"></span>
-                    <span class="font-bold text-purple-700 dark:text-purple-300 truncate text-[11px]">{{ comp.name }}</span>
+                    <span class="font-bold text-purple-700 dark:text-purple-300 truncate text-[11px]">{{ comp.missionTitle || comp.title || comp.name }}</span>
                   </div>
-                  <span class="text-[10px] text-slate-400 font-semibold block">{{ comp.indicators?.length || 0 }} Indikator</span>
+                  <span class="text-[10px] text-slate-400 font-semibold block">{{ (comp.sopChecklist || comp.requirements || comp.indicators)?.length || 0 }} Indikator / SOP</span>
                 </div>
               </div>
             </div>
@@ -562,7 +562,7 @@ const form = ref({
   startDate: defaultStartDate,
   endDate: '',
   description: 'Siklus gamifikasi dan pelatihan standar operasional multi-gerai.',
-  buddyPackageId: 'pkg-buddy-standard',
+  buddyPackageId: templateStore.buddyTemplates[0]?.id || '',
   templatePackageId: templateStore.allPackages[0]?.id || 'pkg-sop-standard',
   feedbackPackageId: '',
   weeks: [],
@@ -579,7 +579,13 @@ const form = ref({
 
 const selectedBuddyPackage = computed(() => {
   if (form.value.buddyPackageId === 'NONE') return null
-  return buddyStore.packageById(form.value.buddyPackageId) || buddyStore.defaultPackage
+  return (
+    templateStore.buddyTemplates.find(b => b.id === form.value.buddyPackageId) ||
+    buddyStore.packageById(form.value.buddyPackageId) ||
+    templateStore.buddyTemplates[0] ||
+    buddyStore.defaultPackage ||
+    null
+  )
 })
 
 const getFeedbackQuestionsCount = (fpkg) => {
@@ -696,6 +702,11 @@ onMounted(async () => {
       storeStore.fetchStoresFromApi({ page: 1, limit: 100 }),
       templateStore.fetchAllTemplateTypes()
     ])
+
+    // Otomatis pilih template Buddy pertama jika ada
+    if (templateStore.buddyTemplates.length > 0 && (!form.value.buddyPackageId || form.value.buddyPackageId === 'pkg-buddy-standard' || form.value.buddyPackageId === 'NONE')) {
+      form.value.buddyPackageId = templateStore.buddyTemplates[0].id
+    }
 
     // Otomatis pilih template Feedback pertama jika ada
     if (templateStore.feedbackTemplates.length > 0 && (!form.value.feedbackPackageId || form.value.feedbackPackageId === 'NONE')) {

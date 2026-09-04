@@ -189,7 +189,7 @@
                     type="number"
                     min="0"
                     max="100"
-                    step="10"
+                    step="1"
                     :disabled="isLocked"
                     class="w-16 text-center text-sm font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 py-1.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] focus:border-[#831843] disabled:opacity-50 shadow-inner"
                   />
@@ -214,16 +214,18 @@
                   type="range"
                   min="0"
                   max="100"
-                  step="10"
+                  step="1"
                   :disabled="isLocked"
                   :style="getSliderTrackStyle(crewScoresMap[crew.id])"
                   class="w-full h-3 rounded-full appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-inner border border-slate-300 dark:border-slate-700 transition-all custom-range-slider"
                   :class="[
-                    (crewScoresMap[crew.id] || 0) >= 90
+                    (crewScoresMap[crew.id] || 0) >= 85
                       ? 'text-emerald-500'
-                      : (crewScoresMap[crew.id] || 0) >= 80
+                      : (crewScoresMap[crew.id] || 0) >= 70
+                      ? 'text-sky-500'
+                      : (crewScoresMap[crew.id] || 0) >= 50
                       ? 'text-amber-500'
-                      : 'text-[#831843]'
+                      : 'text-rose-500'
                   ]"
                 />
               </div>
@@ -574,9 +576,10 @@ const handleSliderChange = (crewId, val) => {
 // High-contrast slider track style generator
 const getSliderTrackStyle = (score) => {
   const val = Math.min(100, Math.max(0, Number(score) || 0))
-  let color = '#831843'
-  if (val >= 90) color = '#10b981'
-  else if (val >= 80) color = '#f59e0b'
+  let color = '#ef4444'
+  if (val >= 85) color = '#10b981'
+  else if (val >= 70) color = '#0284c7'
+  else if (val >= 50) color = '#f59e0b'
   return {
     background: `linear-gradient(to right, ${color} 0%, ${color} ${val}%, #cbd5e1 ${val}%, #cbd5e1 100%)`
   }
@@ -597,19 +600,19 @@ const initForm = () => {
     formData.comment = ''
     formData.evidence = []
     props.mission.crewEvaluations.forEach(ce => {
-      crewScoresMap[ce.crewId] = ce.score || 90
+      crewScoresMap[ce.crewId] = ce.score || 0
     })
   } else {
     formData.comment = ''
     formData.evidence = []
     batchCrews.value.forEach(c => {
-      crewScoresMap[c.id] = 90
+      crewScoresMap[c.id] = 0
     })
   }
 
   batchCrews.value.forEach(c => {
     if (crewScoresMap[c.id] === undefined) {
-      crewScoresMap[c.id] = 90
+      crewScoresMap[c.id] = 0
     }
   })
 }

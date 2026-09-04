@@ -33,6 +33,29 @@
     <!-- 3-Week Progression Selector -->
     <WeekSelector />
 
+    <!-- Info Banner for District Manager: Clarifying Separation of Workstations -->
+    <div
+      v-if="userStore.isDistrictManager"
+      class="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-950 dark:text-amber-200 shadow-2xs"
+    >
+      <div class="flex items-start sm:items-center gap-2.5">
+        <ShieldCheck class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5 sm:mt-0" />
+        <div>
+          <span class="font-bold block sm:inline">Peran District Manager (DM):</span>
+          <span class="text-amber-800 dark:text-amber-300">
+            Halaman ini adalah form pengisian nilai oleh Store Leader. Seluruh peninjauan, persetujuan (approve), permintaan revisi, dan penolakan evaluasi dilakukan secara terpusat di menu <strong>Approvals (DM)</strong>.
+          </span>
+        </div>
+      </div>
+      <NuxtLink
+        to="/approvals"
+        class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold whitespace-nowrap shadow-xs transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+      >
+        <ShieldCheck class="w-3.5 h-3.5" />
+        <span>Buka Menu Approvals (DM) →</span>
+      </NuxtLink>
+    </div>
+
     <!-- 2-Column Main Workspace: Crew Selector Sidebar (4 Cols, Sticky Frozen) & Weekly Missions Evaluation for Selected Crew (8 Cols) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       <!-- Left Column: Crew Roster Selector (4 Cols, Sticky Frozen Container) -->
@@ -238,8 +261,11 @@
                     :show-label="false"
                   />
                   <div class="text-right border-l border-slate-200 dark:border-slate-700 pl-2">
-                    <span class="text-xs font-bold text-slate-900 dark:text-white">
-                      {{ missionScores[mission.id] || 0 }}
+                    <span
+                      class="text-xs font-black transition-colors"
+                      :class="getScoreTier(missionScores[mission.id]).textClass"
+                    >
+                      {{ missionScores[mission.id] !== undefined ? missionScores[mission.id] : 0 }}
                     </span>
                     <span class="text-[10px] text-slate-400">/100</span>
                   </div>
@@ -304,42 +330,66 @@
               <!-- JIKA MISI BELUM SELESAI: Tampilkan Form Input Slider, Catatan, Upload Foto, dan Tombol Kirim -->
               <template v-else>
                 <!-- Input Nilai (Slider & Box Inline) -->
-                <div class="p-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 space-y-1.5">
-                  <div class="flex items-center justify-between gap-3">
-                    <label class="text-xs font-bold text-slate-800 dark:text-slate-200 flex-shrink-0">
-                      Nilai {{ selectedCrew.name }}:
-                    </label>
-                    
-                    <!-- Range Slider in Center -->
+                <div class="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-2">
+                  <!-- Header Row: Label + Score Tier Badge + Value Input -->
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <label class="text-xs font-bold text-slate-800 dark:text-slate-200 flex-shrink-0">
+                        Nilai {{ selectedCrew.name }}:
+                      </label>
+                      <!-- Dynamic Tier Badge -->
+                      <span
+                        class="px-2 py-0.5 rounded-full text-[10px] font-extrabold border transition-all flex items-center gap-1 shadow-xs"
+                        :class="getScoreTier(missionScores[mission.id]).bgSoftClass"
+                      >
+                        <span>{{ getScoreTier(missionScores[mission.id]).label }}</span>
+                        <span>•</span>
+                        <span>{{ calculateMissionStars(missionScores[mission.id]) }} ⭐</span>
+                      </span>
+                    </div>
+
+                    <!-- Number Input Box -->
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                      <div
+                        class="flex items-center rounded-lg border px-2 py-1 transition-all bg-white dark:bg-slate-900 shadow-xs"
+                        :class="getScoreTier(missionScores[mission.id]).borderClass"
+                      >
+                        <input
+                          v-model.number="missionScores[mission.id]"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="1"
+                          @input="onScoreInput(mission.id)"
+                          @blur="onScoreBlur(mission.id)"
+                          class="w-10 text-center text-xs font-black bg-transparent outline-none p-0 transition-colors"
+                          :class="getScoreTier(missionScores[mission.id]).textClass"
+                        />
+                        <span class="text-[10px] text-slate-400 font-bold select-none">/100</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Dynamic Colored Range Slider -->
+                  <div class="pt-0.5">
                     <input
                       v-model.number="missionScores[mission.id]"
                       type="range"
                       min="0"
                       max="100"
-                      step="10"
-                      class="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#831843]"
+                      step="1"
+                      :style="getSliderTrackStyle(missionScores[mission.id])"
+                      class="w-full h-2 rounded-full appearance-none cursor-pointer transition-all custom-score-slider shadow-inner"
                     />
-
-                    <!-- Number Input Box -->
-                    <div class="flex items-center gap-1 flex-shrink-0">
-                      <input
-                        v-model.number="missionScores[mission.id]"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="10"
-                        class="w-14 text-center text-xs font-bold rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 py-1 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#831843]"
-                      />
-                      <span class="text-[11px] text-slate-400 font-semibold">/100</span>
-                    </div>
                   </div>
 
-                  <div class="flex items-center justify-between text-[10px] text-slate-400 px-0.5">
-                    <span>0</span>
-                    <span>30 (3⭐)</span>
-                    <span>50 (5⭐)</span>
-                    <span class="text-amber-600 dark:text-amber-400">80 (8⭐)</span>
-                    <span class="text-emerald-600 dark:text-emerald-400">100 (10⭐)</span>
+                  <!-- Guide Markers Below Slider (Clickable Presets) -->
+                  <div class="flex items-center justify-between text-[10px] font-semibold text-slate-400 dark:text-slate-500 px-0.5 select-none">
+                    <button type="button" class="hover:text-rose-600 transition-colors cursor-pointer" @click="missionScores[mission.id] = 0">0 (0⭐)</button>
+                    <button type="button" class="hover:text-rose-500 transition-colors cursor-pointer" @click="missionScores[mission.id] = 25">25 (1.3⭐)</button>
+                    <button type="button" class="hover:text-amber-500 transition-colors cursor-pointer" @click="missionScores[mission.id] = 50">50 (2.5⭐)</button>
+                    <button type="button" class="hover:text-sky-500 transition-colors cursor-pointer" @click="missionScores[mission.id] = 75">75 (3.8⭐)</button>
+                    <button type="button" class="hover:text-emerald-500 transition-colors text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer" @click="missionScores[mission.id] = 100">100 (5⭐)</button>
                   </div>
                 </div>
 
@@ -447,28 +497,17 @@
 
                   <!-- DM ACTIONS vs SL ACTIONS -->
                   <div v-if="userStore.isDistrictManager" class="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      @click="submitDmReviewAction(mission.id, 'REVISE')"
-                      class="px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/50 dark:text-amber-300 cursor-pointer transition-all active:scale-95"
+                    <NuxtLink
+                      v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'"
+                      to="/approvals"
+                      class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
-                      Minta Revisi
-                    </button>
-                    <button
-                      type="button"
-                      @click="submitDmReviewAction(mission.id, 'REJECT')"
-                      class="px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/50 dark:text-rose-300 cursor-pointer transition-all active:scale-95"
-                    >
-                      Tolak
-                    </button>
-                    <button
-                      type="button"
-                      @click="submitDmReviewAction(mission.id, 'APPROVE')"
-                      class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs cursor-pointer transition-all active:scale-95 flex items-center gap-1.5"
-                    >
-                      <CheckCircle2 class="w-3.5 h-3.5" />
-                      <span>Setujui (Approve)</span>
-                    </button>
+                      <ShieldCheck class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      <span>Buka di Menu Approvals (DM)</span>
+                    </NuxtLink>
+                    <span v-else class="text-[11px] font-medium text-slate-400 italic">
+                      Penilaian diisi oleh Store Leader
+                    </span>
                   </div>
 
                   <div v-else>
@@ -602,6 +641,7 @@ import {
   Plus,
   X,
   Eye,
+  ShieldCheck,
   Image as ImageIcon
 } from 'lucide-vue-next'
 
@@ -625,8 +665,22 @@ const crewFilterTabs = [
 ]
 
 const batchCrews = computed(() => {
+  const activeBatchId = batchStore.selectedBatchId || batchStore.currentBatch?.batchId || batchStore.currentBatch?.id
+  const activeBatchCode = batchStore.currentBatch?.code
+
   if (evalStore.workstationCrews && evalStore.workstationCrews.length > 0) {
-    return evalStore.workstationCrews.map(c => ({
+    // Saring kru yang relevan dengan batch aktif:
+    // 1. Kru yang batchId-nya sesuai batch aktif
+    // 2. ATAU kru yang memiliki misi pada batch ini (totalMissionsCount > 0)
+    const matchingCrews = evalStore.workstationCrews.filter(c => {
+      const matchBatchId = c.batchId && (c.batchId === activeBatchId || c.batchId === activeBatchCode)
+      const hasMissionsInBatch = Number(c.totalMissionsCount) > 0
+      return matchBatchId || hasMissionsInBatch
+    })
+
+    const targetList = matchingCrews.length > 0 ? matchingCrews : evalStore.workstationCrews
+
+    return targetList.map(c => ({
       id: c.userId || c.id,
       userId: c.userId || c.id,
       name: c.name,
@@ -724,9 +778,9 @@ const loadCrewScores = () => {
         missionScores[m.id] = crewEval.score
       } else if (m.crewScores) {
         const found = m.crewScores.find(cs => cs.crewId === selectedCrew.value.id)
-        missionScores[m.id] = found ? found.score : 90
-      } else if (missionScores[m.id] === undefined) {
-        missionScores[m.id] = 90
+        missionScores[m.id] = (found && found.score !== undefined) ? found.score : 0
+      } else {
+        missionScores[m.id] = 0
       }
     }
 
@@ -771,6 +825,8 @@ const loadWorkstationData = async () => {
     if (!selectedCrewId.value || !batchCrews.value.find(c => c.id === selectedCrewId.value)) {
       selectedCrewId.value = batchCrews.value[0].id
     }
+  } else {
+    selectedCrewId.value = null
   }
 
   if (selectedCrewId.value) {
@@ -821,7 +877,7 @@ function removeEvidence(missionId, index) {
   }
 }
 
-watch([() => batchStore.selectedWeek, () => batchStore.selectedBatchId], async () => {
+watch([() => batchStore.selectedWeek, () => batchStore.selectedBatchId, () => batchStore.currentBatch?.id], async () => {
   await loadWorkstationData()
 })
 
@@ -854,20 +910,31 @@ watch(filteredCrewList, (list) => {
 
 // KPI helpers for single crew
 const currentCrewWeekAvgScore = computed(() => {
-  if (currentWeekMissions.value.length === 0) return 0
-  const scores = currentWeekMissions.value.map(m => Number(missionScores[m.id]) || 0)
+  const evaluatedMissions = currentWeekMissions.value.filter(m => {
+    const status = getMissionStatus(m.id)
+    return status !== 'LOCKED' && status !== 'ACTIVE' && status !== 'UNGRADED' && status !== 'NEEDS_SCORING'
+  })
+  if (evaluatedMissions.length === 0) return 0
+  const scores = evaluatedMissions.map(m => Number(missionScores[m.id]) || 0)
   const sum = scores.reduce((acc, curr) => acc + curr, 0)
-  return Math.round(sum / scores.length)
+  return Math.round(sum / evaluatedMissions.length)
 })
 
 const currentCrewWeekTotalStars = computed(() => {
-  return currentWeekMissions.value.reduce((acc, m) => {
+  const evaluatedMissions = currentWeekMissions.value.filter(m => {
+    const status = getMissionStatus(m.id)
+    return status !== 'LOCKED' && status !== 'ACTIVE' && status !== 'UNGRADED' && status !== 'NEEDS_SCORING'
+  })
+  return evaluatedMissions.reduce((acc, m) => {
     return acc + calculateMissionStars(missionScores[m.id])
   }, 0)
 })
 
 const currentCrewEvaluatedMissionsCount = computed(() => {
-  return currentWeekMissions.value.filter(m => (Number(missionScores[m.id]) || 0) > 0).length
+  return currentWeekMissions.value.filter(m => {
+    const status = getMissionStatus(m.id)
+    return status !== 'LOCKED' && status !== 'ACTIVE' && status !== 'UNGRADED' && status !== 'NEEDS_SCORING'
+  }).length
 })
 
 function calculateMissionStars(score) {
@@ -880,8 +947,8 @@ function getCrewWeekEvaluatedCount(crewId) {
     return crew.evaluatedCount
   }
   return currentWeekMissions.value.filter(m => {
-    const ce = missionStore.crewEvaluationForMission(m.id, crewId)
-    return ce && ce.score > 0
+    const status = getMissionStatus(m.id)
+    return status !== 'LOCKED' && status !== 'ACTIVE' && status !== 'UNGRADED' && status !== 'NEEDS_SCORING'
   }).length
 }
 
@@ -893,7 +960,7 @@ function getCrewWeekAvgScore(crewId) {
   if (currentWeekMissions.value.length === 0) return 0
   const evals = currentWeekMissions.value.map(m => {
     const ce = missionStore.crewEvaluationForMission(m.id, crewId)
-    return ce ? ce.score : (crewId === selectedCrewId.value ? (missionScores[m.id] || 90) : 90)
+    return ce ? ce.score : (crewId === selectedCrewId.value ? (Number(missionScores[m.id]) || 0) : 0)
   })
   const sum = evals.reduce((a, b) => a + b, 0)
   return Math.round(sum / evals.length)
@@ -915,11 +982,73 @@ function getCrewWeekBadgeClass(crewId) {
   return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
 }
 
+function getScoreTier(score) {
+  const val = Math.min(100, Math.max(0, Number(score) || 0))
+  if (val >= 85) {
+    return {
+      label: 'Sangat Baik',
+      color: '#10b981',
+      textClass: 'text-emerald-600 dark:text-emerald-400',
+      borderClass: 'border-emerald-400 dark:border-emerald-600',
+      bgSoftClass: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+    }
+  } else if (val >= 70) {
+    return {
+      label: 'Baik',
+      color: '#0284c7',
+      textClass: 'text-sky-600 dark:text-sky-400',
+      borderClass: 'border-sky-400 dark:border-sky-600',
+      bgSoftClass: 'bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800'
+    }
+  } else if (val >= 50) {
+    return {
+      label: 'Cukup',
+      color: '#f59e0b',
+      textClass: 'text-amber-600 dark:text-amber-400',
+      borderClass: 'border-amber-400 dark:border-amber-600',
+      bgSoftClass: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+    }
+  } else {
+    return {
+      label: 'Kurang',
+      color: '#ef4444',
+      textClass: 'text-rose-600 dark:text-rose-400',
+      borderClass: 'border-rose-400 dark:border-rose-600',
+      bgSoftClass: 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+    }
+  }
+}
+
+function getSliderTrackStyle(score) {
+  const val = Math.min(100, Math.max(0, Number(score) || 0))
+  const tier = getScoreTier(val)
+  return {
+    background: `linear-gradient(to right, ${tier.color} 0%, ${tier.color} ${val}%, rgba(148, 163, 184, 0.28) ${val}%, rgba(148, 163, 184, 0.28) 100%)`,
+    accentColor: tier.color,
+    color: tier.color
+  }
+}
+
+function onScoreInput(missionId) {
+  let val = missionScores[missionId]
+  if (val === '' || val === null || val === undefined) return
+  val = Math.min(100, Math.max(0, Math.round(Number(val)) || 0))
+  missionScores[missionId] = val
+}
+
+function onScoreBlur(missionId) {
+  if (missionScores[missionId] === '' || missionScores[missionId] === null || missionScores[missionId] === undefined) {
+    missionScores[missionId] = 0
+  }
+}
+
 function getMissionCardBorderClass(missionId) {
   const score = missionScores[missionId]
-  if (score >= 90) return 'hover:border-emerald-400 dark:hover:border-emerald-700'
-  if (score >= 80) return 'hover:border-amber-400 dark:hover:border-amber-700'
-  return 'hover:border-slate-300 dark:hover:border-slate-700'
+  if (score === undefined || score === null) return 'hover:border-slate-300 dark:hover:border-slate-700'
+  if (score >= 85) return 'hover:border-emerald-400 dark:hover:border-emerald-700'
+  if (score >= 70) return 'hover:border-sky-400 dark:hover:border-sky-700'
+  if (score >= 50) return 'hover:border-amber-400 dark:hover:border-amber-700'
+  return 'hover:border-rose-400 dark:hover:border-rose-700'
 }
 
 function getMissionStatus(missionId) {
@@ -954,7 +1083,9 @@ function getMissionComment(missionId) {
 async function submitSingleMission(missionId) {
   if (!selectedCrew.value) return
   const targetMission = currentWeekMissions.value.find(m => m.id === missionId)
-  const score = Number(missionScores[missionId]) || 90
+  const score = (missionScores[missionId] !== undefined && missionScores[missionId] !== null && missionScores[missionId] !== '')
+    ? Number(missionScores[missionId])
+    : 0
   const notes = missionComments[missionId] || `Evaluasi misi ${targetMission?.title || ''} untuk ${selectedCrew.value.name}`
   const evidenceUrl = missionEvidences[missionId]?.[0]?.url || targetMission?.evidenceUrl || null
   const targetUserMissionId = targetMission?.userMissionId || missionId
@@ -999,7 +1130,9 @@ async function submitSingleMission(missionId) {
 async function submitDmReviewAction(missionId, action) {
   if (!selectedCrew.value) return
   const targetMission = currentWeekMissions.value.find(m => m.id === missionId)
-  const score = Number(missionScores[missionId]) || targetMission?.finalScore || targetMission?.tlScore || 90
+  const score = (missionScores[missionId] !== undefined && missionScores[missionId] !== null && missionScores[missionId] !== '')
+    ? Number(missionScores[missionId])
+    : (targetMission?.finalScore ?? targetMission?.tlScore ?? 0)
   const notes = missionComments[missionId] || `Review DM: ${action}`
   const targetUserMissionId = targetMission?.userMissionId || missionId
 
@@ -1027,3 +1160,33 @@ function goToNextCrew() {
   }
 }
 </script>
+
+<style scoped>
+.custom-score-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3.5px solid currentColor;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.custom-score-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.custom-score-slider::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3.5px solid currentColor;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+</style>

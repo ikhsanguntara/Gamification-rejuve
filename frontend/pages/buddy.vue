@@ -226,77 +226,304 @@
               <div
                 v-for="(bm, bIdx) in buddyStore.selectedCrewMissions"
                 :key="bm.userMissionId || bIdx"
-                class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs space-y-3"
+                class="rounded-2xl bg-white dark:bg-slate-900 border transition-all duration-200 p-4 sm:p-5 shadow-xs space-y-3.5"
+                :class="bm.status === 'COMPLETED' && !editingMissionIds[bm.userMissionId]
+                  ? 'border-slate-200/60 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-900/50'
+                  : 'border-slate-200 dark:border-slate-700/80 hover:border-purple-300 dark:hover:border-purple-800/60'"
               >
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                  <div>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300">
-                      {{ bm.mission?.category || 'BUDDY MISI' }}
-                    </span>
-                    <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-1">
+                <!-- Header Misi: Kategori, Judul, Status Badge & Action -->
+                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/50">
+                        {{ bm.mission?.category || 'BUDDY MISI' }}
+                      </span>
+                      <span v-if="bm.mission?.durationNumber" class="text-[10px] text-slate-400 font-medium">
+                        Hari ke-{{ bm.mission?.durationNumber }}
+                      </span>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-900 dark:text-white">
                       {{ bIdx + 1 }}. {{ bm.mission?.missionTitle || 'Misi Buddy' }}
                     </h4>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                       {{ bm.mission?.description || 'Pendampingan dan pembekalan operasional pra-batch.' }}
                     </p>
                   </div>
 
-                  <div class="flex items-center gap-2 flex-shrink-0">
+                  <!-- Status Badge & Tombol Ubah -->
+                  <div class="flex items-center gap-2 flex-shrink-0 self-start sm:self-auto">
+                    <template v-if="bm.status === 'COMPLETED'">
+                      <span
+                        class="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 shadow-2xs"
+                        :class="getBuddyScoreBadge(bm.tlScore || bm.finalScore || 3).badgeClass"
+                      >
+                        <CheckCircle2 class="w-3.5 h-3.5" />
+                        <span>{{ getBuddyScoreBadge(bm.tlScore || bm.finalScore || 3).fullLabel }}</span>
+                      </span>
+
+                      <button
+                        type="button"
+                        @click="toggleEditMission(bm.userMissionId)"
+                        class="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
+                        title="Ubah Penilaian"
+                      >
+                        <Edit3 class="w-3.5 h-3.5" />
+                      </button>
+                    </template>
                     <span
-                      v-if="bm.status === 'COMPLETED'"
-                      class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1"
+                      v-else
+                      class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100/80 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40 flex items-center gap-1"
                     >
-                      <Check class="w-3 h-3" />
-                      <span>Selesai (Skor: {{ bm.tlScore || bm.finalScore || 100 }})</span>
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      <span>Perlu Dinilai</span>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Input Form Penilaian (Muncul jika belum dinilai ATAU sedang mode edit) -->
+                <div v-if="bm.status !== 'COMPLETED' || editingMissionIds[bm.userMissionId]" class="space-y-3 pt-1">
+                  <!-- Label Seksi -->
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <span>Tingkat Penguasaan SOP / Misi:</span>
+                      <span class="text-[10px] font-normal text-slate-400">(Pilih salah satu skala)</span>
+                    </label>
+                    <span
+                      v-if="buddyMissionScores[bm.userMissionId]"
+                      class="text-[11px] font-semibold"
+                      :class="getBuddyScoreBadge(buddyMissionScores[bm.userMissionId]).textClass"
+                    >
+                      Nilai Terpilih: {{ buddyMissionScores[bm.userMissionId] }} ({{ getBuddyScoreBadge(buddyMissionScores[bm.userMissionId]).label }})
                     </span>
                     <span
                       v-else
-                      class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                      class="text-[11px] font-medium text-slate-400 dark:text-slate-500 italic"
                     >
-                      Perlu Dinilai
+                      Belum dinilai
                     </span>
                   </div>
-                </div>
 
-                <!-- Input Nilai & Catatan Buddy jika belum selesai -->
-                <div v-if="bm.status !== 'COMPLETED'" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center pt-1">
-                  <div class="sm:col-span-4 flex items-center gap-2">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">Nilai:</label>
-                    <input
-                      v-model.number="buddyMissionScores[bm.userMissionId]"
-                      type="number"
-                      min="0"
-                      max="100"
-                      class="w-20 text-center text-xs font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-1.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
-                      placeholder="90"
-                    />
-                    <span class="text-xs text-slate-400">/ 100</span>
+                  <!-- 3 Skala Penilaian: Belum Menguasai (1), Butuh Pendampingan (2), Kompeten (3) -->
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <!-- Option 1: Belum Menguasai -->
+                    <button
+                      type="button"
+                      @click="buddyMissionScores[bm.userMissionId] = 1"
+                      class="relative flex items-center justify-between p-3 rounded-xl border text-left transition-all duration-150 cursor-pointer group"
+                      :class="buddyMissionScores[bm.userMissionId] === 1
+                        ? 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-400 dark:border-rose-800 ring-2 ring-rose-500/20 shadow-xs'
+                        : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:border-rose-300 hover:bg-rose-50/30 dark:hover:bg-slate-800'"
+                    >
+                      <div class="flex items-center gap-2.5">
+                        <span
+                          class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black transition-colors"
+                          :class="buddyMissionScores[bm.userMissionId] === 1
+                            ? 'bg-rose-600 text-white shadow-xs'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-500 group-hover:bg-rose-100 group-hover:text-rose-700'"
+                        >
+                          1
+                        </span>
+                        <div>
+                          <span
+                            class="text-xs font-bold block"
+                            :class="buddyMissionScores[bm.userMissionId] === 1 ? 'text-rose-700 dark:text-rose-300' : 'text-slate-700 dark:text-slate-300'"
+                          >
+                            Belum Menguasai
+                          </span>
+                          <span class="text-[10px] text-slate-400 block">Perlu pendampingan</span>
+                        </div>
+                      </div>
+                      <div
+                        v-if="buddyMissionScores[bm.userMissionId] === 1"
+                        class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center flex-shrink-0"
+                      >
+                        <Check class="w-2.5 h-2.5" />
+                      </div>
+                    </button>
+
+                    <!-- Option 2: Butuh Pendampingan -->
+                    <button
+                      type="button"
+                      @click="buddyMissionScores[bm.userMissionId] = 2"
+                      class="relative flex items-center justify-between p-3 rounded-xl border text-left transition-all duration-150 cursor-pointer group"
+                      :class="buddyMissionScores[bm.userMissionId] === 2
+                        ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-400 dark:border-amber-800 ring-2 ring-amber-500/20 shadow-xs'
+                        : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:border-amber-300 hover:bg-amber-50/30 dark:hover:bg-slate-800'"
+                    >
+                      <div class="flex items-center gap-2.5">
+                        <span
+                          class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black transition-colors"
+                          :class="buddyMissionScores[bm.userMissionId] === 2
+                            ? 'bg-amber-500 text-white shadow-xs'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-500 group-hover:bg-amber-100 group-hover:text-amber-700'"
+                        >
+                          2
+                        </span>
+                        <div>
+                          <span
+                            class="text-xs font-bold block"
+                            :class="buddyMissionScores[bm.userMissionId] === 2 ? 'text-amber-800 dark:text-amber-300' : 'text-slate-700 dark:text-slate-300'"
+                          >
+                            Butuh Pendampingan
+                          </span>
+                          <span class="text-[10px] text-slate-400 block">Masih perlu supervisi</span>
+                        </div>
+                      </div>
+                      <div
+                        v-if="buddyMissionScores[bm.userMissionId] === 2"
+                        class="w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center flex-shrink-0"
+                      >
+                        <Check class="w-2.5 h-2.5" />
+                      </div>
+                    </button>
+
+                    <!-- Option 3: Kompeten -->
+                    <button
+                      type="button"
+                      @click="buddyMissionScores[bm.userMissionId] = 3"
+                      class="relative flex items-center justify-between p-3 rounded-xl border text-left transition-all duration-150 cursor-pointer group"
+                      :class="buddyMissionScores[bm.userMissionId] === 3
+                        ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-400 dark:border-emerald-800 ring-2 ring-emerald-500/20 shadow-xs'
+                        : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:border-emerald-300 hover:bg-emerald-50/30 dark:hover:bg-slate-800'"
+                    >
+                      <div class="flex items-center gap-2.5">
+                        <span
+                          class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black transition-colors"
+                          :class="buddyMissionScores[bm.userMissionId] === 3
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-700'"
+                        >
+                          3
+                        </span>
+                        <div>
+                          <span
+                            class="text-xs font-bold block"
+                            :class="buddyMissionScores[bm.userMissionId] === 3 ? 'text-emerald-800 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-300'"
+                          >
+                            Kompeten
+                          </span>
+                          <span class="text-[10px] text-slate-400 block">Mandiri & sesuai SOP</span>
+                        </div>
+                      </div>
+                      <div
+                        v-if="buddyMissionScores[bm.userMissionId] === 3"
+                        class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center flex-shrink-0"
+                      >
+                        <Check class="w-2.5 h-2.5" />
+                      </div>
+                    </button>
                   </div>
 
-                  <div class="sm:col-span-5">
+                  <!-- Catatan Pendampingan -->
+                  <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <MessageSquare class="w-3.5 h-3.5" />
+                    </div>
                     <input
                       v-model="buddyMissionNotes[bm.userMissionId]"
                       type="text"
-                      placeholder="Catatan pendampingan..."
-                      class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
+                      placeholder="Tambahkan catatan pendampingan evaluasi ini..."
+                      class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 pl-9 pr-3.5 py-2.5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-purple-600 focus:bg-white dark:focus:bg-slate-800 transition-colors shadow-2xs"
                     />
                   </div>
 
-                  <div class="sm:col-span-3 text-right">
-                    <button
-                      type="button"
-                      @click="submitBuddyMission(bm.userMissionId)"
-                      class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
-                    >
-                      <Check class="w-3.5 h-3.5" />
-                      <span>Simpan Nilai</span>
-                    </button>
+                  <!-- Action Button Row -->
+                  <div class="flex items-center justify-between gap-2.5 pt-1">
+                    <!-- Lampiran Bukti yang Sudah Ada (jika mode edit dan sebelumnya punya bukti) -->
+                    <div>
+                      <div
+                        v-if="bm.evidenceUrl"
+                        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-[11px] text-slate-600 dark:text-slate-300"
+                      >
+                        <Paperclip class="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                        <span>Bukti tersimpan</span>
+                        <button
+                          type="button"
+                          @click="openPreviewModal(bm.evidenceUrl, `Bukti: ${bm.mission?.missionTitle}`)"
+                          class="font-bold text-purple-600 hover:underline cursor-pointer ml-1"
+                        >
+                          Lihat
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Tombol Aksi Batal & Simpan -->
+                    <div class="flex items-center gap-2">
+                      <button
+                        v-if="editingMissionIds[bm.userMissionId]"
+                        type="button"
+                        @click="toggleEditMission(bm.userMissionId)"
+                        class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        Batal
+                      </button>
+
+                      <button
+                        type="button"
+                        :disabled="submittingMissionId === bm.userMissionId || !buddyMissionScores[bm.userMissionId]"
+                        @click="submitBuddyMission(bm.userMissionId)"
+                        class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold shadow-sm shadow-purple-600/30 transition-all cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap active:scale-95"
+                      >
+                        <Loader2 v-if="submittingMissionId === bm.userMissionId" class="w-3.5 h-3.5 animate-spin" />
+                        <Check v-else class="w-3.5 h-3.5" />
+                        <span>{{ submittingMissionId === bm.userMissionId ? 'Menyimpan...' : 'Simpan Nilai' }}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Catatan jika sudah selesai -->
-                <div v-else class="text-xs text-slate-600 dark:text-slate-300 italic pt-1">
-                  "{{ bm.tlNotes || 'Pendampingan pra-batch telah selesai dilakukan.' }}"
+                <!-- Tampilan Catatan & Bukti ketika Selesai (Read-only view yang bersih) -->
+                <div v-else class="space-y-2">
+                  <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-xs">
+                    <MessageSquare class="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+                    <div class="flex-1">
+                      <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Catatan Pendampingan:</span>
+                      <p class="text-slate-700 dark:text-slate-300 italic mt-0.5">
+                        "{{ bm.tlNotes || 'Pendampingan pra-batch telah selesai dilakukan dan memenuhi standar operasional.' }}"
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Tampilan Foto / Bukti SOP yang Di-upload -->
+                  <div
+                    v-if="bm.evidenceUrl"
+                    class="flex items-center justify-between p-2.5 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40 text-xs"
+                  >
+                    <div class="flex items-center gap-2.5">
+                      <div
+                        @click="openPreviewModal(bm.evidenceUrl, `Bukti Misi: ${bm.mission?.missionTitle}`)"
+                        class="relative w-10 h-10 rounded-lg overflow-hidden border border-purple-200 dark:border-purple-800 flex-shrink-0 cursor-pointer group bg-white dark:bg-slate-800 shadow-2xs hover:ring-2 hover:ring-purple-600 transition-all"
+                        title="Klik untuk memperbesar bukti"
+                      >
+                        <img
+                          :src="bm.evidenceUrl"
+                          alt="Foto Bukti"
+                          class="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                          @error="$event.target.style.display='none'"
+                        />
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Eye class="w-3 h-3 text-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <span class="text-[10px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider block">
+                          Lampiran Bukti SOP
+                        </span>
+                        <span class="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                          Foto bukti lapangan telah diunggah
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      @click="openPreviewModal(bm.evidenceUrl, `Bukti Misi: ${bm.mission?.missionTitle}`)"
+                      class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/50 text-[11px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <Eye class="w-3 h-3" />
+                      <span>Lihat Bukti</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -487,18 +714,68 @@
         </div>
       </div>
 
+    <!-- Lightbox Modal untuk Preview Foto Bukti SOP -->
+    <BaseModal
+      :model-value="!!previewModalImage"
+      :title="previewModalImage?.caption || 'Lihat Foto Bukti SOP'"
+      max-width="2xl"
+      @update:model-value="previewModalImage = null"
+      @close="previewModalImage = null"
+    >
+      <template #icon>
+        <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 flex items-center justify-center">
+          <Camera class="w-5 h-5" />
+        </div>
+      </template>
+
+      <div v-if="previewModalImage" class="space-y-3 py-2">
+        <div class="rounded-2xl overflow-hidden bg-slate-950/5 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center p-2">
+          <img
+            :src="previewModalImage.url"
+            :alt="previewModalImage.caption"
+            class="max-h-[60vh] w-auto max-w-full object-contain rounded-xl shadow-md"
+          />
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
+          <span class="font-semibold text-slate-800 dark:text-slate-200">
+            📄 {{ previewModalImage.caption }}
+          </span>
+          <span class="text-slate-400 text-[11px]">
+            Lampiran Bukti Evaluasi SOP
+          </span>
+        </div>
+      </div>
+
+      <template #footer>
+        <button
+          type="button"
+          @click="previewModalImage = null"
+          class="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-xs transition-all cursor-pointer"
+        >
+          Tutup
+        </button>
+      </template>
+    </BaseModal>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import {
   Handshake,
   Users,
   Award,
   Search,
-  Check
+  Check,
+  CheckCircle2,
+  MessageSquare,
+  Edit3,
+  Loader2,
+  Camera,
+  Paperclip,
+  Eye
 } from 'lucide-vue-next'
 import { useBuddyStore } from '~/stores/buddy.js'
 import { useBatchStore } from '~/stores/batch.js'
@@ -514,11 +791,55 @@ const crewSearchQuery = ref('')
 const selectedCrewId = ref('')
 const buddyMissionScores = reactive({})
 const buddyMissionNotes = reactive({})
+const previewModalImage = ref(null)
+const editingMissionIds = reactive({})
+const submittingMissionId = ref(null)
+
+const toggleEditMission = (userMissionId) => {
+  const isCurrentlyEditing = !!editingMissionIds[userMissionId]
+  if (isCurrentlyEditing) {
+    // Jika membatalkan edit, kembalikan nilai sesuai data asli misi
+    const m = (buddyStore.selectedCrewMissions || []).find(x => x.userMissionId === userMissionId)
+    if (m && m.status === 'COMPLETED') {
+      const score = m.tlScore !== null && m.tlScore !== undefined ? m.tlScore : m.finalScore
+      buddyMissionScores[userMissionId] = [1, 2, 3].includes(Number(score))
+        ? Number(score)
+        : (Number(score) >= 90 ? 3 : Number(score) >= 60 ? 2 : 1)
+      buddyMissionNotes[userMissionId] = m.tlNotes || ''
+    } else {
+      delete buddyMissionScores[userMissionId]
+      buddyMissionNotes[userMissionId] = ''
+    }
+  }
+  editingMissionIds[userMissionId] = !isCurrentlyEditing
+}
+
+const openPreviewModal = (evidenceUrl, caption = 'Bukti Misi Buddy') => {
+  if (!evidenceUrl) return
+  previewModalImage.value = {
+    url: evidenceUrl,
+    caption
+  }
+}
 
 // Get crews in current active batch (from buddyStore.workstationCrews if available, fallback to userStore)
 const currentBatchCrews = computed(() => {
+  const activeBatchId = batchStore.selectedBatchId || batchStore.currentBatch?.batchId || batchStore.currentBatch?.id
+  const activeBatchCode = batchStore.currentBatch?.code
+
   if (buddyStore.workstationCrews && buddyStore.workstationCrews.length > 0) {
-    return buddyStore.workstationCrews.map(c => ({
+    // Saring kru yang relevan dengan batch aktif:
+    // 1. Kru yang batchId-nya sesuai dengan batch aktif
+    // 2. ATAU kru yang memiliki misi pada batch ini (totalMissionsCount > 0)
+    const matchingCrews = buddyStore.workstationCrews.filter(c => {
+      const matchBatchId = c.batchId && (c.batchId === activeBatchId || c.batchId === activeBatchCode)
+      const hasMissionsInBatch = Number(c.totalMissionsCount) > 0
+      return matchBatchId || hasMissionsInBatch
+    })
+
+    const targetList = matchingCrews.length > 0 ? matchingCrews : buddyStore.workstationCrews
+
+    return targetList.map(c => ({
       id: c.userId || c.id,
       userId: c.userId || c.id,
       name: c.name,
@@ -533,7 +854,7 @@ const currentBatchCrews = computed(() => {
     }))
   }
   if (!batchStore.currentBatch) return []
-  return userStore.allUsers.filter(u => u.role === 'CREW')
+  return userStore.allUsers.filter(u => u.role === 'CREW' && (u.batchId === activeBatchId || !u.batchId))
 })
 
 const filteredCrewList = computed(() => {
@@ -596,21 +917,60 @@ const loadSelectedCrewRapor = () => {
   }
 }
 
-const loadBuddyScores = () => {
-  (buddyStore.selectedCrewMissions || []).forEach(m => {
-    if (m.tlScore !== null && m.tlScore !== undefined) {
-      buddyMissionScores[m.userMissionId] = m.tlScore
-    } else if (m.finalScore !== null && m.finalScore !== undefined) {
-      buddyMissionScores[m.userMissionId] = m.finalScore
-    } else if (buddyMissionScores[m.userMissionId] === undefined) {
-      buddyMissionScores[m.userMissionId] = 90
+const getBuddyScoreBadge = (score) => {
+  const num = Number(score)
+  if (num === 3 || num >= 90) {
+    return {
+      score: 3,
+      label: 'Kompeten',
+      fullLabel: 'Kompeten (Skor 3)',
+      badgeClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80',
+      textClass: 'text-emerald-700 dark:text-emerald-400',
+      dotClass: 'bg-emerald-500'
     }
+  }
+  if (num === 2 || num >= 60) {
+    return {
+      score: 2,
+      label: 'Butuh Pendampingan',
+      fullLabel: 'Butuh Pendampingan (Skor 2)',
+      badgeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80',
+      textClass: 'text-amber-700 dark:text-amber-400',
+      dotClass: 'bg-amber-500'
+    }
+  }
+  return {
+    score: 1,
+    label: 'Belum Menguasai',
+    fullLabel: 'Belum Menguasai (Skor 1)',
+    badgeClass: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80',
+    textClass: 'text-rose-700 dark:text-rose-400',
+    dotClass: 'bg-rose-500'
+  }
+}
 
-    if (m.tlNotes) {
-      buddyMissionNotes[m.userMissionId] = m.tlNotes
-    } else if (buddyMissionNotes[m.userMissionId] === undefined) {
-      buddyMissionNotes[m.userMissionId] = ''
+const loadBuddyScores = () => {
+  // Bersihkan nilai sebelumnya saat berpindah kru
+  Object.keys(buddyMissionScores).forEach(key => delete buddyMissionScores[key])
+  Object.keys(buddyMissionNotes).forEach(key => delete buddyMissionNotes[key])
+
+  (buddyStore.selectedCrewMissions || []).forEach(m => {
+    if (m.status === 'COMPLETED') {
+      if (m.tlScore !== null && m.tlScore !== undefined) {
+        buddyMissionScores[m.userMissionId] = [1, 2, 3].includes(Number(m.tlScore))
+          ? Number(m.tlScore)
+          : (Number(m.tlScore) >= 90 ? 3 : Number(m.tlScore) >= 60 ? 2 : 1)
+      } else if (m.finalScore !== null && m.finalScore !== undefined) {
+        buddyMissionScores[m.userMissionId] = [1, 2, 3].includes(Number(m.finalScore))
+          ? Number(m.finalScore)
+          : (Number(m.finalScore) >= 90 ? 3 : Number(m.finalScore) >= 60 ? 2 : 1)
+      }
+
+      if (m.tlNotes) {
+        buddyMissionNotes[m.userMissionId] = m.tlNotes
+      }
     }
+    // Misi yang belum dinilai (belum COMPLETED) dibiarkan undefined tanpa nilai default
   })
 }
 
@@ -618,8 +978,12 @@ const loadBuddyData = async () => {
   const batchId = batchStore.selectedBatchId || batchStore.currentBatch?.batchId || batchStore.currentBatch?.id
   await buddyStore.fetchBuddyCrews({ batchId })
 
-  if (currentBatchCrews.value.length > 0 && (!selectedCrewId.value || !currentBatchCrews.value.find(c => c.id === selectedCrewId.value))) {
-    selectedCrewId.value = currentBatchCrews.value[0].id
+  if (currentBatchCrews.value.length > 0) {
+    if (!selectedCrewId.value || !currentBatchCrews.value.find(c => c.id === selectedCrewId.value)) {
+      selectedCrewId.value = currentBatchCrews.value[0].id
+    }
+  } else {
+    selectedCrewId.value = null
   }
 
   if (selectedCrewId.value) {
@@ -637,7 +1001,7 @@ watch(selectedCrewId, async (newId) => {
   }
 })
 
-watch(() => batchStore.selectedBatchId, async () => {
+watch([() => batchStore.selectedBatchId, () => batchStore.currentBatch?.id], async () => {
   await loadBuddyData()
 })
 
@@ -656,17 +1020,31 @@ onMounted(async () => {
 
 const submitBuddyMission = async (userMissionId) => {
   if (!selectedCrew.value) return
-  const score = Number(buddyMissionScores[userMissionId]) || 90
-  const notes = buddyMissionNotes[userMissionId] || `Penilaian pendampingan Buddy untuk ${selectedCrew.value.name}`
+  const rawScore = buddyMissionScores[userMissionId]
+  if (!rawScore || ![1, 2, 3].includes(Number(rawScore))) {
+    toast.warning('Pilih Nilai Terlebih Dahulu', 'Silakan tentukan penilaian (Belum Menguasai, Butuh Pendampingan, atau Kompeten) terlebih dahulu.')
+    return
+  }
+  const score = Number(rawScore)
+  const label = score === 3 ? 'Kompeten' : score === 2 ? 'Butuh Pendampingan' : 'Belum Menguasai'
+  const notes = buddyMissionNotes[userMissionId] || `Penilaian pendampingan Buddy (${label}) untuk ${selectedCrew.value.name}`
 
+  submittingMissionId.value = userMissionId
   try {
-    await buddyStore.submitBuddyScore(userMissionId, {
+    const payload = {
       score,
       notes
-    })
-    toast.success('Misi Buddy Selesai!', 'Penilaian misi Buddy berhasil disimpan (COMPLETED). Jika seluruh misi Buddy kru ini selesai, Journey Week 1 otomatis terbuka! 🚀')
+    }
+
+    await buddyStore.submitBuddyScore(userMissionId, payload)
+    
+    editingMissionIds[userMissionId] = false
+
+    toast.success('Misi Buddy Selesai!', `Penilaian berhasil disimpan sebagai "${label}" (Skor: ${score}). 🚀`)
   } catch (err) {
     toast.error('Gagal Menyimpan Nilai Buddy', err.message || 'Terjadi kesalahan saat memproses data.')
+  } finally {
+    submittingMissionId.value = null
   }
 }
 

@@ -49,27 +49,43 @@ export const useApprovalStore = defineStore('approval', {
   actions: {
     async fetchApprovalsFromApi(params = {}) {
       try {
-        const exact = {}
+        const inList = {}
+        const exact = {
+          'mission.type': 'JOURNEY'
+        }
 
         if (params.status && params.status !== 'ALL') {
           exact.status = params.status
+        } else {
+          inList.status = ['SCORED_BY_TL', 'REVISED_BY_DM', 'APPROVED_BY_DM']
         }
 
         const query = buildPrismaQuery({
           page: params.page || 1,
-          limit: params.limit || 9,
-          exact
+          limit: params.limit || 50,
+          exact,
+          inList
         })
 
         const res = await evaluationApi.getUserMissions(query)
         if (res && res.data && Array.isArray(res.data)) {
-          this.approvals = res.data.map(m => {
-            const isApproved = m.status === 'APPROVED_BY_DM' || m.status === 'COMPLETED'
-            const isPending = m.status === 'SCORED_BY_TL' || m.status === 'PENDING_REVIEW' || m.status === 'OPEN'
-            const status = isApproved ? 'APPROVED' : (isPending ? 'PENDING_REVIEW' : 'PENDING_REVIEW')
-            const slScore = Number(m.tlScore) || 85
-            const dmScore = Number(m.dmScore) || slScore
-            const finalScore = Number(m.finalScore) || Math.round((slScore + dmScore) / 2)
+          // Filter ketat: Hanya misi JOURNEY yang statusnya siap di-review DM atau sudah disetujui
+          const eligibleMissions = res.data.filter(m => {
+            const isJourney = !m.mission?.type || m.mission.type === 'JOURNEY'
+            const isPendingDm = ['SCORED_BY_TL', 'REVISED_BY_DM', 'PENDING_REVIEW'].includes(m.status)
+            const isApprovedDm = ['APPROVED_BY_DM', 'APPROVED'].includes(m.status)
+            return isJourney && (isPendingDm || isApprovedDm)
+          })
+
+          this.approvals = eligibleMissions.map(m => {
+            const isApproved = m.status === 'APPROVED_BY_DM' || m.status === 'APPROVED'
+            const status = isApproved ? 'APPROVED' : 'PENDING_REVIEW'
+            const slScore = m.tlScore !== null && m.tlScore !== undefined ? Number(m.tlScore) : 0
+            const dmScore = m.dmScore !== null && m.dmScore !== undefined ? Number(m.dmScore) : slScore
+            const finalScore = m.finalScore !== null && m.finalScore !== undefined
+              ? Number(m.finalScore)
+              : (isApproved ? Math.round((slScore + dmScore) / 2) : slScore)
+
             return {
               id: m.userMissionId,
               userMissionId: m.userMissionId,
@@ -78,10 +94,13 @@ export const useApprovalStore = defineStore('approval', {
               batchName: 'Batch Onboarding September 2026',
               missionId: m.missionId,
               missionTitle: m.mission?.missionTitle || 'Evaluasi Standar Operasional',
+              missionCategory: m.mission?.category || 'TECHNICAL',
               week: m.mission?.weekOrDayNumber || 1,
               crewId: m.userId,
               crewName: m.user?.name || 'Kru Gerai',
-              crewAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+              crewAvatar: m.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(m.user?.name || 'crew')}`,
+              crewRole: m.user?.position || 'Crew Specialist',
+              storeLocation: m.user?.department?.departmentName || m.user?.storeLocation || 'Gerai Re.juve',
               supervisorId: m.tlId || 'sl-001',
               supervisorName: m.tl?.name || 'Store Leader',
               slScore,
@@ -99,9 +118,9 @@ export const useApprovalStore = defineStore('approval', {
 
           const meta = res.meta || res.pagination || {}
           this.serverPagination = {
-            total: meta.total !== undefined ? meta.total : res.data.length,
-            page: meta.page || page,
-            limit: meta.limit || limit,
+            total: meta.total !== undefined ? meta.total : eligibleMissions.length,
+            page: meta.page || params.page || 1,
+            limit: meta.limit || params.limit || 50,
             totalPages: meta.totalPages || 1
           }
 
