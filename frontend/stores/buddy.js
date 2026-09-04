@@ -1,11 +1,19 @@
 import { defineStore } from 'pinia'
 import { getStoredData, setStoredData } from '../utils/storage.js'
+import { evaluationApi } from '../services/api.js'
 
 export const useBuddyStore = defineStore('buddy', {
   state: () => ({
     packages: getStoredData('rejuve_buddy_packages_v4', []),
     evaluations: getStoredData('rejuve_buddy_evaluations_v4', []),
-    selectedCompetencyId: 'comp-pk'
+    selectedCompetencyId: 'comp-pk',
+    workstationBatch: null,
+    workstationCrews: [],
+    selectedCrewMissions: [],
+    selectedCrewUser: null,
+    isLoadingCrews: false,
+    isLoadingMissions: false,
+    isSubmitting: false
   }),
 
   getters: {
@@ -77,6 +85,68 @@ export const useBuddyStore = defineStore('buddy', {
   },
 
   actions: {
+    async fetchBuddyCrews(params = {}) {
+      this.isLoadingCrews = true
+      try {
+        const res = await evaluationApi.getCrews({ ...params, type: 'BUDDY' })
+        if (res && res.data) {
+          this.workstationBatch = res.data.batch || null
+          this.workstationCrews = Array.isArray(res.data.crews) ? res.data.crews : []
+          return res.data
+        }
+      } catch (err) {
+        console.warn('fetchBuddyCrews failed:', err.message)
+      } finally {
+        this.isLoadingCrews = false
+      }
+      return { batch: this.workstationBatch, crews: this.workstationCrews }
+    },
+
+    async fetchBuddyMissions(userId, params = {}) {
+      if (!userId) return null
+      this.isLoadingMissions = true
+      try {
+        const res = await evaluationApi.getCrewMissions(userId, { ...params, type: 'BUDDY' })
+        if (res && res.data) {
+          this.selectedCrewUser = res.data.user || null
+          this.selectedCrewMissions = Array.isArray(res.data.missions) ? res.data.missions : []
+          return res.data
+        }
+      } catch (err) {
+        console.warn('fetchBuddyMissions failed:', err.message)
+      } finally {
+        this.isLoadingMissions = false
+      }
+      return { user: this.selectedCrewUser, missions: this.selectedCrewMissions }
+    },
+
+    async submitBuddyScore(userMissionId, payload) {
+      this.isSubmitting = true
+      try {
+        const res = await evaluationApi.submitBuddyScore(userMissionId, payload)
+        if (res && res.data) {
+          const updated = res.data
+          const idx = this.selectedCrewMissions.findIndex(m => m.userMissionId === userMissionId)
+          if (idx !== -1) {
+            this.selectedCrewMissions[idx] = { ...this.selectedCrewMissions[idx], ...updated }
+          }
+          const crew = this.workstationCrews.find(c => c.userId === updated.userId)
+          if (crew) {
+            crew.evaluatedCount = Math.min(crew.totalMissionsCount, (crew.evaluatedCount || 0) + 1)
+            if (crew.evaluatedCount >= crew.totalMissionsCount) {
+              crew.status = 'COMPLETED'
+            }
+          }
+          return res
+        }
+      } catch (err) {
+        console.error('submitBuddyScore failed:', err)
+        throw err
+      } finally {
+        this.isSubmitting = false
+      }
+    },
+
     selectCompetency(compId) {
       this.selectedCompetencyId = compId || 'comp-pk'
     },

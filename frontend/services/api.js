@@ -99,6 +99,10 @@ export const batchApi = {
 
 // ─── 9. Evaluations & Approvals Service ─────────────────────────────────────
 export const evaluationApi = {
+  // Workstation Endpoints (Sidebar Kru & Detail Misi Kru)
+  getCrews: (params) => apiFetch('/evaluations/crews', { method: 'GET', params }),
+  getCrewMissions: (userId, params) => apiFetch(`/evaluations/crews/${userId}/missions`, { method: 'GET', params }),
+
   getUserMissions: (params) => apiFetch('/evaluations/user-missions', { method: 'GET', params }),
   getUserMissionById: (id) => apiFetch(`/evaluations/user-missions/${id}`, { method: 'GET' }),
   

@@ -210,6 +210,98 @@
             </div>
           </div>
 
+          <!-- DAFTAR PENUGASAN MISI BUDDY DARI REST API (Jika Batch Memiliki Misi Buddy) -->
+          <div v-if="buddyStore.selectedCrewMissions && buddyStore.selectedCrewMissions.length > 0" class="space-y-3">
+            <div class="flex items-center justify-between px-1">
+              <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <Award class="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <span>Penugasan Misi Buddy Pre-Batch ({{ buddyStore.selectedCrewMissions.length }} Misi Terdaftar di Backend)</span>
+              </h3>
+              <span class="text-[11px] text-purple-600 dark:text-purple-400 font-semibold">
+                ⚡ Auto-Unlock Journey Week 1 saat seluruh misi selesai
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+              <div
+                v-for="(bm, bIdx) in buddyStore.selectedCrewMissions"
+                :key="bm.userMissionId || bIdx"
+                class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs space-y-3"
+              >
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300">
+                      {{ bm.mission?.category || 'BUDDY MISI' }}
+                    </span>
+                    <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-1">
+                      {{ bIdx + 1 }}. {{ bm.mission?.missionTitle || 'Misi Buddy' }}
+                    </h4>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                      {{ bm.mission?.description || 'Pendampingan dan pembekalan operasional pra-batch.' }}
+                    </p>
+                  </div>
+
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    <span
+                      v-if="bm.status === 'COMPLETED'"
+                      class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1"
+                    >
+                      <Check class="w-3 h-3" />
+                      <span>Selesai (Skor: {{ bm.tlScore || bm.finalScore || 100 }})</span>
+                    </span>
+                    <span
+                      v-else
+                      class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                    >
+                      Perlu Dinilai
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Input Nilai & Catatan Buddy jika belum selesai -->
+                <div v-if="bm.status !== 'COMPLETED'" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center pt-1">
+                  <div class="sm:col-span-4 flex items-center gap-2">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">Nilai:</label>
+                    <input
+                      v-model.number="buddyMissionScores[bm.userMissionId]"
+                      type="number"
+                      min="0"
+                      max="100"
+                      class="w-20 text-center text-xs font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-1.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
+                      placeholder="90"
+                    />
+                    <span class="text-xs text-slate-400">/ 100</span>
+                  </div>
+
+                  <div class="sm:col-span-5">
+                    <input
+                      v-model="buddyMissionNotes[bm.userMissionId]"
+                      type="text"
+                      placeholder="Catatan pendampingan..."
+                      class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600"
+                    />
+                  </div>
+
+                  <div class="sm:col-span-3 text-right">
+                    <button
+                      type="button"
+                      @click="submitBuddyMission(bm.userMissionId)"
+                      class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                    >
+                      <Check class="w-3.5 h-3.5" />
+                      <span>Simpan Nilai</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Catatan jika sudah selesai -->
+                <div v-else class="text-xs text-slate-600 dark:text-slate-300 italic pt-1">
+                  "{{ bm.tlNotes || 'Pendampingan pra-batch telah selesai dilakukan.' }}"
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- TABEL / BLOK EVALUASI 7 PILAR KOMPETENSI RE.JUVE -->
           <div class="space-y-4">
             <div
@@ -420,9 +512,26 @@ const toast = useToast()
 
 const crewSearchQuery = ref('')
 const selectedCrewId = ref('')
+const buddyMissionScores = reactive({})
+const buddyMissionNotes = reactive({})
 
-// Get crews in current active batch
+// Get crews in current active batch (from buddyStore.workstationCrews if available, fallback to userStore)
 const currentBatchCrews = computed(() => {
+  if (buddyStore.workstationCrews && buddyStore.workstationCrews.length > 0) {
+    return buddyStore.workstationCrews.map(c => ({
+      id: c.userId || c.id,
+      userId: c.userId || c.id,
+      name: c.name,
+      avatar: c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(c.name)}`,
+      code: c.departmentCode || 'CRW-NEW',
+      position: c.position || 'Store Specialist New Hire',
+      storeLocation: c.storeLocation || 'Standby Gerai',
+      totalMissionsCount: c.totalMissionsCount || 0,
+      evaluatedCount: c.evaluatedCount || 0,
+      status: c.status || 'NEEDS_SCORING',
+      avgScore: c.avgScore || 0
+    }))
+  }
   if (!batchStore.currentBatch) return []
   return userStore.allUsers.filter(u => u.role === 'CREW')
 })
@@ -461,7 +570,7 @@ const raporForm = ref({
 const loadSelectedCrewRapor = () => {
   if (!selectedCrew.value || !batchStore.currentBatch) return
 
-  const batchId = batchStore.currentBatch.id
+  const batchId = batchStore.currentBatch.batchId || batchStore.currentBatch.id
   const crewId = selectedCrew.value.id
   const existing = buddyStore.evaluationForCrew(batchId, crewId)
 
@@ -487,26 +596,79 @@ const loadSelectedCrewRapor = () => {
   }
 }
 
-watch(selectedCrew, () => {
-  loadSelectedCrewRapor()
-}, { immediate: true })
+const loadBuddyScores = () => {
+  (buddyStore.selectedCrewMissions || []).forEach(m => {
+    if (m.tlScore !== null && m.tlScore !== undefined) {
+      buddyMissionScores[m.userMissionId] = m.tlScore
+    } else if (m.finalScore !== null && m.finalScore !== undefined) {
+      buddyMissionScores[m.userMissionId] = m.finalScore
+    } else if (buddyMissionScores[m.userMissionId] === undefined) {
+      buddyMissionScores[m.userMissionId] = 90
+    }
+
+    if (m.tlNotes) {
+      buddyMissionNotes[m.userMissionId] = m.tlNotes
+    } else if (buddyMissionNotes[m.userMissionId] === undefined) {
+      buddyMissionNotes[m.userMissionId] = ''
+    }
+  })
+}
+
+const loadBuddyData = async () => {
+  const batchId = batchStore.selectedBatchId || batchStore.currentBatch?.batchId || batchStore.currentBatch?.id
+  await buddyStore.fetchBuddyCrews({ batchId })
+
+  if (currentBatchCrews.value.length > 0 && (!selectedCrewId.value || !currentBatchCrews.value.find(c => c.id === selectedCrewId.value))) {
+    selectedCrewId.value = currentBatchCrews.value[0].id
+  }
+
+  if (selectedCrewId.value) {
+    await buddyStore.fetchBuddyMissions(selectedCrewId.value, { batchId })
+    loadBuddyScores()
+  }
+}
+
+watch(selectedCrewId, async (newId) => {
+  if (newId) {
+    const batchId = batchStore.selectedBatchId || batchStore.currentBatch?.batchId || batchStore.currentBatch?.id
+    await buddyStore.fetchBuddyMissions(newId, { batchId })
+    loadBuddyScores()
+    loadSelectedCrewRapor()
+  }
+})
+
+watch(() => batchStore.selectedBatchId, async () => {
+  await loadBuddyData()
+})
 
 onMounted(async () => {
   try {
-    // Selalu hit live API backend untuk User & Batch saat halaman dibuka
-    await Promise.all([
+    await Promise.allSettled([
       userStore.fetchUsersFromApi({ limit: 100 }),
       batchStore.fetchBatchesFromApi({ limit: 10 })
     ])
+    await loadBuddyData()
   } catch (err) {
     console.error('Failed to fetch users/batches in buddy page:', err)
   }
-
-  if (currentBatchCrews.value.length > 0 && !selectedCrewId.value) {
-    selectedCrewId.value = currentBatchCrews.value[0].id
-  }
   loadSelectedCrewRapor()
 })
+
+const submitBuddyMission = async (userMissionId) => {
+  if (!selectedCrew.value) return
+  const score = Number(buddyMissionScores[userMissionId]) || 90
+  const notes = buddyMissionNotes[userMissionId] || `Penilaian pendampingan Buddy untuk ${selectedCrew.value.name}`
+
+  try {
+    await buddyStore.submitBuddyScore(userMissionId, {
+      score,
+      notes
+    })
+    toast.success('Misi Buddy Selesai!', 'Penilaian misi Buddy berhasil disimpan (COMPLETED). Jika seluruh misi Buddy kru ini selesai, Journey Week 1 otomatis terbuka! 🚀')
+  } catch (err) {
+    toast.error('Gagal Menyimpan Nilai Buddy', err.message || 'Terjadi kesalahan saat memproses data.')
+  }
+}
 
 // Set rating for an indicator
 const setRating = (indicatorId, rating) => {
@@ -533,12 +695,13 @@ const currentSummary = computed(() => {
   return { scorePercent, rated }
 })
 
-// Save Rapor to store
-const saveCurrentRapor = () => {
+// Save Rapor to store & sync to backend
+const saveCurrentRapor = async () => {
   if (!selectedCrew.value || !batchStore.currentBatch) return
+  const batchId = batchStore.currentBatch.batchId || batchStore.currentBatch.id
 
   buddyStore.saveBuddyEvaluation({
-    batchId: batchStore.currentBatch.id,
+    batchId,
     crewId: selectedCrew.value.id,
     crewName: selectedCrew.value.name,
     storeTraining: selectedCrew.value.storeLocation || batchStore.currentBatch.name,
@@ -552,14 +715,32 @@ const saveCurrentRapor = () => {
     crewSigned: raporForm.value.crewSigned
   })
 
-  toast.success(`Rapor New Hire untuk ${selectedCrew.value.name} berhasil disimpan!`)
+  // Sinkronkan ke API untuk misi Buddy yang belum COMPLETED
+  if (buddyStore.selectedCrewMissions && buddyStore.selectedCrewMissions.length > 0) {
+    for (const bm of buddyStore.selectedCrewMissions) {
+      if (bm.status !== 'COMPLETED') {
+        try {
+          await buddyStore.submitBuddyScore(bm.userMissionId, {
+            score: currentSummary.value.scorePercent || 90,
+            notes: raporForm.value.recommendationNote || 'Evaluasi Rapor New Hire 7 Kompetensi selesai.'
+          })
+        } catch (e) {
+          console.warn('Sync buddy mission score error:', e.message)
+        }
+      }
+    }
+  }
+
+  toast.success('Rapor Berhasil Disimpan', `Rapor New Hire untuk ${selectedCrew.value.name} berhasil disimpan dan disinkronkan ke sistem! 🎉`)
 }
 
 // Helpers for sidebar badge
 const getCrewRaporBadgeClass = (crewId) => {
+  const crew = currentBatchCrews.value.find(c => c.id === crewId)
+  if (crew && crew.status === 'COMPLETED') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
   if (!batchStore.currentBatch) return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-  const summary = buddyStore.crewCompetencySummary(batchStore.currentBatch.id, crewId)
-  const status = buddyStore.crewOverallStatus(batchStore.currentBatch.id, crewId)
+  const summary = buddyStore.crewCompetencySummary(batchStore.currentBatch.batchId || batchStore.currentBatch.id, crewId)
+  const status = buddyStore.crewOverallStatus(batchStore.currentBatch.batchId || batchStore.currentBatch.id, crewId)
 
   if (status === 'RECOMMENDED') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
   if (status === 'NEED_RETRAINING') return 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
@@ -568,9 +749,11 @@ const getCrewRaporBadgeClass = (crewId) => {
 }
 
 const getCrewRaporStatusText = (crewId) => {
+  const crew = currentBatchCrews.value.find(c => c.id === crewId)
+  if (crew && crew.status === 'COMPLETED') return 'Selesai'
   if (!batchStore.currentBatch) return 'Belum Dinilai'
-  const status = buddyStore.crewOverallStatus(batchStore.currentBatch.id, crewId)
-  const summary = buddyStore.crewCompetencySummary(batchStore.currentBatch.id, crewId)
+  const status = buddyStore.crewOverallStatus(batchStore.currentBatch.batchId || batchStore.currentBatch.id, crewId)
+  const summary = buddyStore.crewCompetencySummary(batchStore.currentBatch.batchId || batchStore.currentBatch.id, crewId)
 
   if (status === 'RECOMMENDED') return 'Siap Batch'
   if (status === 'NEED_RETRAINING') return 'Butuh Review'
@@ -579,8 +762,10 @@ const getCrewRaporStatusText = (crewId) => {
 }
 
 const getCrewCompetencyScore = (crewId) => {
+  const crew = currentBatchCrews.value.find(c => c.id === crewId)
+  if (crew && crew.avgScore) return crew.avgScore
   if (!batchStore.currentBatch) return 0
-  const summary = buddyStore.crewCompetencySummary(batchStore.currentBatch.id, crewId)
-  return summary.scorePercent
+  const summary = buddyStore.crewCompetencySummary(batchStore.currentBatch.batchId || batchStore.currentBatch.id, crewId)
+  return summary.scorePercent || 0
 }
 </script>

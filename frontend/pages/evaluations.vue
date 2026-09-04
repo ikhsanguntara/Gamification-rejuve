@@ -260,8 +260,8 @@
                 </div>
               </div>
 
-              <!-- JIKA MISI SUDAH SELESAI (COMPLETED / APPROVED): Tampilkan Ringkasan Read-Only (Tanpa Slider & Tombol Update) -->
-              <template v-if="getMissionStatus(mission.id) === 'COMPLETED' || getMissionStatus(mission.id) === 'APPROVED'">
+              <!-- JIKA MISI SUDAH SELESAI (COMPLETED / APPROVED / APPROVED_BY_DM): Tampilkan Ringkasan Read-Only (Tanpa Slider & Tombol Update) -->
+              <template v-if="getMissionStatus(mission.id) === 'COMPLETED' || getMissionStatus(mission.id) === 'APPROVED' || getMissionStatus(mission.id) === 'APPROVED_BY_DM'">
                 <!-- Catatan Evaluator & Foto Bukti (Read-Only) -->
                 <div class="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-2.5 text-xs">
                   <!-- Catatan Evaluator -->
@@ -418,11 +418,26 @@
                   <!-- Status Indikator Misi -->
                   <div class="flex items-center gap-1.5">
                     <span
-                      v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW'"
+                      v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'"
                       class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[11px] font-bold"
                     >
                       <Clock class="w-3 h-3 text-amber-600 animate-pulse" />
                       <span>⏳ Menunggu Review DM</span>
+                    </span>
+
+                    <span
+                      v-else-if="getMissionStatus(mission.id) === 'APPROVED_BY_DM' || getMissionStatus(mission.id) === 'COMPLETED' || getMissionStatus(mission.id) === 'APPROVED'"
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold"
+                    >
+                      <CheckCircle2 class="w-3 h-3 text-emerald-600" />
+                      <span>✅ Selesai & Disetujui</span>
+                    </span>
+
+                    <span
+                      v-else-if="getMissionStatus(mission.id) === 'LOCKED'"
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold"
+                    >
+                      <span>🔒 Terkunci (Selesaikan Buddy Terlebih Dahulu)</span>
                     </span>
 
                     <span v-else class="text-[11px] text-slate-400 font-medium">
@@ -430,21 +445,49 @@
                     </span>
                   </div>
 
-                  <!-- Tombol Aksi Mandiri Per-Misi -->
-                  <button
-                    type="button"
-                    @click="submitSingleMission(mission.id)"
-                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-                    :class="[
-                      getMissionStatus(mission.id) === 'PENDING_REVIEW'
-                        ? 'bg-amber-600 hover:bg-amber-700'
-                        : 'bg-[#831843] hover:bg-[#6b133a]'
-                    ]"
-                  >
-                    <Send class="w-3 h-3" />
-                    <span v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW'">Perbarui Nilai di DM</span>
-                    <span v-else>Kirim Misi Ini ke DM</span>
-                  </button>
+                  <!-- DM ACTIONS vs SL ACTIONS -->
+                  <div v-if="userStore.isDistrictManager" class="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      @click="submitDmReviewAction(mission.id, 'REVISE')"
+                      class="px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/50 dark:text-amber-300 cursor-pointer transition-all active:scale-95"
+                    >
+                      Minta Revisi
+                    </button>
+                    <button
+                      type="button"
+                      @click="submitDmReviewAction(mission.id, 'REJECT')"
+                      class="px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/50 dark:text-rose-300 cursor-pointer transition-all active:scale-95"
+                    >
+                      Tolak
+                    </button>
+                    <button
+                      type="button"
+                      @click="submitDmReviewAction(mission.id, 'APPROVE')"
+                      class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs cursor-pointer transition-all active:scale-95 flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 class="w-3.5 h-3.5" />
+                      <span>Setujui (Approve)</span>
+                    </button>
+                  </div>
+
+                  <div v-else>
+                    <button
+                      type="button"
+                      :disabled="getMissionStatus(mission.id) === 'LOCKED'"
+                      @click="submitSingleMission(mission.id)"
+                      class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                      :class="[
+                        (getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL')
+                          ? 'bg-amber-600 hover:bg-amber-700'
+                          : 'bg-[#831843] hover:bg-[#6b133a]'
+                      ]"
+                    >
+                      <Send class="w-3 h-3" />
+                      <span v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'">Perbarui Nilai di DM</span>
+                      <span v-else>Kirim Misi Ini ke DM</span>
+                    </button>
+                  </div>
                 </div>
               </template>
             </div>
@@ -582,6 +625,25 @@ const crewFilterTabs = [
 ]
 
 const batchCrews = computed(() => {
+  if (evalStore.workstationCrews && evalStore.workstationCrews.length > 0) {
+    return evalStore.workstationCrews.map(c => ({
+      id: c.userId || c.id,
+      userId: c.userId || c.id,
+      name: c.name,
+      avatar: c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(c.name)}`,
+      code: c.departmentCode || 'CREW',
+      position: c.position || 'Crew Specialist',
+      level: c.level || 1,
+      stars: c.stars || 0,
+      points: c.points || 0,
+      storeLocation: c.storeLocation || 'Standby Gerai',
+      totalMissionsCount: c.totalMissionsCount || 0,
+      evaluatedCount: c.evaluatedCount || 0,
+      status: c.status || 'NEEDS_SCORING',
+      avgScore: c.avgScore || 0,
+      starsEarned: c.starsEarned || 0
+    }))
+  }
   return gamificationStore.crewsByBatch(batchStore.currentBatch?.id || 'batch-alpha')
 })
 
@@ -591,9 +653,9 @@ const filteredCrewList = computed(() => {
   let list = batchCrews.value
 
   if (activeCrewFilter.value === 'NEEDS_SCORING') {
-    list = list.filter(c => getCrewWeekEvaluatedCount(c.id) < currentWeekMissions.value.length)
+    list = list.filter(c => getCrewWeekEvaluatedCount(c.id) < (currentWeekMissions.value.length || 1))
   } else if (activeCrewFilter.value === 'COMPLETED') {
-    list = list.filter(c => getCrewWeekEvaluatedCount(c.id) >= currentWeekMissions.value.length)
+    list = list.filter(c => getCrewWeekEvaluatedCount(c.id) >= (currentWeekMissions.value.length || 1))
   }
 
   if (crewSearchQuery.value.trim()) {
@@ -613,6 +675,31 @@ const selectedCrew = computed(() => {
 })
 
 const currentWeekMissions = computed(() => {
+  if (evalStore.selectedCrewMissions && evalStore.selectedCrewMissions.length > 0) {
+    return evalStore.selectedCrewMissions.map((um, idx) => {
+      const m = um.mission || {}
+      return {
+        id: um.userMissionId || um.missionId || `m-${idx}`,
+        userMissionId: um.userMissionId,
+        missionId: um.missionId,
+        code: `MSN-W${m.weekOrDayNumber || batchStore.selectedWeek}-0${idx + 1}`,
+        title: m.missionTitle || `Misi ${idx + 1}`,
+        category: m.category || 'STANDAR OPERASIONAL',
+        description: m.description || 'Pemeriksaan kepatuhan standar operasional Re.juve.',
+        status: um.status || 'ACTIVE',
+        tlScore: um.tlScore,
+        tlNotes: um.tlNotes,
+        dmScore: um.dmScore,
+        dmNotes: um.dmNotes,
+        finalScore: um.finalScore,
+        evidenceUrl: um.evidenceUrl,
+        requirements: (Array.isArray(m.sopChecklist) && m.sopChecklist.length > 0)
+          ? m.sopChecklist
+          : (m.description ? [m.description] : ['Patuhi standar operasional & kebersihan gerai'])
+      }
+    })
+  }
+
   return missionStore.missionsByWeek(batchStore.currentBatch?.id || 'batch-alpha', batchStore.selectedWeek)
 })
 
@@ -627,43 +714,73 @@ const loadCrewScores = () => {
 
   currentWeekMissions.value.forEach(m => {
     // 1. Score
-    const crewEval = missionStore.crewEvaluationForMission(m.id, selectedCrew.value.id)
-    if (crewEval && crewEval.score > 0) {
-      missionScores[m.id] = crewEval.score
-    } else if (m.crewScores) {
-      const found = m.crewScores.find(cs => cs.crewId === selectedCrew.value.id)
-      missionScores[m.id] = found ? found.score : 90
+    if (m.tlScore !== null && m.tlScore !== undefined) {
+      missionScores[m.id] = m.tlScore
+    } else if (m.finalScore !== null && m.finalScore !== undefined) {
+      missionScores[m.id] = m.finalScore
     } else {
-      if (missionScores[m.id] === undefined) {
+      const crewEval = missionStore.crewEvaluationForMission(m.id, selectedCrew.value.id)
+      if (crewEval && crewEval.score > 0) {
+        missionScores[m.id] = crewEval.score
+      } else if (m.crewScores) {
+        const found = m.crewScores.find(cs => cs.crewId === selectedCrew.value.id)
+        missionScores[m.id] = found ? found.score : 90
+      } else if (missionScores[m.id] === undefined) {
         missionScores[m.id] = 90
       }
     }
 
     // 2. Comments
-    const existingApproval = approvalStore.approvals.find(a => a.missionId === m.id && (a.crewId === selectedCrew.value.id || !a.crewId))
-    const existingEval = evalStore.evaluations.find(e => e.missionId === m.id && (e.crewId === selectedCrew.value.id || (e.crewScores && e.crewScores.some(cs => cs.crewId === selectedCrew.value.id))))
+    if (m.tlNotes) {
+      missionComments[m.id] = m.tlNotes
+    } else if (m.dmNotes) {
+      missionComments[m.id] = m.dmNotes
+    } else {
+      const existingApproval = approvalStore.approvals.find(a => a.missionId === m.id && (a.crewId === selectedCrew.value.id || !a.crewId))
+      const existingEval = evalStore.evaluations.find(e => e.missionId === m.id && (e.crewId === selectedCrew.value.id || (e.crewScores && e.crewScores.some(cs => cs.crewId === selectedCrew.value.id))))
 
-    if (existingApproval && existingApproval.comment) {
-      missionComments[m.id] = existingApproval.comment
-    } else if (existingEval && existingEval.comment) {
-      missionComments[m.id] = existingEval.comment
-    } else if (crewEval && crewEval.comment) {
-      missionComments[m.id] = crewEval.comment
-    } else if (m.comment) {
-      missionComments[m.id] = m.comment
-    } else if (missionComments[m.id] === undefined) {
-      missionComments[m.id] = ''
+      if (existingApproval?.comment) {
+        missionComments[m.id] = existingApproval.comment
+      } else if (existingEval?.comment) {
+        missionComments[m.id] = existingEval.comment
+      } else if (missionComments[m.id] === undefined) {
+        missionComments[m.id] = ''
+      }
     }
 
     // 3. Evidence
-    if (existingApproval && existingApproval.evidenceList && existingApproval.evidenceList.length > 0) {
-      missionEvidences[m.id] = [...existingApproval.evidenceList]
-    } else if (existingEval && existingEval.evidence && existingEval.evidence.length > 0) {
-      missionEvidences[m.id] = [...existingEval.evidence]
+    if (m.evidenceUrl) {
+      missionEvidences[m.id] = [{ url: m.evidenceUrl, caption: 'Bukti Foto' }]
     } else if (!missionEvidences[m.id]) {
       missionEvidences[m.id] = []
     }
   })
+}
+
+const loadWorkstationData = async () => {
+  const currentBatchId = batchStore.selectedBatchId || batchStore.currentBatch?.batchId || batchStore.currentBatch?.id
+  const week = batchStore.selectedWeek || 1
+
+  await evalStore.fetchWorkstationCrews({
+    batchId: currentBatchId,
+    week,
+    type: 'JOURNEY'
+  })
+
+  if (batchCrews.value.length > 0) {
+    if (!selectedCrewId.value || !batchCrews.value.find(c => c.id === selectedCrewId.value)) {
+      selectedCrewId.value = batchCrews.value[0].id
+    }
+  }
+
+  if (selectedCrewId.value) {
+    await evalStore.fetchCrewMissions(selectedCrewId.value, {
+      batchId: currentBatchId,
+      week,
+      type: 'JOURNEY'
+    })
+    loadCrewScores()
+  }
 }
 
 function handleFileUpload(event, missionId) {
@@ -686,6 +803,7 @@ function handleFileUpload(event, missionId) {
         id: `ev-${Date.now()}-${idx}`,
         url: e.target.result,
         caption: file.name.replace(/\.[^/.]+$/, ''),
+        file: file,
         uploadedAt: new Date().toISOString()
       })
       toast.success('Foto Berhasil Dilampirkan', `${file.name} telah ditambahkan ke bukti misi.`)
@@ -703,9 +821,21 @@ function removeEvidence(missionId, index) {
   }
 }
 
-watch([selectedCrewId, () => batchStore.selectedWeek, () => batchStore.selectedBatchId], () => {
-  loadCrewScores()
-}, { immediate: true })
+watch([() => batchStore.selectedWeek, () => batchStore.selectedBatchId], async () => {
+  await loadWorkstationData()
+})
+
+watch(selectedCrewId, async (newId) => {
+  if (newId) {
+    const currentBatchId = batchStore.selectedBatchId || batchStore.currentBatch?.batchId || batchStore.currentBatch?.id
+    await evalStore.fetchCrewMissions(newId, {
+      batchId: currentBatchId,
+      week: batchStore.selectedWeek || 1,
+      type: 'JOURNEY'
+    })
+    loadCrewScores()
+  }
+})
 
 onMounted(async () => {
   await Promise.allSettled([
@@ -713,9 +843,7 @@ onMounted(async () => {
     missionStore.fetchMissionsFromApi(),
     evalStore.fetchEvaluationsFromApi()
   ])
-  if (batchCrews.value.length > 0) {
-    selectedCrewId.value = batchCrews.value[0].id
-  }
+  await loadWorkstationData()
 })
 
 watch(filteredCrewList, (list) => {
@@ -747,6 +875,10 @@ function calculateMissionStars(score) {
 }
 
 function getCrewWeekEvaluatedCount(crewId) {
+  const crew = batchCrews.value.find(c => c.id === crewId)
+  if (crew && crew.evaluatedCount !== undefined) {
+    return crew.evaluatedCount
+  }
   return currentWeekMissions.value.filter(m => {
     const ce = missionStore.crewEvaluationForMission(m.id, crewId)
     return ce && ce.score > 0
@@ -754,6 +886,10 @@ function getCrewWeekEvaluatedCount(crewId) {
 }
 
 function getCrewWeekAvgScore(crewId) {
+  const crew = batchCrews.value.find(c => c.id === crewId)
+  if (crew && crew.avgScore !== undefined) {
+    return crew.avgScore
+  }
   if (currentWeekMissions.value.length === 0) return 0
   const evals = currentWeekMissions.value.map(m => {
     const ce = missionStore.crewEvaluationForMission(m.id, crewId)
@@ -765,7 +901,7 @@ function getCrewWeekAvgScore(crewId) {
 
 function getCrewWeekProgressLabel(crewId) {
   const count = getCrewWeekEvaluatedCount(crewId)
-  const total = currentWeekMissions.value.length
+  const total = currentWeekMissions.value.length || 1
   if (count === 0) return 'Belum Dinilai'
   if (count < total) return `${count}/${total} Dinilai`
   return 'Lengkap'
@@ -773,7 +909,7 @@ function getCrewWeekProgressLabel(crewId) {
 
 function getCrewWeekBadgeClass(crewId) {
   const count = getCrewWeekEvaluatedCount(crewId)
-  const total = currentWeekMissions.value.length
+  const total = currentWeekMissions.value.length || 1
   if (count === 0) return 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
   if (count < total) return 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
   return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
@@ -787,6 +923,8 @@ function getMissionCardBorderClass(missionId) {
 }
 
 function getMissionStatus(missionId) {
+  const m = currentWeekMissions.value.find(x => x.id === missionId || x.userMissionId === missionId)
+  if (m && m.status) return m.status
   const mission = missionStore.missionById(missionId)
   if (!mission) return 'UNGRADED'
   if (selectedCrew.value) {
@@ -801,51 +939,83 @@ function getMissionComment(missionId) {
     return missionComments[missionId]
   }
 
-  if (selectedCrew.value) {
-    const existingApproval = approvalStore.approvals.find(a => a.missionId === missionId && (a.crewId === selectedCrew.value.id || !a.crewId))
-    if (existingApproval?.comment && existingApproval.comment.trim()) {
-      return existingApproval.comment
-    }
-
-    const existingEval = evalStore.evaluations.find(e => e.missionId === missionId && (e.crewId === selectedCrew.value.id || (e.crewScores && e.crewScores.some(cs => cs.crewId === selectedCrew.value.id))))
-    if (existingEval?.comment && existingEval.comment.trim()) {
-      return existingEval.comment
-    }
-
-    const crewEval = missionStore.crewEvaluationForMission(missionId, selectedCrew.value.id)
-    if (crewEval?.comment && crewEval.comment.trim()) {
-      return crewEval.comment
-    }
-  }
-
-  const mission = missionStore.missionById(missionId)
-  if (mission?.comment && mission.comment.trim()) {
-    return mission.comment
-  }
+  const m = currentWeekMissions.value.find(x => x.id === missionId || x.userMissionId === missionId)
+  if (m?.tlNotes) return m.tlNotes
+  if (m?.dmNotes) return m.dmNotes
 
   const status = getMissionStatus(missionId)
-  if (status === 'COMPLETED' || status === 'APPROVED') {
+  if (status === 'COMPLETED' || status === 'APPROVED' || status === 'APPROVED_BY_DM') {
     return 'Pemeriksaan kepatuhan SOP operasional telah memenuhi standar kualitas Re.juve.'
   }
 
   return 'Catatan evaluasi belum diisi.'
 }
 
-function submitSingleMission(missionId) {
+async function submitSingleMission(missionId) {
   if (!selectedCrew.value) return
   const targetMission = currentWeekMissions.value.find(m => m.id === missionId)
   const score = Number(missionScores[missionId]) || 90
+  const notes = missionComments[missionId] || `Evaluasi misi ${targetMission?.title || ''} untuk ${selectedCrew.value.name}`
+  const evidenceUrl = missionEvidences[missionId]?.[0]?.url || targetMission?.evidenceUrl || null
+  const targetUserMissionId = targetMission?.userMissionId || missionId
 
-  evalStore.submitForReview({
-    missionId,
-    supervisorId: userStore.currentUserId,
-    supervisorName: userStore.currentUser?.name || 'Store Leader',
-    crewScores: [{ crewId: selectedCrew.value.id, score }],
-    comment: missionComments[missionId] || `Evaluasi misi ${targetMission?.code || ''} untuk ${selectedCrew.value.name}`,
-    evidence: missionEvidences[missionId] || []
-  })
+  try {
+    if (targetMission?.userMissionId) {
+      let payloadData
+      const attachedFileObj = (missionEvidences[missionId] || []).find(e => e.file)
+      if (attachedFileObj && attachedFileObj.file instanceof File) {
+        const fd = new FormData()
+        fd.append('score', String(score))
+        fd.append('notes', notes)
+        fd.append('evidence', attachedFileObj.file)
+        payloadData = fd
+      } else {
+        payloadData = {
+          score,
+          notes,
+          evidenceUrl
+        }
+      }
 
-  toast.success('Misi Berhasil Dikirim ke DM', `Misi "${targetMission?.title || missionId}" untuk ${selectedCrew.value.name} telah diajukan ke DM untuk persetujuan! 🚀`)
+      await evalStore.submitSlScoreToApi(targetUserMissionId, payloadData)
+    } else {
+      // Local fallback
+      evalStore.submitForReview({
+        missionId,
+        supervisorId: userStore.currentUserId,
+        supervisorName: userStore.currentUser?.name || 'Store Leader',
+        crewScores: [{ crewId: selectedCrew.value.id, score }],
+        comment: notes,
+        evidence: missionEvidences[missionId] || []
+      })
+    }
+
+    toast.success('Misi Berhasil Dikirim ke DM', `Misi "${targetMission?.title || missionId}" untuk ${selectedCrew.value.name} telah diajukan ke DM untuk persetujuan! 🚀`)
+  } catch (err) {
+    toast.error('Gagal Mengirim Penilaian', err.message || 'Terjadi kesalahan saat memproses penilaian.')
+  }
+}
+
+async function submitDmReviewAction(missionId, action) {
+  if (!selectedCrew.value) return
+  const targetMission = currentWeekMissions.value.find(m => m.id === missionId)
+  const score = Number(missionScores[missionId]) || targetMission?.finalScore || targetMission?.tlScore || 90
+  const notes = missionComments[missionId] || `Review DM: ${action}`
+  const targetUserMissionId = targetMission?.userMissionId || missionId
+
+  try {
+    if (targetMission?.userMissionId) {
+      await evalStore.submitDmReviewToApi(targetUserMissionId, {
+        action,
+        score,
+        notes
+      })
+    }
+    const actionLabel = action === 'APPROVE' ? 'disetujui' : (action === 'REVISE' ? 'diminta revisi' : 'ditolak')
+    toast.success('Review DM Disimpan', `Misi "${targetMission?.title || missionId}" telah berhasil ${actionLabel}!`)
+  } catch (err) {
+    toast.error('Gagal Menyimpan Review', err.message || 'Terjadi kesalahan saat memproses review.')
+  }
 }
 
 function goToNextCrew() {
