@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { mockCrews } from '../mocks/crews.js'
 import { useGamificationStore } from './gamification.js'
 import { useBatchStore } from './batch.js'
 
@@ -181,35 +180,7 @@ export const mockUsers = {
 }
 
 // Initial full user directory
-const initialDirectory = [
-  { ...mockUsers.SUPERADMIN },
-  { ...mockUsers.DISTRICT_MANAGER_1 },
-  { ...mockUsers.DISTRICT_MANAGER_2 },
-  { ...mockUsers.STORE_LEADER_1 },
-  { ...mockUsers.STORE_LEADER_2 },
-  ...mockCrews.map(c => {
-    let storeId = c.storeId || 'store-001'
-    if (!c.storeId) {
-      if (c.batchId === 'batch-beta') storeId = 'store-002'
-      else if (c.batchId === 'batch-gamma') storeId = 'store-003'
-    }
-    return {
-      id: c.id,
-      name: c.name,
-      role: 'CREW',
-      roleTitle: 'Store Specialist',
-      email: `${c.name.toLowerCase().replace(/[^a-z]/g, '.')}@rejuve.co.id`,
-      avatar: c.avatar,
-      department: c.department,
-      position: c.position,
-      storeId,
-      storeLocation: c.storeLocation,
-      batchId: c.batchId || null,
-      stars: c.stars || 0,
-      level: c.level || 1
-    }
-  })
-]
+const initialDirectory = []
 
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { authApi, userApi } from '../services/api.js'
@@ -219,24 +190,17 @@ import { buildPrismaQuery } from '../utils/queryBuilder.js'
 function extractRoleCode(raw) {
   if (!raw) return ''
   if (typeof raw === 'string') return raw.toUpperCase()
-  if (typeof raw === 'object') {
-    return (raw.roleCode || raw.code || raw.name || raw.role || '').toUpperCase()
-  }
-  return ''
+  return (raw.roleCode || raw.code || raw.name || '').toUpperCase()
 }
 
-function resolveRoleTitle(apiUser) {
-  if (!apiUser) return 'Specialist'
-  if (apiUser.roleDetails && typeof apiUser.roleDetails === 'object' && apiUser.roleDetails.roleName) {
-    return apiUser.roleDetails.roleName
-  }
-  if (apiUser.role && typeof apiUser.role === 'object' && apiUser.role.roleName) {
-    return apiUser.role.roleName
-  }
-  const rawRole = extractRoleCode(apiUser.role) || extractRoleCode(apiUser.roleDetails)
+function resolveRoleTitle(u) {
+  if (!u) return 'Specialist'
+  if (u.roleDetails?.roleName) return u.roleDetails.roleName
+  const rawRole = extractRoleCode(u.role)
   const map = {
     SUPERADMIN: 'Super Administrator',
     STORE_LEADER: 'Store Leader',
+    SUPERVISOR: 'Store Leader',
     DISTRICT_MANAGER: 'District Manager',
     CREW: 'Crew Specialist',
     BUDDY: 'Buddy Mentor'
@@ -250,8 +214,8 @@ export const useUserStore = defineStore('user', {
     isAuthenticated: Boolean(getAuthToken()),
     apiUser: null,
     isLiveApi: false,
-    currentUserId: 'spv-001',
-    userDirectory: getStoredData('rejuve_users_v3', initialDirectory),
+    currentUserId: '',
+    userDirectory: getStoredData('rejuve_users_v3', []),
     serverPagination: {
       total: 0,
       page: 1,
@@ -355,7 +319,12 @@ export const useUserStore = defineStore('user', {
     },
 
     allUsers: (state) => state.userDirectory,
-    userById: (state) => (id) => state.userDirectory.find(u => u.id === id),
+    userById: (state) => (id) => {
+      const found = state.userDirectory.find(u => u.id === id)
+      if (found) return found
+      const persona = Object.values(mockUsers).find(p => p.id === id)
+      return persona || null
+    },
 
     storeLeaders: (state) => state.userDirectory.filter(u => u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR'),
     districtManagers: (state) => state.userDirectory.filter(u => u.role === 'DISTRICT_MANAGER' || u.role === 'HEAD'),
@@ -375,21 +344,21 @@ export const useUserStore = defineStore('user', {
 
   actions: {
     async initAuth() {
-      if (!this.userDirectory || this.userDirectory.length === 0) {
-        this.userDirectory = initialDirectory
-      }
-      if (!this.userDirectory.find(u => u.id === this.currentUserId)) {
-        this.currentUserId = this.currentUser.id
-      }
-      this.isAuthenticated = true
-
-      // Cek sesi token API yang tersimpan
       const savedToken = getAuthToken()
       if (savedToken) {
         this.token = savedToken
+        this.isAuthenticated = true
         await this.fetchMe()
+      } else {
+        if (this.currentUserId && this.userDirectory && this.userDirectory.find(u => u.id === this.currentUserId)) {
+          this.isAuthenticated = true
+        } else {
+          this.token = null
+          this.apiUser = null
+          this.isAuthenticated = false
+        }
       }
-      return true
+      return this.isAuthenticated
     },
 
     async loginWithApi(credentials) {
@@ -522,7 +491,15 @@ export const useUserStore = defineStore('user', {
       else if (userId === 'head-001') targetId = 'dm-001'
       else if (userId === 'head-002') targetId = 'dm-002'
 
-      const user = this.userDirectory.find(u => u.id === targetId) || this.userDirectory.find(u => u.id === userId)
+      let user = this.userDirectory.find(u => u.id === targetId) || this.userDirectory.find(u => u.id === userId)
+      if (!user) {
+        const personaKey = Object.keys(mockUsers).find(k => mockUsers[k].id === targetId || mockUsers[k].id === userId)
+        if (personaKey) {
+          user = { ...mockUsers[personaKey] }
+          this.userDirectory.push(user)
+        }
+      }
+
       if (user) {
         this.currentUserId = user.id
         this.isAuthenticated = true

@@ -1,6 +1,4 @@
 import { defineStore } from 'pinia'
-import { mockCrews } from '../mocks/crews.js'
-import { mockAchievements } from '../mocks/achievements.js'
 import { calculateStarLevel } from '../utils/star.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 
@@ -10,8 +8,8 @@ import { getStoredData, setStoredData } from '../utils/storage.js'
 
 export const useGamificationStore = defineStore('gamification', {
   state: () => ({
-    crews: getStoredData('rejuve_crews_v3', mockCrews),
-    achievements: getStoredData('rejuve_achievements_v3', mockAchievements)
+    crews: getStoredData('rejuve_crews_v3', []),
+    achievements: getStoredData('rejuve_achievements_v3', [])
   }),
 
   getters: {

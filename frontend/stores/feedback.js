@@ -1,18 +1,12 @@
 import { defineStore } from 'pinia'
-import {
-  mockFeedbackSurveyTemplate,
-  mockNewHireReportTemplate,
-  mockSubmittedFeedbacks,
-  mockNewHireReports
-} from '../mocks/feedbackTemplates.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 
 export const useFeedbackStore = defineStore('feedback', {
   state: () => ({
-    surveyTemplate: getStoredData('rejuve_feedback_survey_tmpl_v1', mockFeedbackSurveyTemplate),
-    raporTemplate: getStoredData('rejuve_newhire_rapor_tmpl_v1', mockNewHireReportTemplate),
-    crewFeedbacks: getStoredData('rejuve_crew_feedbacks_v1', mockSubmittedFeedbacks),
-    newHireReports: getStoredData('rejuve_newhire_reports_v1', mockNewHireReports)
+    surveyTemplate: getStoredData('rejuve_feedback_survey_tmpl_v1', { id: 'tpl-survey', title: 'Survey Onboarding Kru', questions: [] }),
+    raporTemplate: getStoredData('rejuve_newhire_rapor_tmpl_v1', { id: 'tpl-rapor', title: 'Rapor Evaluasi 7 Kompetensi', competencies: [] }),
+    crewFeedbacks: getStoredData('rejuve_crew_feedbacks_v1', []),
+    newHireReports: getStoredData('rejuve_newhire_reports_v1', [])
   }),
 
   getters: {

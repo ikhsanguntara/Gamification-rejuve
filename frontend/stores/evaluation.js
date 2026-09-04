@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { mockEvaluations } from '../mocks/evaluations.js'
 import { calculateStars } from '../utils/star.js'
 import { useMissionStore } from './mission.js'
 import { useApprovalStore } from './approval.js'
@@ -12,7 +11,7 @@ import { evaluationApi } from '../services/api.js'
 
 export const useEvaluationStore = defineStore('evaluation', {
   state: () => ({
-    evaluations: getStoredData('rejuve_evaluations_v3', mockEvaluations)
+    evaluations: getStoredData('rejuve_evaluations_v3', [])
   }),
 
   getters: {

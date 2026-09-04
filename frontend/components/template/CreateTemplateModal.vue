@@ -476,7 +476,7 @@ const addNewMissionToCurrentPeriod = () => {
     description: '',
     category: 'TECHNICAL',
     inputType: 'SCALE',
-    requirementsText: 'Cek kesiapan perlengkapan kerja\nCatat kepatuhan SOP di logbook',
+    requirementsText: '',
     scaleConfig: { min: 0, max: 100, step: 20, starPerStep: 1 }
   })
 }
@@ -524,7 +524,7 @@ const executeSavePackage = async () => {
   const compiledDetails = form.value.details.map((item, idx) => {
     const reqList = item.requirementsText
       ? item.requirementsText.split('\n').map(r => r.trim()).filter(Boolean)
-      : ['Verifikasi checklist standar operasional']
+      : []
 
     return {
       durationNumber: Number(item.durationNumber || 1),
@@ -533,6 +533,7 @@ const executeSavePackage = async () => {
       category: mapCategoryEnum(item.category),
       inputType: mapInputTypeEnum(item.inputType),
       scaleConfig: item.inputType === 'SCALE' ? (item.scaleConfig || { min: 0, max: 100, step: 20, starPerStep: 1 }) : null,
+      sopChecklist: reqList,
       requirements: reqList
     }
   })

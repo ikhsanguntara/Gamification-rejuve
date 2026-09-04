@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { mockStores } from '../mocks/stores.js'
 import { useUserStore } from './user.js'
 import { useBatchStore } from './batch.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
@@ -12,8 +11,8 @@ import { buildPrismaQuery } from '../utils/queryBuilder.js'
 
 export const useStoreStore = defineStore('store', {
   state: () => ({
-    stores: getStoredData('rejuve_stores_v1', mockStores),
-    selectedStoreId: 'store-001',
+    stores: getStoredData('rejuve_stores_v1', []),
+    selectedStoreId: '',
     isLiveApi: false,
     isLoading: false,
     serverPagination: {

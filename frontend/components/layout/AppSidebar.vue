@@ -262,21 +262,21 @@
     <div class="p-3.5 m-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
       <div class="flex items-center justify-between mb-2">
         <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[130px]">
-          {{ batchStore.currentBatch.name }}
+          {{ batchStore.currentBatch?.name || 'Memuat Batch...' }}
         </span>
         <span class="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-          Week {{ batchStore.selectedWeek }} Active
+          Week {{ batchStore.selectedWeek || 1 }} Active
         </span>
       </div>
       <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
         <div
           class="bg-[#831843] dark:bg-[#f472b6] h-full rounded-full transition-all duration-500"
-          :style="{ width: `${batchStore.currentBatch.weeks[batchStore.selectedWeek - 1]?.completionRate || 65}%` }"
+          :style="{ width: `${batchStore.currentBatch?.weeks?.[batchStore.selectedWeek - 1]?.completionRate || 0}%` }"
         ></div>
       </div>
       <div class="flex items-center justify-between text-xs text-slate-400 mt-1.5">
         <span>Cycle Progress</span>
-        <span class="font-semibold">{{ batchStore.currentBatch.weeks[batchStore.selectedWeek - 1]?.completionRate || 65 }}%</span>
+        <span class="font-semibold">{{ batchStore.currentBatch?.weeks?.[batchStore.selectedWeek - 1]?.completionRate || 0 }}%</span>
       </div>
     </div>
 

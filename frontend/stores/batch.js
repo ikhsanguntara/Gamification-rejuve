@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { mockBatches } from '../mocks/batches.js'
 import { useTemplateStore } from './template.js'
 import { useUserStore } from './user.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
@@ -84,14 +83,48 @@ export function computeWeeksLifecycle(startDateStr, customWeeks = []) {
   })
 }
 
+export const EMPTY_BATCH_FALLBACK = {
+  id: '',
+  code: 'BTH-01',
+  name: 'Memuat Gerai / Batch...',
+  storeLocation: 'Re.juve Store',
+  description: 'Belum ada batch aktif yang dipilih.',
+  currentWeek: 1,
+  totalWeeks: 3,
+  startDate: new Date().toISOString().split('T')[0],
+  endDate: new Date().toISOString().split('T')[0],
+  status: 'ACTIVE',
+  totalCrew: 0,
+  totalMissions: 0,
+  completedMissions: 0,
+  averageScore: 0,
+  totalStars: 0,
+  assignment: {
+    storeLeaderId: '',
+    storeLeaderName: '-',
+    districtManagerId: '',
+    districtManagerName: '-',
+    supervisorId: '',
+    supervisorName: '-',
+    headId: '',
+    headName: '-',
+    crewIds: []
+  },
+  weeks: [
+    { weekNumber: 1, title: 'Minggu 1: Operasional Dasar', completionRate: 0, status: 'ACTIVE', isLocked: false },
+    { weekNumber: 2, title: 'Minggu 2: Penilaian Mutu', completionRate: 0, status: 'LOCKED', isLocked: true },
+    { weekNumber: 3, title: 'Minggu 3: Evaluasi Akhir', completionRate: 0, status: 'LOCKED', isLocked: true }
+  ]
+}
+
 /**
  * Batch Store: Manage active batch, 3-week lifecycle, aggregated metrics, and Superadmin CRUD
  */
 
 export const useBatchStore = defineStore('batch', {
   state: () => ({
-    batches: getStoredData('rejuve_batches_v4', mockBatches),
-    selectedBatchId: 'batch-alpha',
+    batches: getStoredData('rejuve_batches_v4', []),
+    selectedBatchId: '',
     customSelectedWeek: null, // Follows batch's active week if not manually clicked
     isLiveApi: false,
     serverPagination: {
@@ -138,37 +171,34 @@ export const useBatchStore = defineStore('batch', {
       const userStore = useUserStore()
       if (userStore.isStoreLeader || userStore.isDistrictManager || userStore.isCrew) {
         const acc = state.accessibleBatches
-        return acc[0] || state.batches[0]
+        if (acc && acc.length > 0) return acc[0]
       }
-      return state.batches[0]
+      return state.batches[0] || EMPTY_BATCH_FALLBACK
     },
     batchById: (state) => (id) => state.batches.find(b => b.id === id),
     activeWeekNumber: (state) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId)
+      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
       return calculateActiveWeek(batch)
     },
     selectedWeek: (state) => {
       if (state.customSelectedWeek !== null) {
         return state.customSelectedWeek
       }
-      const batch = state.batches.find(b => b.id === state.selectedBatchId)
+      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
       return calculateActiveWeek(batch)
     },
     currentBatchWeeks: (state) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId)
-      if (!batch) return []
-      return computeWeeksLifecycle(batch.startDate, batch.weeks || [])
+      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      return computeWeeksLifecycle(batch.startDate, batch.weeks || EMPTY_BATCH_FALLBACK.weeks)
     },
     isWeekSelectedLocked: (state) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId)
-      if (!batch) return false
+      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
       const activeW = calculateActiveWeek(batch)
       const selW = state.customSelectedWeek !== null ? state.customSelectedWeek : activeW
       return selW !== activeW
     },
     isWeekLocked: (state) => (weekNumber) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId)
-      if (!batch) return false
+      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
       return Number(weekNumber) !== calculateActiveWeek(batch)
     }
   },

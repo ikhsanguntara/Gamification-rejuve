@@ -39,9 +39,12 @@ export function clearAllStoredData() {
       'rejuve_crews_v3',
       'rejuve_evaluations_v3',
       'rejuve_approvals_v3',
+      'rejuve_approvals_v4',
       'rejuve_stores_v1',
       'rejuve_buddy_packages_v1',
+      'rejuve_buddy_packages_v4',
       'rejuve_buddy_evaluations_v1',
+      'rejuve_buddy_evaluations_v4',
       'rejuve_feedback_survey_tmpl_v1',
       'rejuve_newhire_rapor_tmpl_v1',
       'rejuve_crew_feedbacks_v1',
@@ -50,3 +53,16 @@ export function clearAllStoredData() {
     keys.forEach(k => localStorage.removeItem(k))
   }
 }
+
+// Auto-purge residual mock data once on client load
+if (typeof window !== 'undefined' && window.localStorage) {
+  try {
+    if (localStorage.getItem('rejuve_mock_purged_v1') !== 'true') {
+      clearAllStoredData()
+      localStorage.setItem('rejuve_mock_purged_v1', 'true')
+    }
+  } catch (e) {
+    // Ignore storage errors in restricted contexts
+  }
+}
+

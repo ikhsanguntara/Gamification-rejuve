@@ -365,9 +365,11 @@ watch(() => props.modelValue, (isOpen) => {
     const rawDetails = props.template.templates || props.template.details || []
 
     const mappedDetails = rawDetails.map((item, idx) => {
-      const reqs = Array.isArray(item.requirements)
-        ? item.requirements.join('\n')
-        : (item.requirements || '')
+      const reqs = Array.isArray(item.sopChecklist)
+        ? item.sopChecklist.join('\n')
+        : (Array.isArray(item.requirements)
+          ? item.requirements.join('\n')
+          : (item.sopChecklist || item.requirements || ''))
 
       return {
         tempId: item.id || item.tplMissionDetailId || `item-${Date.now()}-${idx}`,
@@ -446,7 +448,7 @@ const addNewMissionToCurrentPeriod = () => {
     description: '',
     category: 'TECHNICAL',
     inputType: 'SCALE',
-    requirementsText: 'Cek kesiapan perlengkapan kerja\nCatat kepatuhan SOP di logbook',
+    requirementsText: '',
     scaleConfig: { min: 0, max: 100, step: 20, starPerStep: 1 }
   })
 }
@@ -476,9 +478,9 @@ const executeSaveAll = async () => {
 
   // Compile clean details payload according to Prisma backend schema
   const compiledDetails = form.value.details.map((item, idx) => {
-    const reqList = item.requirementsText
+    const checklistArr = item.requirementsText
       ? item.requirementsText.split('\n').map(r => r.trim()).filter(Boolean)
-      : ['Verifikasi checklist standar operasional']
+      : []
 
     return {
       durationNumber: Number(item.durationNumber || 1),
@@ -487,7 +489,8 @@ const executeSaveAll = async () => {
       category: mapCategoryEnum(item.category),
       inputType: mapInputTypeEnum(item.inputType),
       scaleConfig: item.inputType === 'SCALE' ? (item.scaleConfig || { min: 0, max: 100, step: 20, starPerStep: 1 }) : null,
-      requirements: reqList
+      sopChecklist: checklistArr,
+      requirements: checklistArr
     }
   })
 

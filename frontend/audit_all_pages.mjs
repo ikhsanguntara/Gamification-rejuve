@@ -79,51 +79,23 @@ components.forEach(compPath => {
   console.log(`  ✅ [PASS Component] ${relPath}`)
 })
 
-// Check 2: Verify all Stores & Mocks
-console.log(`\n📌 Menguji Integritas Store & Mock Data:`)
-import('./mocks/batches.js').then(batches => {
+// Check 2: Verify Pinia Stores Integrity
+console.log(`\n📌 Menguji Integritas Pinia Stores:`)
+Promise.all([
+  import('./stores/batch.js'),
+  import('./stores/mission.js'),
+  import('./stores/template.js'),
+  import('./stores/approval.js'),
+  import('./stores/store.js'),
+  import('./stores/user.js')
+]).then(([batch, mission, template, approval, store, user]) => {
   totalChecks++
-  if (batches.mockBatches && batches.mockBatches.length >= 3) {
+  if (batch.useBatchStore && mission.useMissionStore && template.useTemplateStore && approval.useApprovalStore && store.useStoreStore && user.useUserStore) {
     passedChecks++
-    console.log(`  ✅ [PASS Mock Batches] ${batches.mockBatches.length} batch terkonfigurasi lengkap`)
+    console.log(`  ✅ [PASS Pinia Stores] Seluruh store utama terdefinisi secara utuh tanpa dependensi mock`)
   } else {
     failedChecks++
-    issues.push(`❌ [Mock Batches] Kurang dari 3 batch`)
-  }
-
-  return import('./mocks/missions.js')
-}).then(missions => {
-  totalChecks++
-  if (missions.mockMissions && missions.mockMissions.length >= 36) {
-    passedChecks++
-    console.log(`  ✅ [PASS Mock Missions] ${missions.mockMissions.length} misi terkonfigurasi (Batch 1: 12 misi • Batch 2: 16 misi • Batch 3: 20 misi)`)
-  } else {
-    failedChecks++
-    issues.push(`❌ [Mock Missions] Ditemukan ${missions.mockMissions.length} misi`)
-  }
-
-  return import('./mocks/evaluations.js')
-}).then(evals => {
-  totalChecks++
-  if (evals.mockEvaluations && evals.mockEvaluations.length >= 3) {
-    passedChecks++
-    console.log(`  ✅ [PASS Mock Evaluations] ${evals.mockEvaluations.length} evaluasi terdaftar`)
-  }
-
-  return import('./mocks/approvals.js')
-}).then(apps => {
-  totalChecks++
-  if (apps.mockApprovals && apps.mockApprovals.length >= 3) {
-    passedChecks++
-    console.log(`  ✅ [PASS Mock Approvals] ${apps.mockApprovals.length} antrean approval terdaftar`)
-  }
-
-  return import('./mocks/stores.js')
-}).then(stores => {
-  totalChecks++
-  if (stores.mockStores && stores.mockStores.length >= 3) {
-    passedChecks++
-    console.log(`  ✅ [PASS Mock Stores] ${stores.mockStores.length} gerai terkonfigurasi di Master Store`)
+    issues.push(`❌ [Pinia Stores] Terdapat store yang gagal dimuat`)
   }
 
   console.log('\n==========================================')

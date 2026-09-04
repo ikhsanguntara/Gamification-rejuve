@@ -151,13 +151,13 @@
               </div>
 
               <!-- Checklist Standar Pelaksanaan -->
-              <div v-if="item.requirements && item.requirements.length > 0" class="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+              <div v-if="(item.sopChecklist && item.sopChecklist.length > 0) || (item.requirements && item.requirements.length > 0)" class="pt-2 border-t border-slate-100 dark:border-slate-800/80">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
                   Standar Pelaksanaan (Checklist SOP)
                 </span>
                 <div class="space-y-1">
                   <div
-                    v-for="(req, rIdx) in item.requirements"
+                    v-for="(req, rIdx) in (item.sopChecklist || item.requirements || [])"
                     :key="rIdx"
                     class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400"
                   >

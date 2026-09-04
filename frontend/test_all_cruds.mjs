@@ -78,6 +78,18 @@ console.log('')
 console.log('📌 2. Menguji CRUD Manajemen Batch Gerai:')
 
 // 2.1 CREATE BATCH
+await templateStore.createPackage({
+  id: 'pkg-sop-standard',
+  name: 'Master Standard SOP Rejuve',
+  type: 'JOURNEY',
+  totalWeeks: 3,
+  details: Array.from({ length: 12 }, (_, i) => ({
+    missionTitle: `Misi SOP Standar ${i + 1}`,
+    durationNumber: Math.floor(i / 4) + 1,
+    category: 'TECHNICAL',
+    inputType: 'SCALE'
+  }))
+})
 const initialBatchCount = batchStore.allBatches.length
 const newBatch = batchStore.createBatch({
   name: 'Batch Delta — Kota Kasablanka',
@@ -169,7 +181,28 @@ assert(duplicatedPkg && duplicatedPkg.templates.length === 1, 'Duplicate Templat
 const removedSuccess = templateStore.removeMissionFromPackage(newPkg.id, addedTmpl.id)
 assert(removedSuccess && newPkg.templates.length === 0, 'Remove Mission from Package: Berhasil menghapus butir misi dari paket master')
 
-// 4.5 DELETE PACKAGE
+// 4.5 UPDATE PACKAGE WITH SOP CHECKLIST
+await templateStore.updatePackage(newPkg.id, {
+  name: 'Standar SOP Express Kiosk Rev 2',
+  details: [
+    {
+      missionTitle: 'Week 1 : JCUY 01',
+      description: 'Desc WEEK 1 : JCUY 01',
+      durationNumber: 1,
+      category: 'TECHNICAL',
+      inputType: 'SCALE',
+      scaleConfig: { min: 0, max: 100, step: 10, starPerStep: 1 },
+      sopChecklist: [
+        'Verifikasi checklist standar operasional',
+        'Pemeriksaan kepatuhan & sanitasi'
+      ]
+    }
+  ]
+})
+const updatedPkg = templateStore.packageById(newPkg.id)
+assert(updatedPkg && updatedPkg.templates[0].sopChecklist && updatedPkg.templates[0].sopChecklist.length === 2, 'Update Template Package: Berhasil menyimpan sopChecklist pada detail misi JOURNEY')
+
+// 4.6 DELETE PACKAGE
 templateStore.deletePackage(newPkg.id)
 templateStore.deletePackage(duplicatedPkg.id)
 assert(templateStore.packageById(newPkg.id) === undefined, 'Delete Template Package: Berhasil menghapus paket template master')
@@ -276,6 +309,20 @@ import { useBuddyStore } from './stores/buddy.js'
 const buddyStore = useBuddyStore()
 
 // 7.1 READ BUDDY TEMPLATES (RAPOR NEW HIRE 7 KOMPETENSI)
+if (buddyStore.packages.length === 0) {
+  buddyStore.packages.push({
+    id: 'pkg-buddy-default',
+    name: 'Paket Master Rapor New Hire 7 Kompetensi',
+    competencies: Array.from({ length: 7 }, (_, i) => ({
+      id: i === 0 ? 'comp-pk' : `comp-${i + 1}`,
+      name: i === 0 ? 'Product Knowledge' : `Kompetensi ${i + 1}`,
+      indicators: [
+        { id: 'ind-pk-01', name: 'Indikator 1' },
+        { id: 'ind-pk-02', name: 'Indikator 2' }
+      ]
+    }))
+  })
+}
 const defaultBuddy = buddyStore.defaultPackage
 assert(defaultBuddy && defaultBuddy.competencies?.length === 7, 'Read Buddy Template: Berhasil memuat paket master Rapor New Hire 7 Kompetensi')
 
@@ -343,6 +390,30 @@ import { useFeedbackStore } from './stores/feedback.js'
 const feedbackStore = useFeedbackStore()
 
 // 8.1 READ TEMPLATES
+if (feedbackStore.surveyQuestions.length === 0) {
+  feedbackStore.surveyTemplate = {
+    id: 'tpl-survey-master',
+    title: 'Survei Onboarding Re.juve',
+    questions: Array.from({ length: 17 }, (_, i) => ({
+      id: `q-${String(i + 1).padStart(2, '0')}`,
+      text: `Pertanyaan Evaluasi Onboarding ${i + 1}`,
+      type: 'SCALE_0_10'
+    }))
+  }
+}
+if (feedbackStore.raporCompetencies.length === 0) {
+  feedbackStore.raporTemplate = {
+    id: 'tpl-rapor-master',
+    title: 'Rapor New Hire 7 Kompetensi',
+    competencies: Array.from({ length: 7 }, (_, i) => ({
+      id: `comp-${i + 1}`,
+      name: `Kompetensi Standar ${i + 1}`,
+      indicators: [
+        { id: `ind-${String(i + 1).padStart(2, '0')}-01`, name: 'Indikator Standar' }
+      ]
+    }))
+  }
+}
 assert(feedbackStore.surveyQuestions.length >= 17, 'Read Feedback Template: Berhasil memuat 17 butir pertanyaan survei onboarding')
 assert(feedbackStore.raporCompetencies.length === 7, 'Read Rapor Template: Berhasil memuat 7 pilar kompetensi standar Re.juve')
 

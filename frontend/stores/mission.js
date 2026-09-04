@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { mockMissions } from '../mocks/missions.js'
 import { calculateStars } from '../utils/star.js'
 import { useGamificationStore } from './gamification.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
@@ -11,7 +10,7 @@ import { batchApi, evaluationApi } from '../services/api.js'
 
 export const useMissionStore = defineStore('mission', {
   state: () => ({
-    missions: getStoredData('rejuve_missions_v4', mockMissions),
+    missions: getStoredData('rejuve_missions_v4', []),
     searchQuery: '',
     selectedCategory: 'ALL',
     selectedStatus: 'ALL'

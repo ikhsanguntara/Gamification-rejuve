@@ -38,7 +38,7 @@
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Peringkat Batch:</span>
         <span class="text-xs font-semibold text-[#831843] dark:text-[#f472b6] px-3 py-1 rounded-xl bg-[#831843]/10">
-          📍 {{ batchStore.currentBatch.name }}
+          📍 {{ batchStore.currentBatch?.name || 'Semua Gerai' }}
         </span>
       </div>
 

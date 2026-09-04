@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { mockTemplatePackages } from '../mocks/templates.js'
 import { useMissionStore } from './mission.js'
 import { useBatchStore } from './batch.js'
 import { useGamificationStore } from './gamification.js'
@@ -26,23 +25,30 @@ function normalizePackage(pkg) {
       })
     }
   }
+  if (Array.isArray(pkg.templates)) {
+    pkg.templates.forEach(t => {
+      if (!t.sopChecklist) {
+        t.sopChecklist = Array.isArray(t.requirements) ? t.requirements : []
+      }
+      if (!t.requirements) {
+        t.requirements = t.sopChecklist
+      }
+    })
+  }
   pkg.totalWeeks = pkg.weeks.length
   return pkg
 }
-
-const rawPackages = getStoredData('rejuve_templates_v4', mockTemplatePackages)
-const initialPackages = rawPackages.map(normalizePackage)
 
 /**
  * Template Store: Manage Master Mission Packages, SOP Presets, and Dynamic Batch Provisioning
  */
 export const useTemplateStore = defineStore('template', {
   state: () => ({
-    packages: initialPackages,
+    packages: [],
     journeyTemplates: [],
     buddyTemplates: [],
     feedbackTemplates: [],
-    selectedPackageId: 'pkg-sop-standard',
+    selectedPackageId: '',
     selectedBuddyId: '',
     selectedFeedbackId: '',
     isLoading: false
@@ -117,19 +123,27 @@ export const useTemplateStore = defineStore('template', {
         const res = await templateApi.getAll(queryParams)
         if (res && res.data && Array.isArray(res.data)) {
           const mapped = res.data.map(t => {
-            const templates = (t.details || []).map((d, idx) => ({
-              id: d.tplMissionDetailId || `tmpl-${idx}`,
-              tplMissionDetailId: d.tplMissionDetailId,
-              week: d.durationNumber || 1,
-              durationNumber: d.durationNumber || 1,
-              title: d.missionTitle,
-              missionTitle: d.missionTitle,
-              category: d.category || 'TECHNICAL',
-              inputType: d.inputType || 'SCALE',
-              scaleConfig: d.scaleConfig || null,
-              description: d.description || '',
-              requirements: ['Verifikasi checklist standar', 'Dokumentasi foto']
-            }))
+            const templates = (t.details || []).map((d, idx) => {
+              const checklist = Array.isArray(d.sopChecklist)
+                ? d.sopChecklist
+                : (Array.isArray(d.requirements) ? d.requirements : [])
+              const checklistArr = [...checklist]
+
+              return {
+                id: d.tplMissionDetailId || `tmpl-${idx}`,
+                tplMissionDetailId: d.tplMissionDetailId,
+                week: d.durationNumber || 1,
+                durationNumber: d.durationNumber || 1,
+                title: d.missionTitle,
+                missionTitle: d.missionTitle,
+                category: d.category || 'TECHNICAL',
+                inputType: d.inputType || 'SCALE',
+                scaleConfig: d.scaleConfig || null,
+                description: d.description || '',
+                sopChecklist: checklistArr,
+                requirements: checklistArr
+              }
+            })
 
             return normalizePackage({
               id: t.tplMissionId,
@@ -211,20 +225,28 @@ export const useTemplateStore = defineStore('template', {
         if (data && (data.tplMissionId || data.id)) {
           const actualId = data.tplMissionId || data.id
           const actualType = type || data.type || 'JOURNEY'
-          const templates = (data.details || []).map((d, idx) => ({
-            id: d.tplMissionDetailId || `tmpl-${idx}`,
-            tplMissionDetailId: d.tplMissionDetailId,
-            week: Number(d.durationNumber) || 1,
-            durationNumber: Number(d.durationNumber) || 1,
-            codePrefix: `M-W${d.durationNumber || 1}-0${idx + 1}`,
-            title: d.missionTitle,
-            missionTitle: d.missionTitle,
-            category: d.category || (actualType === 'FEEDBACK' ? 'SOFT_SKILL' : 'TECHNICAL'),
-            inputType: d.inputType || 'SCALE',
-            scaleConfig: d.scaleConfig || null,
-            description: d.description || '',
-            requirements: ['Verifikasi checklist standar operasional', 'Pemeriksaan kepatuhan & sanitasi']
-          }))
+          const templates = (data.details || []).map((d, idx) => {
+            const checklist = Array.isArray(d.sopChecklist)
+              ? d.sopChecklist
+              : (Array.isArray(d.requirements) ? d.requirements : [])
+            const checklistArr = [...checklist]
+
+            return {
+              id: d.tplMissionDetailId || `tmpl-${idx}`,
+              tplMissionDetailId: d.tplMissionDetailId,
+              week: Number(d.durationNumber) || 1,
+              durationNumber: Number(d.durationNumber) || 1,
+              codePrefix: `M-W${d.durationNumber || 1}-0${idx + 1}`,
+              title: d.missionTitle,
+              missionTitle: d.missionTitle,
+              category: d.category || (actualType === 'FEEDBACK' ? 'SOFT_SKILL' : 'TECHNICAL'),
+              inputType: d.inputType || 'SCALE',
+              scaleConfig: d.scaleConfig || null,
+              description: d.description || '',
+              sopChecklist: checklistArr,
+              requirements: checklistArr
+            }
+          })
 
           const maxDur = (data.details || []).reduce((max, d) => Math.max(max, Number(d.durationNumber || 1)), 1)
           const totalTabsCount = Math.max(maxDur, 1)
@@ -391,18 +413,26 @@ export const useTemplateStore = defineStore('template', {
         title: type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`
       }))
 
-      const mappedTemplates = inputDetails.map((d, idx) => ({
-        id: d.id || d.tempId || `mis-${Date.now()}-${idx}`,
-        codePrefix: d.codePrefix || `M-W${d.durationNumber || 1}-${String(idx + 1).padStart(2, '0')}`,
-        title: d.missionTitle || d.title || `Butir SOP ${idx + 1}`,
-        description: d.description || '',
-        week: Number(d.durationNumber) || 1,
-        category: d.category || 'TECHNICAL',
-        inputType: d.inputType || 'SCALE',
-        requirements: Array.isArray(d.requirements)
-          ? d.requirements
-          : (d.requirementsText ? d.requirementsText.split('\n').map(r => r.trim()).filter(Boolean) : ['Verifikasi checklist standar operasional'])
-      }))
+      const mappedTemplates = inputDetails.map((d, idx) => {
+        const checklistArr = Array.isArray(d.sopChecklist)
+          ? d.sopChecklist
+          : (Array.isArray(d.requirements)
+            ? d.requirements
+            : (d.requirementsText ? d.requirementsText.split('\n').map(r => r.trim()).filter(Boolean) : []))
+
+        return {
+          id: d.id || d.tempId || `mis-${Date.now()}-${idx}`,
+          codePrefix: d.codePrefix || `M-W${d.durationNumber || 1}-${String(idx + 1).padStart(2, '0')}`,
+          title: d.missionTitle || d.title || `Butir SOP ${idx + 1}`,
+          description: d.description || '',
+          week: Number(d.durationNumber) || 1,
+          category: d.category || 'TECHNICAL',
+          inputType: d.inputType || 'SCALE',
+          scaleConfig: d.scaleConfig || null,
+          sopChecklist: checklistArr,
+          requirements: checklistArr
+        }
+      })
 
       const newPkg = normalizePackage({
         id,
@@ -671,13 +701,21 @@ export const useTemplateStore = defineStore('template', {
 
         const scaleConfig = item.scaleConfig || (inp === 'SCALE' ? { min: 0, max: 100, step: 20, starPerStep: 1 } : null)
 
+        const checklistArr = Array.isArray(item.sopChecklist)
+          ? item.sopChecklist
+          : (Array.isArray(item.requirements)
+            ? item.requirements
+            : (item.requirementsText ? item.requirementsText.split('\n').map(r => r.trim()).filter(Boolean) : []))
+
         return {
           durationNumber: Number(item.week || item.durationNumber || 1),
           missionTitle: item.title || item.missionTitle || `Misi SOP ${idx + 1}`,
           description: item.description || '',
           category: cat,
           inputType: inp,
-          scaleConfig
+          scaleConfig,
+          sopChecklist: checklistArr,
+          requirements: checklistArr
         }
       })
 
@@ -701,7 +739,8 @@ export const useTemplateStore = defineStore('template', {
         inputType: d.inputType,
         scaleConfig: d.scaleConfig,
         description: d.description,
-        requirements: sourceDetails[idx]?.requirements || ['Verifikasi checklist standar operasional', 'Pemeriksaan kepatuhan SOP']
+        sopChecklist: d.sopChecklist,
+        requirements: d.sopChecklist
       }))
       pkg.totalMissions = pkg.templates.length
 
@@ -783,7 +822,10 @@ export const useTemplateStore = defineStore('template', {
       const pkg = this.packageById(pkgId)
       if (!pkg) return null
 
-      const id = `tmpl-${Date.now()}`
+      const checklist = payload.sopChecklist || payload.requirements || []
+      const checklistArr = Array.isArray(checklist) ? checklist : [checklist]
+
+      const id = payload.id || `tmpl-${Date.now()}`
       const newTmpl = {
         id,
         week: Number(payload.week) || 1,
@@ -791,7 +833,8 @@ export const useTemplateStore = defineStore('template', {
         title: payload.title,
         category: payload.category || 'Quality Control',
         description: payload.description || '',
-        requirements: payload.requirements || ['Pemeriksaan standar operasional prosedur'],
+        sopChecklist: checklistArr,
+        requirements: checklistArr,
         maxStars: 5
       }
 

@@ -12,7 +12,7 @@
             <Compass class="w-3.5 h-3.5 text-amber-300 animate-spin-slow" />
             <span>Re.juve Cold-Pressed 3-Week Star Odyssey</span>
             <span>•</span>
-            <span>{{ batchStore.currentBatch.name }}</span>
+            <span>{{ batchStore.currentBatch?.name || 'Batch' }}</span>
           </div>
 
           <h2 class="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
@@ -397,7 +397,7 @@ const myTotalStars = computed(() => {
     const c = gamificationStore.crewById(userStore.currentUser.id)
     return c?.stars || userStore.currentUser.stars || 0
   }
-  return batchStore.currentBatch.totalStars || 0
+  return batchStore.currentBatch?.totalStars || 0
 })
 
 const completedMissionsCount = computed(() => {

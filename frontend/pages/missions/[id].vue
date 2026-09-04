@@ -143,7 +143,7 @@
                   <h4 class="text-sm font-semibold text-slate-900 dark:text-white">
                     {{ userStore.currentUser.name }}
                   </h4>
-                  <p class="text-xs text-slate-400">{{ userStore.currentUser.position }} • {{ batchStore.currentBatch.name }}</p>
+                  <p class="text-xs text-slate-400">{{ userStore.currentUser.position }} • {{ batchStore.currentBatch?.name || 'Re.juve Store' }}</p>
                 </div>
               </div>
 
@@ -322,7 +322,7 @@
               </div>
               <div>
                 <h4 class="text-xs font-semibold text-slate-900 dark:text-white">
-                  {{ batchStore.currentBatch.name }}
+                  {{ batchStore.currentBatch?.name || 'Re.juve Store' }}
                 </h4>
                 <p class="text-xs text-slate-400">
                   {{ participatingCrews.length }} Active Store Crew Members

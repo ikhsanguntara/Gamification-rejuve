@@ -10,17 +10,17 @@
         <div>
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-amber-300 text-xs font-semibold mb-2.5 sm:mb-3 border border-white/15">
             <Star class="w-3.5 h-3.5 fill-amber-300" />
-            <span class="truncate max-w-[160px] sm:max-w-none">{{ batchStore.currentBatch.name }}</span>
+            <span class="truncate max-w-[160px] sm:max-w-none">{{ batchStore.currentBatch?.name || 'Memuat Batch...' }}</span>
             <span>•</span>
-            <span>Week {{ batchStore.selectedWeek }}/3</span>
+            <span>Week {{ batchStore.selectedWeek || 1 }}/3</span>
           </div>
 
           <h2 class="text-xl sm:text-3xl font-bold tracking-tight">
-            {{ greetingText }}, {{ userStore.currentUser.name.split(' ')[0] }}! 🥤
+            {{ greetingText }}, {{ (userStore.currentUser?.name || 'User').split(' ')[0] }}! 🥤
           </h2>
           <p class="text-slate-200 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
             <span v-if="userStore.isCrew">
-              Re.juve Specialist • Saat ini berada di <strong class="text-amber-300 font-semibold">Level {{ myProgress.currentLevel }} ({{ myProgress.currentLevelTitle }})</strong> dengan <strong class="font-semibold">{{ myStars.toLocaleString() }} ⭐ Stars</strong>. Terus selesaikan seluruh misi di {{ batchStore.currentBatch.name }}!
+              Re.juve Specialist • Saat ini berada di <strong class="text-amber-300 font-semibold">Level {{ myProgress.currentLevel }} ({{ myProgress.currentLevelTitle }})</strong> dengan <strong class="font-semibold">{{ myStars.toLocaleString() }} ⭐ Stars</strong>. Terus selesaikan seluruh misi di {{ batchStore.currentBatch?.name || 'gerai' }}!
             </span>
             <span v-else-if="userStore.isSupervisor">
               Area Supervisor • Week {{ batchStore.selectedWeek }} aktif dinilai. Terdapat <strong class="text-amber-300 font-semibold">{{ pendingReviewCount }} misi diajukan</strong> dan <strong class="text-rose-300 font-semibold">{{ missionStore.revisionCount }} revisi</strong>.
@@ -121,8 +121,8 @@
       <!-- 5. Assigned Store Branch -->
       <StatCard
         title="Cabang Penempatan"
-        :value="batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name"
-        :subtext="`Week ${batchStore.selectedWeek}/3 Aktif`"
+        :value="(batchStore.currentBatch?.name || '').split('—')[1] || batchStore.currentBatch?.name || 'Re.juve'"
+        :subtext="`Week ${batchStore.selectedWeek || 1}/3 Aktif`"
         :icon="MapPin"
         variant="slate"
         class="col-span-2 sm:col-span-1"
@@ -133,7 +133,7 @@
     <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
       <StatCard
         title="Store Crew"
-        :value="batchStore.currentBatch.totalCrew"
+        :value="batchStore.currentBatch?.totalCrew || 0"
         unit="Crew"
         subtext="Active in branch"
         :icon="Users"
@@ -142,22 +142,22 @@
 
       <StatCard
         title="Missions Completed"
-        :value="`${batchStore.currentBatch.completedMissions} / ${batchStore.currentBatch.totalMissions}`"
-        :subtext="`${Math.round((batchStore.currentBatch.completedMissions / batchStore.currentBatch.totalMissions) * 100)}% cycle progress`"
+        :value="`${batchStore.currentBatch?.completedMissions || 0} / ${batchStore.currentBatch?.totalMissions || 0}`"
+        :subtext="`${Math.round(((batchStore.currentBatch?.completedMissions || 0) / (batchStore.currentBatch?.totalMissions || 1)) * 100) || 0}% cycle progress`"
         :icon="CheckCircle2"
         variant="emerald"
         trend="up"
-        trendValue="+4 this week"
+        trendValue="Aktif"
       />
 
       <StatCard
         title="Average Score"
-        :value="`${batchStore.currentBatch.averageScore}%`"
+        :value="`${batchStore.currentBatch?.averageScore || 0}%`"
         subtext="Branch benchmark"
         :icon="Award"
         variant="brand"
         trend="up"
-        trendValue="+2.1%"
+        trendValue="Aktif"
       />
 
       <StatCard
@@ -170,7 +170,7 @@
 
       <StatCard
         title="Total Stars"
-        :value="batchStore.currentBatch.totalStars.toLocaleString()"
+        :value="(batchStore.currentBatch?.totalStars || 0).toLocaleString()"
         unit="⭐"
         subtext="Earned across store"
         :icon="Star"
@@ -228,7 +228,7 @@
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                Top Star Performers — {{ batchStore.currentBatch.name }}
+                Top Star Performers — {{ batchStore.currentBatch?.name || 'Batch' }}
               </h3>
               <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                 Peringkat Crew Batch

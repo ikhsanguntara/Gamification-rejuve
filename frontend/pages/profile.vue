@@ -26,7 +26,7 @@
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
             <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
               <span class="text-xs font-semibold text-slate-400 uppercase">Assigned Batch</span>
-              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}</p>
+              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{{ (batchStore.currentBatch?.name || '').split('—')[1] || batchStore.currentBatch?.name || 'Re.juve Store' }}</p>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
               <span class="text-xs font-semibold text-slate-400 uppercase">Total Stars Earned</span>

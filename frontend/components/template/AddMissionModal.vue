@@ -152,6 +152,7 @@ const executeAddMission = () => {
     title: newMissionForm.value.title.trim(),
     category: newMissionForm.value.category.trim(),
     description: newMissionForm.value.description.trim(),
+    sopChecklist: reqs,
     requirements: reqs
   }
 

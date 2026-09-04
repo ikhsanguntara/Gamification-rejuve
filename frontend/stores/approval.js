@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { mockApprovals } from '../mocks/approvals.js'
 import { useMissionStore } from './mission.js'
 import { useEvaluationStore } from './evaluation.js'
 import { useGamificationStore } from './gamification.js'
@@ -10,40 +9,20 @@ import { getStoredData, setStoredData } from '../utils/storage.js'
 import { evaluationApi } from '../services/api.js'
 import { buildPrismaQuery } from '../utils/queryBuilder.js'
 
-function loadSafeApprovals() {
-  const data = getStoredData('rejuve_approvals_v4', mockApprovals)
-  if (!Array.isArray(data) || data.length === 0) {
-    setStoredData('rejuve_approvals_v4', mockApprovals)
-    return JSON.parse(JSON.stringify(mockApprovals))
-  }
-  return data
-}
-
 /**
  * Approval Store: District Manager Review Workspace (Approve with Option to Adjust Score)
  */
 
 export const useApprovalStore = defineStore('approval', {
   state: () => ({
-    approvals: loadSafeApprovals(),
+    approvals: getStoredData('rejuve_approvals_v4', []),
     serverPagination: {
       total: 0,
       page: 1,
       limit: 9,
       totalPages: 1
     },
-    activities: [
-      {
-        id: 'act-1',
-        actor: 'District Manager',
-        action: 'approved store evaluation for',
-        target: 'Andi Pratama - Cek Suhu Chiller (2-4°C)',
-        details: 'Audit suhu chiller stabil sempurna.',
-        time: 'Just now',
-        type: 'award',
-        badge: '+5 Stars Awarded'
-      }
-    ]
+    activities: []
   }),
 
   getters: {

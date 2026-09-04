@@ -7,7 +7,7 @@
             Assigned Crew Roster ({{ batchCrews.length }} Members)
           </h3>
           <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
-            {{ batchStore.currentBatch.name.split('—')[1] || batchStore.currentBatch.name }}
+            {{ (batchStore.currentBatch?.name || '').split('—')[1] || batchStore.currentBatch?.name || 'Batch' }}
           </span>
         </div>
         <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">

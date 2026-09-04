@@ -29,7 +29,7 @@
         <div>
           <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Target Batch</p>
           <p class="text-xs font-semibold text-slate-900 dark:text-white">
-            {{ batchStore.currentBatch.name }}
+            {{ batchStore.currentBatch?.name || 'Batch' }}
           </p>
         </div>
       </div>
@@ -515,7 +515,7 @@ const isLocked = computed(() => {
 })
 
 const batchCrews = computed(() => {
-  return gamificationStore.crewsByBatch(props.mission.batchId || batchStore.currentBatch.id)
+  return gamificationStore.crewsByBatch(props.mission?.batchId || batchStore.currentBatch?.id || '')
 })
 
 const filteredBatchCrews = computed(() => {
@@ -701,7 +701,7 @@ const buildPayload = (status) => {
     missionId: props.mission.id,
     missionTitle: props.mission.title,
     week: props.mission.week,
-    batchId: props.mission.batchId || batchStore.currentBatch.id,
+    batchId: props.mission?.batchId || batchStore.currentBatch?.id || '',
     status: status,
     averageScore: averageBatchScore.value,
     calculatedStars: averageCalculatedStars.value,

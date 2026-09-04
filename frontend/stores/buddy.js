@@ -1,30 +1,10 @@
 import { defineStore } from 'pinia'
-import { mockBuddyPackages } from '../mocks/buddyTemplates.js'
-import { mockBuddyEvaluations } from '../mocks/buddyEvaluations.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
-
-function loadSafeBuddyPackages() {
-  const data = getStoredData('rejuve_buddy_packages_v4', mockBuddyPackages)
-  if (!Array.isArray(data) || data.length === 0 || !data[0] || !data[0].competencies || !Array.isArray(data[0].competencies)) {
-    setStoredData('rejuve_buddy_packages_v4', mockBuddyPackages)
-    return JSON.parse(JSON.stringify(mockBuddyPackages))
-  }
-  return data
-}
-
-function loadSafeBuddyEvaluations() {
-  const data = getStoredData('rejuve_buddy_evaluations_v4', mockBuddyEvaluations)
-  if (!Array.isArray(data) || (data.length > 0 && !data[0].indicatorRatings)) {
-    setStoredData('rejuve_buddy_evaluations_v4', mockBuddyEvaluations)
-    return JSON.parse(JSON.stringify(mockBuddyEvaluations))
-  }
-  return data
-}
 
 export const useBuddyStore = defineStore('buddy', {
   state: () => ({
-    packages: loadSafeBuddyPackages(),
-    evaluations: loadSafeBuddyEvaluations(),
+    packages: getStoredData('rejuve_buddy_packages_v4', []),
+    evaluations: getStoredData('rejuve_buddy_evaluations_v4', []),
     selectedCompetencyId: 'comp-pk'
   }),
 
@@ -33,7 +13,7 @@ export const useBuddyStore = defineStore('buddy', {
     packageById: (state) => (id) => (state.packages || []).find(p => p.id === id),
     defaultPackage: (state) => {
       const pkgs = state.packages || []
-      return pkgs[0] || mockBuddyPackages[0]
+      return pkgs[0] || null
     },
 
     evaluationsByBatch: (state) => (batchId) => {
