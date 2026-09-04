@@ -52,7 +52,7 @@
               :side-offset="6"
             >
               <DropdownMenuLabel class="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Pilih Gerai Aktif:
+                Pilih Batch Aktif:
               </DropdownMenuLabel>
               <DropdownMenuItem
                 v-for="b in batchStore.accessibleBatches"
@@ -270,9 +270,9 @@ const currentBatchTotalWeeks = computed(() => {
   return batchStore.currentBatch?.weeks?.length || batchStore.currentBatch?.totalWeeks || 3
 })
 
-const handleBatchChange = (batchId) => {
-  batchStore.selectBatch(batchId)
-  toast.info('Cabang Berubah', `Melihat data untuk ${batchStore.currentBatch?.name || 'Batch'}`)
+const handleBatchChange = async (batchId) => {
+  await batchStore.selectBatch(batchId)
+  toast.info('Batch Aktif Diubah', `Melihat data untuk ${batchStore.currentBatch?.name || 'Batch'}`)
 }
 
 

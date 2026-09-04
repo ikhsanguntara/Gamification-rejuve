@@ -259,7 +259,8 @@ export const useUserStore = defineStore('user', {
           department: state.apiUser.department?.departmentName || 'Store Operations',
           position: title,
           storeLocation: state.apiUser.department?.departmentName || 'Re.juve Store',
-          batchId: state.apiUser.batchId || 'batch-alpha',
+          activeBatchId: state.apiUser.activeBatchId || null,
+          batchId: state.apiUser.activeBatchId || state.apiUser.batchId || 'batch-alpha',
           stars: state.apiUser.stars || 0,
           level: state.apiUser.level || 1,
           isBuddy: Boolean(state.apiUser.isBuddy)
@@ -421,6 +422,12 @@ export const useUserStore = defineStore('user', {
         if (res && res.data) {
           this.apiUser = res.data
           this.isLiveApi = true
+          if (res.data.activeBatchId) {
+            const batchStore = useBatchStore()
+            if (!batchStore.selectedBatchId) {
+              batchStore.selectedBatchId = res.data.activeBatchId
+            }
+          }
           return res.data
         }
       } catch (err) {

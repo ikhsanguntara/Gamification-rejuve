@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { useTemplateStore } from './template.js'
 import { useUserStore } from './user.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
-import { batchApi } from '../services/api.js'
+import { batchApi, authApi } from '../services/api.js'
 import { buildPrismaQuery } from '../utils/queryBuilder.js'
 
 /**
@@ -204,11 +204,37 @@ export const useBatchStore = defineStore('batch', {
   },
 
   actions: {
-    selectBatch(batchId) {
-      const batch = this.batches.find(b => b.id === batchId)
+    async selectBatch(batchId) {
+      const batch = this.batches.find(b => b.id === batchId || b.code === batchId)
+      const targetId = batch ? batch.id : batchId
       if (batch) {
-        this.selectedBatchId = batchId
+        this.selectedBatchId = batch.id
         this.customSelectedWeek = calculateActiveWeek(batch)
+      } else if (targetId) {
+        this.selectedBatchId = targetId
+      }
+
+      const userStore = useUserStore()
+      if (userStore.isAuthenticated && (userStore.token || userStore.isLiveApi) && targetId) {
+        try {
+          const res = await authApi.setActiveBatch(targetId)
+          if (res?.data) {
+            if (res.data.token) {
+              userStore.token = res.data.token
+            }
+            if (userStore.apiUser) {
+              userStore.apiUser.activeBatchId = res.data.activeBatchId || targetId
+              if (res.data.activeBatch) {
+                userStore.apiUser.activeBatch = res.data.activeBatch
+              }
+              if (res.data.availableBatches) {
+                userStore.apiUser.availableBatches = res.data.availableBatches
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Gagal sinkronisasi active batch ke API:', err.message)
+        }
       }
     },
 
@@ -289,7 +315,11 @@ export const useBatchStore = defineStore('batch', {
             totalPages: meta.totalPages || 1
           }
 
-          if (this.batches.length > 0 && (!this.selectedBatchId || !this.batches.find(b => b.id === this.selectedBatchId))) {
+          const userStore = useUserStore()
+          const preferredId = userStore.apiUser?.activeBatchId
+          if (preferredId && this.batches.find(b => b.id === preferredId)) {
+            this.selectedBatchId = preferredId
+          } else if (this.batches.length > 0 && (!this.selectedBatchId || !this.batches.find(b => b.id === this.selectedBatchId))) {
             this.selectedBatchId = this.batches[0].id
           }
           return this.batches

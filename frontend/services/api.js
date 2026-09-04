@@ -10,7 +10,14 @@ export const authApi = {
     return res
   },
   me: () => apiFetch('/auth/me', { method: 'GET' }),
-  changePassword: (data) => apiFetch('/auth/change-password', { method: 'POST', body: data })
+  changePassword: (data) => apiFetch('/auth/change-password', { method: 'POST', body: data }),
+  setActiveBatch: async (batchId) => {
+    const res = await apiFetch('/auth/active-batch', { method: 'PATCH', body: { batchId } })
+    if (res?.data?.token) {
+      setAuthToken(res.data.token)
+    }
+    return res
+  }
 }
 
 // ─── 2. Master Departments (Stores) Service ─────────────────────────────────

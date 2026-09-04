@@ -270,10 +270,12 @@ const setActiveBatch = async (req, res, next) => {
     });
 
     const availableBatches = await batchService.getUserAvailableBatches(updatedUser);
+    const token = generateToken(updatedUser);
 
     return sendSuccess(res, {
       message: `Active batch berhasil diatur ke "${batch.name}".`,
       data: {
+        token,
         userId: updatedUser.userId,
         activeBatchId: updatedUser.activeBatchId,
         activeBatch: updatedUser.activeBatch,
