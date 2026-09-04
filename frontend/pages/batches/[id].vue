@@ -41,25 +41,25 @@
           <!-- Quick Summary Box -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800">
             <div class="text-center p-2">
-              <span class="text-xs font-semibold text-slate-400 uppercase">Crew Size</span>
+              <span class="text-xs font-semibold text-slate-400 uppercase">Jumlah Kru</span>
               <p class="text-base font-bold text-slate-900 dark:text-white mt-0.5">
                 {{ currentBatch.totalCrew || 0 }} / 20
               </p>
             </div>
             <div class="text-center p-2">
-              <span class="text-xs font-semibold text-slate-400 uppercase">Avg Score</span>
+              <span class="text-xs font-semibold text-slate-400 uppercase">Rata-rata Skor</span>
               <p class="text-base font-bold text-slate-900 dark:text-white mt-0.5">
                 {{ currentBatch.averageScore || 0 }}%
               </p>
             </div>
             <div class="text-center p-2">
-              <span class="text-xs font-semibold text-slate-400 uppercase">Completed</span>
+              <span class="text-xs font-semibold text-slate-400 uppercase">Misi Selesai</span>
               <p class="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
                 {{ currentBatch.completedMissions || 0 }}/{{ currentBatch.totalMissions || 12 }}
               </p>
             </div>
             <div class="text-center p-2">
-              <span class="text-xs font-semibold text-slate-400 uppercase">Total Stars</span>
+              <span class="text-xs font-semibold text-slate-400 uppercase">Total Bintang</span>
               <p class="text-base font-bold text-amber-500 mt-0.5 flex items-center justify-center gap-1">
                 <Star class="w-4 h-4 fill-amber-400" />
                 {{ (currentBatch.totalStars || 0).toLocaleString() }}
@@ -77,17 +77,17 @@
         <div class="flex items-center justify-between mb-5">
           <div>
             <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
-              Week {{ batchStore.selectedWeek }} Missions
+              Misi Minggu {{ batchStore.selectedWeek }}
             </h3>
             <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-              Operational tasks assigned for this cycle
+              Penugasan operasional untuk siklus ini
             </p>
           </div>
           <NuxtLink
             to="/missions"
             class="text-xs font-semibold text-[#831843] dark:text-[#f472b6] hover:underline"
           >
-            View in Mission Catalog
+            Lihat di Katalog Misi
           </NuxtLink>
         </div>
 
@@ -103,7 +103,7 @@
           v-if="weekMissions.length === 0"
           class="py-8 text-center text-slate-400 text-xs"
         >
-          No missions scheduled for Week {{ batchStore.selectedWeek }}.
+          Belum ada misi yang dijadwalkan untuk Minggu {{ batchStore.selectedWeek }}.
         </div>
       </div>
 

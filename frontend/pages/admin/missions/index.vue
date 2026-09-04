@@ -126,6 +126,14 @@
       :items-per-page="itemsPerPage"
       item-label="misi"
     />
+
+    <!-- Empty State -->
+    <EmptyState
+      v-else
+      title="Tidak Ada Misi Ditemukan"
+      description="Tidak ada misi operasional yang cocok dengan filter atau kata kunci pencarian Anda."
+      icon="Search"
+    />
   </div>
 </template>
 
@@ -136,6 +144,7 @@ import { useMissionStore } from '~/stores/mission.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { useToast } from '~/composables/useToast.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
+import EmptyState from '~/components/ui/EmptyState.vue'
 import { Plus, Edit3, Trash2, Search } from 'lucide-vue-next'
 
 const batchStore = useBatchStore()

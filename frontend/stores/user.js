@@ -450,6 +450,9 @@ export const useUserStore = defineStore('user', {
         if (params.role && params.role !== 'ALL') {
           exact.role = params.role
         }
+        if (params.batchId && params.batchId !== 'ALL') {
+          exact.batchId = params.batchId
+        }
 
         const query = buildPrismaQuery({
           page: params.page || 1,

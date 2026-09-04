@@ -4,13 +4,13 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-1">
-          <span>Gamification</span>
+          <span>Gamifikasi</span>
           <span>/</span>
-          <span class="text-amber-600 dark:text-amber-400 font-bold">Adventure Journey</span>
+          <span class="text-amber-600 dark:text-amber-400 font-bold">Petualangan Misi</span>
         </div>
         <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
           <span>🗺️</span>
-          <span>New Hire Adventure Journey</span>
+          <span>Petualangan Ekspedisi New Hire</span>
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Selesaikan setiap misi operasional Re.juve dan jadilah <strong class="text-amber-600">Star Legend</strong>!
@@ -31,7 +31,7 @@
           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold transition-all shadow-md shadow-orange-500/25 active:scale-95 cursor-pointer"
         >
           <Trophy class="w-4 h-4" />
-          <span>Leaderboard</span>
+          <span>Papan Peringkat</span>
         </NuxtLink>
       </div>
     </div>

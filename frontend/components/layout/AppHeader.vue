@@ -38,7 +38,7 @@
         <!-- For Multi-Batch Users: Interactive Reka UI Dropdown -->
         <DropdownMenuRoot v-else>
           <DropdownMenuTrigger
-            class="flex items-center gap-2 bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-[#831843] transition-all cursor-pointer truncate max-w-[160px] xs:max-w-[200px] sm:max-w-[260px]"
+            class="flex items-center gap-2 bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-xl px-2.5 sm:px-3 py-1.5 focus:ring-2 focus:ring-[#831843] transition-all cursor-pointer truncate max-w-[120px] xs:max-w-[180px] sm:max-w-[240px] md:max-w-[280px]"
             aria-label="Pilih Batch Gerai"
           >
             <Layers class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6] flex-shrink-0" />

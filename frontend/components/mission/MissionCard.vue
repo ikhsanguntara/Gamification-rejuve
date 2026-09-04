@@ -41,7 +41,7 @@
       <div class="flex items-center justify-between text-xs">
         <div class="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 font-medium">
           <Users class="w-3.5 h-3.5 text-[#831843] dark:text-[#f472b6]" />
-          <span>{{ assignedCrewList.length }} Store Crew Members</span>
+          <span>{{ assignedCrewList.length }} Anggota Kru</span>
         </div>
 
         <span class="text-slate-400 dark:text-slate-500 text-xs flex items-center gap-1">
@@ -75,7 +75,7 @@
         <!-- SUPERVISOR / HEAD / ADMIN Store Aggregate Display -->
         <template v-else>
           <div class="flex items-center gap-1.5">
-            <span class="text-xs text-slate-500 dark:text-slate-400">Avg Score:</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400">Rata-rata:</span>
             <span
               class="text-xs font-semibold"
               :class="mission.averageScore > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400'"
@@ -99,7 +99,7 @@
           :to="`/missions/${mission.id}`"
           class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] dark:hover:text-white text-slate-700 dark:text-slate-200 transition-all group cursor-pointer"
         >
-          <span>{{ userStore.isCrew ? 'Lihat Evaluasi & SOP Misi' : 'View Mission Details' }}</span>
+          <span>{{ userStore.isCrew ? 'Lihat Evaluasi & SOP Misi' : 'Lihat Detail Misi' }}</span>
           <ChevronRight class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
         </NuxtLink>
       </div>

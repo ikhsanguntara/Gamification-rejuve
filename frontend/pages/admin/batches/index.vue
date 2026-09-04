@@ -95,11 +95,19 @@
 
     <!-- App Pagination for Grid Cards (9 Items / Page) -->
     <AppPagination
-      v-if="batchStore.serverPagination.total > 0"
+      v-if="batchStore.allBatches.length > 0 && batchStore.serverPagination.total > 0"
       v-model:current-page="currentPage"
       :total-items="batchStore.serverPagination.total"
       :items-per-page="itemsPerPage"
       item-label="batch"
+    />
+
+    <!-- Empty State -->
+    <EmptyState
+      v-else-if="!batchStore.loading"
+      title="Belum Ada Batch Gerai"
+      description="Belum ada data batch operasional yang terdaftar di sistem."
+      icon="Layers"
     />
   </div>
 </template>
@@ -110,6 +118,7 @@ import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { useToast } from '~/composables/useToast.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
+import EmptyState from '~/components/ui/EmptyState.vue'
 import { Plus, Edit3, Trash2, MapPin } from 'lucide-vue-next'
 
 const batchStore = useBatchStore()

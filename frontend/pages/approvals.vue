@@ -12,7 +12,7 @@
           </span>
         </div>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-          Tinjau evaluasi Store Leader, setujui sekaligus secara <strong>Bulk Approve</strong>, atau lakukan penilaian langsung.
+          Tinjau evaluasi Store Leader, setujui sekaligus secara <strong>Bulk Approve</strong>, atau minta revisi evaluasi.
         </p>
       </div>
 

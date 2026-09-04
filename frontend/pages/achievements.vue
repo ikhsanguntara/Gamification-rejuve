@@ -51,7 +51,7 @@
         class="focus:outline-hidden space-y-4"
       >
         <!-- Achievements Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
+        <div v-if="filteredAchievements.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
           <AchievementCard
             v-for="ach in paginatedAchievements"
             :key="ach.id"
@@ -65,6 +65,14 @@
           :total-items="filteredAchievements.length"
           :items-per-page="itemsPerPage"
           item-label="lencana"
+        />
+
+        <!-- Empty State -->
+        <EmptyState
+          v-else
+          title="Belum Ada Lencana"
+          description="Tidak ada lencana prestasi pada kategori ini."
+          icon="Trophy"
         />
       </TabsContent>
     </TabsRoot>
@@ -83,6 +91,7 @@ import { useUserStore } from '~/stores/user.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import AchievementCard from '~/components/gamification/AchievementCard.vue'
 import AppPagination from '~/components/ui/AppPagination.vue'
+import EmptyState from '~/components/ui/EmptyState.vue'
 
 const userStore = useUserStore()
 const gamificationStore = useGamificationStore()

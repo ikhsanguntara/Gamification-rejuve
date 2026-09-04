@@ -4,14 +4,14 @@
       <div>
         <div class="flex items-center gap-2">
           <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
-            Assigned Crew Roster ({{ batchCrews.length }} Members)
+            Daftar Kru Terdaftar ({{ batchCrews.length }} Anggota)
           </h3>
           <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
             {{ (batchStore.currentBatch?.name || '').split('—')[1] || batchStore.currentBatch?.name || 'Batch' }}
           </span>
         </div>
         <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-          Live performance, star ranking, and evaluation state per crew member
+          Performa riil, peringkat bintang, dan status evaluasi tiap anggota kru
         </p>
       </div>
 
@@ -20,7 +20,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search crew name or code..."
+          placeholder="Cari nama atau kode kru..."
           class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none pl-9 pr-4 py-2 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#831843]"
         />
         <Search class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -65,7 +65,7 @@
         <!-- Metrics Row -->
         <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs">
           <div class="text-xs text-slate-500 dark:text-slate-400">
-            <span>{{ crew.completedMissions }} Missions</span>
+            <span>{{ crew.completedMissions }} Misi Selesai</span>
           </div>
 
           <div class="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400 text-xs">
@@ -82,7 +82,7 @@
             class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-[#831843] hover:bg-[#701a40] text-white shadow-sm transition-all cursor-pointer"
           >
             <ClipboardCheck class="w-3.5 h-3.5" />
-            <span>Evaluate {{ crew.name.split(' ')[0] }}</span>
+            <span>Nilai {{ crew.name.split(' ')[0] }}</span>
           </button>
         </div>
       </div>
@@ -93,7 +93,7 @@
       v-if="filteredCrews.length === 0"
       class="py-12 text-center text-slate-400 text-xs"
     >
-      No crew found matching "{{ searchQuery }}" in this batch.
+      Tidak ada kru yang sesuai dengan pencarian "{{ searchQuery }}" di batch ini.
     </div>
   </div>
 </template>

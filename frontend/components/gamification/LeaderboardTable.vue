@@ -81,7 +81,7 @@
             <span>{{ (Number(topThreeList[1].stars) || 0).toFixed(1).replace(/\.0$/, '') }}</span>
           </div>
           <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
-            {{ (topThreeList[1].points || starsToPoints(topThreeList[1].stars)).toLocaleString() }} Points
+            {{ (topThreeList[1].points || starsToPoints(topThreeList[1].stars)).toLocaleString() }} Poin
           </span>
         </div>
       </div>
@@ -124,12 +124,12 @@
           </div>
           <span class="text-slate-400">|</span>
           <span class="text-xs font-black text-white">
-            {{ (topThreeList[0].points || starsToPoints(topThreeList[0].stars)).toLocaleString() }} Points
+            {{ (topThreeList[0].points || starsToPoints(topThreeList[0].stars)).toLocaleString() }} Poin
           </span>
         </div>
 
         <span class="text-xs font-medium text-amber-700 dark:text-amber-300 mt-2">
-          Star Level {{ topThreeList[0].level }} • {{ topThreeList[0].completedMissions }} Missions Completed
+          Level Bintang {{ topThreeList[0].level }} • {{ topThreeList[0].completedMissions }} Misi Selesai
         </span>
       </div>
 
@@ -166,7 +166,7 @@
             <span>{{ (Number(topThreeList[2].stars) || 0).toFixed(1).replace(/\.0$/, '') }}</span>
           </div>
           <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
-            {{ (topThreeList[2].points || starsToPoints(topThreeList[2].stars)).toLocaleString() }} Points
+            {{ (topThreeList[2].points || starsToPoints(topThreeList[2].stars)).toLocaleString() }} Poin
           </span>
         </div>
       </div>
@@ -279,7 +279,7 @@
                     <span>{{ (Number(crew.stars) || 0).toFixed(1).replace(/\.0$/, '') }}</span>
                   </div>
                   <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    {{ (crew.points || starsToPoints(crew.stars)).toLocaleString() }} Points
+                    {{ (crew.points || starsToPoints(crew.stars)).toLocaleString() }} Poin
                   </span>
                 </div>
               </td>

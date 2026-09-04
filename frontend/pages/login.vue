@@ -183,7 +183,7 @@ const apiAccounts = [
   { label: 'Store Leader', role: 'STORE_LEADER', email: 'sl@example.com' },
   { label: 'District Mgr', role: 'DISTRICT_MANAGER', email: 'dm@example.com' },
   { label: 'Crew Barista', role: 'CREW', email: 'crew@example.com' },
-  { label: 'Buddy Mentor', role: 'BUDDY (CREW)', email: 'buddy@example.com' }
+  { label: 'Buddy Mentor', role: 'CREW (BUDDY)', email: 'buddy@example.com' }
 ]
 
 const quickFill = (acc) => {

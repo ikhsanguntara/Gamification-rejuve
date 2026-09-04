@@ -1,6 +1,6 @@
 <template>
   <div class="p-8 text-center text-xs text-slate-400">
-    Redirecting to Administrator Console...
+    Mengalihkan ke Konsol Administrator...
   </div>
 </template>
 

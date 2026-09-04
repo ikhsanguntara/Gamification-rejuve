@@ -42,7 +42,7 @@
             class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white font-semibold text-xs sm:text-sm shadow-lg shadow-[#831843]/30 transition-all active:scale-95 border border-white/20"
           >
             <ClipboardCheck class="w-4 h-4" />
-            <span>Evaluate Store Missions</span>
+            <span>Penilaian Misi Gerai</span>
           </NuxtLink>
 
           <NuxtLink
@@ -51,7 +51,7 @@
             class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white font-semibold text-xs sm:text-sm shadow-lg shadow-[#9d174d]/30 transition-all active:scale-95 border border-white/20"
           >
             <ShieldCheck class="w-4 h-4" />
-            <span>Review Approvals ({{ approvalStore.pendingApprovals.length }})</span>
+            <span>Tinjau Persetujuan ({{ approvalStore.pendingApprovals.length }})</span>
           </NuxtLink>
 
           <NuxtLink
@@ -60,7 +60,7 @@
             class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white font-semibold text-xs sm:text-sm shadow-lg shadow-[#9d174d]/30 transition-all active:scale-95 border border-white/20"
           >
             <Settings class="w-4 h-4" />
-            <span>Administrator Console</span>
+            <span>Konsol Administrator</span>
           </NuxtLink>
 
           <NuxtLink
@@ -132,18 +132,18 @@
     <!-- 5 Core Dashboard Metric Cards for Non-Crew (Supervisor / Head / Admin) -->
     <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
       <StatCard
-        title="Store Crew"
+        title="Kru Gerai"
         :value="batchStore.currentBatch?.totalCrew || 0"
-        unit="Crew"
-        subtext="Active in branch"
+        unit="Kru"
+        subtext="Aktif di gerai"
         :icon="Users"
         variant="brand"
       />
 
       <StatCard
-        title="Missions Completed"
+        title="Misi Selesai"
         :value="`${batchStore.currentBatch?.completedMissions || 0} / ${batchStore.currentBatch?.totalMissions || 0}`"
-        :subtext="`${Math.round(((batchStore.currentBatch?.completedMissions || 0) / (batchStore.currentBatch?.totalMissions || 1)) * 100) || 0}% cycle progress`"
+        :subtext="`${Math.round(((batchStore.currentBatch?.completedMissions || 0) / (batchStore.currentBatch?.totalMissions || 1)) * 100) || 0}% progres siklus`"
         :icon="CheckCircle2"
         variant="emerald"
         trend="up"
@@ -151,9 +151,9 @@
       />
 
       <StatCard
-        title="Average Score"
+        title="Rata-rata Skor"
         :value="`${batchStore.currentBatch?.averageScore || 0}%`"
-        subtext="Branch benchmark"
+        subtext="Tolok ukur gerai"
         :icon="Award"
         variant="brand"
         trend="up"
@@ -161,18 +161,18 @@
       />
 
       <StatCard
-        title="Pending Review"
+        title="Menunggu Review"
         :value="approvalStore.pendingApprovals.length"
-        subtext="Awaiting Head decision"
+        subtext="Menunggu persetujuan DM"
         :icon="Hourglass"
         variant="amber"
       />
 
       <StatCard
-        title="Total Stars"
+        title="Total Bintang"
         :value="(batchStore.currentBatch?.totalStars || 0).toLocaleString()"
         unit="⭐"
-        subtext="Earned across store"
+        subtext="Akumulasi seluruh gerai"
         :icon="Star"
         variant="amber"
         class="col-span-2 sm:col-span-1"
@@ -244,7 +244,7 @@
           </div>
 
           <!-- Top 3 Mini Podium List -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div v-if="branchTopThree.length > 0" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div
               v-for="(crew, index) in branchTopThree"
               :key="crew.crewId || crew.id"
@@ -294,6 +294,10 @@
                 <span>{{ (crew.stars || 0).toLocaleString() }}</span>
               </div>
             </div>
+          </div>
+
+          <div v-else class="py-8 text-center text-xs text-slate-400">
+            Belum ada data peringkat kru untuk batch ini.
           </div>
         </div>
       </div>

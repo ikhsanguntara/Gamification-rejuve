@@ -19,7 +19,7 @@
     </div>
 
     <!-- Batch Cards Grid (Filtered by Accessible Batches) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div v-if="batchStore.accessibleBatches.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <BatchCard
         v-for="batch in batchStore.accessibleBatches"
         :key="batch.id"
@@ -29,11 +29,19 @@
 
     <!-- App Pagination for Grid Cards (9 Items / Page) -->
     <AppPagination
-      v-if="batchStore.serverPagination.total > 0"
+      v-if="batchStore.accessibleBatches.length > 0 && batchStore.serverPagination.total > 0"
       v-model:current-page="currentPage"
       :total-items="batchStore.serverPagination.total"
       :items-per-page="itemsPerPage"
       item-label="batch"
+    />
+
+    <!-- Empty State -->
+    <EmptyState
+      v-else-if="!batchStore.loading"
+      title="Belum ada batch penugasan"
+      description="Tidak ada siklus batch operasional yang ditugaskan untuk profil Anda saat ini."
+      icon="Layers"
     />
   </div>
 </template>
@@ -43,6 +51,7 @@ import { ref, watch, onMounted } from 'vue'
 import { useBatchStore } from '~/stores/batch.js'
 import BatchCard from '~/components/batch/BatchCard.vue'
 import AppPagination from '~/components/ui/AppPagination.vue'
+import EmptyState from '~/components/ui/EmptyState.vue'
 
 const batchStore = useBatchStore()
 

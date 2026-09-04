@@ -254,7 +254,8 @@ const loadUsers = async (page = 1) => {
       page,
       limit: itemsPerPage,
       search: searchQuery.value,
-      role: userRoleFilter.value
+      role: userRoleFilter.value,
+      batchId: userBatchFilter.value
     })
   } finally {
     isLoading.value = false
@@ -264,12 +265,16 @@ const loadUsers = async (page = 1) => {
 onMounted(async () => {
   loadUsers(1)
   try {
-    const rolesRes = await roleApi.getAll({ limit: 50 })
-    if (rolesRes && rolesRes.data) {
-      availableRoles.value = rolesRes.data
+    const [rolesRes] = await Promise.allSettled([
+      roleApi.getAll({ limit: 50 }),
+      batchStore.fetchBatchesFromApi({ limit: 50 }),
+      storeStore.fetchStoresFromApi({ limit: 50 })
+    ])
+    if (rolesRes.status === 'fulfilled' && rolesRes.value?.data) {
+      availableRoles.value = rolesRes.value.data
     }
   } catch (err) {
-    console.warn('Gagal memuat roles:', err.message)
+    console.warn('Gagal memuat metadata master:', err.message)
   }
 })
 
@@ -290,6 +295,12 @@ watch(searchQuery, () => {
 
 // Filter role -> Reset ke Page 1 & HIT API!
 watch(userRoleFilter, () => {
+  currentPage.value = 1
+  loadUsers(1)
+})
+
+// Filter batch -> Reset ke Page 1 & HIT API!
+watch(userBatchFilter, () => {
   currentPage.value = 1
   loadUsers(1)
 })

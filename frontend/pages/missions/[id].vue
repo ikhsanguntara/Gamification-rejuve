@@ -58,7 +58,7 @@
               </div>
               <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <span v-if="myScore > 0" class="text-amber-600 dark:text-amber-400">
-                  ⭐ {{ myStars }} Stars Diperoleh ({{ myScore }}/100)
+                  ⭐ {{ myStars }} Bintang Diperoleh ({{ myScore }}/100)
                 </span>
                 <span v-else>
                   Hingga 5 Bintang
@@ -80,10 +80,10 @@
               </div>
               <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <span v-if="mission.awardedStars" class="text-emerald-600 dark:text-emerald-400">
-                  ⭐ {{ mission.awardedStars }} Stars Dicairkan ke Seluruh Kru
+                  ⭐ {{ mission.awardedStars }} Bintang Dicairkan ke Seluruh Kru
                 </span>
                 <span v-else-if="mission.calculatedStars" class="text-amber-600 dark:text-amber-400">
-                  ⭐ {{ mission.calculatedStars }} Stars (Dihitung)
+                  ⭐ {{ mission.calculatedStars }} Bintang (Dihitung)
                 </span>
                 <span v-else>
                   Hingga 5 Bintang per Kru
@@ -149,7 +149,7 @@
 
               <div class="text-right">
                 <span class="text-xs font-semibold text-amber-500 block">
-                  ⭐ {{ myStars }} Stars Diperoleh
+                  ⭐ {{ myStars }} Bintang Diperoleh
                 </span>
                 <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
                   {{ mission.status === 'COMPLETED' ? 'Selesai Terverifikasi' : 'Siklus Berjalan' }}
@@ -235,7 +235,7 @@
                     {{ getCrewScore(c.id) }} / 100
                   </span>
                   <span class="text-xs font-semibold text-amber-500">
-                    ⭐ {{ getCrewStars(c.id) }} Stars
+                    ⭐ {{ getCrewStars(c.id) }} Bintang
                   </span>
                 </div>
               </div>
@@ -294,7 +294,7 @@
                 class="text-sm font-semibold"
                 :class="mission.status === 'REVISION_REQUIRED' ? 'text-rose-900 dark:text-rose-200' : 'text-emerald-900 dark:text-emerald-200'"
               >
-                {{ mission.status === 'REVISION_REQUIRED' ? 'Catatan Permintaan Revisi' : 'Keputusan Head: Approved & Bintang Didistribusikan' }}
+                {{ mission.status === 'REVISION_REQUIRED' ? 'Catatan Permintaan Revisi' : 'Keputusan District Manager (DM): Disetujui & Bintang Didistribusikan' }}
               </h3>
             </div>
 

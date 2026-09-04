@@ -85,7 +85,7 @@
       <!-- District Manager Comparison Grid -->
       <div class="space-y-3 pt-2">
         <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-          <span>👑 Akun District Manager (DM) - Approver & Evaluator:</span>
+          <span>👑 Akun District Manager (DM) - Peninjau & Persetujuan (Approval):</span>
         </span>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -111,7 +111,7 @@
                 </span>
               </div>
               <p class="text-xs text-slate-500 mt-0.5">Wilayah: <strong>Batch 1 & 2</strong></p>
-              <p class="text-xs text-slate-400 mt-1">Fitur: Bulk Approve antrean SL & penilaian langsung per kru.</p>
+              <p class="text-xs text-slate-400 mt-1">Fitur: Persetujuan (Approval) & peninjauan evaluasi misi dari Store Leader.</p>
             </div>
           </button>
 
@@ -137,7 +137,7 @@
                 </span>
               </div>
               <p class="text-xs text-slate-500 mt-0.5">Wilayah: <strong>Batch 3 (PIM)</strong></p>
-              <p class="text-xs text-slate-400 mt-1">Fitur: Bulk Approve antrean SL & penilaian langsung per kru.</p>
+              <p class="text-xs text-slate-400 mt-1">Fitur: Persetujuan (Approval) & peninjauan evaluasi misi dari Store Leader.</p>
             </div>
           </button>
         </div>
