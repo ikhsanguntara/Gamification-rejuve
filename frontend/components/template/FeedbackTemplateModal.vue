@@ -6,7 +6,7 @@
     :subtitle="isEditMode ? 'Perbarui konfigurasi header dan butir kuesioner evaluasi onboarding.' : 'Susun butir kuesioner evaluasi onboarding kru 1 bulan (Skala 0–10 & Esai).'"
     max-width="5xl"
   >
-    <form @submit.prevent="executeSaveAll" class="space-y-6">
+    <form id="feedback-template-form" @submit.prevent="executeSaveAll" class="space-y-6">
       <!-- ========================================== -->
       <!-- BAGIAN 1: HEADER & METADATA PAKET FEEDBACK -->
       <!-- ========================================== -->
@@ -187,7 +187,7 @@
               <div class="sm:col-span-1 flex items-center justify-end pt-2">
                 <button
                   type="button"
-                  @click="removeQuestion(q)"
+                  @click="confirmRemoveQuestion(q, idx + 1)"
                   class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                   title="Hapus Pertanyaan"
                 >
@@ -236,28 +236,34 @@
           </div>
         </div>
       </div>
-
-      <!-- ========================================== -->
-      <!-- FOOTER: BATAL & SIMPAN SEKALIGUS           -->
-      <!-- ========================================== -->
-      <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
-        <button
-          type="button"
-          @click="$emit('update:modelValue', false)"
-          class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-        >
-          Batal
-        </button>
-        <button
-          type="submit"
-          :disabled="isSubmitting"
-          class="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer disabled:opacity-50"
-        >
-          <Loader2 v-if="isSubmitting" class="w-3.5 h-3.5 animate-spin" />
-          <span>{{ isSubmitting ? 'Menyimpan...' : 'Simpan Template Feedback' }}</span>
-        </button>
-      </div>
     </form>
+
+    <!-- STICKY FOOTER -->
+    <template #footer>
+      <div class="w-full flex items-center justify-between gap-3 flex-wrap">
+        <p class="text-[11px] text-slate-400">
+          * Seluruh konfigurasi evaluasi dan {{ questions.length }} butir pertanyaan akan disimpan serentak ke API.
+        </p>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            @click="$emit('update:modelValue', false)"
+            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            form="feedback-template-form"
+            :disabled="isSubmitting"
+            class="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer disabled:opacity-50"
+          >
+            <Loader2 v-if="isSubmitting" class="w-3.5 h-3.5 animate-spin" />
+            <span>{{ isSubmitting ? 'Menyimpan...' : 'Simpan Template Feedback' }}</span>
+          </button>
+        </div>
+      </div>
+    </template>
   </BaseModal>
 </template>
 
@@ -267,6 +273,7 @@ import BaseModal from '~/components/ui/BaseModal.vue'
 import { Plus, Trash2, Loader2 } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
 import { useToast } from '~/composables/useToast.js'
+import { confirmDeleteDialog } from '~/utils/dialog.js'
 import {
   FEEDBACK_TOPIC_OPTIONS,
   normalizeFeedbackDetails,
@@ -347,6 +354,19 @@ const addNewQuestion = () => {
     topic: 'Umum',
     category: 'SOFT_SKILL'
   })
+}
+
+const confirmRemoveQuestion = async (q, questionNumber) => {
+  const confirmed = await confirmDeleteDialog({
+    title: `Hapus Pertanyaan #${questionNumber}?`,
+    text: `Yakin ingin menghapus butir "${q.question ? (q.question.slice(0, 40) + '...') : 'Pertanyaan'}" dari template?`,
+    confirmButtonText: 'Ya, Hapus'
+  })
+
+  if (confirmed) {
+    removeQuestion(q)
+    toast.success('Pertanyaan Dihapus', `Pertanyaan #${questionNumber} berhasil dihapus.`)
+  }
 }
 
 const removeQuestion = (q) => {

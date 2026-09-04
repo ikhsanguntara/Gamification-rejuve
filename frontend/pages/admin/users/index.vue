@@ -44,10 +44,9 @@
           class="text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#831843] cursor-pointer"
         >
           <option value="ALL">Semua Role</option>
-          <option value="CREW">Crew (Store Specialist)</option>
-          <option value="STORE_LEADER">Store Leader (SL)</option>
-          <option value="DISTRICT_MANAGER">District Manager (DM)</option>
-          <option value="SUPERADMIN">Superadmin</option>
+          <option v-for="r in roleOptions" :key="r.roleCode" :value="r.roleCode">
+            {{ r.roleName }}
+          </option>
         </select>
 
         <!-- Batch Filter -->
@@ -179,7 +178,7 @@ import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useStoreStore } from '~/stores/store.js'
 import { useToast } from '~/composables/useToast.js'
-import { userApi } from '~/services/api.js'
+import { userApi, roleApi } from '~/services/api.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
 import TanStackTable from '~/components/ui/TanStackTable.vue'
 import { Plus, Edit3, Trash2, Search, Store } from 'lucide-vue-next'
@@ -192,6 +191,26 @@ const toast = useToast()
 const searchQuery = ref('')
 const userRoleFilter = ref('ALL')
 const userBatchFilter = ref('ALL')
+
+const availableRoles = ref([])
+
+const defaultRoles = [
+  { roleCode: 'CREW', roleName: 'Crew (Store Specialist)' },
+  { roleCode: 'STORE_LEADER', roleName: 'Store Leader (SL)' },
+  { roleCode: 'DISTRICT_MANAGER', roleName: 'District Manager (DM)' },
+  { roleCode: 'SUPERADMIN', roleName: 'System Superadmin' }
+]
+
+const roleOptions = computed(() => {
+  if (availableRoles.value && availableRoles.value.length > 0) {
+    return availableRoles.value.map(r => ({
+      roleId: r.roleId || r.id,
+      roleCode: r.roleCode,
+      roleName: r.roleName ? `${r.roleName} (${r.roleCode})` : r.roleCode
+    }))
+  }
+  return defaultRoles
+})
 
 const currentPage = ref(1)
 const itemsPerPage = 10
@@ -242,8 +261,16 @@ const loadUsers = async (page = 1) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   loadUsers(1)
+  try {
+    const rolesRes = await roleApi.getAll({ limit: 50 })
+    if (rolesRes && rolesRes.data) {
+      availableRoles.value = rolesRes.data
+    }
+  } catch (err) {
+    console.warn('Gagal memuat roles:', err.message)
+  }
 })
 
 // Pindah halaman via pagination -> HIT API Backend!

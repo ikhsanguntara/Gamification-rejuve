@@ -51,12 +51,11 @@
             <select
               v-model="form.role"
               required
-              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] cursor-pointer"
             >
-              <option value="CREW">Crew (Store Specialist)</option>
-              <option value="STORE_LEADER">Store Leader (SL)</option>
-              <option value="DISTRICT_MANAGER">District Manager (DM)</option>
-              <option value="SUPERADMIN">System Superadmin</option>
+              <option v-for="r in roleOptions" :key="r.roleCode" :value="r.roleCode">
+                {{ r.roleName }}
+              </option>
             </select>
           </div>
 
@@ -219,6 +218,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
 import { useStoreStore } from '~/stores/store.js'
 import { useToast } from '~/composables/useToast.js'
+import { userApi, roleApi } from '~/services/api.js'
 import SearchableSelect from '~/components/ui/SearchableSelect.vue'
 import { ArrowLeft, Store, UserCheck } from 'lucide-vue-next'
 
@@ -227,6 +227,26 @@ const router = useRouter()
 const userStore = useUserStore()
 const storeStore = useStoreStore()
 const toast = useToast()
+
+const availableRoles = ref([])
+
+const defaultRoles = [
+  { roleCode: 'CREW', roleName: 'Crew (Store Specialist)' },
+  { roleCode: 'STORE_LEADER', roleName: 'Store Leader (SL)' },
+  { roleCode: 'DISTRICT_MANAGER', roleName: 'District Manager (DM)' },
+  { roleCode: 'SUPERADMIN', roleName: 'System Superadmin' }
+]
+
+const roleOptions = computed(() => {
+  if (availableRoles.value && availableRoles.value.length > 0) {
+    return availableRoles.value.map(r => ({
+      roleId: r.roleId || r.id,
+      roleCode: r.roleCode,
+      roleName: r.roleName ? `${r.roleName} (${r.roleCode})` : r.roleCode
+    }))
+  }
+  return defaultRoles
+})
 
 const user = computed(() => {
   return userStore.allUsers.find(u => u.id === route.params.id)
@@ -302,18 +322,19 @@ const buddyOptions = computed(() => {
 
 onMounted(async () => {
   try {
-    const promises = []
+    const promises = [roleApi.getAll({ limit: 50 })]
     if (storeStore.allStores.length === 0) {
       promises.push(storeStore.fetchStoresFromApi({ page: 1, limit: 100 }))
     }
     if (userStore.allUsers.length === 0) {
       promises.push(userStore.fetchUsersFromApi({ page: 1, limit: 100 }))
     }
-    if (promises.length > 0) {
-      await Promise.all(promises)
+    const [rolesRes] = await Promise.all(promises)
+    if (rolesRes && rolesRes.data) {
+      availableRoles.value = rolesRes.data
     }
   } catch (e) {
-    console.warn('Gagal memuat stores/users:', e.message)
+    console.warn('Gagal memuat roles/stores/users:', e.message)
   }
 })
 
@@ -352,16 +373,19 @@ watch(
   { immediate: true }
 )
 
-import { userApi } from '~/services/api.js'
-
 const isUpdating = ref(false)
 
 const handleUpdate = async () => {
   if (!user.value) return
   isUpdating.value = true
   try {
+    let matchedRole = availableRoles.value.find(
+      r => r.roleCode?.toUpperCase() === form.value.role?.toUpperCase()
+    )
+
     const payload = {
       name: form.value.name.trim(),
+      roleId: matchedRole ? (matchedRole.roleId || matchedRole.id) : undefined,
       isActive: true,
       isBuddy: form.value.role === 'STORE_LEADER' ? Boolean(form.value.isBuddy) : false,
       userBuddyId: (form.value.role === 'CREW' && form.value.userBuddyId) ? form.value.userBuddyId : null

@@ -7,22 +7,65 @@
     @update:modelValue="$emit('update:modelValue', $event)"
     @close="$emit('update:modelValue', false)"
   >
-    <form @submit.prevent="executeSaveAll" class="space-y-5 py-2">
+    <!-- Navigasi Sub-Tab Modal: Langsung Fokus ke Misi atau Header -->
+    <div class="flex items-center justify-between gap-3 pb-3 mb-4 border-b border-slate-100 dark:border-slate-800">
+      <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90">
+        <button
+          type="button"
+          @click="activeModalSection = 'MISSIONS'"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-2"
+          :class="activeModalSection === 'MISSIONS'
+            ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-xs font-bold'
+            : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'"
+        >
+          <Layers class="w-3.5 h-3.5" />
+          <span>Kurikulum & Butir SOP ({{ form.details.length }})</span>
+        </button>
+
+        <button
+          type="button"
+          @click="activeModalSection = 'HEADER'"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-2"
+          :class="activeModalSection === 'HEADER'
+            ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-xs font-bold'
+            : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'"
+        >
+          <Settings2 class="w-3.5 h-3.5" />
+          <span>Pengaturan Template (Header)</span>
+        </button>
+      </div>
+
+      <!-- Quick Summary Chip -->
+      <div class="hidden sm:flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#831843] text-white">
+          {{ form.type }}
+        </span>
+        <span class="font-mono font-bold text-slate-700 dark:text-slate-300">{{ form.code }}</span>
+        <span>•</span>
+        <span class="truncate max-w-[180px] font-semibold text-slate-800 dark:text-slate-200">{{ form.name }}</span>
+      </div>
+    </div>
+
+    <!-- Formulir Utama -->
+    <form id="edit-template-form" @submit.prevent="executeSaveAll" class="space-y-4">
       <!-- ========================================== -->
-      <!-- BAGIAN 1: HEADER CONFIGURATION            -->
+      <!-- TAB 1: PENGATURAN HEADER TEMPLATE         -->
       <!-- ========================================== -->
-      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
-        <div class="flex items-center justify-between gap-2 border-b border-slate-200/70 dark:border-slate-700/70 pb-2.5">
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#831843] text-white">
-              {{ form.type }}
-            </span>
-            <span class="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
-              {{ form.code }}
-            </span>
+      <div
+        v-show="activeModalSection === 'HEADER'"
+        class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-4 animate-in fade-in-50 duration-150"
+      >
+        <div class="flex items-center justify-between border-b border-slate-200/70 dark:border-slate-700/70 pb-3">
+          <div>
+            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              Identitas & Parameter Template
+            </h4>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              Konfigurasi dasar paket kurikulum pelatihan dan standar SOP gerai.
+            </p>
           </div>
-          <span class="text-[11px] font-semibold text-slate-400">
-            Konfigurasi Header Template
+          <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+            {{ form.code }}
           </span>
         </div>
 
@@ -37,7 +80,7 @@
               type="text"
               required
               placeholder="Contoh: Core Barista Onboarding Standard"
-              class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-900 dark:text-white font-semibold focus:ring-2 focus:ring-[#831843]"
+              class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white font-semibold focus:ring-2 focus:ring-[#831843]"
             />
           </div>
 
@@ -50,7 +93,7 @@
               <select
                 v-model="form.durationCode"
                 @change="handleDurationCodeChange"
-                class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2.5 py-2 text-slate-900 dark:text-white font-semibold focus:ring-2 focus:ring-[#831843] cursor-pointer"
+                class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2.5 py-2.5 text-slate-900 dark:text-white font-semibold focus:ring-2 focus:ring-[#831843] cursor-pointer"
               >
                 <option value="DAY">DAYS (Hari)</option>
                 <option value="WEEK">WEEK (Minggu)</option>
@@ -68,7 +111,7 @@
                 max="52"
                 required
                 placeholder="Contoh: 1"
-                class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white font-semibold focus:ring-2 focus:ring-[#831843]"
+                class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-slate-900 dark:text-white font-semibold focus:ring-2 focus:ring-[#831843]"
               />
             </div>
           </div>
@@ -80,7 +123,7 @@
           </label>
           <textarea
             v-model="form.description"
-            rows="2"
+            rows="3"
             placeholder="Keterangan kurikulum atau tujuan standar operasional paket ini..."
             class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] resize-none"
           ></textarea>
@@ -88,19 +131,20 @@
       </div>
 
       <!-- ========================================== -->
-      <!-- BAGIAN 2: DETAIL MISI SOP PER MINGGU/HARI -->
+      <!-- TAB 2: DETAIL MISI SOP PER MINGGU/HARI    -->
       <!-- ========================================== -->
-      <div class="space-y-3">
+      <div v-show="activeModalSection === 'MISSIONS'" class="space-y-3.5 animate-in fade-in-50 duration-150">
+        <!-- Header Section Misi & Tombol Tambah Minggu -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
           <div>
             <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-              <span>Detail Butir SOP Misi</span>
+              <span>Kurikulum Misi SOP Gerai</span>
               <span class="px-2 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] text-[10px] font-bold">
                 {{ form.details.length }} Butir Total
               </span>
             </h4>
             <p class="text-[11px] text-slate-500 dark:text-slate-400">
-              Edit judul, kategori, instruksi, dan checklist butir SOP di setiap {{ unitLabel.toLowerCase() }}.
+              Pilih {{ unitLabel.toLowerCase() }} di bawah untuk mengedit urutan butir SOP dan checklist kepatuhan.
             </p>
           </div>
 
@@ -108,21 +152,21 @@
           <button
             type="button"
             @click="addNewUnitPeriod"
-            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-dashed border-[#831843]/40 hover:border-[#831843] text-xs font-semibold text-[#831843] dark:text-[#f472b6] bg-[#831843]/5 hover:bg-[#831843]/10 transition-all cursor-pointer self-start sm:self-auto"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-dashed border-[#831843]/40 hover:border-[#831843] text-xs font-semibold text-[#831843] dark:text-[#f472b6] bg-[#831843]/5 hover:bg-[#831843]/10 transition-all cursor-pointer self-start sm:self-auto shadow-2xs active:scale-95"
           >
             <Plus class="w-3.5 h-3.5" />
-            <span>Tambah {{ unitLabel }} Baru</span>
+            <span>+ Tambah {{ unitLabel }} Baru</span>
           </button>
         </div>
 
         <!-- Period / Week Selector Tabs -->
-        <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 overflow-x-auto">
+        <div class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 overflow-x-auto">
           <button
             v-for="period in totalPeriods"
             :key="period"
             type="button"
             @click="activePeriodTab = period"
-            class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5"
+            class="px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-2 group"
             :class="[
               activePeriodTab === period
                 ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-xs font-bold'
@@ -130,13 +174,16 @@
             ]"
           >
             <span>{{ getTabTitle(period) }}</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded-full" :class="activePeriodTab === period ? 'bg-[#831843]/10 text-[#831843]' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'">
+            <span
+              class="text-[10px] px-1.5 py-0.2 rounded-full font-bold"
+              :class="activePeriodTab === period ? 'bg-[#831843]/10 text-[#831843]' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'"
+            >
               {{ getMissionsForPeriod(period).length }}
             </span>
             <span
               v-if="totalPeriods > 1"
-              @click.stop="removePeriod(period)"
-              class="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/60 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer inline-flex items-center justify-center"
+              @click.stop="confirmRemovePeriod(period)"
+              class="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/60 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer inline-flex items-center justify-center opacity-70 group-hover:opacity-100"
               :title="`Hapus ${getTabTitle(period)}`"
             >
               <X class="w-3 h-3" />
@@ -149,9 +196,47 @@
           <div
             v-for="(mission, mIdx) in getMissionsForPeriod(activePeriodTab)"
             :key="mission.tempId || mIdx"
-            class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3 relative group"
+            class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3.5 relative group hover:border-slate-300 dark:hover:border-slate-700 transition-all"
           >
-            <!-- Baris 1: Judul, Kategori, Tipe Input, & Hapus -->
+            <!-- Card Header: Penomoran Urutan & Badge Warna Kategori -->
+            <div class="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <!-- Badge Nomor Urut -->
+                <span class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center border border-slate-200/80 dark:border-slate-700/80">
+                  #{{ mIdx + 1 }}
+                </span>
+
+                <span class="text-xs font-bold text-slate-900 dark:text-white">
+                  Misi {{ mIdx + 1 }}: {{ mission.missionTitle || 'Belum Diberi Judul' }}
+                </span>
+
+                <!-- Badge Kategori dengan Dot Warna -->
+                <span
+                  class="text-[10px] px-2 py-0.5 rounded-full font-bold border inline-flex items-center gap-1.5"
+                  :class="getCategoryBadgeClass(mission.category)"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full" :class="getCategoryDotClass(mission.category)"></span>
+                  {{ getCategoryLabel(mission.category) }}
+                </span>
+
+                <!-- Badge Tipe Evaluasi -->
+                <span class="text-[10px] text-slate-400 font-medium">
+                  {{ getInputTypeHelper(mission.inputType) }}
+                </span>
+              </div>
+
+              <!-- Tombol Hapus dengan Konfirmasi -->
+              <button
+                type="button"
+                @click="confirmRemoveMission(mission, mIdx + 1)"
+                class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                :title="`Hapus Misi #${mIdx + 1}`"
+              >
+                <Trash2 class="w-4 h-4" />
+              </button>
+            </div>
+
+            <!-- Baris 1: Judul, Kategori, Tipe Input -->
             <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
               <div class="sm:col-span-5">
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
@@ -181,7 +266,7 @@
                 </select>
               </div>
 
-              <div class="sm:col-span-2">
+              <div class="sm:col-span-3">
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                   Tipe Input
                 </label>
@@ -189,21 +274,10 @@
                   v-model="mission.inputType"
                   class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white font-semibold focus:ring-1 focus:ring-[#831843] cursor-pointer"
                 >
-                  <option value="SCALE">Skala 0-100</option>
-                  <option value="CHECKBOX">Checklist</option>
-                  <option value="TEXT">Esai Deskripsi</option>
+                  <option value="SCALE">Skala Nilai (0 - 100)</option>
+                  <option value="CHECKBOX">Checklist (Ya / Tidak)</option>
+                  <option value="TEXT">Esai / Catatan Supervisor</option>
                 </select>
-              </div>
-
-              <div class="sm:col-span-1 flex items-end justify-center pt-5">
-                <button
-                  type="button"
-                  @click="removeMission(mission)"
-                  class="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                  title="Hapus butir SOP ini"
-                >
-                  <Trash2 class="w-4 h-4" />
-                </button>
               </div>
             </div>
 
@@ -223,7 +297,7 @@
 
               <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                  Checklist / Poin SOP (1 baris per poin)
+                  Checklist / Poin SOP (1 baris per butir)
                 </label>
                 <textarea
                   v-model="mission.requirementsText"
@@ -238,13 +312,13 @@
           <!-- Empty State in Active Period -->
           <div
             v-if="getMissionsForPeriod(activePeriodTab).length === 0"
-            class="py-8 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2"
+            class="py-10 text-center text-slate-400 text-xs border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2 bg-slate-50/50 dark:bg-slate-900/30"
           >
-            <p>Belum ada butir misi SOP di {{ getTabTitle(activePeriodTab) }}.</p>
+            <p class="font-medium">Belum ada butir misi SOP di {{ getTabTitle(activePeriodTab) }}.</p>
             <button
               type="button"
               @click="addNewMissionToCurrentPeriod"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-bold text-xs hover:bg-[#831843]/20 cursor-pointer"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] font-bold text-xs hover:bg-[#831843]/20 cursor-pointer shadow-2xs active:scale-95"
             >
               <Plus class="w-3.5 h-3.5" />
               <span>Tambah Butir SOP Sekarang</span>
@@ -252,49 +326,64 @@
           </div>
 
           <!-- Tombol Tambah Misi Baru di Periode Aktif -->
-          <div v-else class="flex justify-start">
+          <div v-else class="flex justify-start pt-1">
             <button
               type="button"
               @click="addNewMissionToCurrentPeriod"
-              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-[#831843] text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-[#831843] transition-all cursor-pointer bg-white dark:bg-slate-900"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-[#831843] text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#831843] transition-all cursor-pointer bg-white dark:bg-slate-900 shadow-2xs active:scale-95"
             >
               <Plus class="w-3.5 h-3.5 text-[#831843]" />
-              <span>Tambah Butir SOP di {{ getTabTitle(activePeriodTab) }}</span>
+              <span>+ Tambah Butir SOP di {{ getTabTitle(activePeriodTab) }}</span>
             </button>
           </div>
         </div>
       </div>
-
-      <!-- ========================================== -->
-      <!-- FOOTER: SIMPAN SEKALIGUS (HEADER + DETAILS) -->
-      <!-- ========================================== -->
-      <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 flex-wrap">
-        <button
-          type="button"
-          @click="$emit('update:modelValue', false)"
-          class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-        >
-          Batal
-        </button>
-        <button
-          type="submit"
-          :disabled="isSubmitting"
-          class="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer disabled:opacity-50"
-        >
-          <Loader2 v-if="isSubmitting" class="w-3.5 h-3.5 animate-spin" />
-          <span>{{ isSubmitting ? 'Menyimpan...' : 'Simpan' }}</span>
-        </button>
-      </div>
     </form>
+
+    <!-- ========================================== -->
+    <!-- STICKY DOCKED FOOTER: SELALU MELAYANG DI BAWAH -->
+    <!-- ========================================== -->
+    <template #footer>
+      <div class="w-full flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="font-medium">
+            {{ form.details.length }} Butir Misi di {{ totalPeriods }} {{ unitLabel }}
+          </span>
+          <span class="text-slate-300 dark:text-slate-700">•</span>
+          <span class="text-[11px] text-slate-400">Tersimpan serentak ke API live</span>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button
+            type="button"
+            @click="$emit('update:modelValue', false)"
+            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            form="edit-template-form"
+            :disabled="isSubmitting"
+            class="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white shadow-md shadow-[#831843]/25 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Loader2 v-if="isSubmitting" class="w-3.5 h-3.5 animate-spin" />
+            <span>{{ isSubmitting ? 'Menyimpan...' : 'Simpan Seluruh Perubahan (Header + Details)' }}</span>
+          </button>
+        </div>
+      </div>
+    </template>
   </BaseModal>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import BaseModal from '~/components/ui/BaseModal.vue'
-import { Plus, Trash2, Loader2, X } from 'lucide-vue-next'
+import { Plus, Trash2, Loader2, X, Layers, Settings2 } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
 import { useToast } from '~/composables/useToast.js'
+import { confirmDeleteDialog } from '~/utils/dialog.js'
 
 const props = defineProps({
   modelValue: {
@@ -312,6 +401,9 @@ const emit = defineEmits(['update:modelValue', 'updated'])
 const templateStore = useTemplateStore()
 const toast = useToast()
 const isSubmitting = ref(false)
+
+// Section switcher: 'MISSIONS' (default) or 'HEADER'
+const activeModalSection = ref('MISSIONS')
 
 const activePeriodTab = ref(1)
 const periodCount = ref(3)
@@ -360,6 +452,50 @@ const mapInputTypeEnum = (inp) => {
   return 'SCALE'
 }
 
+const getCategoryLabel = (cat) => {
+  switch (cat) {
+    case 'TECHNICAL': return 'Technical'
+    case 'SOFT_SKILL': return 'Soft Skill'
+    case 'LEADERSHIP': return 'Leadership'
+    case 'PROJECT': return 'Project'
+    default: return cat || 'Technical'
+  }
+}
+
+const getCategoryBadgeClass = (cat) => {
+  switch (cat) {
+    case 'TECHNICAL':
+      return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800'
+    case 'SOFT_SKILL':
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800'
+    case 'LEADERSHIP':
+      return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800'
+    case 'PROJECT':
+      return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800'
+    default:
+      return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300'
+  }
+}
+
+const getCategoryDotClass = (cat) => {
+  switch (cat) {
+    case 'TECHNICAL': return 'bg-blue-500'
+    case 'SOFT_SKILL': return 'bg-emerald-500'
+    case 'LEADERSHIP': return 'bg-purple-500'
+    case 'PROJECT': return 'bg-amber-500'
+    default: return 'bg-slate-400'
+  }
+}
+
+const getInputTypeHelper = (inp) => {
+  switch (inp) {
+    case 'SCALE': return '⭐ Skala 0-100'
+    case 'CHECKBOX': return '☑️ Checklist Ya/Tidak'
+    case 'TEXT': return '✍️ Esai Deskriptif'
+    default: return '⭐ Skala 0-100'
+  }
+}
+
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen && props.template) {
     const rawDetails = props.template.templates || props.template.details || []
@@ -397,6 +533,8 @@ watch(() => props.modelValue, (isOpen) => {
       details: mappedDetails
     }
 
+    // Default ke Misi SOP dan Periode 1
+    activeModalSection.value = 'MISSIONS'
     activePeriodTab.value = 1
   }
 })
@@ -411,10 +549,21 @@ const addNewUnitPeriod = () => {
   toast.success('Tab Ditambahkan', `${getTabTitle(activePeriodTab.value)} siap diisi butir SOP.`)
 }
 
-const removePeriod = (periodToDelete) => {
+const confirmRemovePeriod = async (periodToDelete) => {
   if (totalPeriods.value <= 1) return
 
+  const missionsInPeriod = getMissionsForPeriod(periodToDelete)
   const tabLabel = getTabTitle(periodToDelete)
+
+  const confirmed = await confirmDeleteDialog({
+    title: `Hapus ${tabLabel}?`,
+    text: missionsInPeriod.length > 0
+      ? `${tabLabel} memiliki ${missionsInPeriod.length} butir misi yang akan ikut terhapus. Lanjutkan?`
+      : `Yakin ingin menghapus ${tabLabel}?`,
+    confirmButtonText: `Ya, Hapus ${unitLabel.value}`
+  })
+
+  if (!confirmed) return
 
   // 1. Hapus misi pada periode ini
   form.value.details = form.value.details.filter(m => Number(m.durationNumber) !== Number(periodToDelete))
@@ -453,6 +602,19 @@ const addNewMissionToCurrentPeriod = () => {
   })
 }
 
+const confirmRemoveMission = async (mission, missionNumber) => {
+  const confirmed = await confirmDeleteDialog({
+    title: `Hapus Misi #${missionNumber}?`,
+    text: `Yakin ingin menghapus "${mission.missionTitle || 'Misi #' + missionNumber}" dari template?`,
+    confirmButtonText: 'Ya, Hapus Misi'
+  })
+
+  if (confirmed) {
+    removeMission(mission)
+    toast.success('Misi Dihapus', `Misi #${missionNumber} berhasil dikeluarkan.`)
+  }
+}
+
 const removeMission = (mission) => {
   const idx = form.value.details.findIndex(m => m === mission || m.tempId === mission.tempId)
   if (idx !== -1) {
@@ -462,6 +624,7 @@ const removeMission = (mission) => {
 
 const executeSaveAll = async () => {
   if (!form.value.name?.trim()) {
+    activeModalSection.value = 'HEADER'
     toast.error('Validasi Gagal', 'Nama template wajib diisi.')
     return
   }
@@ -470,6 +633,7 @@ const executeSaveAll = async () => {
   for (let i = 0; i < form.value.details.length; i++) {
     const m = form.value.details[i]
     if (!m.missionTitle?.trim()) {
+      activeModalSection.value = 'MISSIONS'
       activePeriodTab.value = m.durationNumber
       toast.error('Validasi Gagal', `Judul SOP pada ${getTabTitle(m.durationNumber)} masih kosong.`)
       return
@@ -477,7 +641,7 @@ const executeSaveAll = async () => {
   }
 
   // Compile clean details payload according to Prisma backend schema
-  const compiledDetails = form.value.details.map((item, idx) => {
+  const compiledDetails = form.value.details.map((item) => {
     const checklistArr = item.requirementsText
       ? item.requirementsText.split('\n').map(r => r.trim()).filter(Boolean)
       : []

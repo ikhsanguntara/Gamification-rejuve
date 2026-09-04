@@ -45,12 +45,11 @@
             <select
               v-model="form.role"
               required
-              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+              class="w-full text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] cursor-pointer"
             >
-              <option value="CREW">Crew (Store Specialist)</option>
-              <option value="STORE_LEADER">Store Leader (SL)</option>
-              <option value="DISTRICT_MANAGER">District Manager (DM)</option>
-              <option value="SUPERADMIN">System Superadmin</option>
+              <option v-for="r in roleOptions" :key="r.roleCode" :value="r.roleCode">
+                {{ r.roleName }}
+              </option>
             </select>
           </div>
 
@@ -233,6 +232,24 @@ const toast = useToast()
 
 const isSubmitting = ref(false)
 const availableRoles = ref([])
+
+const defaultRoles = [
+  { roleCode: 'CREW', roleName: 'Crew (Store Specialist)' },
+  { roleCode: 'STORE_LEADER', roleName: 'Store Leader (SL)' },
+  { roleCode: 'DISTRICT_MANAGER', roleName: 'District Manager (DM)' },
+  { roleCode: 'SUPERADMIN', roleName: 'System Superadmin' }
+]
+
+const roleOptions = computed(() => {
+  if (availableRoles.value && availableRoles.value.length > 0) {
+    return availableRoles.value.map(r => ({
+      roleId: r.roleId || r.id,
+      roleCode: r.roleCode,
+      roleName: r.roleName ? `${r.roleName} (${r.roleCode})` : r.roleCode
+    }))
+  }
+  return defaultRoles
+})
 
 const storeOptions = computed(() => {
   const list = [
