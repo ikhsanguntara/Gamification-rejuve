@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # Dockerfile: Rejuve Gamification Frontend (Nuxt 3 SPA via Nginx)
 # ==============================================================================
 
@@ -20,6 +20,9 @@ COPY . .
 ARG NUXT_PUBLIC_API_BASE=http://103.168.147.133:3005/api
 ENV NUXT_PUBLIC_API_BASE=${NUXT_PUBLIC_API_BASE}
 ENV NUXT_PUBLIC_APP_ENV=production
+
+# Run unit tests (Must pass 100% before build proceeds)
+RUN npm run test
 
 # Generate static SPA output
 RUN npm run generate

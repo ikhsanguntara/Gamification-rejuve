@@ -95,6 +95,10 @@ Foundation → Mock Data → Utilities → Pinia Stores → Layout → Shared Co
 ### RULE 15 — REALTIME REACTIVITY WITHOUT REFRESH
 - Setiap aksi (Approve, Revise, Submit, Role Switch) harus langsung memperbarui UI, Counter Bintang, Level, dan Leaderboard secara otomatis melalui Pinia tanpa page reload.
 
+### RULE 16 — MANDATORY UNIT TESTING & DEPLOYMENT LOGGING
+- Sebelum deploy ke environment mana pun (Firebase / VPS), pengujian unit test **WAJIB** dijalankan (`npm --prefix frontend run test`) dan harus **100% PASS (0 fail)**.
+- Setiap deployment yang telah dieksekusi **WAJIB** dicatat riwayat dan hasil verifikasinya ke dalam [`docs/DEPLOYMENT_LOG.md`](file:///d:/Ikhsan/Kerjaan/Gamification-rejuve/docs/DEPLOYMENT_LOG.md).
+
 ---
 
 ## 🎯 STAR CALCULATION SPECIFICATION
