@@ -6,16 +6,23 @@
 let memoryToken = ''
 
 export function getApiBaseUrl() {
+  let url = 'http://103.168.147.133:3005/api'
   if (typeof window !== 'undefined') {
     try {
       const config = useRuntimeConfig?.()
-      if (config?.public?.apiBase) return config.public.apiBase
+      if (config?.public?.apiBase) url = config.public.apiBase
     } catch {
       // Fallback outside Nuxt reactive context
     }
-    return localStorage.getItem('rejuve_api_base') || 'https://cagelike-flukily-niels.ngrok-free.dev/api'
+    const saved = localStorage.getItem('rejuve_api_base')
+    if (saved) url = saved
+  } else {
+    url = process.env.NUXT_PUBLIC_API_BASE || url
   }
-  return process.env.NUXT_PUBLIC_API_BASE || 'https://cagelike-flukily-niels.ngrok-free.dev/api'
+
+  let clean = url.replace(/\/$/, '')
+  if (!clean.endsWith('/api')) clean += '/api'
+  return clean
 }
 
 export function getAuthToken() {
