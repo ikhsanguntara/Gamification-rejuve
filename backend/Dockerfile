@@ -25,10 +25,10 @@ COPY . .
 # Buat direktori uploads lokal untuk fallback evidence MinIO
 RUN mkdir -p uploads/evidence
 
-EXPOSE 3000
+EXPOSE 3005
 
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=3005
 
 # Saat container start: jalankan prisma db push otomatis lalu start server Express
 CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node src/server.js"]
