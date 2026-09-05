@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 # ==============================================================================
 # Script Automasi Deploy / Update Gamification Frontend (Dev/Staging Server)
 # Jalankan script ini: ./deploy-fe-gamification.sh
