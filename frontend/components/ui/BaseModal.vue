@@ -7,6 +7,8 @@
           class="relative w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden transition-all focus:outline-hidden pointer-events-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-top-[48%]"
           :class="maxWidthClass"
           :trap-focus="true"
+          @pointer-down-outside="handlePointerDownOutside"
+          @interact-outside="handleInteractOutside"
         >
           <!-- Modal Header -->
           <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800/80">
@@ -114,6 +116,31 @@ const handleOpenUpdate = (open) => {
   emit('update:modelValue', open)
   if (!open) {
     emit('close')
+  }
+}
+
+const isSwalElement = (target) => {
+  if (!target || typeof target.closest !== 'function') return false
+  return Boolean(
+    target.closest('.swal2-container') ||
+    target.closest('.swal2-popup') ||
+    target.classList?.contains('swal2-container')
+  )
+}
+
+const handlePointerDownOutside = (event) => {
+  if (isSwalElement(event?.target)) {
+    event.preventDefault()
+    return
+  }
+  if (!props.closeOnBackdrop) {
+    event.preventDefault()
+  }
+}
+
+const handleInteractOutside = (event) => {
+  if (isSwalElement(event?.target)) {
+    event.preventDefault()
   }
 }
 </script>

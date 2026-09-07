@@ -40,7 +40,7 @@
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span class="font-bold text-slate-800 dark:text-slate-200">REST API:</span>
-            <span class="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">Live ngrok Server</span>
+            <span class="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">Live API Server (103.168.147.133:3005)</span>
           </div>
           <span class="text-[10px] px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold">
             JWT Bearer

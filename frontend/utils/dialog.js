@@ -12,7 +12,16 @@ const RejuveSwal = Swal.mixin({
     confirmButton: '!px-4 !py-2 !rounded-xl !text-xs !font-semibold !shadow-sm !transition-all !cursor-pointer',
     cancelButton: '!px-4 !py-2 !rounded-xl !text-xs !font-semibold !transition-all !cursor-pointer !border !border-slate-300 dark:!border-slate-700'
   },
-  buttonsStyling: false
+  buttonsStyling: false,
+  didOpen: (popup) => {
+    const container = Swal.getContainer()
+    if (container) {
+      container.style.pointerEvents = 'auto'
+    }
+    if (popup) {
+      popup.style.pointerEvents = 'auto'
+    }
+  }
 })
 
 /**

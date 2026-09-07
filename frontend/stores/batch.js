@@ -274,6 +274,11 @@ export const useBatchStore = defineStore('batch', {
           this.batches = res.data.map(b => {
             const startDate = b.startDate ? b.startDate.split('T')[0] : new Date().toISOString().split('T')[0]
             const endDate = b.endDate ? b.endDate.split('T')[0] : new Date().toISOString().split('T')[0]
+
+            const buddyDetail = b.details?.find(d => d.tplMission?.type === 'BUDDY')
+            const journeyDetail = b.details?.find(d => d.tplMission?.type === 'JOURNEY')
+            const feedbackDetail = b.details?.find(d => d.tplMission?.type === 'FEEDBACK')
+
             return {
               id: b.batchId,
               code: b.code,
@@ -284,12 +289,19 @@ export const useBatchStore = defineStore('batch', {
               totalWeeks: 3,
               startDate,
               endDate,
-              status: b.status === 'OPEN' ? 'ACTIVE' : (b.status || 'ACTIVE'),
-              totalCrew: b._count?.users || b.members?.length || 0,
-              totalMissions: b._count?.missions || 0,
+              status: b.status || 'OPEN',
+              totalCrew: b._count?.users ?? (b.members?.length || 0),
+              totalMissions: b._count?.missions ?? 0,
               completedMissions: b._count?.completedMissions || 0,
               averageScore: Number(b.averageScore) || 0,
               totalStars: Number(b.totalStars) || 0,
+              details: b.details || [],
+              buddyTemplate: buddyDetail?.tplMission || null,
+              journeyTemplate: journeyDetail?.tplMission || null,
+              feedbackTemplate: feedbackDetail?.tplMission || null,
+              buddyPackageId: buddyDetail?.tplMissionId || 'NONE',
+              templatePackageId: journeyDetail?.tplMissionId || 'NONE',
+              feedbackPackageId: feedbackDetail?.tplMissionId || 'NONE',
               assignment: {
                 storeLeaderId: b.storeLeaderId || b.leaderUserId || '',
                 storeLeaderName: b.storeLeader?.name || b.leaderUser?.name || b.storeLeaderName || '-',
@@ -308,8 +320,8 @@ export const useBatchStore = defineStore('batch', {
           const meta = res.meta || res.pagination || {}
           this.serverPagination = {
             total: meta.total !== undefined ? meta.total : res.data.length,
-            page: meta.page || page,
-            limit: meta.limit || limit,
+            page: meta.page || params.page || 1,
+            limit: meta.limit || params.limit || 9,
             totalPages: meta.totalPages || 1
           }
 
@@ -325,6 +337,86 @@ export const useBatchStore = defineStore('batch', {
       } catch (err) {
         console.warn('fetchBatchesFromApi error:', err.message)
       }
+    },
+
+    async fetchBatchByIdFromApi(batchId) {
+      if (!batchId) return null
+      try {
+        const res = await batchApi.getById(batchId)
+        const b = res?.data?.data || res?.data
+        if (b && (b.batchId || b.id)) {
+          const id = b.batchId || b.id
+          const startDate = b.startDate ? b.startDate.split('T')[0] : new Date().toISOString().split('T')[0]
+          const endDate = b.endDate ? b.endDate.split('T')[0] : new Date().toISOString().split('T')[0]
+
+          const buddyDetail = b.details?.find(d => d.tplMission?.type === 'BUDDY')
+          const journeyDetail = b.details?.find(d => d.tplMission?.type === 'JOURNEY')
+          const feedbackDetail = b.details?.find(d => d.tplMission?.type === 'FEEDBACK')
+
+          const users = Array.isArray(b.users) ? b.users : []
+          const missions = Array.isArray(b.missions) ? b.missions : []
+          const crewIds = users.map(u => u.userId || u.id)
+
+          const formattedBatch = {
+            id,
+            batchId: id,
+            code: b.code || '',
+            name: b.name || '',
+            storeLocation: b.name || 'Multi-Store (Seluruh Cabang Re.juve)',
+            description: b.name || `Siklus gamifikasi ${b.name}`,
+            currentWeek: b.currentWeek || 1,
+            totalWeeks: 3,
+            startDate,
+            endDate,
+            status: b.status || 'OPEN',
+            totalCrew: b._count?.users ?? users.length,
+            totalMissions: b._count?.missions ?? missions.length,
+            completedMissions: b._count?.completedMissions || 0,
+            averageScore: Number(b.averageScore) || 0,
+            totalStars: Number(b.totalStars) || 0,
+            details: b.details || [],
+            missions,
+            users,
+            buddyTemplate: buddyDetail?.tplMission || null,
+            journeyTemplate: journeyDetail?.tplMission || null,
+            feedbackTemplate: feedbackDetail?.tplMission || null,
+            buddyPackageId: buddyDetail?.tplMissionId || 'NONE',
+            templatePackageId: journeyDetail?.tplMissionId || 'NONE',
+            feedbackPackageId: feedbackDetail?.tplMissionId || 'NONE',
+            assignment: {
+              storeLeaderId: b.storeLeaderId || b.leaderUserId || '',
+              storeLeaderName: b.storeLeader?.name || b.leaderUser?.name || b.storeLeaderName || '-',
+              districtManagerId: b.districtManagerId || b.districtManagerUserId || '',
+              districtManagerName: b.districtManager?.name || b.districtManagerUser?.name || b.districtManagerName || '-',
+              supervisorId: b.storeLeaderId || b.leaderUserId || '',
+              supervisorName: b.storeLeader?.name || b.leaderUser?.name || b.storeLeaderName || '-',
+              headId: b.districtManagerId || b.districtManagerUserId || '',
+              headName: b.districtManager?.name || b.districtManagerUser?.name || b.districtManagerName || '-',
+              crewIds
+            },
+            approvalConfig: {
+              minScoreFor5Stars: 90,
+              minEvidenceCount: 1,
+              maxRevisions: 3,
+              requireEvidence: true
+            },
+            weeks: computeWeeksLifecycle(startDate)
+          }
+
+          // Sinkronisasikan ke state batches array di store
+          const existingIdx = this.batches.findIndex(item => item.id === id)
+          if (existingIdx !== -1) {
+            this.batches[existingIdx] = { ...this.batches[existingIdx], ...formattedBatch }
+          } else {
+            this.batches.push(formattedBatch)
+          }
+
+          return formattedBatch
+        }
+      } catch (err) {
+        console.warn(`fetchBatchByIdFromApi(${batchId}) error:`, err.message)
+      }
+      return null
     },
 
     // ==================== SUPERADMIN ACTIONS ====================

@@ -37,18 +37,43 @@
             <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
               {{ b.code }}
             </span>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+            <span
+              class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+              :class="[
+                b.status === 'DRAFT'
+                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/60'
+                  : b.status === 'COMPLETED'
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300'
+                  : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'
+              ]"
+            >
               {{ b.status }}
             </span>
           </div>
 
-          <h3 class="font-bold text-base text-slate-900 dark:text-white mb-1">
+          <h3 class="font-bold text-base text-slate-900 dark:text-white mb-1 line-clamp-1">
             {{ b.name }}
           </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-4">
-            <MapPin class="w-3.5 h-3.5 text-slate-400" />
-            <span>{{ b.storeLocation }}</span>
+          <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-3">
+            <MapPin class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+            <span class="truncate">{{ b.storeLocation || b.name }}</span>
           </p>
+
+          <!-- Template Terpasang -->
+          <div class="mb-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-xs space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] text-slate-400">🏃 Kurikulum SOP:</span>
+              <span class="text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[170px]">
+                {{ b.journeyTemplate?.name || 'SOP Reguler' }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] text-slate-400">🤝 Program Buddy:</span>
+              <span class="text-[11px] font-semibold text-purple-700 dark:text-purple-300 truncate max-w-[170px]">
+                {{ b.buddyTemplate?.name || 'Tanpa Buddy' }}
+              </span>
+            </div>
+          </div>
 
           <div class="space-y-1.5 text-xs">
             <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
@@ -56,30 +81,40 @@
               <span class="font-medium">{{ b.startDate }} s/d {{ b.endDate }}</span>
             </div>
             <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
-              <span class="text-slate-400">👤 Store Leader:</span>
-              <span class="font-semibold">{{ b.assignment?.storeLeaderName || '-' }}</span>
-            </div>
-            <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
-              <span class="text-slate-400">👑 Head Approver:</span>
-              <span class="font-semibold">{{ b.assignment?.headName || b.assignment?.districtManagerName || '-' }}</span>
+              <span class="text-slate-400">🎯 Total Misi:</span>
+              <span class="font-semibold text-slate-800 dark:text-slate-200">
+                {{ b.totalMissions || b._count?.missions || 0 }} Misi Terdaftar
+              </span>
             </div>
             <div class="flex items-center justify-between text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-100 dark:border-slate-800/60">
-              <span class="text-slate-400">👥 Total Kru:</span>
+              <span class="text-slate-400">👥 Anggota Kru:</span>
               <span class="font-bold text-[#831843] dark:text-[#f472b6]">
-                {{ b.assignment?.crewIds?.length || gamificationStore.crewsByBatch(b.id).length }} Anggota
+                {{ b.totalCrew || b._count?.users || b.assignment?.crewIds?.length || 0 }} Anggota
               </span>
             </div>
           </div>
         </div>
 
-        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <NuxtLink
-            :to="`/admin/batches/${b.id}`"
-            class="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#831843] dark:hover:text-[#f472b6] flex items-center gap-1 cursor-pointer"
-          >
-            <Edit3 class="w-3.5 h-3.5" />
-            <span>Pengaturan</span>
-          </NuxtLink>
+        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <NuxtLink
+              :to="`/admin/batches/${b.id}`"
+              class="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#831843] dark:hover:text-[#f472b6] flex items-center gap-1 cursor-pointer"
+            >
+              <Eye class="w-3.5 h-3.5" />
+              <span>Detail Batch</span>
+            </NuxtLink>
+
+            <button
+              v-if="b.status === 'DRAFT'"
+              type="button"
+              @click="handleGenerateMissions(b)"
+              class="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-lg flex items-center gap-1 hover:bg-amber-200 cursor-pointer transition-all"
+            >
+              <Zap class="w-3.5 h-3.5" />
+              <span>Generate Misi</span>
+            </button>
+          </div>
 
           <button
             type="button"
@@ -115,14 +150,14 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useBatchStore } from '~/stores/batch.js'
-import { useGamificationStore } from '~/stores/gamification.js'
 import { useToast } from '~/composables/useToast.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
-import { Plus, Edit3, Trash2, MapPin } from 'lucide-vue-next'
+import { Plus, Eye, Trash2, MapPin, Zap } from 'lucide-vue-next'
+import { batchApi } from '~/services/api.js'
+import { confirmDeleteDialog } from '~/utils/dialog.js'
 
 const batchStore = useBatchStore()
-const gamificationStore = useGamificationStore()
 const toast = useToast()
 
 const currentPage = ref(1)
@@ -144,9 +179,24 @@ watch(currentPage, (newPage) => {
   loadBatches(newPage)
 })
 
-import { batchApi } from '~/services/api.js'
+const handleGenerateMissions = async (batch) => {
+  const isConfirmed = await confirmDeleteDialog({
+    title: 'Generate Misi Batch?',
+    text: `Generate penugasan seluruh misi untuk batch "${batch.name}"? Status batch akan berubah menjadi OPEN.`,
+    confirmButtonText: 'Ya, Generate Misi'
+  })
 
-import { confirmDeleteDialog } from '~/utils/dialog.js'
+  if (isConfirmed) {
+    try {
+      await batchApi.generate(batch.id)
+      toast.success('Misi Berhasil Di-generate', `Seluruh misi untuk batch ${batch.name} telah diaktifkan ke status OPEN.`)
+      await loadBatches(currentPage.value)
+    } catch (err) {
+      console.error('Generate missions error:', err)
+      toast.error('Gagal Generate Misi', err.message || 'Tidak dapat meng-generate misi dari backend.')
+    }
+  }
+}
 
 const confirmDeleteBatch = async (batch) => {
   const isConfirmed = await confirmDeleteDialog({

@@ -62,11 +62,18 @@
 
 /* Compact & Sleek SweetAlert2 Dialog Styling */
 .swal2-container {
+  pointer-events: auto !important;
+  z-index: 99999 !important;
   padding: 1rem !important;
   backdrop-filter: blur(4px) !important;
 }
 
+.swal2-container * {
+  pointer-events: auto !important;
+}
+
 .swal2-popup {
+  pointer-events: auto !important;
   width: 380px !important;
   max-width: 90vw !important;
   padding: 1.5rem !important;
@@ -104,6 +111,16 @@
   margin: 0.5rem 0 0 0 !important;
   width: 100% !important;
   justify-content: flex-end !important;
+  pointer-events: auto !important;
+}
+
+.swal2-actions button,
+.swal2-confirm,
+.swal2-cancel {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative !important;
+  z-index: 10 !important;
 }
 
 .rejuve-text-glow {

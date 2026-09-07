@@ -3,10 +3,10 @@ import { readFileSync } from 'fs'
 async function runSwaggerTest() {
   console.log('=====================================================================')
   console.log('🔍 PENGUJIAN OTOMATIS SELURUH API SWAGGER (OPENAPI 3.0.3) LIVE')
-  console.log('Target API Host: https://cagelike-flukily-niels.ngrok-free.dev/api')
+  console.log('Target API Host: http://103.168.147.133:3005/api')
   console.log('=====================================================================\n')
 
-  const base = 'https://cagelike-flukily-niels.ngrok-free.dev/api'
+  const base = process.env.NUXT_PUBLIC_API_BASE || 'http://103.168.147.133:3005/api'
   
   // 1. Auth Test
   let token = null
