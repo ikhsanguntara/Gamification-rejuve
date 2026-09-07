@@ -33,6 +33,7 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 
 | ID | Tanggal & Waktu (WIB) | Target Environment | Komponen | Commit Hash & Branch | Hasil Unit Test | Port / URL Akses | Status |
 | :---: | :--- | :--- | :--- | :--- | :---: | :--- | :---: |
+| **DEP-004** | 2026-09-07 14:15 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `0c42431` (`main`) | **86/86 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-003** | 2026-09-07 13:42 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `2badd97` (`main`) | **86/86 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-002** | 2026-09-05 12:53 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `81b5963` (`stg-fe` & `main`) | **86/86 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-001** | 2026-09-02 00:59 | **Firebase Hosting** | Frontend (Static SSR/SPA) | `20efaaf` (`main`) | **44/44 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
@@ -40,6 +41,29 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 ---
 
 ## 📝 Rincian Log Tiap Deployment
+
+### [DEP-004] — 2026-09-07 14:15 WIB
+- **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"deploy ke vps maksud saya sekarang deploy di vps jangan firebase. ikutin rule jangan ngerusak punya be dan servis project lainya cek dulu..."*)
+- **Target Host**: VPS Linux Ubuntu 22.04 LTS (`103.168.147.133`)
+- **Komponen Di-Deploy**: 
+  - `gamification-frontend` (Container Docker: Nuxt 3 SPA + Nginx Alpine)
+  - Integrasi dropdown Kategori SOP & Rapor Buddy ke REST API Bisnis Parameter (`/api/params`)
+  - Konfigurasi Nginx `port_in_redirect off;` dan `absolute_redirect off;` untuk mengatasi port hilang saat redirect new tab
+- **Branch & Commit**: `0c42431` di branch `main`
+- **Hasil Pengujian Unit Test Sebelum Deploy**:
+  - **CRUD Test Suite**: `49/49 Tests PASS (100%)`
+  - **QA Unit Tester Suite**: `37/37 Tests PASS (100%)`
+  - **Total Pengujian**: `86/86 Tests PASS (0 Failed)`
+- **Verifikasi Container & Port Pasca Deploy**:
+  - `gamification-frontend` $\rightarrow$ Status: **Up / Running** pada port **`3006`** (`0.0.0.0:3006->80/tcp`)
+  - `gamification-backend` $\rightarrow$ Status: **Up 2 days (Untouched / Tidak Disentuh)** pada port **`3005`**
+  - Response `curl -I http://127.0.0.1:3006/` $\rightarrow$ **`HTTP/1.1 200 OK`**
+  - Response `curl -I http://127.0.0.1:3006/admin` $\rightarrow$ **`Location: /admin/`** (Port 3006 tidak hilang)
+- **Dampak ke Service Lain di VPS**:
+  - Seluruh 20+ service ASCO (`asco_frontend`, `asco-sales-service`, `asco-postgres:5433`, `asco-rabbitmq`, dll) diverifikasi **100% aman, tidak disentuh, dan tetap berjalan normal**.
+- **Status Akhir**: 🟢 **SUCCESS (BERHASIL 100%)**
+
+---
 
 ### [DEP-003] — 2026-09-07 13:42 WIB
 - **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"push deploy"*)
