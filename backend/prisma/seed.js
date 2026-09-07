@@ -166,6 +166,70 @@ async function main() {
   });
   console.log(`✅ CREW : ${crew.name} <${crew.email}>`);
 
+  // 8. Bisnis Parameter (ParamGroup & Param)
+  const groupMissionCat = await prisma.paramGroup.upsert({
+    where: { code: 'MISSION_CATEGORY' },
+    update: {},
+    create: {
+      code: 'MISSION_CATEGORY',
+      name: 'Kategori Misi SOP',
+      createdBy: 'seeder'
+    }
+  });
+
+  const missionParams = [
+    { code: 'TECHNICAL', value: 'TECHNICAL (Operasional)' },
+    { code: 'SOFT_SKILL', value: 'SOFT_SKILL (Layanan)' },
+    { code: 'LEADERSHIP', value: 'LEADERSHIP (Manajerial)' },
+    { code: 'PROJECT', value: 'PROJECT (Proyek Khusus)' }
+  ];
+  for (const mp of missionParams) {
+    await prisma.param.upsert({
+      where: { code: mp.code },
+      update: { value: mp.value },
+      create: {
+        paramgroupId: groupMissionCat.paramgroupId,
+        code: mp.code,
+        value: mp.value,
+        createdBy: 'seeder'
+      }
+    });
+  }
+  console.log('✅ Param Group : MISSION_CATEGORY (4 parameter SOP)');
+
+  const groupBuddyCat = await prisma.paramGroup.upsert({
+    where: { code: 'BUDDY_CATEGORY' },
+    update: {},
+    create: {
+      code: 'BUDDY_CATEGORY',
+      name: 'Kategori Rapor Buddy',
+      createdBy: 'seeder'
+    }
+  });
+
+  const buddyParams = [
+    { code: 'PRODUCT_KNOWLEDGE', value: 'Product Knowledge' },
+    { code: 'CUSTOMER_SERVICE', value: 'Customer Service' },
+    { code: 'SALES_UPSELLING', value: 'Sales & Upselling' },
+    { code: 'CASHIER_OPERATION', value: 'Cashier Operation' },
+    { code: 'STORE_OPERATION', value: 'Store Operation' },
+    { code: 'FOOD_SAFETY_QUALITY', value: 'Food Safety & Quality' },
+    { code: 'TEAMWORK_ATTITUDE', value: 'Teamwork & Attitude' }
+  ];
+  for (const bp of buddyParams) {
+    await prisma.param.upsert({
+      where: { code: bp.code },
+      update: { value: bp.value },
+      create: {
+        paramgroupId: groupBuddyCat.paramgroupId,
+        code: bp.code,
+        value: bp.value,
+        createdBy: 'seeder'
+      }
+    });
+  }
+  console.log('✅ Param Group : BUDDY_CATEGORY (7 parameter Rapor Buddy)');
+
   console.log('\n──────────────────────────────────────────────────');
   console.log('🎉 Seeding selesai! Data siap digunakan.\n');
   console.log('Kredensial default (semua user):');

@@ -259,10 +259,9 @@
                   v-model="mission.category"
                   class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-white font-semibold focus:ring-1 focus:ring-[#831843] cursor-pointer"
                 >
-                  <option value="TECHNICAL">TECHNICAL (Operasional)</option>
-                  <option value="SOFT_SKILL">SOFT_SKILL (Layanan)</option>
-                  <option value="LEADERSHIP">LEADERSHIP (Manajerial)</option>
-                  <option value="PROJECT">PROJECT (Proyek Khusus)</option>
+                  <option v-for="cat in missionCategories" :key="cat.code" :value="cat.code">
+                    {{ cat.value }}
+                  </option>
                 </select>
               </div>
 
@@ -384,6 +383,30 @@ import { Plus, Trash2, Loader2, X, Layers, Settings2 } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
 import { useToast } from '~/composables/useToast.js'
 import { confirmDeleteDialog } from '~/utils/dialog.js'
+import { paramApi } from '~/services/api.js'
+
+const DEFAULT_MISSION_CATEGORIES = [
+  { code: 'TECHNICAL', value: 'TECHNICAL (Operasional)' },
+  { code: 'SOFT_SKILL', value: 'SOFT_SKILL (Layanan)' },
+  { code: 'LEADERSHIP', value: 'LEADERSHIP (Manajerial)' },
+  { code: 'PROJECT', value: 'PROJECT (Proyek Khusus)' }
+]
+
+const missionCategories = ref([...DEFAULT_MISSION_CATEGORIES])
+
+const loadMissionCategoriesFromApi = async () => {
+  try {
+    const res = await paramApi.getByGroupCode('MISSION_CATEGORY')
+    if (res?.success && Array.isArray(res.data?.list) && res.data.list.length > 0) {
+      missionCategories.value = res.data.list.map(p => ({
+        code: p.code,
+        value: p.value || p.code
+      }))
+    }
+  } catch (err) {
+    console.warn('Gagal memuat parameter MISSION_CATEGORY dari Bispar:', err)
+  }
+}
 
 const props = defineProps({
   modelValue: {
@@ -497,8 +520,10 @@ const getInputTypeHelper = (inp) => {
 }
 
 watch(() => props.modelValue, (isOpen) => {
-  if (isOpen && props.template) {
-    const rawDetails = props.template.templates || props.template.details || []
+  if (isOpen) {
+    loadMissionCategoriesFromApi()
+    if (props.template) {
+      const rawDetails = props.template.templates || props.template.details || []
 
     const mappedDetails = rawDetails.map((item, idx) => {
       const reqs = Array.isArray(item.sopChecklist)
@@ -537,6 +562,7 @@ watch(() => props.modelValue, (isOpen) => {
     activeModalSection.value = 'MISSIONS'
     activePeriodTab.value = 1
   }
+}
 })
 
 const handleDurationCodeChange = () => {

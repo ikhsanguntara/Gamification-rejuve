@@ -138,7 +138,7 @@
             <span>Semua ({{ indicators.length }})</span>
           </button>
           <button
-            v-for="cat in BUDDY_CATEGORIES"
+            v-for="cat in buddyCategories"
             :key="cat.value"
             type="button"
             @click="filterCat = cat.value"
@@ -192,7 +192,7 @@
                   v-model="ind.category"
                   class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-2.5 py-2 text-slate-900 dark:text-white font-semibold focus:ring-1 focus:ring-purple-600 cursor-pointer"
                 >
-                  <option v-for="cat in BUDDY_CATEGORIES" :key="cat.value" :value="cat.value">
+                  <option v-for="cat in buddyCategories" :key="cat.value" :value="cat.value">
                     {{ cat.label }}
                   </option>
                 </select>
@@ -277,8 +277,10 @@ import { Plus, Trash2, Loader2 } from 'lucide-vue-next'
 import { useTemplateStore } from '~/stores/template.js'
 import { useToast } from '~/composables/useToast.js'
 import { confirmDeleteDialog } from '~/utils/dialog.js'
+import { paramApi } from '~/services/api.js'
 import {
   BUDDY_CATEGORIES,
+  mapBuddyCategoryToEnum,
   normalizeBuddyDetails,
   compileBuddyDetailsForApi
 } from '~/utils/buddyHelper.js'
@@ -299,6 +301,24 @@ const emit = defineEmits(['update:modelValue', 'created', 'updated'])
 const templateStore = useTemplateStore()
 const toast = useToast()
 const isSubmitting = ref(false)
+
+const buddyCategories = ref([...BUDDY_CATEGORIES])
+
+const loadBuddyCategoriesFromApi = async () => {
+  try {
+    const res = await paramApi.getByGroupCode('BUDDY_CATEGORY')
+    if (res?.success && Array.isArray(res.data?.list) && res.data.list.length > 0) {
+      buddyCategories.value = res.data.list.map(p => ({
+        code: p.code,
+        value: p.value,
+        label: p.value,
+        enumVal: mapBuddyCategoryToEnum(p.value || p.code)
+      }))
+    }
+  } catch (err) {
+    console.warn('Gagal memuat parameter BUDDY_CATEGORY dari Bispar:', err)
+  }
+}
 
 const filterCat = ref('ALL')
 
@@ -327,6 +347,7 @@ const displayedIndicators = computed(() => {
 
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
+    loadBuddyCategoriesFromApi()
     if (props.template) {
       // Edit Mode
       form.value = {
@@ -362,11 +383,12 @@ watch(() => props.modelValue, (isOpen) => {
 
 const addNewIndicator = () => {
   const nextNum = indicators.value.length + 1
+  const defaultCat = buddyCategories.value[0]?.value || 'Product Knowledge'
   const newInd = {
     id: `ind-${Date.now()}-${nextNum}`,
     tempId: `ind-${Date.now()}-${nextNum}`,
     name: '',
-    category: filterCat.value !== 'ALL' ? filterCat.value : 'Product Knowledge',
+    category: filterCat.value !== 'ALL' ? filterCat.value : defaultCat,
     isStar: false,
     description: '',
     durationNumber: 1,

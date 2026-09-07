@@ -11,13 +11,13 @@
  */
 
 export const BUDDY_CATEGORIES = [
-  { value: 'Product Knowledge', label: 'Product Knowledge', enumVal: 'TECHNICAL' },
-  { value: 'Customer Service', label: 'Customer Service', enumVal: 'SOFT_SKILL' },
-  { value: 'Sales & Upselling', label: 'Sales & Upselling', enumVal: 'SOFT_SKILL' },
-  { value: 'Cashier Operation', label: 'Cashier Operation', enumVal: 'TECHNICAL' },
-  { value: 'Store Operation', label: 'Store Operation', enumVal: 'TECHNICAL' },
-  { value: 'Food Safety & Quality', label: 'Food Safety & Quality', enumVal: 'TECHNICAL' },
-  { value: 'Teamwork & Attitude', label: 'Teamwork & Attitude', enumVal: 'SOFT_SKILL' }
+  { code: 'PRODUCT_KNOWLEDGE', value: 'Product Knowledge', label: 'Product Knowledge', enumVal: 'TECHNICAL' },
+  { code: 'CUSTOMER_SERVICE', value: 'Customer Service', label: 'Customer Service', enumVal: 'SOFT_SKILL' },
+  { code: 'SALES_UPSELLING', value: 'Sales & Upselling', label: 'Sales & Upselling', enumVal: 'SOFT_SKILL' },
+  { code: 'CASHIER_OPERATION', value: 'Cashier Operation', label: 'Cashier Operation', enumVal: 'TECHNICAL' },
+  { code: 'STORE_OPERATION', value: 'Store Operation', label: 'Store Operation', enumVal: 'TECHNICAL' },
+  { code: 'FOOD_SAFETY_QUALITY', value: 'Food Safety & Quality', label: 'Food Safety & Quality', enumVal: 'TECHNICAL' },
+  { code: 'TEAMWORK_ATTITUDE', value: 'Teamwork & Attitude', label: 'Teamwork & Attitude', enumVal: 'SOFT_SKILL' }
 ]
 
 export const DEFAULT_BUDDY_INDICATORS = [
@@ -62,9 +62,13 @@ export const DEFAULT_BUDDY_INDICATORS = [
  * Petakan nama kategori Buddy ke enum resmi Prisma Backend (TECHNICAL / SOFT_SKILL)
  */
 export function mapBuddyCategoryToEnum(catName) {
-  const found = BUDDY_CATEGORIES.find(c => c.value.toLowerCase() === String(catName).toLowerCase())
+  const nameStr = String(catName || '').trim()
+  const found = BUDDY_CATEGORIES.find(c =>
+    c.value.toLowerCase() === nameStr.toLowerCase() ||
+    c.code.toLowerCase() === nameStr.toLowerCase()
+  )
   if (found) return found.enumVal
-  const upper = String(catName).toUpperCase()
+  const upper = nameStr.toUpperCase()
   if (upper.includes('SOFT') || upper.includes('SERVICE') || upper.includes('SALES') || upper.includes('ATTITUDE') || upper.includes('TEAM')) {
     return 'SOFT_SKILL'
   }
