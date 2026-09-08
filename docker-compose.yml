@@ -12,8 +12,9 @@ services:
     restart: unless-stopped
     ports:
       - "3005:3005"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - default
+      - asco_network
     env_file:
       - ./backend/.env
     environment:
@@ -45,8 +46,16 @@ services:
     restart: unless-stopped
     ports:
       - "3006:80"
+    networks:
+      - default
     depends_on:
       - gamification-backend
+
+networks:
+  default:
+  asco_network:
+    name: backend_default
+    external: true
 
 volumes:
   gamification_backend_uploads:
