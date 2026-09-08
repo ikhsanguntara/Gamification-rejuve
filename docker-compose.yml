@@ -14,12 +14,13 @@ services:
       - "3005:3005"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
     environment:
-      PORT: 3005
-      NODE_ENV: production
-      # Menghubungkan ke asco-postgres via host port 5433 (user: gamification_rjv, db: gamification)
-      DATABASE_URL: ${DATABASE_URL:-postgresql://gamification_rjv:P4ssw0rd.Rjv@host.docker.internal:5433/gamification?schema=public}
-      JWT_SECRET: ${JWT_SECRET:-rejuve_super_secret_jwt_key_2026_gamification_api}
+      PORT: ${PORT:-3005}
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       MINIO_ENDPOINT: ${MINIO_ENDPOINT:-localhost}
