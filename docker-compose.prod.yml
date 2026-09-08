@@ -2,9 +2,9 @@ version: '3.8'
 
 services:
 
-  # ============================================================================
-  # POSTGRESQL DATABASE
-  # ============================================================================
+  # ==========================================================
+  # POSTGRESQL
+  # ==========================================================
   gamification-db:
     image: postgres:16-alpine
     container_name: gamification-db
@@ -32,10 +32,13 @@ services:
       retries: 10
 
 
-  # ============================================================================
+  # ==========================================================
   # BACKEND
-  # HOST 84 -> CONTAINER 3005
-  # ============================================================================
+  #
+  # Host EC2 :84
+  #      ↓
+  # Container :3005
+  # ==========================================================
   gamification-backend:
     build:
       context: ./backend
@@ -47,12 +50,6 @@ services:
     ports:
       - "84:3005"
 
-    networks:
-      - gamification-network
-
-    env_file:
-      - ./backend/.env
-
     environment:
       PORT: 3005
       NODE_ENV: production
@@ -60,15 +57,18 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@gamification-db:5432/${POSTGRES_DB}
 
       JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       CORS_ORIGIN: ${CORS_ORIGIN}
 
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-gamification-minio}
-      MINIO_PORT: ${MINIO_PORT:-9000}
-      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_USE_SSL: ${MINIO_USE_SSL}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET: ${MINIO_BUCKET:-gamification}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+
+    networks:
+      - gamification-network
 
     depends_on:
       gamification-db:
@@ -78,15 +78,17 @@ services:
       - gamification_backend_uploads:/app/uploads
 
 
-  # ============================================================================
+  # ==========================================================
   # FRONTEND
-  # HOST 82 -> CONTAINER 80
-  # ============================================================================
+  #
+  # Host EC2 :82
+  #      ↓
+  # Container Nginx :80
+  # ==========================================================
   gamification-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-
       args:
         NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE}
 
