@@ -535,27 +535,36 @@ const getScopedBatchWhere = async (currentUser, baseWhere = {}) => {
     });
     const deptIds = depts.map(d => d.departmentId);
 
-    const scopingConditions = [];
+    const scopingConditions = [
+      // 1. Batch di mana SL ini bertindak sebagai evaluator (tlId) di t_user_missions
+      { missions: { some: { userMissions: { some: { tlId: userId } } } } },
+      // 2. Batch di mana SL ini terdaftar langsung
+      { users: { some: { userId } } }
+    ];
+
     if (deptIds.length > 0) {
       scopingConditions.push({
         users: { some: { departmentId: { in: deptIds } } }
       });
     }
+
+    if (currentUser.isBuddy) {
+      scopingConditions.push({
+        users: { some: { userBuddyId: userId } }
+      });
+    }
+
     if (currentUser.activeBatchId) {
       scopingConditions.push({ batchId: currentUser.activeBatchId });
     }
 
-    if (scopingConditions.length > 0) {
-      if (where.OR) {
-        where.AND = [
-          ...(where.AND || []),
-          { OR: scopingConditions }
-        ];
-      } else {
-        where.OR = scopingConditions;
-      }
+    if (where.OR) {
+      where.AND = [
+        ...(where.AND || []),
+        { OR: scopingConditions }
+      ];
     } else {
-      where.batchId = '00000000-0000-0000-0000-000000000000';
+      where.OR = scopingConditions;
     }
   } else if (roleCode === 'DISTRICT_MANAGER') {
     const depts = await prisma.department.findMany({
@@ -569,33 +578,73 @@ const getScopedBatchWhere = async (currentUser, baseWhere = {}) => {
     });
     const deptIds = depts.map(d => d.departmentId);
 
-    const scopingConditions = [];
+    const scopingConditions = [
+      // 1. Batch di mana DM ini bertindak sebagai reviewer (dmId) di t_user_missions
+      { missions: { some: { userMissions: { some: { dmId: userId } } } } },
+      // 2. Batch di mana DM ini terdaftar langsung
+      { users: { some: { userId } } }
+    ];
+
     if (deptIds.length > 0) {
       scopingConditions.push({
         users: { some: { departmentId: { in: deptIds } } }
       });
     }
+
     if (currentUser.activeBatchId) {
       scopingConditions.push({ batchId: currentUser.activeBatchId });
     }
 
-    if (scopingConditions.length > 0) {
-      if (where.OR) {
-        where.AND = [
-          ...(where.AND || []),
-          { OR: scopingConditions }
-        ];
-      } else {
-        where.OR = scopingConditions;
-      }
+    if (where.OR) {
+      where.AND = [
+        ...(where.AND || []),
+        { OR: scopingConditions }
+      ];
     } else {
-      where.batchId = '00000000-0000-0000-0000-000000000000';
+      where.OR = scopingConditions;
+    }
+  } else if (roleCode === 'BUDDY' || currentUser.isBuddy) {
+    const scopingConditions = [
+      // 1. Batch di mana Buddy ini bertindak sebagai evaluator (tlId) di t_user_missions
+      { missions: { some: { userMissions: { some: { tlId: userId } } } } },
+      // 2. Batch di mana Buddy membimbing mentees
+      { users: { some: { userBuddyId: userId } } },
+      // 3. Batch di mana Buddy terdaftar langsung
+      { users: { some: { userId } } }
+    ];
+
+    if (currentUser.activeBatchId) {
+      scopingConditions.push({ batchId: currentUser.activeBatchId });
+    }
+
+    if (where.OR) {
+      where.AND = [
+        ...(where.AND || []),
+        { OR: scopingConditions }
+      ];
+    } else {
+      where.OR = scopingConditions;
     }
   } else if (roleCode === 'CREW') {
+    const scopingConditions = [
+      { users: { some: { userId } } },
+      { missions: { some: { userMissions: { some: { userId } } } } }
+    ];
+
     if (currentUser.batchId) {
-      where.batchId = currentUser.batchId;
+      scopingConditions.push({ batchId: currentUser.batchId });
+    }
+    if (currentUser.activeBatchId) {
+      scopingConditions.push({ batchId: currentUser.activeBatchId });
+    }
+
+    if (where.OR) {
+      where.AND = [
+        ...(where.AND || []),
+        { OR: scopingConditions }
+      ];
     } else {
-      where.batchId = '00000000-0000-0000-0000-000000000000';
+      where.OR = scopingConditions;
     }
   }
 

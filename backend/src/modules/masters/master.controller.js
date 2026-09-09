@@ -298,7 +298,19 @@ const createUser = async (req, res, next) => {
     const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive, activeBatchId } = req.body;
     const creatorId = req.user?.id || req.user?.userId || null;
 
-    const hashedPassword = await bcrypt.hash(password || 'password123', 10);
+    // Cek apakah role yang dibuat adalah CREW
+    let isCrew = false;
+    if (roleId) {
+      const targetRole = await prisma.role.findUnique({ where: { roleId } });
+      if (targetRole && targetRole.roleCode === 'CREW') {
+        isCrew = true;
+      }
+    }
+
+    // Password default: CREW menggunakan prefix email sebelum '@', role lain menggunakan 'password123'
+    const emailPrefix = (email && email.includes('@')) ? email.split('@')[0] : (email || 'crew123');
+    const rawPassword = password || (isCrew ? emailPrefix : 'password123');
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
     const user = await prisma.user.create({
       data: {
@@ -317,8 +329,10 @@ const createUser = async (req, res, next) => {
       include: { role: true, department: true }
     });
 
-    // Sinkronkan mutasi user ke Lynx
-    await pushToLynx('/gamification/webhook/users', [user], 'POST');
+    // Sinkronkan mutasi user ke Lynx HANYA jika bukan role CREW
+    if (!isCrew) {
+      await pushToLynx('/gamification/webhook/users', [user], 'POST');
+    }
 
     const userResponse = {
       ...user,
@@ -745,7 +759,11 @@ const bulkCommitUsers = async (req, res, next) => {
       prisma.batch.findMany()
     ]);
     const roleCodeMap = new Map();
-    roles.forEach(r => roleCodeMap.set(r.roleCode.toUpperCase(), r.roleId));
+    const roleIdToCodeMap = new Map();
+    roles.forEach(r => {
+      roleCodeMap.set(r.roleCode.toUpperCase(), r.roleId);
+      roleIdToCodeMap.set(r.roleId, r.roleCode.toUpperCase());
+    });
     const deptCodeMap = new Map();
     departments.forEach(d => deptCodeMap.set(d.departmentCode.toUpperCase(), d.departmentId));
     const batchCodeMap = new Map();
@@ -796,11 +814,20 @@ const bulkCommitUsers = async (req, res, next) => {
             skippedCount++;
           }
         } else {
+          // Default password: CREW menggunakan prefix email sebelum '@', role lain menggunakan 'password123'
+          const roleCode = (item.roleCode || '').toUpperCase() || roleIdToCodeMap.get(roleId) || '';
+          const isCrew = roleCode === 'CREW';
+          let userPasswordHash = defaultPasswordHash;
+          if (isCrew) {
+            const emailPrefix = (email && email.includes('@')) ? email.split('@')[0] : (email || 'crew123');
+            userPasswordHash = await bcrypt.hash(emailPrefix, 10);
+          }
+
           const newUser = await tx.user.create({
             data: {
               name: item.name,
               email,
-              password: defaultPasswordHash,
+              password: userPasswordHash,
               roleId,
               departmentId,
               batchId,
@@ -820,9 +847,10 @@ const bulkCommitUsers = async (req, res, next) => {
       }
     });
 
-    // Lynx ERP push synchronization in background
-    if (createdUsersList.length > 0) {
-      pushToLynx('/gamification/webhook/users', createdUsersList, 'POST').catch(err => {
+    // Lynx ERP push synchronization in background (HANYA untuk user non-CREW)
+    const nonCrewUsers = createdUsersList.filter(u => u.role?.roleCode !== 'CREW');
+    if (nonCrewUsers.length > 0) {
+      pushToLynx('/gamification/webhook/users', nonCrewUsers, 'POST').catch(err => {
         console.error('[Lynx User Sync Error]:', err.message);
       });
     }

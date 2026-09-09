@@ -159,42 +159,129 @@ const getWorkstationCrews = async (currentUser, query = {}) => {
   const weekNumber = query.week ? parseInt(query.week, 10) : (batch?.currentWeek || 1);
   const missionType = query.type ? query.type.toUpperCase() : 'JOURNEY';
 
-  // 2. Filter Departemen berdasarkan Role Pengguna
+  // 2. Filter Kru Berdasarkan Role & Tipe Evaluasi
   const userRole = currentUser?.role?.roleCode || currentUser?.role || 'SUPERADMIN';
-  const whereCrew = {
-    role: { roleCode: 'CREW' },
-    isActive: true
-  };
-
-  if (userRole === 'STORE_LEADER' && currentUser.departmentId) {
-    whereCrew.departmentId = currentUser.departmentId;
-  } else if (userRole === 'DISTRICT_MANAGER') {
-    const depts = await prisma.department.findMany({
-      where: {
-        OR: [
-          { userDmId: currentUser.userId },
-          ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
-        ]
-      },
-      select: { departmentId: true }
-    });
-    const deptIds = depts.map(d => d.departmentId);
-    if (deptIds.length > 0) {
-      whereCrew.departmentId = { in: deptIds };
+  const andConditions = [
+    { role: { roleCode: 'CREW' } },
+    { isActive: true },
+    // Kru WAJIB memiliki misi bertipe missionType pada batchId ini
+    {
+      missions: {
+        some: {
+          mission: {
+            batchId,
+            type: missionType
+          }
+        }
+      }
     }
-  } else if (query.departmentId) {
-    whereCrew.departmentId = query.departmentId;
+  ];
+
+  // Penilaian Buddy (murni relasi 1-on-1 Buddy-Mentee via userBuddyId / tlId)
+  if (missionType === 'BUDDY') {
+    if (userRole !== 'SUPERADMIN' && userRole !== 'HEAD') {
+      andConditions.push({
+        OR: [
+          { userBuddyId: currentUser.userId },
+          {
+            missions: {
+              some: {
+                tlId: currentUser.userId,
+                mission: {
+                  batchId,
+                  type: 'BUDDY'
+                }
+              }
+            }
+          }
+        ]
+      });
+    } else {
+      if (query.buddyId) {
+        andConditions.push({ userBuddyId: query.buddyId });
+      }
+      if (query.departmentId) {
+        andConditions.push({ departmentId: query.departmentId });
+      }
+    }
+  } else {
+    // Penilaian Kru (JOURNEY / lainnya): Filter berdasarkan Toko/Departemen Store Leader atau District Manager
+    if (userRole === 'STORE_LEADER') {
+      const depts = await prisma.department.findMany({
+        where: {
+          OR: [
+            { userSlId: currentUser.userId },
+            ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
+          ]
+        },
+        select: { departmentId: true }
+      });
+      const deptIds = depts.map(d => d.departmentId);
+
+      const slConditions = [
+        {
+          missions: {
+            some: {
+              tlId: currentUser.userId,
+              mission: { batchId, type: missionType }
+            }
+          }
+        }
+      ];
+
+      if (deptIds.length > 0) {
+        slConditions.push({ departmentId: { in: deptIds } });
+      }
+
+      andConditions.push({ OR: slConditions });
+    } else if (userRole === 'DISTRICT_MANAGER') {
+      const depts = await prisma.department.findMany({
+        where: {
+          OR: [
+            { userDmId: currentUser.userId },
+            ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
+          ]
+        },
+        select: { departmentId: true }
+      });
+      const deptIds = depts.map(d => d.departmentId);
+
+      const dmConditions = [
+        {
+          missions: {
+            some: {
+              dmId: currentUser.userId,
+              mission: { batchId, type: missionType }
+            }
+          }
+        }
+      ];
+
+      if (deptIds.length > 0) {
+        dmConditions.push({ departmentId: { in: deptIds } });
+      }
+
+      andConditions.push({ OR: dmConditions });
+    } else if (query.departmentId) {
+      andConditions.push({ departmentId: query.departmentId });
+    }
   }
 
-  // Jika query search ada
+  // Jika query search ada (name atau email)
   const search = query.search || query.q;
   if (search && typeof search === 'string' && search.trim()) {
     const s = search.trim();
-    whereCrew.OR = [
-      { name: { contains: s, mode: 'insensitive' } },
-      { email: { contains: s, mode: 'insensitive' } }
-    ];
+    andConditions.push({
+      OR: [
+        { name: { contains: s, mode: 'insensitive' } },
+        { email: { contains: s, mode: 'insensitive' } }
+      ]
+    });
   }
+
+  const whereCrew = {
+    AND: andConditions
+  };
 
   // 3. Ambil seluruh Crew yang relevan
   const crews = await prisma.user.findMany({
@@ -441,6 +528,22 @@ const evaluateBuddyMission = async (userMissionId, evaluatorId, { score, notes, 
 
   if (userMission.status === 'LOCKED') {
     throw new Error('Misi Buddy ini masih berstatus LOCKED.');
+  }
+
+  // Otorisasi: Pastikan evaluator adalah Buddy dari user ini, atau bertindak sebagai tlId, atau ber-role SUPERADMIN / HEAD
+  const evaluatorUser = await prisma.user.findUnique({
+    where: { userId: evaluatorId },
+    include: { role: true }
+  });
+  const evalRole = evaluatorUser?.role?.roleCode || '';
+  const isSuper = evalRole === 'SUPERADMIN' || evalRole === 'HEAD';
+
+  if (!isSuper) {
+    const isAssignedBuddy = userMission.user?.userBuddyId === evaluatorId;
+    const isAssignedTl = userMission.tlId === evaluatorId;
+    if (!isAssignedBuddy && !isAssignedTl) {
+      throw new Error('Anda tidak memiliki wewenang untuk menilai misi ini karena bukan mentor/buddy yang ditugaskan.');
+    }
   }
 
   const numScore = Math.max(0, Math.min(100, Number(score) || 0));
