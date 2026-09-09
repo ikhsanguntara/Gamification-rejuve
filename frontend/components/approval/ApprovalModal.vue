@@ -1,65 +1,122 @@
 <template>
   <BaseModal
     :modelValue="modelValue"
-    title="Setujui Evaluasi & Cairkan Bintang?"
-    :subtitle="item ? `${item.missionCode} • ${item.missionTitle}` : ''"
-    max-width="md"
+    title="Verifikasi Evaluasi Misi"
+    :subtitle="item ? `${item.missionCode || item.code || 'MSN'} • ${item.missionTitle || item.title || item.missionCategory || 'Misi Operasional'}` : ''"
+    max-width="lg"
     @update:modelValue="$emit('update:modelValue', $event)"
     @close="$emit('cancel')"
   >
     <template #icon>
-      <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center text-amber-500">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400/20 to-amber-600/20 text-amber-500 flex items-center justify-center">
         <Star class="w-5 h-5 fill-amber-400" />
       </div>
     </template>
 
-    <div v-if="item" class="space-y-3.5 py-1">
-      <!-- Crew & Mission Summary Box -->
-      <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 space-y-2.5">
-        <div class="flex items-center justify-between">
-          <div>
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Anggota Kru</span>
-            <p class="text-sm font-bold text-slate-900 dark:text-white">
+    <div v-if="item" class="space-y-4 py-1">
+      <!-- 1. Ringkasan Kru & Lokasi (Clean & Minimalist) -->
+      <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#831843] to-[#500e28] text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+            <img
+              v-if="item.crewAvatar"
+              :src="item.crewAvatar"
+              :alt="item.crewName"
+              class="w-full h-full object-cover"
+            />
+            <span v-else>{{ (item.crewName || 'C').charAt(0) }}</span>
+          </div>
+          <div class="min-w-0">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate">
               {{ item.crewName || 'Crew Member' }}
+            </h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
+              <span class="font-medium text-[#831843] dark:text-[#f472b6]">{{ item.crewRole || 'Crew' }}</span>
+              <span>•</span>
+              <span>Week {{ item.week || 1 }}</span>
+              <span>•</span>
+              <span>🏪 {{ item.storeLocation || item.storeName || 'Re.juve Gerai' }}</span>
             </p>
-            <span class="text-[11px] text-[#831843] dark:text-[#f472b6] font-semibold">
-              {{ item.crewRole || 'Barista' }} • Week {{ item.week }}
-            </span>
+          </div>
+        </div>
+        <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] dark:bg-[#831843]/20 flex-shrink-0">
+          {{ item.missionCode || 'MSN' }}
+        </span>
+      </div>
+
+      <!-- 2. Dual Skor: Store Leader vs District Manager -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- Kolom Store Leader -->
+        <div class="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                Skor Store Leader
+              </span>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                Diajukan
+              </span>
+            </div>
+
+            <div class="flex items-baseline gap-2 my-1">
+              <span class="text-3xl font-black text-slate-800 dark:text-white">
+                {{ slScore }}
+              </span>
+              <span class="text-xs text-slate-400 font-semibold">/ 100</span>
+              <span class="text-xs text-amber-500 font-bold ml-auto flex items-center gap-0.5">
+                <Star class="w-3.5 h-3.5 fill-amber-400" />
+                {{ calculateStars(slScore) }}
+              </span>
+            </div>
           </div>
 
-          <div class="text-right">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              Skor Evaluasi
-            </span>
-            <p class="text-sm font-black text-[#831843] dark:text-[#f472b6]">
-              {{ dmScore }}/100
+          <div class="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-700/60">
+            <span class="text-[10px] font-semibold text-slate-400 block mb-0.5">Catatan SL:</span>
+            <p class="text-xs text-slate-600 dark:text-slate-300 italic leading-snug line-clamp-2">
+              "{{ item.comment || item.tlNotes || 'Standar SOP operasional telah diperiksa dan terpenuhi.' }}"
             </p>
-            <span class="text-xs text-amber-500 font-bold">
-              +{{ finalStars }} ⭐ Bintang
-            </span>
           </div>
         </div>
 
-        <!-- Slider for DM Score -->
-        <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 space-y-2">
-          <div class="flex items-center justify-between text-[11px]">
-            <div class="flex items-center gap-1.5">
-              <span class="font-semibold text-slate-700 dark:text-slate-300">
-                Input Nilai Baru (DM):
+        <!-- Kolom District Manager (Interaktif & Modern) -->
+        <div class="p-3.5 rounded-2xl bg-gradient-to-br from-[#831843]/5 to-transparent dark:from-[#831843]/15 border border-[#831843]/20 dark:border-[#831843]/40 flex flex-col justify-between space-y-2.5">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-[#831843] dark:text-[#f472b6] flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#831843] dark:bg-[#f472b6]"></span>
+                Nilai DM (Anda)
               </span>
               <span
-                class="px-2 py-0.5 rounded-full text-[9px] font-extrabold border"
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all"
                 :class="getScoreTier(dmScore).bgSoftClass"
               >
                 {{ getScoreTier(dmScore).label }}
               </span>
             </div>
-            <span v-if="isAdjusted" class="text-[10px] text-amber-600 dark:text-amber-400 font-bold">
-              (Disesuaikan DM)
-            </span>
+
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-baseline gap-1.5">
+                <input
+                  v-model.number="dmScore"
+                  type="number"
+                  min="0"
+                  max="100"
+                  class="w-14 text-3xl font-black bg-transparent border-b-2 outline-none p-0 focus:border-[#831843] transition-colors"
+                  :class="getScoreTier(dmScore).textClass"
+                  :style="{ borderColor: getScoreTier(dmScore).color }"
+                />
+                <span class="text-xs text-slate-400 font-semibold">/ 100</span>
+              </div>
+              <span class="text-xs text-amber-500 font-bold flex items-center gap-0.5">
+                <Star class="w-3.5 h-3.5 fill-amber-400" />
+                {{ calculateStars(dmScore) }}
+              </span>
+            </div>
           </div>
 
-          <div class="flex items-center gap-2">
+          <!-- Slider Nilai DM -->
+          <div class="space-y-1.5 pt-0.5">
             <input
               v-model.number="dmScore"
               type="range"
@@ -67,48 +124,69 @@
               max="100"
               step="1"
               :style="getSliderTrackStyle(dmScore)"
-              class="w-full h-2 rounded-full appearance-none cursor-pointer custom-score-slider shadow-inner"
+              class="w-full h-2 rounded-full appearance-none cursor-pointer custom-score-slider shadow-xs"
             />
-            <div
-              class="flex items-center rounded-lg border px-2 py-1 bg-white dark:bg-slate-800 shadow-xs flex-shrink-0"
-              :class="getScoreTier(dmScore).borderClass"
-            >
-              <input
-                v-model.number="dmScore"
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                class="w-10 text-center font-black text-xs bg-transparent outline-none p-0"
-                :class="getScoreTier(dmScore).textClass"
-              />
-              <span class="text-[10px] text-slate-400 font-bold select-none">/100</span>
+            <!-- Quick Preset Pills -->
+            <div class="flex items-center justify-between gap-1 pt-0.5">
+              <button
+                type="button"
+                @click="dmScore = slScore"
+                class="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                title="Samakan dengan nilai SL"
+              >
+                = SL ({{ slScore }})
+              </button>
+              <button
+                v-for="p in [80, 90, 100]"
+                :key="p"
+                type="button"
+                @click="dmScore = p"
+                :class="dmScore === p ? 'bg-[#831843] text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'"
+                class="text-[10px] px-2 py-0.5 rounded-md font-semibold transition-all cursor-pointer"
+              >
+                {{ p }}
+              </button>
             </div>
           </div>
-
-          <!-- Quick Markers -->
-          <div class="flex items-center justify-between text-[10px] font-semibold text-slate-400 dark:text-slate-500 px-0.5 select-none">
-            <button type="button" class="hover:text-rose-600 cursor-pointer" @click="dmScore = 0">0</button>
-            <button type="button" class="hover:text-rose-500 cursor-pointer" @click="dmScore = 25">25</button>
-            <button type="button" class="hover:text-amber-500 cursor-pointer" @click="dmScore = 50">50</button>
-            <button type="button" class="hover:text-sky-500 cursor-pointer" @click="dmScore = 75">75</button>
-            <button type="button" class="hover:text-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer" @click="dmScore = 100">100</button>
-          </div>
-        </div>
-
-        <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-400 space-y-1">
-          <p class="font-medium text-slate-800 dark:text-slate-200">
-            🎯 <strong>{{ item.missionCode }}</strong>: {{ item.missionTitle }}
-          </p>
-          <p v-if="item.comment" class="italic text-[11px] text-slate-500">
-            💬 Catatan SL: "{{ item.comment }}"
-          </p>
         </div>
       </div>
 
-      <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-        Menyetujui evaluasi ini akan menandai misi sebagai <strong>COMPLETED</strong> dan langsung mencairkan <strong>+{{ finalStars }} Bintang ⭐</strong> ke saldo akun <strong>{{ item.crewName }}</strong>.
-      </p>
+      <!-- 3. Hasil Kalkulasi Rata-rata (Elegan & Jelas) -->
+      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 to-[#500e28] text-white shadow-md flex items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-1.5 text-[11px] text-slate-300 font-medium">
+            <span>Rata-rata: (SL {{ slScore }} + DM {{ dmScore }}) / 2</span>
+          </div>
+          <div class="flex items-baseline gap-1.5 mt-0.5">
+            <span class="text-2xl font-black tracking-tight text-white">{{ finalScore }}</span>
+            <span class="text-xs text-slate-300">/ 100</span>
+          </div>
+        </div>
+
+        <div class="text-right">
+          <span class="text-[10px] uppercase font-bold text-amber-300 tracking-wider block">Pencairan Reward</span>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 mt-0.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+            <Star class="w-4 h-4 fill-amber-400 text-amber-400" />
+            <span class="text-sm font-black text-amber-300">+{{ finalStars }} Bintang</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Catatan DM (Opsional) -->
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center justify-between">
+          <span>Catatan / Arahan DM (Opsional):</span>
+          <span v-if="isAdjusted" class="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+            Nilai disesuaikan ({{ slScore }} → {{ dmScore }})
+          </span>
+        </label>
+        <textarea
+          v-model="dmNote"
+          rows="2"
+          placeholder="Tuliskan arahan atau feedback untuk kru & Store Leader..."
+          class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-1 focus:ring-[#831843] resize-none"
+        ></textarea>
+      </div>
     </div>
 
     <template #footer>
@@ -125,7 +203,7 @@
         class="inline-flex items-center gap-2 px-5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white shadow-md shadow-[#831843]/20 transition-all active:scale-95 cursor-pointer"
       >
         <Star class="w-3.5 h-3.5 fill-white" />
-        <span>Setujui & Cairkan {{ finalStars }} ⭐</span>
+        <span>Setujui & Beri +{{ finalStars }} ⭐</span>
       </button>
     </template>
   </BaseModal>

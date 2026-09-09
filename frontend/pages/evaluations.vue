@@ -329,8 +329,29 @@
 
               <!-- JIKA MISI BELUM SELESAI: Tampilkan Form Input Slider, Catatan, Upload Foto, dan Tombol Kirim -->
               <template v-else>
+                <!-- Locked Week Notice Banner on Card if Week is Locked -->
+                <div
+                  v-if="isWeekLocked"
+                  class="p-2.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-600 dark:text-slate-300"
+                >
+                  <span class="flex items-center gap-1.5 font-semibold text-[11px]">
+                    <Lock class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                    <span>Week {{ batchStore.selectedWeek }} berstatus terkunci. Input nilai dinonaktifkan.</span>
+                  </span>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                    Hanya Lihat
+                  </span>
+                </div>
+
                 <!-- Input Nilai (Slider & Box Inline) -->
-                <div class="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-2">
+                <div
+                  class="p-3 rounded-xl border space-y-2 transition-all"
+                  :class="[
+                    isWeekLocked
+                      ? 'bg-slate-100/50 dark:bg-slate-800/20 border-slate-200 dark:border-slate-800'
+                      : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/60 dark:border-slate-800'
+                  ]"
+                >
                   <!-- Header Row: Label + Score Tier Badge + Value Input -->
                   <div class="flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2 flex-wrap">
@@ -352,7 +373,10 @@
                     <div class="flex items-center gap-1 flex-shrink-0">
                       <div
                         class="flex items-center rounded-lg border px-2 py-1 transition-all bg-white dark:bg-slate-900 shadow-xs"
-                        :class="getScoreTier(missionScores[mission.id]).borderClass"
+                        :class="[
+                          getScoreTier(missionScores[mission.id]).borderClass,
+                          isWeekLocked ? 'opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''
+                        ]"
                       >
                         <input
                           v-model.number="missionScores[mission.id]"
@@ -360,10 +384,14 @@
                           min="0"
                           max="100"
                           step="1"
+                          :disabled="isWeekLocked"
                           @input="onScoreInput(mission.id)"
                           @blur="onScoreBlur(mission.id)"
                           class="w-10 text-center text-xs font-black bg-transparent outline-none p-0 transition-colors"
-                          :class="getScoreTier(missionScores[mission.id]).textClass"
+                          :class="[
+                            getScoreTier(missionScores[mission.id]).textClass,
+                            isWeekLocked ? 'cursor-not-allowed' : ''
+                          ]"
                         />
                         <span class="text-[10px] text-slate-400 font-bold select-none">/100</span>
                       </div>
@@ -378,18 +406,20 @@
                       min="0"
                       max="100"
                       step="1"
+                      :disabled="isWeekLocked"
                       :style="getSliderTrackStyle(missionScores[mission.id])"
-                      class="w-full h-2 rounded-full appearance-none cursor-pointer transition-all custom-score-slider shadow-inner"
+                      class="w-full h-2 rounded-full appearance-none transition-all custom-score-slider shadow-inner"
+                      :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
                     />
                   </div>
 
                   <!-- Guide Markers Below Slider (Clickable Presets) -->
                   <div class="flex items-center justify-between text-[10px] font-semibold text-slate-400 dark:text-slate-500 px-0.5 select-none">
-                    <button type="button" class="hover:text-rose-600 transition-colors cursor-pointer" @click="missionScores[mission.id] = 0">0 (0⭐)</button>
-                    <button type="button" class="hover:text-rose-500 transition-colors cursor-pointer" @click="missionScores[mission.id] = 25">25 (1.3⭐)</button>
-                    <button type="button" class="hover:text-amber-500 transition-colors cursor-pointer" @click="missionScores[mission.id] = 50">50 (2.5⭐)</button>
-                    <button type="button" class="hover:text-sky-500 transition-colors cursor-pointer" @click="missionScores[mission.id] = 75">75 (3.8⭐)</button>
-                    <button type="button" class="hover:text-emerald-500 transition-colors text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer" @click="missionScores[mission.id] = 100">100 (5⭐)</button>
+                    <button type="button" :disabled="isWeekLocked" :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'hover:text-rose-600 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 0">0 (0⭐)</button>
+                    <button type="button" :disabled="isWeekLocked" :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'hover:text-rose-500 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 25">25 (1.3⭐)</button>
+                    <button type="button" :disabled="isWeekLocked" :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'hover:text-amber-500 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 50">50 (2.5⭐)</button>
+                    <button type="button" :disabled="isWeekLocked" :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'hover:text-sky-500 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 75">75 (3.8⭐)</button>
+                    <button type="button" :disabled="isWeekLocked" :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'hover:text-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer transition-colors'" @click="missionScores[mission.id] = 100">100 (5⭐)</button>
                   </div>
                 </div>
 
@@ -403,8 +433,14 @@
                     <textarea
                       v-model="missionComments[mission.id]"
                       rows="2"
-                      placeholder="Tuliskan catatan kepatuhan SOP atau temuan lapangan..."
-                      class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-2 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-1 focus:ring-[#831843] resize-none"
+                      :disabled="isWeekLocked"
+                      :placeholder="isWeekLocked ? 'Minggu ini terkunci. Catatan hanya dapat diedit pada minggu aktif.' : 'Tuliskan catatan kepatuhan SOP atau temuan lapangan...'"
+                      class="w-full text-xs rounded-xl border p-2 placeholder-slate-400 resize-none transition-all"
+                      :class="[
+                        isWeekLocked
+                          ? 'bg-slate-100/80 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-500 cursor-not-allowed'
+                          : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#831843]'
+                      ]"
                     ></textarea>
                   </div>
 
@@ -421,8 +457,11 @@
                     </div>
 
                     <div class="flex items-center gap-1.5 flex-wrap">
-                      <!-- Tombol Upload File -->
-                      <label class="h-8 px-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-[#831843] bg-slate-50 dark:bg-slate-800 hover:bg-[#831843]/5 flex items-center gap-1.5 cursor-pointer transition-all text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <!-- Tombol Upload File (Hanya muncul jika minggu aktif) -->
+                      <label
+                        v-if="!isWeekLocked"
+                        class="h-8 px-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-[#831843] bg-slate-50 dark:bg-slate-800 hover:bg-[#831843]/5 flex items-center gap-1.5 cursor-pointer transition-all text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      >
                         <input
                           type="file"
                           accept="image/*"
@@ -433,6 +472,11 @@
                         <Plus class="w-3 h-3 text-[#831843] dark:text-[#f472b6]" />
                         <span class="text-[11px]">+ Foto</span>
                       </label>
+
+                      <!-- Info jika minggu terkunci dan tidak ada foto -->
+                      <span v-else-if="(missionEvidences[mission.id] || []).length === 0" class="text-[11px] text-slate-400 italic py-1">
+                        Tidak ada lampiran foto
+                      </span>
 
                       <!-- Preview Thumbnail Foto yang Diupload (Klik untuk memperbesar) -->
                       <div
@@ -449,8 +493,9 @@
                           <Eye class="w-3 h-3 text-white" />
                         </div>
 
-                        <!-- Tombol Hapus Foto -->
+                        <!-- Tombol Hapus Foto (Hanya muncul jika minggu aktif) -->
                         <button
+                          v-if="!isWeekLocked"
                           type="button"
                           @click.stop="removeEvidence(mission.id, evIdx)"
                           class="absolute top-0 right-0 w-3.5 h-3.5 bg-rose-600 hover:bg-rose-700 text-white rounded-bl flex items-center justify-center cursor-pointer shadow-xs z-10"
@@ -468,7 +513,15 @@
                   <!-- Status Indikator Misi -->
                   <div class="flex items-center gap-1.5">
                     <span
-                      v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'"
+                      v-if="isWeekLocked"
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold"
+                    >
+                      <Lock class="w-3 h-3 text-slate-400" />
+                      <span>🔒 Minggu Terkunci (Hanya Lihat)</span>
+                    </span>
+
+                    <span
+                      v-else-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'"
                       class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[11px] font-bold"
                     >
                       <Clock class="w-3 h-3 text-amber-600 animate-pulse" />
@@ -513,17 +566,21 @@
                   <div v-else>
                     <button
                       type="button"
-                      :disabled="getMissionStatus(mission.id) === 'LOCKED'"
+                      :disabled="isWeekLocked || getMissionStatus(mission.id) === 'LOCKED'"
                       @click="submitSingleMission(mission.id)"
                       class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                       :class="[
-                        (getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL')
-                          ? 'bg-amber-600 hover:bg-amber-700'
-                          : 'bg-[#831843] hover:bg-[#6b133a]'
+                        isWeekLocked
+                          ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed'
+                          : (getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL')
+                            ? 'bg-amber-600 hover:bg-amber-700'
+                            : 'bg-[#831843] hover:bg-[#6b133a]'
                       ]"
                     >
-                      <Send class="w-3 h-3" />
-                      <span v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'">Perbarui Nilai di DM</span>
+                      <Lock v-if="isWeekLocked" class="w-3 h-3" />
+                      <Send v-else class="w-3 h-3" />
+                      <span v-if="isWeekLocked">Minggu Terkunci</span>
+                      <span v-else-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'">Perbarui Nilai di DM</span>
                       <span v-else>Kirim Misi Ini ke DM</span>
                     </button>
                   </div>
@@ -642,6 +699,7 @@ import {
   X,
   Eye,
   ShieldCheck,
+  Lock,
   Image as ImageIcon
 } from 'lucide-vue-next'
 
@@ -653,6 +711,10 @@ const approvalStore = useApprovalStore()
 const gamificationStore = useGamificationStore()
 const userStore = useUserStore()
 const toast = useToast()
+
+const isWeekLocked = computed(() => {
+  return batchStore.isWeekSelectedLocked || (Number(batchStore.selectedWeek) !== Number(batchStore.activeWeekNumber))
+})
 
 const previewImage = ref(null)
 
@@ -1084,6 +1146,10 @@ function getMissionComment(missionId) {
 }
 
 async function submitSingleMission(missionId) {
+  if (isWeekLocked.value) {
+    toast.warning('Minggu Terkunci', `Minggu ${batchStore.selectedWeek} berstatus terkunci. Evaluasi hanya dapat diinput saat minggu ini menjadi siklus aktif.`)
+    return
+  }
   if (!selectedCrew.value) return
   const targetMission = currentWeekMissions.value.find(m => m.id === missionId)
   const score = (missionScores[missionId] !== undefined && missionScores[missionId] !== null && missionScores[missionId] !== '')

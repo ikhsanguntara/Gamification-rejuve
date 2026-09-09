@@ -68,11 +68,16 @@
           </div>
           <div>
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              Skor Evaluasi
+              {{ item.status === 'APPROVED' && item.dmScore !== undefined ? 'Nilai Akhir Rata-rata' : 'Skor Pengajuan SL' }}
             </span>
-            <span class="text-sm font-black text-slate-900 dark:text-white">
-              {{ item.score || item.averageScore }}/100
-            </span>
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-sm font-black text-slate-900 dark:text-white">
+                {{ item.score || item.averageScore }}/100
+              </span>
+              <span v-if="item.status === 'APPROVED' && item.dmScore !== undefined && item.slScore !== undefined" class="text-[10px] text-slate-500 font-medium">
+                (SL: {{ item.slScore }} • DM: {{ item.dmScore }})
+              </span>
+            </div>
           </div>
         </div>
 
