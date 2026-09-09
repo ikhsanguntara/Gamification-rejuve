@@ -33,6 +33,8 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 
 | ID | Tanggal & Waktu (WIB) | Target Environment | Komponen | Commit Hash & Branch | Hasil Unit Test | Port / URL Akses | Status |
 | :---: | :--- | :--- | :--- | :--- | :---: | :--- | :---: |
+| **DEP-006** | 2026-09-09 14:20 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `4b496e7` (`main`) | **86/86 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
+| **DEP-005** | 2026-09-07 17:44 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `4b496e7` (`main`) | **86/86 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-004** | 2026-09-07 14:15 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `0c42431` (`main`) | **86/86 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-003** | 2026-09-07 13:42 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `2badd97` (`main`) | **86/86 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-002** | 2026-09-05 12:53 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `81b5963` (`stg-fe` & `main`) | **86/86 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
@@ -41,6 +43,47 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 ---
 
 ## 📝 Rincian Log Tiap Deployment
+
+### [DEP-006] — 2026-09-09 14:20 WIB
+- **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"deploy ke firebase"*)
+- **Target Host**: Google Firebase Hosting (`gamification-dde4b`)
+- **Komponen Di-Deploy**: 
+  - Nuxt 3 Frontend SPA ter-generate ke static distribution (`.output/public`)
+  - Target REST API: `https://cagelike-flukily-niels.ngrok-free.dev/api`
+  - Host dinamis pada login & preset cepat Ngrok di halaman settings
+- **Branch & Commit**: `4b496e7` di branch `main`
+- **Hasil Pengujian Unit Test Sebelum Deploy**:
+  - **CRUD Test Suite**: `49/49 Tests PASS (100%)`
+  - **QA Unit Tester Suite**: `37/37 Tests PASS (100%)`
+  - **Total Pengujian**: `86/86 Tests PASS (0 Failed)`
+- **Verifikasi Live Hosting Pasca Deploy**:
+  - Hosting URL $\rightarrow$ **`https://gamification-dde4b.web.app`**
+  - Status Akses $\rightarrow$ `HTTP/2 200 OK`
+  - Prerendered Routes: 32 routes
+- **Status Akhir**: 🟢 **SUCCESS (BERHASIL 100%)**
+
+---
+
+### [DEP-005] — 2026-09-07 17:44 WIB
+- **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"https://cagelike-flukily-niels.ngrok-free.dev rubah env pake ini dulu lalu deploy ke firebase dulu jangan vps"*)
+- **Target Host**: Google Firebase Hosting (`gamification-dde4b`)
+- **Komponen Di-Deploy**: 
+  - Switch REST API Base URL ke Ngrok Tunnel: `https://cagelike-flukily-niels.ngrok-free.dev/api`
+  - Injeksi Business Parameter `MISSION_CATEGORY` & `BUDDY_CATEGORY` ke database backend Ngrok
+  - Indikator koneksi API di halaman Login diset dinamis sesuai hostname backend yang aktif
+  - Penambahan preset cepat Ngrok Dev di halaman Settings
+- **Branch & Commit**: `4b496e7` di branch `main`
+- **Hasil Pengujian Unit Test Sebelum Deploy**:
+  - **CRUD Test Suite**: `49/49 Tests PASS (100%)`
+  - **QA Unit Tester Suite**: `37/37 Tests PASS (100%)`
+  - **Total Pengujian**: `86/86 Tests PASS (0 Failed)`
+- **Verifikasi Live Hosting Pasca Deploy**:
+  - Hosting URL $\rightarrow$ **`https://gamification-dde4b.web.app`**
+  - Prerendered Routes: 32 routes (100% OK)
+  - Nuxt Client Runtime API Target $\rightarrow$ `https://cagelike-flukily-niels.ngrok-free.dev/api`
+- **Status Akhir**: 🟢 **SUCCESS (BERHASIL 100%)**
+
+---
 
 ### [DEP-004] — 2026-09-07 14:15 WIB
 - **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"deploy ke vps maksud saya sekarang deploy di vps jangan firebase. ikutin rule jangan ngerusak punya be dan servis project lainya cek dulu..."*)

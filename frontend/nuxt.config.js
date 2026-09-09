@@ -6,7 +6,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://103.168.147.133:3005/api',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://cagelike-flukily-niels.ngrok-free.dev/api',
       appEnv: process.env.NUXT_PUBLIC_APP_ENV || 'development',
       appName: process.env.NUXT_PUBLIC_APP_NAME || 'Rejuve Gamification',
       appVersion: process.env.NUXT_PUBLIC_APP_VERSION || '1.0.0',

@@ -16,15 +16,6 @@
         </p>
       </div>
 
-      <div class="flex items-center gap-2">
-        <NuxtLink
-          to="/admin/stores/create"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#831843] hover:bg-[#9d174d] text-white text-xs font-semibold shadow-md shadow-[#831843]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <Plus class="w-4 h-4" />
-          <span>Tambah Gerai Baru</span>
-        </NuxtLink>
-      </div>
     </div>
 
 
@@ -195,14 +186,7 @@
             >
               <Edit3 class="w-4 h-4" />
             </NuxtLink>
-            <button
-              type="button"
-              @click="confirmDelete(store)"
-              class="p-2 rounded-xl text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-              title="Hapus Gerai"
-            >
-              <Trash2 class="w-4 h-4" />
-            </button>
+
           </div>
         </div>
       </div>

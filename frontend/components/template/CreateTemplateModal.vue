@@ -386,9 +386,7 @@ const form = ref({
 })
 
 const unitLabel = computed(() => {
-  if (form.value.durationCode === 'DAY') return 'Hari'
-  if (form.value.durationCode === 'MONTH') return 'Bulan'
-  return 'Minggu'
+  return 'Periode'
 })
 
 const totalPeriods = computed(() => {

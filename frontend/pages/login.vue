@@ -40,7 +40,7 @@
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span class="font-bold text-slate-800 dark:text-slate-200">REST API:</span>
-            <span class="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">Live API Server (103.168.147.133:3005)</span>
+            <span class="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold truncate max-w-[200px] sm:max-w-xs" :title="apiHostDisplay">Live API Server ({{ apiHostDisplay }})</span>
           </div>
           <span class="text-[10px] px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold">
             JWT Bearer
@@ -152,8 +152,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { getApiBaseUrl } from '~/composables/useApi.js'
 import { useUserStore } from '~/stores/user.js'
 import { useStoreStore } from '~/stores/store.js'
 import { useBatchStore } from '~/stores/batch.js'
@@ -176,6 +177,7 @@ const email = ref('sl@example.com')
 const password = ref('password123')
 const showPassword = ref(false)
 const isLoading = ref(false)
+const apiHostDisplay = computed(() => getApiBaseUrl().replace(/^https?:\/\//, '').replace(/\/api$/, ''))
 
 // Akun-akun resmi di database backend (seeder PostgreSQL)
 const apiAccounts = [

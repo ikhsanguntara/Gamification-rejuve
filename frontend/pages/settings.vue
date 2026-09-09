@@ -114,7 +114,7 @@
             <input
               v-model="customApiUrl"
               type="url"
-              placeholder="http://103.168.147.133:3005/api"
+              placeholder="https://cagelike-flukily-niels.ngrok-free.dev/api"
               class="flex-1 text-xs font-mono rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
             <button
@@ -128,7 +128,6 @@
               type="button"
               @click="resetApiUrl"
               class="px-3 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Kembalikan ke default file .env"
             >
               Reset
             </button>
@@ -138,6 +137,13 @@
         <!-- Preset URL Buttons -->
         <div class="flex flex-wrap items-center gap-2 pt-1">
           <span class="text-[11px] text-slate-400 font-medium">Preset Cepat:</span>
+          <button
+            type="button"
+            @click="applyPreset('https://cagelike-flukily-niels.ngrok-free.dev/api')"
+            class="text-[11px] px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:border-[#831843] cursor-pointer"
+          >
+            🌐 Ngrok Dev
+          </button>
           <button
             type="button"
             @click="applyPreset('http://103.168.147.133:3005/api')"
@@ -241,7 +247,7 @@ const userStore = useUserStore()
 const { theme, setTheme } = useTheme()
 const toast = useToast()
 
-const customApiUrl = ref('http://103.168.147.133:3005/api')
+const customApiUrl = ref('https://cagelike-flukily-niels.ngrok-free.dev/api')
 const appEnv = ref('development')
 
 const roleBadgeClasses = computed(() => {

@@ -6,7 +6,7 @@
 let memoryToken = ''
 
 export function getApiBaseUrl() {
-  let url = 'http://103.168.147.133:3005/api'
+  let url = 'https://cagelike-flukily-niels.ngrok-free.dev/api'
   if (typeof window !== 'undefined') {
     try {
       const config = useRuntimeConfig?.()
