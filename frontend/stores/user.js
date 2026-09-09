@@ -258,6 +258,9 @@ export const useUserStore = defineStore('user', {
         if (params.batchId && params.batchId !== 'ALL') {
           exact.batchId = params.batchId
         }
+        if (params.hasBatch !== undefined) {
+          exact.hasBatch = params.hasBatch
+        }
 
         const query = buildPrismaQuery({
           page: params.page || 1,

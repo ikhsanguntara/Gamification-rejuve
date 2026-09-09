@@ -8,7 +8,7 @@
             <Handshake class="w-4 h-4" />
           </div>
           <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Rapor New Hire Re.juve (Pre-Batch 3 Hari)
+            Rapor New Hire Re.juve
           </h2>
           <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
             {{ batchStore.currentBatch?.name }}

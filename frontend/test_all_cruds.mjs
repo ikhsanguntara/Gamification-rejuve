@@ -337,7 +337,7 @@ console.log('')
 // ==========================================
 // TEST SUITE 7: BUDDY TEMPLATE & EVALUATION CRUD
 // ==========================================
-console.log('📌 7. Menguji CRUD Program Misi Buddy (Pre-Batch 3 Hari):')
+console.log('📌 7. Menguji CRUD Program Misi Buddy')
 
 import { useBuddyStore } from './stores/buddy.js'
 const buddyStore = useBuddyStore()
