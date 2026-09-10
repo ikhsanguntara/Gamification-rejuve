@@ -286,8 +286,8 @@
                 </div>
               </div>
 
-              <!-- JIKA MISI SUDAH SELESAI (COMPLETED / APPROVED / APPROVED_BY_DM): Tampilkan Ringkasan Read-Only (Tanpa Slider & Tombol Update) -->
-              <template v-if="getMissionStatus(mission.id) === 'COMPLETED' || getMissionStatus(mission.id) === 'APPROVED' || getMissionStatus(mission.id) === 'APPROVED_BY_DM'">
+              <!-- JIKA MISI SUDAH DINILAI (SCORED_BY_TL / PENDING_REVIEW / COMPLETED / APPROVED / APPROVED_BY_DM): Tampilkan Ringkasan Read-Only (Tanpa Slider & Tombol Update) -->
+              <template v-if="isMissionSubmitted(mission.id)">
                 <!-- Catatan Evaluator & Foto Bukti (Read-Only) -->
                 <div class="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-2.5 text-xs">
                   <!-- Catatan Evaluator -->
@@ -327,7 +327,7 @@
                 </div>
               </template>
 
-              <!-- JIKA MISI BELUM SELESAI: Tampilkan Form Input Slider, Catatan, Upload Foto, dan Tombol Kirim -->
+              <!-- JIKA MISI BELUM DINILAI: Tampilkan Form Input Slider, Catatan, Upload Foto -->
               <template v-else>
                 <!-- Locked Week Notice Banner on Card if Week is Locked -->
                 <div
@@ -356,7 +356,7 @@
                   <div class="flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2 flex-wrap">
                       <label class="text-xs font-bold text-slate-800 dark:text-slate-200 flex-shrink-0">
-                        Nilai {{ selectedCrew.name }}:
+                        Nilai {{ selectedCrew?.name || 'Kru' }}:
                       </label>
                       <!-- Dynamic Tier Badge -->
                       <span
@@ -507,85 +507,97 @@
                     </div>
                   </div>
                 </div>
-
-                <!-- Action Bar Per-Misi (Compact Footer) -->
-                <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                  <!-- Status Indikator Misi -->
-                  <div class="flex items-center gap-1.5">
-                    <span
-                      v-if="isWeekLocked"
-                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold"
-                    >
-                      <Lock class="w-3 h-3 text-slate-400" />
-                      <span>🔒 Minggu Terkunci (Hanya Lihat)</span>
-                    </span>
-
-                    <span
-                      v-else-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'"
-                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[11px] font-bold"
-                    >
-                      <Clock class="w-3 h-3 text-amber-600 animate-pulse" />
-                      <span>⏳ Menunggu Review DM</span>
-                    </span>
-
-                    <span
-                      v-else-if="getMissionStatus(mission.id) === 'APPROVED_BY_DM' || getMissionStatus(mission.id) === 'COMPLETED' || getMissionStatus(mission.id) === 'APPROVED'"
-                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold"
-                    >
-                      <CheckCircle2 class="w-3 h-3 text-emerald-600" />
-                      <span>✅ Selesai & Disetujui</span>
-                    </span>
-
-                    <span
-                      v-else-if="getMissionStatus(mission.id) === 'LOCKED'"
-                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold"
-                    >
-                      <span>🔒 Terkunci (Selesaikan Buddy Terlebih Dahulu)</span>
-                    </span>
-
-                    <span v-else class="text-[11px] text-slate-400 font-medium">
-                      ⚡ Siap dinilai & diajukan
-                    </span>
-                  </div>
-
-                  <!-- DM ACTIONS vs SL ACTIONS -->
-                  <div v-if="userStore.isDistrictManager" class="flex items-center gap-1.5">
-                    <NuxtLink
-                      v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'"
-                      to="/approvals"
-                      class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                    >
-                      <ShieldCheck class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                      <span>Buka di Menu Approvals (DM)</span>
-                    </NuxtLink>
-                    <span v-else class="text-[11px] font-medium text-slate-400 italic">
-                      Penilaian diisi oleh Store Leader
-                    </span>
-                  </div>
-
-                  <div v-else>
-                    <button
-                      type="button"
-                      :disabled="isWeekLocked || getMissionStatus(mission.id) === 'LOCKED'"
-                      @click="submitSingleMission(mission.id)"
-                      class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                      :class="[
-                        isWeekLocked
-                          ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed'
-                          : (getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL')
-                            ? 'bg-amber-600 hover:bg-amber-700'
-                            : 'bg-[#831843] hover:bg-[#6b133a]'
-                      ]"
-                    >
-                      <Lock v-if="isWeekLocked" class="w-3 h-3" />
-                      <Send v-else class="w-3 h-3" />
-                      <span v-if="isWeekLocked">Minggu Terkunci</span>
-                      <span v-else-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'">Perbarui Nilai di DM</span>
-                      <span v-else>Kirim Misi Ini ke DM</span>
-                    </button>
-                  </div>
-                </div>
               </template>
+
+              <!-- Action Bar Per-Misi (Compact Footer) -->
+              <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                <!-- Status Indikator Misi -->
+                <div class="flex items-center gap-1.5">
+                  <span
+                    v-if="isWeekLocked"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold"
+                  >
+                    <Lock class="w-3 h-3 text-slate-400" />
+                    <span>🔒 Minggu Terkunci (Hanya Lihat)</span>
+                  </span>
+
+                  <span
+                    v-else-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[11px] font-bold"
+                  >
+                    <Clock class="w-3 h-3 text-amber-600 animate-pulse" />
+                    <span>⏳ Menunggu Review DM</span>
+                  </span>
+
+                  <span
+                    v-else-if="getMissionStatus(mission.id) === 'APPROVED_BY_DM' || getMissionStatus(mission.id) === 'COMPLETED' || getMissionStatus(mission.id) === 'APPROVED'"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold"
+                  >
+                    <CheckCircle2 class="w-3 h-3 text-emerald-600" />
+                    <span>✅ Selesai & Disetujui</span>
+                  </span>
+
+                  <span
+                    v-else-if="getMissionStatus(mission.id) === 'LOCKED'"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold"
+                  >
+                    <span>🔒 Terkunci (Selesaikan Buddy Terlebih Dahulu)</span>
+                  </span>
+
+                  <span v-else class="text-[11px] text-slate-400 font-medium">
+                    ⚡ Siap dinilai & diajukan
+                  </span>
+                </div>
+
+                <!-- DM ACTIONS vs SL ACTIONS -->
+                <div v-if="userStore.isDistrictManager" class="flex items-center gap-1.5">
+                  <NuxtLink
+                    v-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'"
+                    to="/approvals"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <ShieldCheck class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>Buka di Menu Approvals (DM)</span>
+                  </NuxtLink>
+                  <span v-else class="text-[11px] font-medium text-slate-400 italic">
+                    Penilaian diisi oleh Store Leader
+                  </span>
+                </div>
+
+                <div v-else>
+                  <button
+                    v-if="!isMissionSubmitted(mission.id)"
+                    type="button"
+                    :disabled="isWeekLocked || getMissionStatus(mission.id) === 'LOCKED'"
+                    @click="submitSingleMission(mission.id)"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    :class="[
+                      isWeekLocked
+                        ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed'
+                        : 'bg-[#831843] hover:bg-[#6b133a]'
+                    ]"
+                  >
+                    <Lock v-if="isWeekLocked" class="w-3 h-3" />
+                    <Send v-else class="w-3 h-3" />
+                    <span v-if="isWeekLocked">Minggu Terkunci</span>
+                    <span v-else>Kirim Misi Ini ke DM</span>
+                  </button>
+                  <span
+                    v-else-if="getMissionStatus(mission.id) === 'PENDING_REVIEW' || getMissionStatus(mission.id) === 'SCORED_BY_TL'"
+                    class="text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-200/80 dark:border-amber-800/60 flex items-center gap-1"
+                  >
+                    <CheckCircle2 class="w-3.5 h-3.5 text-amber-600" />
+                    <span>Terkirim ke DM</span>
+                  </span>
+                  <span
+                    v-else-if="getMissionStatus(mission.id) === 'APPROVED_BY_DM' || getMissionStatus(mission.id) === 'COMPLETED' || getMissionStatus(mission.id) === 'APPROVED'"
+                    class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-200/80 dark:border-emerald-800/60 flex items-center gap-1"
+                  >
+                    <CheckCircle2 class="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Disetujui</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -700,6 +712,7 @@ import {
   Eye,
   ShieldCheck,
   Lock,
+  MessageSquare,
   Image as ImageIcon
 } from 'lucide-vue-next'
 
@@ -1126,6 +1139,11 @@ function getMissionStatus(missionId) {
     if (ce && ce.status) return ce.status
   }
   return mission.status || 'UNGRADED'
+}
+
+function isMissionSubmitted(missionId) {
+  const status = getMissionStatus(missionId)
+  return ['PENDING_REVIEW', 'SCORED_BY_TL', 'APPROVED_BY_DM', 'COMPLETED', 'APPROVED'].includes(status)
 }
 
 function getMissionComment(missionId) {

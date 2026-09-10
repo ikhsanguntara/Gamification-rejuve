@@ -39,13 +39,13 @@ export const useMissionStore = defineStore('mission', {
   },
 
   actions: {
-    async fetchMissionsFromApi(forceRefresh = false) {
+    async fetchMissionsFromApi(forceRefresh = false, queryParams = {}) {
       try {
-        const cacheKey = 'missions:all'
+        const cacheKey = `missions:${JSON.stringify(queryParams)}`
         const resData = await cachedApiCall(cacheKey, async () => {
           const [batchRes, missionRes] = await Promise.allSettled([
-            batchApi.getAll(),
-            evaluationApi.getUserMissions()
+            batchApi.getAll({ limit: 50 }),
+            evaluationApi.getUserMissions({ limit: 100, type: 'JOURNEY', ...queryParams })
           ])
 
           const userMissions = (missionRes.status === 'fulfilled' && missionRes.value?.data && Array.isArray(missionRes.value.data))
@@ -56,25 +56,44 @@ export const useMissionStore = defineStore('mission', {
             : []
 
           return { userMissions, batches }
-        }, 20000, forceRefresh)
+        }, 15000, forceRefresh)
 
         const userMissions = resData?.userMissions || []
         const batches = resData?.batches || []
 
         if (userMissions.length > 0) {
-          this.missions = userMissions.map((um, idx) => {
+          // Filter hanya misi bertipe JOURNEY (misi operasional mingguan) agar kuesioner feedback atau buddy tidak tercampur
+          const journeyUserMissions = userMissions.filter(um => {
+            const mType = (um.mission?.type || '').toUpperCase()
+            return !mType || mType === 'JOURNEY'
+          })
+
+          const targetList = journeyUserMissions.length > 0 ? journeyUserMissions : userMissions
+
+          this.missions = targetList.map((um, idx) => {
             const m = um.mission || {}
             let status = 'IN_PROGRESS'
             if (um.status === 'LOCKED') status = 'LOCKED'
             else if (um.status === 'SCORED_BY_TL') status = 'PENDING_REVIEW'
             else if (um.status === 'APPROVED_BY_DM' || um.status === 'COMPLETED') status = 'COMPLETED'
-            else if (um.status === 'OPEN') status = 'IN_PROGRESS'
+            else if (um.status === 'REVISED_BY_DM') status = 'REVISION_REQUIRED'
+            else if (um.status === 'OPEN' || um.status === 'ACTIVE') status = 'IN_PROGRESS'
 
-            const score = Number(um.finalScore || um.tlScore || 0)
+            const score = Number(um.finalScore !== null && um.finalScore !== undefined ? um.finalScore : (um.dmScore !== null && um.dmScore !== undefined ? um.dmScore : (um.tlScore || 0)))
+            const earnedStars = calculateStars(score)
+
+            // Extract real SOP Checklist from database (tanpa hardcode string palsu)
+            let sopChecklist = []
+            if (Array.isArray(m.sopChecklist) && m.sopChecklist.length > 0) {
+              sopChecklist = m.sopChecklist.map(s => typeof s === 'string' ? s : (s.item || s.text || s.title || JSON.stringify(s)))
+            }
+
             return {
               id: um.userMissionId || m.missionId || `msn-${idx}`,
+              missionId: m.missionId,
+              userMissionId: um.userMissionId,
               batchId: m.batchId || (batches[0]?.batchId) || (batches[0]?.id) || '',
-              week: m.weekOrDayNumber || 1,
+              week: Number(m.weekOrDayNumber || m.week || 1),
               code: m.code || `MSN-0${idx + 1}`,
               title: m.missionTitle || 'Misi Standar Operasional',
               category: m.category || 'TECHNICAL',
@@ -82,21 +101,20 @@ export const useMissionStore = defineStore('mission', {
               assignedCrewIds: [um.userId],
               crewEvaluations: [{
                 crewId: um.userId,
+                crewName: um.user?.name || 'Crew',
                 score: score,
-                calculatedStars: calculateStars(score),
-                awardedStars: calculateStars(score),
+                calculatedStars: earnedStars,
+                awardedStars: (status === 'COMPLETED') ? earnedStars : 0,
                 status
               }],
               status,
               averageScore: score,
-              calculatedStars: calculateStars(score),
-              awardedStars: calculateStars(score),
+              calculatedStars: earnedStars,
+              awardedStars: (status === 'COMPLETED') ? earnedStars : 0,
               deadline: m.endDate?.split('T')[0] || '',
-              requirements: [
-                'Verifikasi standar kepatuhan operasional Re.juve.',
-                'Dokumentasikan bukti foto kebersihan dan sanitasi.'
-              ],
+              requirements: sopChecklist,
               supervisorId: um.tlId || '',
+              reviewerId: um.dmId || '',
               createdAt: um.createdAt || new Date().toISOString()
             }
           })
@@ -181,11 +199,7 @@ export const useMissionStore = defineStore('mission', {
         calculatedStars: 0,
         awardedStars: 0,
         deadline: payload.deadline || '2026-09-14',
-        requirements: payload.requirements || [
-          'Verifikasi suhu chiller penyimpanan pada kisaran 2-4°C.',
-          'Pemeriksaan sanitasi alat pemeras hidrolik cold-pressed.',
-          'Uji sampling Brix dan kejernihan sari buah.'
-        ],
+        requirements: Array.isArray(payload.requirements) ? payload.requirements : (Array.isArray(payload.sopChecklist) ? payload.sopChecklist : []),
         supervisorId: 'spv-001',
         createdAt: new Date().toISOString()
       }

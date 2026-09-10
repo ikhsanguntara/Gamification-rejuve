@@ -9,8 +9,8 @@
       <div class="hero-user">
         <div class="hero-avatar-wrap">
           <img
-            :src="userStore.currentUser.avatar"
-            :alt="userStore.currentUser.name"
+            :src="userStore.currentUser?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Crew'"
+            :alt="userStore.currentUser?.name || 'Crew Avatar'"
             class="hero-avatar"
           />
           <span class="hero-level-badge">LVL {{ myProgress.currentLevel }}</span>
@@ -22,9 +22,9 @@
               <MapPin class="w-3 h-3" />
               <span>MISI AKTIF</span>
             </span>
-            <span class="hero-batch-name">{{ currentBatch.name }}</span>
+            <span class="hero-batch-name">{{ currentBatch?.name || 'Re.juve Expedition' }}</span>
           </div>
-          <h3 class="hero-name">{{ userStore.currentUser.name }}</h3>
+          <h3 class="hero-name">{{ userStore.currentUser?.name || 'Crew Specialist' }}</h3>
           <p class="hero-subtitle">
             Selesaikan {{ totalMissions }} misi untuk meraih predikat <strong>Star Legend</strong>!
           </p>
@@ -372,7 +372,7 @@ const activeWeek = computed(() => batchStore.activeWeekNumber)
 
 const myCrewData = computed(() => {
   if (userStore.isCrew) {
-    return gamificationStore.crewById(userStore.currentUser.id) || userStore.currentUser
+    return (userStore.currentUser?.id ? gamificationStore.crewById(userStore.currentUser.id) : null) || userStore.currentUser
   }
   return gamificationStore.allCrews[0]
 })

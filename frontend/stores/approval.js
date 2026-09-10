@@ -249,6 +249,7 @@ export const useApprovalStore = defineStore('approval', {
       invalidateApiCache('approvals')
       invalidateApiCache('leaderboard')
       invalidateApiCache('batches')
+      invalidateApiCache('missions')
       return {
         success: true,
         awardedStars,
@@ -283,6 +284,7 @@ export const useApprovalStore = defineStore('approval', {
 
       setStoredData('rejuve_approvals_v4', this.approvals)
       invalidateApiCache('approvals')
+      invalidateApiCache('missions')
       return {
         success: approvedCount > 0,
         approvedCount,

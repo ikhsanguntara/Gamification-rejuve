@@ -30,6 +30,15 @@ const getUserMissions = async (query = {}, currentUser = null) => {
   delete queryClone.page;
   delete queryClone.limit;
 
+  if (queryClone.type) {
+    queryClone['mission.type'] = queryClone.type.toUpperCase();
+    delete queryClone.type;
+  }
+  if (queryClone.batchId) {
+    queryClone['mission.batchId'] = queryClone.batchId;
+    delete queryClone.batchId;
+  }
+
   const where = parsePrismaQuery(queryClone, ['submissionNotes', 'tlNotes', 'dmNotes']);
 
   // Jika batchId tidak ditentukan secara eksplisit di query, gunakan activeBatchId user jika ada

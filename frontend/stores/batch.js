@@ -45,12 +45,16 @@ export function calculateActiveWeek(batch) {
 /**
  * Helper: Compute weeks calendar dates and status dynamically (2, 3, 4, 5+ weeks)
  */
-export function computeWeeksLifecycle(startDateStr, customWeeks = []) {
+export function computeWeeksLifecycle(startDateStr, customWeeks = [], totalWeeksOverride = null) {
   const defaultStartDate = startDateStr || new Date().toISOString().split('T')[0]
   const parts = defaultStartDate.split('-').map(Number)
   const baseStart = new Date(parts[0], parts[1] - 1, parts[2])
 
-  const totalWeeksCount = customWeeks.length > 0 ? customWeeks.length : 3
+  const totalWeeksCount = Math.max(
+    Number(totalWeeksOverride) || 0,
+    customWeeks.length > 0 ? customWeeks.length : 0,
+    3
+  )
   const activeWeek = calculateActiveWeek({ startDate: defaultStartDate, totalWeeks: totalWeeksCount })
 
   const weekNums = Array.from({ length: totalWeeksCount }, (_, i) => i + 1)
@@ -184,7 +188,8 @@ export const useBatchStore = defineStore('batch', {
     },
     currentBatchWeeks: (state) => {
       const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
-      return computeWeeksLifecycle(batch.startDate, batch.weeks || EMPTY_BATCH_FALLBACK.weeks)
+      const totalWeeks = batch.totalWeeks || (Array.isArray(batch.weeks) ? batch.weeks.length : 3)
+      return computeWeeksLifecycle(batch.startDate, batch.weeks || [], totalWeeks)
     },
     isWeekSelectedLocked: (state) => {
       const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
@@ -283,6 +288,31 @@ export const useBatchStore = defineStore('batch', {
             const journeyDetail = b.details?.find(d => d.tplMission?.type === 'JOURNEY')
             const feedbackDetail = b.details?.find(d => d.tplMission?.type === 'FEEDBACK')
 
+            const maxWeeksFromTpl = (journeyDetail?.tplMission?.details || []).reduce((max, d) => Math.max(max, Number(d.durationNumber || d.week || 1)), 1)
+            const maxWeeksFromDuration = Number(journeyDetail?.tplMission?.durationValue) || 0
+            const maxWeeksFromMissions = (b.missions || []).reduce((max, m) => Math.max(max, Number(m.weekOrDayNumber || m.week || 1)), 1)
+            const customWeeksFromTpl = (journeyDetail?.tplMission?.details || []).length > 0
+              ? Array.from({ length: Math.max(maxWeeksFromTpl, maxWeeksFromDuration) }, (_, i) => ({
+                  weekNumber: i + 1,
+                  title: `Minggu ${i + 1}: Tema SOP Operasional`
+                }))
+              : []
+
+            const calculatedTotalWeeks = Math.max(
+              Number(b.totalWeeks) || 0,
+              maxWeeksFromTpl,
+              maxWeeksFromDuration,
+              maxWeeksFromMissions,
+              Array.isArray(b.weeks) && b.weeks.length > 0 ? b.weeks.length : 0,
+              3
+            )
+
+            const finalWeeks = computeWeeksLifecycle(
+              startDate,
+              (Array.isArray(b.weeks) && b.weeks.length > 0) ? b.weeks : customWeeksFromTpl,
+              calculatedTotalWeeks
+            )
+
             return {
               id: b.batchId,
               code: b.code,
@@ -290,7 +320,7 @@ export const useBatchStore = defineStore('batch', {
               storeLocation: b.name,
               description: b.name || `Siklus onboarding ${b.name}`,
               currentWeek: b.currentWeek || 1,
-              totalWeeks: 3,
+              totalWeeks: calculatedTotalWeeks,
               startDate,
               endDate,
               status: b.status || 'OPEN',
@@ -317,7 +347,7 @@ export const useBatchStore = defineStore('batch', {
                 headName: b.districtManager?.name || b.districtManagerUser?.name || b.districtManagerName || '-',
                 crewIds: Array.isArray(b.crewIds) ? b.crewIds : Array.isArray(b.users) ? b.users.map(u => u.userId || u.id) : []
               },
-              weeks: computeWeeksLifecycle(startDate)
+              weeks: finalWeeks
             }
           })
 
@@ -361,6 +391,31 @@ export const useBatchStore = defineStore('batch', {
           const missions = Array.isArray(b.missions) ? b.missions : []
           const crewIds = users.map(u => u.userId || u.id)
 
+          const maxWeeksFromTpl = (journeyDetail?.tplMission?.details || []).reduce((max, d) => Math.max(max, Number(d.durationNumber || d.week || 1)), 1)
+          const maxWeeksFromDuration = Number(journeyDetail?.tplMission?.durationValue) || 0
+          const maxWeeksFromMissions = (missions || []).reduce((max, m) => Math.max(max, Number(m.weekOrDayNumber || m.week || 1)), 1)
+          const customWeeksFromTpl = (journeyDetail?.tplMission?.details || []).length > 0
+            ? Array.from({ length: Math.max(maxWeeksFromTpl, maxWeeksFromDuration) }, (_, i) => ({
+                weekNumber: i + 1,
+                title: `Minggu ${i + 1}: Tema SOP Operasional`
+              }))
+            : []
+
+          const calculatedTotalWeeks = Math.max(
+            Number(b.totalWeeks) || 0,
+            maxWeeksFromTpl,
+            maxWeeksFromDuration,
+            maxWeeksFromMissions,
+            Array.isArray(b.weeks) && b.weeks.length > 0 ? b.weeks.length : 0,
+            3
+          )
+
+          const finalWeeks = computeWeeksLifecycle(
+            startDate,
+            (Array.isArray(b.weeks) && b.weeks.length > 0) ? b.weeks : customWeeksFromTpl,
+            calculatedTotalWeeks
+          )
+
           const formattedBatch = {
             id,
             batchId: id,
@@ -369,7 +424,7 @@ export const useBatchStore = defineStore('batch', {
             storeLocation: b.name || 'Multi-Store (Seluruh Cabang Re.juve)',
             description: b.name || `Siklus gamifikasi ${b.name}`,
             currentWeek: b.currentWeek || 1,
-            totalWeeks: 3,
+            totalWeeks: calculatedTotalWeeks,
             startDate,
             endDate,
             status: b.status || 'OPEN',
@@ -404,7 +459,7 @@ export const useBatchStore = defineStore('batch', {
               maxRevisions: 3,
               requireEvidence: true
             },
-            weeks: computeWeeksLifecycle(startDate)
+            weeks: finalWeeks
           }
 
           // Sinkronisasikan ke state batches array di store
@@ -439,14 +494,21 @@ export const useBatchStore = defineStore('batch', {
       const endDate = payload.endDate || new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       const crewIds = payload.assignment?.crewIds || payload.crewIds || []
 
-      const customWeeks = payload.weeks && payload.weeks.length === 3 ? payload.weeks : [
-        { weekNumber: 1, title: payload.week1Title || 'Minggu 1: Suhu & Sanitasi Dasar' },
-        { weekNumber: 2, title: payload.week2Title || 'Minggu 2: Kualitas Rasa & Layanan' },
-        { weekNumber: 3, title: payload.week3Title || 'Minggu 3: Audit Akhir & Stok' }
-      ]
+      const totalWeeksCount = Math.max(
+        Number(payload.totalWeeks) || 0,
+        Array.isArray(payload.weeks) ? payload.weeks.length : 0,
+        3
+      )
 
-      const computedWeeks = computeWeeksLifecycle(startDate, customWeeks)
-      const currentActiveWeek = calculateActiveWeek({ startDate })
+      const customWeeks = Array.isArray(payload.weeks) && payload.weeks.length > 0
+        ? payload.weeks
+        : Array.from({ length: totalWeeksCount }, (_, i) => ({
+            weekNumber: i + 1,
+            title: payload[`week${i + 1}Title`] || `Minggu ${i + 1}: Tema SOP Operasional`
+          }))
+
+      const computedWeeks = computeWeeksLifecycle(startDate, customWeeks, totalWeeksCount)
+      const currentActiveWeek = calculateActiveWeek({ startDate, totalWeeks: totalWeeksCount })
 
       const newBatch = {
         id,
@@ -455,7 +517,7 @@ export const useBatchStore = defineStore('batch', {
         storeLocation: payload.storeLocation || payload.name,
         description: payload.description || `Siklus gamifikasi dan penjaminan mutu gerai ${payload.name}.`,
         currentWeek: currentActiveWeek,
-        totalWeeks: 3,
+        totalWeeks: totalWeeksCount,
         startDate,
         endDate,
         status: payload.status || 'ACTIVE',
