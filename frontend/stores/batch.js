@@ -209,6 +209,8 @@ export const useBatchStore = defineStore('batch', {
         this.selectedBatchId = targetId
       }
 
+      invalidateApiCache()
+
       const userStore = useUserStore()
       if (userStore.isAuthenticated && (userStore.token || userStore.isLiveApi) && targetId) {
         try {

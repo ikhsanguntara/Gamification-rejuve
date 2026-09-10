@@ -320,8 +320,20 @@ const currentBatchTotalWeeks = computed(() => {
 })
 
 const handleBatchChange = async (batchId) => {
-  await batchStore.selectBatch(batchId)
-  toast.info('Batch Aktif Diubah', `Melihat data untuk ${batchStore.currentBatch?.name || 'Batch'}`)
+  if (batchStore.selectedBatchId === batchId) return
+
+  try {
+    toast.info('Mengganti Batch...', `Menyinkronkan data untuk ${batchStore.batches.find(b => b.id === batchId)?.name || 'Batch'}...`)
+    await batchStore.selectBatch(batchId)
+
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        window.location.reload()
+      }, 300)
+    }
+  } catch (err) {
+    console.error('Gagal mengganti batch:', err)
+  }
 }
 
 
