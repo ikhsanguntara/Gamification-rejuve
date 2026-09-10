@@ -115,6 +115,14 @@
       :active-week="activeWeek"
     />
 
+    <!-- ============================================================
+         ADVENTURE LEADERBOARD SECTION
+    ============================================================ -->
+    <AdventureLeaderboard
+      :batch-id="currentBatch?.id || currentBatch?.batchId"
+      :batch-name="currentBatch?.name"
+    />
+
     <!-- Journey complete banner -->
     <div v-if="journeyComplete" class="journey-complete-banner">
       <div class="complete-stars">
@@ -151,6 +159,7 @@ import { useGamificationStore } from '~/stores/gamification.js'
 import { getStarProgress } from '~/utils/star.js'
 import AdventureMap from '~/components/gamification/adventure/AdventureMap.vue'
 import AdventureWeekModal from '~/components/gamification/adventure/AdventureWeekModal.vue'
+import AdventureLeaderboard from '~/components/gamification/adventure/AdventureLeaderboard.vue'
 import {
   MapPin, Lock, CheckCircle2, ChevronRight, Clock,
   AlertTriangle, Trophy, Tent, Waves, Mountain, Compass

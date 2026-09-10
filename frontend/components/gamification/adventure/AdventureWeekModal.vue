@@ -157,7 +157,7 @@
                 </ul>
               </div>
 
-              <!-- Card Footer: Stars & Action Button -->
+              <!-- Card Footer: Stars -->
               <div class="flex items-center justify-between gap-3 mt-3 pt-2.5 border-t border-[#C19A6B]/25">
                 <!-- Stars count -->
                 <div class="flex items-center gap-1.5">
@@ -172,17 +172,6 @@
                     {{ isMissionCompleted(m) ? `${getMissionStars(m)} Bintang` : 'Maks 5 Bintang' }}
                   </span>
                 </div>
-
-                <!-- Action Button -->
-                <button
-                  type="button"
-                  @click="goToMission(m)"
-                  class="mission-action-btn"
-                  :class="missionBtnClass(m)"
-                >
-                  <span>{{ missionBtnLabel(m) }}</span>
-                  <component :is="missionBtnIcon(m)" class="w-3 h-3" />
-                </button>
               </div>
             </div>
           </div>
