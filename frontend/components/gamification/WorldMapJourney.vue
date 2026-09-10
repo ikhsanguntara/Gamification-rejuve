@@ -216,6 +216,17 @@
                 {{ weekStatusLabel(week) }}
               </span>
 
+              <!-- Modal Trigger Button -->
+              <button
+                type="button"
+                @click.stop="openWeekModal(week.weekNumber)"
+                class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 text-[10px] font-bold border border-amber-500/30 transition-all cursor-pointer"
+                title="Buka detail seluruh misi di week ini"
+              >
+                <span>Buka Detail</span>
+                <ChevronRight class="w-3 h-3" />
+              </button>
+
               <!-- Expand/Collapse Chevron -->
               <ChevronRight
                 class="w-4 h-4 text-slate-400 transition-transform duration-200"
@@ -299,6 +310,16 @@
       </div>
     </div>
 
+    <!-- Adventure Week Modal (Triggered by button / tab) -->
+    <AdventureWeekModal
+      v-model="isWeekModalOpen"
+      :week="selectedModalWeek"
+      :missions="selectedModalWeekMissions"
+      :all-weeks="currentBatchWeeks"
+      :batch-name="currentBatch?.name"
+      @select-week="openWeekModal"
+    />
+
   </div>
 </template>
 
@@ -311,6 +332,7 @@ import { useMissionStore } from '~/stores/mission.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { getStarProgress } from '~/utils/star.js'
 import AdventureMap from '~/components/gamification/adventure/AdventureMap.vue'
+import AdventureWeekModal from '~/components/gamification/adventure/AdventureWeekModal.vue'
 import {
   MapPin, Lock, CheckCircle2, ChevronRight, Clock,
   AlertTriangle, Trophy, Tent, Waves, Mountain, Compass
@@ -324,6 +346,22 @@ const gamificationStore = useGamificationStore()
 
 const selectedWeekFilter = ref(null)
 const collapsedWeeks = ref({})
+const isWeekModalOpen = ref(false)
+const modalWeekNumber = ref(1)
+
+const openWeekModal = (weekNum) => {
+  modalWeekNumber.value = weekNum
+  isWeekModalOpen.value = true
+}
+
+const selectedModalWeek = computed(() => {
+  return currentBatchWeeks.value.find(w => w.weekNumber === modalWeekNumber.value) || currentBatchWeeks.value[0] || null
+})
+
+const selectedModalWeekMissions = computed(() => {
+  if (!selectedModalWeek.value) return []
+  return activeBatchMissions.value.filter(m => m.week === selectedModalWeek.value.weekNumber)
+})
 
 // ── Stores data ──────────────────────────────────────────────────────────────
 

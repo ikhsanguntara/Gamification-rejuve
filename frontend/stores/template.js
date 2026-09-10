@@ -396,9 +396,9 @@ export const useTemplateStore = defineStore('template', {
     },
 
     /**
-     * Create a new Master Template Package (JOURNEY, BUDDY, or FEEDBACK)
+     * Create a new Master Package (JOURNEY, BUDDY, or FEEDBACK)
      */
-    createPackage(payload) {
+    async createPackage(payload) {
       const type = payload.type || 'JOURNEY'
       const durationCode = payload.durationCode || (type === 'JOURNEY' ? 'WEEK' : 'DAY')
       const durationValue = Number(payload.durationValue || 1)
@@ -407,7 +407,36 @@ export const useTemplateStore = defineStore('template', {
       const maxDur = inputDetails.reduce((max, d) => Math.max(max, Number(d.durationNumber || 1)), 1)
       const totalTabs = Math.max(Number(payload.totalWeeks) || 1, maxDur, 1)
 
-      const id = payload.id || payload.tplMissionId || `pkg-${Date.now()}`
+      const payloadCode = payload.code?.trim() || `PKG-${String(this.packages.length + 1).padStart(2, '0')}`
+
+      let apiCreatedId = null
+      let apiResponseData = null
+
+      // Send to live backend API first if available
+      try {
+        const res = await templateApi.create({
+          code: payloadCode,
+          name: payload.name,
+          type,
+          durationCode,
+          durationValue,
+          description: payload.description || '',
+          details: inputDetails
+        })
+        if (res && res.data) {
+          apiResponseData = res.data
+          apiCreatedId = res.data.tplMissionId || res.data.id
+        }
+      } catch (err) {
+        // If API rejects (409 Conflict duplicate code, 400 Bad Request, 422, 500), throw error so UI stays open
+        const statusCode = err.statusCode || err.status || err.data?.statusCode
+        if (typeof window !== 'undefined' || (statusCode && statusCode !== 404 && statusCode !== 401 && statusCode !== 403)) {
+          throw err
+        }
+        console.warn('templateApi.create background sync warning:', err.message)
+      }
+
+      const id = apiCreatedId || payload.id || payload.tplMissionId || `pkg-${Date.now()}`
       const weeks = Array.from({ length: totalTabs }, (_, i) => ({
         weekNumber: i + 1,
         title: type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`
@@ -438,7 +467,7 @@ export const useTemplateStore = defineStore('template', {
         id,
         tplMissionId: id,
         name: payload.name,
-        code: payload.code || `PKG-${String(this.packages.length + 1).padStart(2, '0')}`,
+        code: payloadCode,
         type,
         durationCode,
         durationValue,
@@ -449,7 +478,7 @@ export const useTemplateStore = defineStore('template', {
         totalWeeks: totalTabs,
         weeks,
         templates: mappedTemplates,
-        details: inputDetails
+        details: apiResponseData?.details || inputDetails
       })
 
       if (type === 'JOURNEY') {
@@ -466,27 +495,10 @@ export const useTemplateStore = defineStore('template', {
 
       setStoredData('rejuve_templates_v4', this.packages)
 
-      // Background API sync if available
-      templateApi.create({
-        code: newPkg.code,
-        name: newPkg.name,
-        type,
-        durationCode,
-        durationValue,
-        description: newPkg.description || '',
-        details: inputDetails
-      }).then(res => {
-        if (res?.data?.tplMissionId) {
-          newPkg.tplMissionId = res.data.tplMissionId
-          newPkg.id = res.data.tplMissionId
-          if (type === 'JOURNEY') this.selectedPackageId = newPkg.id
-          else if (type === 'BUDDY') this.selectedBuddyId = newPkg.id
-          else if (type === 'FEEDBACK') this.selectedFeedbackId = newPkg.id
-          this.fetchTemplatesByType(type, { limit: 10 }).catch(() => {})
-        }
-      }).catch(err => {
-        console.warn('templateApi.create background sync warning:', err.message)
-      })
+      // Refresh cache from API if in browser
+      if (apiCreatedId) {
+        this.fetchTemplatesByType(type, { limit: 10 }).catch(() => {})
+      }
 
       return newPkg
     },
@@ -788,7 +800,23 @@ export const useTemplateStore = defineStore('template', {
     /**
      * Delete a Master Package (JOURNEY, BUDDY, or FEEDBACK)
      */
-    deletePackage(id, type = 'JOURNEY') {
+    async deletePackage(id, type = 'JOURNEY') {
+      const isUuid = (val) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val)
+      const pkg = this.packageById(id)
+      const targetApiId = isUuid(id) ? id : (pkg?.tplMissionId && isUuid(pkg.tplMissionId) ? pkg.tplMissionId : null)
+
+      if (targetApiId) {
+        try {
+          await templateApi.delete(targetApiId)
+        } catch (err) {
+          const statusCode = err.statusCode || err.status || err.data?.statusCode
+          if (typeof window !== 'undefined' || (statusCode && statusCode !== 404 && statusCode !== 401 && statusCode !== 403)) {
+            throw err
+          }
+          console.warn('templateApi.delete warning:', err.message)
+        }
+      }
+
       const list = type === 'JOURNEY' ? this.journeyTemplates : (type === 'BUDDY' ? this.buddyTemplates : this.feedbackTemplates)
       const listIdx = list.findIndex(p => p.id === id)
       if (listIdx !== -1) {
@@ -805,12 +833,9 @@ export const useTemplateStore = defineStore('template', {
         setStoredData('rejuve_templates_v4', this.packages)
       }
 
-      // Background API sync if available
-      templateApi.delete(id).then(() => {
+      if (targetApiId) {
         this.fetchTemplatesByType(type, { limit: 10 }).catch(() => {})
-      }).catch(err => {
-        console.warn('Background templateApi.delete failed:', err.message)
-      })
+      }
 
       return removed
     },

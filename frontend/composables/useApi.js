@@ -1,3 +1,5 @@
+import { useLoading } from './useLoading.js'
+
 /**
  * Composable useApi: REST API Client Universal untuk Rejuve Gamification
  * Bekerja sempurna di Nuxt 3 (Browser/SSR) maupun Node.js standalone test scripts.
@@ -66,6 +68,35 @@ export async function apiFetch(path, options = {}) {
 
   const url = cleanPath.startsWith('http') ? cleanPath : `${baseUrl}${cleanPath}`
   const token = options.token || getAuthToken()
+  const method = (options.method || 'GET').toUpperCase()
+  const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)
+  const shouldShowLoading = options.showLoading !== false && (options.showLoading === true || isMutation) && typeof window !== 'undefined'
+
+  let loadingHelper = null
+  if (shouldShowLoading) {
+    try {
+      loadingHelper = useLoading()
+      let msg = options.loadingMessage || 'Memproses permintaan...'
+      let sub = options.loadingSubmessage || 'Harap tunggu, sistem sedang memproses data.'
+
+      if (!options.loadingMessage) {
+        if (method === 'POST') {
+          msg = 'Menyimpan data...'
+          sub = 'Harap tunggu, data sedang dikirim dan diproses server.'
+        } else if (method === 'PUT' || method === 'PATCH') {
+          msg = 'Memperbarui data...'
+          sub = 'Harap tunggu, perubahan sedang disimpan ke server.'
+        } else if (method === 'DELETE') {
+          msg = 'Menghapus data...'
+          sub = 'Harap tunggu, penghapusan data sedang diproses.'
+        }
+      }
+
+      loadingHelper.startLoading(msg, sub)
+    } catch {
+      loadingHelper = null
+    }
+  }
 
   const headers = {
     'ngrok-skip-browser-warning': 'true',
@@ -81,50 +112,56 @@ export async function apiFetch(path, options = {}) {
     requestBody = JSON.stringify(requestBody)
   }
 
-  // Gunakan $fetch jika tersedia (Nuxt), atau fallback ke global fetch
-  if (typeof $fetch !== 'undefined') {
-    try {
-      const res = await $fetch(url, {
-        method: options.method || 'GET',
-        body: options.body,
-        headers
-      })
-      return res
-    } catch (err) {
-      const errData = err.data || {}
-      const errorMessage = errData.message || err.message || 'Terjadi kesalahan saat menghubungi server API.'
-      const statusCode = err.status || err.statusCode || errData.statusCode || 500
-      
-      const customError = new Error(errorMessage)
-      customError.statusCode = statusCode
-      customError.data = errData
-      throw customError
-    }
-  } else {
-    // Native fetch untuk Node.js environment
-    const response = await fetch(url, {
-      method: options.method || 'GET',
-      headers,
-      body: requestBody
-    })
-
-    const contentType = response.headers.get('content-type') || ''
-    let data = null
-    if (contentType.includes('application/json')) {
-      data = await response.json()
+  try {
+    // Gunakan $fetch jika tersedia (Nuxt), atau fallback ke global fetch
+    if (typeof $fetch !== 'undefined') {
+      try {
+        const res = await $fetch(url, {
+          method,
+          body: options.body,
+          headers
+        })
+        return res
+      } catch (err) {
+        const errData = err.data || {}
+        const errorMessage = errData.message || err.message || 'Terjadi kesalahan saat menghubungi server API.'
+        const statusCode = err.status || err.statusCode || errData.statusCode || 500
+        
+        const customError = new Error(errorMessage)
+        customError.statusCode = statusCode
+        customError.data = errData
+        throw customError
+      }
     } else {
-      data = await response.text()
-    }
+      // Native fetch untuk Node.js environment
+      const response = await fetch(url, {
+        method,
+        headers,
+        body: requestBody
+      })
 
-    if (!response.ok) {
-      const msg = (data && data.message) ? data.message : `HTTP error ${response.status}`
-      const err = new Error(msg)
-      err.statusCode = response.status
-      err.data = data
-      throw err
-    }
+      const contentType = response.headers.get('content-type') || ''
+      let data = null
+      if (contentType.includes('application/json')) {
+        data = await response.json()
+      } else {
+        data = await response.text()
+      }
 
-    return data
+      if (!response.ok) {
+        const msg = (data && data.message) ? data.message : `HTTP error ${response.status}`
+        const err = new Error(msg)
+        err.statusCode = response.status
+        err.data = data
+        throw err
+      }
+
+      return data
+    }
+  } finally {
+    if (loadingHelper) {
+      loadingHelper.stopLoading()
+    }
   }
 }
 

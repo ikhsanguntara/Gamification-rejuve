@@ -189,7 +189,7 @@ console.log('')
 console.log('📌 4. Menguji CRUD Master Template SOP:')
 
 // 4.1 CREATE PACKAGE
-const newPkg = templateStore.createPackage({
+const newPkg = await templateStore.createPackage({
   name: 'Standar SOP Express Kiosk',
   code: 'PKG-EXP-01',
   category: 'Operasional Kiosk',
@@ -237,8 +237,8 @@ const updatedPkg = templateStore.packageById(newPkg.id)
 assert(updatedPkg && updatedPkg.templates[0].sopChecklist && updatedPkg.templates[0].sopChecklist.length === 2, 'Update Template Package: Berhasil menyimpan sopChecklist pada detail misi JOURNEY')
 
 // 4.6 DELETE PACKAGE
-templateStore.deletePackage(newPkg.id)
-templateStore.deletePackage(duplicatedPkg.id)
+await templateStore.deletePackage(newPkg.id)
+await templateStore.deletePackage(duplicatedPkg.id)
 assert(templateStore.packageById(newPkg.id) === undefined, 'Delete Template Package: Berhasil menghapus paket template master')
 
 console.log('')

@@ -415,11 +415,30 @@ const mapInputTypeEnum = (inp) => {
   if (['SCALE', 'CHECKBOX', 'RADIO', 'TEXT'].includes(upper)) return upper
   return 'SCALE'
 }
-
 const resetForm = (type = 'JOURNEY') => {
-  const count = type === 'JOURNEY'
-    ? templateStore.journeyTemplates.length
-    : (type === 'BUDDY' ? templateStore.buddyTemplates.length : templateStore.feedbackTemplates.length)
+  const list = type === 'JOURNEY'
+    ? (templateStore.journeyTemplates.length > 0 ? templateStore.journeyTemplates : templateStore.allPackages)
+    : (type === 'BUDDY' ? templateStore.buddyTemplates : templateStore.feedbackTemplates)
+
+  // Smart auto-generate code that avoids existing codes and scans for highest number
+  let nextNum = (list?.length || 0) + 1
+  const existingCodes = new Set((list || []).map(p => (p.code || '').toUpperCase().trim()))
+  
+  ;(list || []).forEach(p => {
+    const match = (p.code || '').match(/(\d+)$/)
+    if (match) {
+      const num = parseInt(match[1], 10)
+      if (!isNaN(num) && num >= nextNum) {
+        nextNum = num + 1
+      }
+    }
+  })
+
+  let generatedCode = `TPL-${type}-${String(nextNum).padStart(2, '0')}`
+  while (existingCodes.has(generatedCode.toUpperCase())) {
+    nextNum++
+    generatedCode = `TPL-${type}-${String(nextNum).padStart(2, '0')}`
+  }
 
   const defaultDurationCode = type === 'JOURNEY' ? 'WEEK' : 'DAY'
   const defaultDurationValue = 1
@@ -427,7 +446,7 @@ const resetForm = (type = 'JOURNEY') => {
 
   form.value = {
     type,
-    code: `TPL-${type}-${String(count + 1).padStart(2, '0')}`,
+    code: generatedCode,
     name: '',
     category: type === 'JOURNEY' ? 'Standar Operasional' : (type === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi'),
     targetType: 'Semua Gerai',
@@ -587,7 +606,8 @@ const executeSavePackage = async () => {
       `Paket "${created?.name || createPayload.name}" beserta ${compiledDetails.length} butir SOP siap digunakan.`
     )
   } catch (err) {
-    toast.error('Gagal Membuat Paket', err.message || 'Terjadi kesalahan')
+    console.error('Gagal membuat paket template:', err)
+    toast.error('Gagal Membuat Paket', err.message || 'Terjadi kesalahan pada server saat membuat paket template.')
   } finally {
     isSubmitting.value = false
   }
