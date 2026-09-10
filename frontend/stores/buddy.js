@@ -85,6 +85,31 @@ export const useBuddyStore = defineStore('buddy', {
   },
 
   actions: {
+    async fetchBuddyReport(userId) {
+      if (!userId) return null
+      try {
+        const res = await evaluationApi.getBuddyReport(userId)
+        if (res && res.data) {
+          return res.data
+        }
+        return res
+      } catch (err) {
+        console.warn('fetchBuddyReport warning:', err.message)
+        return null
+      }
+    },
+
+    async fetchBuddyReportHtml(userId) {
+      if (!userId) return ''
+      try {
+        const res = await evaluationApi.getBuddyReportHtml(userId)
+        return res?.data || res || ''
+      } catch (err) {
+        console.warn('fetchBuddyReportHtml warning:', err.message)
+        return ''
+      }
+    },
+
     async fetchBuddyCrews(params = {}) {
       this.isLoadingCrews = true
       try {

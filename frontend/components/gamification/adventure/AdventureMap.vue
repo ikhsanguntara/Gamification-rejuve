@@ -275,19 +275,48 @@ const isFeedbackModalOpen = ref(false)
 const isWeekModalOpen = ref(false)
 const selectedWeekNumber = ref(1)
 
-// Crew Buddy Evaluation Info
-const currentCrewId = computed(() => userStore.currentUser?.id || '')
+const currentCrewId = computed(() => userStore.currentUser?.id || userStore.currentUser?.userId || userStore.apiUser?.userId || '')
 const currentBatchId = computed(() => batchStore.currentBatch?.id || '')
 
+const liveBuddyReport = ref(null)
+
+onMounted(async () => {
+  if (currentCrewId.value) {
+    try {
+      const res = await buddyStore.fetchBuddyReport(currentCrewId.value)
+      if (res) {
+        liveBuddyReport.value = res?.data || res
+      }
+    } catch (e) {
+      console.warn('Map fetch buddy report warning:', e.message)
+    }
+  }
+})
+
 const crewBuddyEval = computed(() => {
-  return buddyStore.evaluationForCrew(currentBatchId.value, currentCrewId.value)
+  return liveBuddyReport.value || buddyStore.evaluationForCrew(currentBatchId.value, currentCrewId.value)
 })
 
 const crewBuddySummary = computed(() => {
+  if (liveBuddyReport.value?.summary) {
+    const s = liveBuddyReport.value.summary
+    return {
+      total: s.totalIndicators ?? 4,
+      rated: s.evaluatedCount ?? 4,
+      kompeten: s.evaluatedCount ?? 4,
+      butuhPendampingan: 0,
+      belumMenguasai: 0,
+      scorePercent: s.completionPercent ?? s.scorePercent ?? 0,
+      isCompleted: s.completionPercent === 100
+    }
+  }
   return buddyStore.crewCompetencySummary(currentBatchId.value, currentCrewId.value)
 })
 
 const buddyTemplateCompetencies = computed(() => {
+  if (liveBuddyReport.value?.categories && Array.isArray(liveBuddyReport.value.categories)) {
+    return liveBuddyReport.value.categories
+  }
   return buddyStore.defaultPackage?.competencies || []
 })
 

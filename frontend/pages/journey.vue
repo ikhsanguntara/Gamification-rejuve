@@ -16,24 +16,6 @@
           Selesaikan setiap misi operasional Re.juve dan jadilah <strong class="text-amber-600">Star Legend</strong>!
         </p>
       </div>
-
-      <div class="flex items-center gap-2 flex-shrink-0">
-        <NuxtLink
-          to="/missions"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold transition-all cursor-pointer border border-amber-200 dark:border-amber-800"
-        >
-          <Target class="w-4 h-4" />
-          <span>Katalog Misi</span>
-        </NuxtLink>
-
-        <NuxtLink
-          to="/leaderboard"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold transition-all shadow-md shadow-orange-500/25 active:scale-95 cursor-pointer"
-        >
-          <Trophy class="w-4 h-4" />
-          <span>Papan Peringkat</span>
-        </NuxtLink>
-      </div>
     </div>
 
     <!-- Main Adventure Journey Component -->

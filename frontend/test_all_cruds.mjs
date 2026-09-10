@@ -418,6 +418,10 @@ buddyStore.removeIndicator(newBuddyPkg.id, 'comp-pk', addedInd.id)
 buddyStore.deleteBuddyPackage(newBuddyPkg.id)
 assert(buddyStore.packageById(newBuddyPkg.id) === undefined, 'Delete Buddy Package: Berhasil menghapus paket template Rapor')
 
+// 7.7 BUDDY REPORT ACTIONS
+assert(typeof buddyStore.fetchBuddyReport === 'function', 'Buddy Report: Action fetchBuddyReport (JSON) tersedia di store')
+assert(typeof buddyStore.fetchBuddyReportHtml === 'function', 'Buddy Report: Action fetchBuddyReportHtml (Print-Ready) tersedia di store')
+
 console.log('')
 
 // ==========================================

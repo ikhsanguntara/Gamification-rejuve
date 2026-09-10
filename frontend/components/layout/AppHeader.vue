@@ -76,49 +76,7 @@
       </div>
     </div>
 
-    <!-- Center: Desktop Navigation Tabs for Crew (Since Sidebar is Hidden on Desktop for Crew) -->
-    <nav v-if="userStore.isCrew" class="hidden lg:flex items-center gap-1 px-2 py-1 rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-xs font-semibold">
-      <NuxtLink
-        to="/journey"
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all"
-        :class="$route.path.startsWith('/journey') ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-      >
-        <Compass class="w-3.5 h-3.5" />
-        <span>Petualangan</span>
-      </NuxtLink>
-      <NuxtLink
-        to="/missions"
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all"
-        :class="$route.path.startsWith('/missions') ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-      >
-        <Target class="w-3.5 h-3.5" />
-        <span>Misi</span>
-      </NuxtLink>
-      <NuxtLink
-        to="/feedback"
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all"
-        :class="$route.path.startsWith('/feedback') ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-      >
-        <MessageSquareText class="w-3.5 h-3.5" />
-        <span>Survei</span>
-      </NuxtLink>
-      <NuxtLink
-        to="/leaderboard"
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all"
-        :class="$route.path.startsWith('/leaderboard') ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-      >
-        <Medal class="w-3.5 h-3.5" />
-        <span>Peringkat</span>
-      </NuxtLink>
-      <NuxtLink
-        to="/achievements"
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all"
-        :class="$route.path.startsWith('/achievements') ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-      >
-        <Trophy class="w-3.5 h-3.5" />
-        <span>Lencana</span>
-      </NuxtLink>
-    </nav>
+
 
     <!-- Right Controls: Theme Toggle, Notifications, Profile Menu -->
     <div class="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">

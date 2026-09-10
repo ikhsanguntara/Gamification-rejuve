@@ -131,7 +131,11 @@ export const evaluationApi = {
   submitCrewFeedback: (id, data) => apiFetch(`/evaluations/user-missions/${id}/crew-feedback`, {
     method: 'POST',
     body: data
-  })
+  }),
+
+  // Rapor Resmi Evaluasi Buddy
+  getBuddyReport: (userId) => apiFetch(`/evaluations/buddy-report/${userId}`, { method: 'GET' }),
+  getBuddyReportHtml: (userId) => apiFetch(`/evaluations/buddy-report/${userId}/html`, { method: 'GET' })
 }
 
 // ─── 10. Lynx Sync Service ──────────────────────────────────────────────────
