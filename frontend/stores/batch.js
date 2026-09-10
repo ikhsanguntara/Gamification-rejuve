@@ -288,13 +288,22 @@ export const useBatchStore = defineStore('batch', {
             const journeyDetail = b.details?.find(d => d.tplMission?.type === 'JOURNEY')
             const feedbackDetail = b.details?.find(d => d.tplMission?.type === 'FEEDBACK')
 
-            const maxWeeksFromTpl = (journeyDetail?.tplMission?.details || []).reduce((max, d) => Math.max(max, Number(d.durationNumber || d.week || 1)), 1)
-            const maxWeeksFromDuration = Number(journeyDetail?.tplMission?.durationValue) || 0
-            const maxWeeksFromMissions = (b.missions || []).reduce((max, m) => Math.max(max, Number(m.weekOrDayNumber || m.week || 1)), 1)
-            const customWeeksFromTpl = (journeyDetail?.tplMission?.details || []).length > 0
-              ? Array.from({ length: Math.max(maxWeeksFromTpl, maxWeeksFromDuration) }, (_, i) => ({
+            const periodTitlesMap = {}
+            ;(journeyDetail?.tplMission?.details || []).forEach(d => {
+              const num = Number(d.durationNumber || d.week || 1)
+              const t = d.scaleConfig?.periodTitle || d.scaleConfig?.weekTitle || d.periodTitle || d.weekTitle
+              if (t && !periodTitlesMap[num]) periodTitlesMap[num] = t
+            })
+            ;(b.missions || []).forEach(m => {
+              const num = Number(m.weekOrDayNumber || m.week || 1)
+              const t = m.scaleConfig?.periodTitle || m.scaleConfig?.weekTitle || m.periodTitle || m.weekTitle
+              if (t && !periodTitlesMap[num]) periodTitlesMap[num] = t
+            })
+
+            const customWeeksFromTpl = (journeyDetail?.tplMission?.details || []).length > 0 || Object.keys(periodTitlesMap).length > 0
+              ? Array.from({ length: Math.max(maxWeeksFromTpl, maxWeeksFromDuration, (b.missions || []).length > 0 ? maxWeeksFromMissions : 0) }, (_, i) => ({
                   weekNumber: i + 1,
-                  title: `Minggu ${i + 1}: Tema SOP Operasional`
+                  title: periodTitlesMap[i + 1] || `Minggu ${i + 1}: Tema SOP Operasional`
                 }))
               : []
 
@@ -330,6 +339,7 @@ export const useBatchStore = defineStore('batch', {
               averageScore: Number(b.averageScore) || 0,
               totalStars: Number(b.totalStars) || 0,
               details: b.details || [],
+              templateName: journeyDetail?.tplMission?.name || '',
               buddyTemplate: buddyDetail?.tplMission || null,
               journeyTemplate: journeyDetail?.tplMission || null,
               feedbackTemplate: feedbackDetail?.tplMission || null,
@@ -391,13 +401,22 @@ export const useBatchStore = defineStore('batch', {
           const missions = Array.isArray(b.missions) ? b.missions : []
           const crewIds = users.map(u => u.userId || u.id)
 
-          const maxWeeksFromTpl = (journeyDetail?.tplMission?.details || []).reduce((max, d) => Math.max(max, Number(d.durationNumber || d.week || 1)), 1)
-          const maxWeeksFromDuration = Number(journeyDetail?.tplMission?.durationValue) || 0
-          const maxWeeksFromMissions = (missions || []).reduce((max, m) => Math.max(max, Number(m.weekOrDayNumber || m.week || 1)), 1)
-          const customWeeksFromTpl = (journeyDetail?.tplMission?.details || []).length > 0
-            ? Array.from({ length: Math.max(maxWeeksFromTpl, maxWeeksFromDuration) }, (_, i) => ({
+          const periodTitlesMap = {}
+          ;(journeyDetail?.tplMission?.details || []).forEach(d => {
+            const num = Number(d.durationNumber || d.week || 1)
+            const t = d.scaleConfig?.periodTitle || d.scaleConfig?.weekTitle || d.periodTitle || d.weekTitle
+            if (t && !periodTitlesMap[num]) periodTitlesMap[num] = t
+          })
+          ;(missions || []).forEach(m => {
+            const num = Number(m.weekOrDayNumber || m.week || 1)
+            const t = m.scaleConfig?.periodTitle || m.scaleConfig?.weekTitle || m.periodTitle || m.weekTitle
+            if (t && !periodTitlesMap[num]) periodTitlesMap[num] = t
+          })
+
+          const customWeeksFromTpl = (journeyDetail?.tplMission?.details || []).length > 0 || Object.keys(periodTitlesMap).length > 0
+            ? Array.from({ length: Math.max(maxWeeksFromTpl, maxWeeksFromDuration, (missions || []).length > 0 ? maxWeeksFromMissions : 0) }, (_, i) => ({
                 weekNumber: i + 1,
-                title: `Minggu ${i + 1}: Tema SOP Operasional`
+                title: periodTitlesMap[i + 1] || `Minggu ${i + 1}: Tema SOP Operasional`
               }))
             : []
 
@@ -436,6 +455,7 @@ export const useBatchStore = defineStore('batch', {
             details: b.details || [],
             missions,
             users,
+            templateName: journeyDetail?.tplMission?.name || '',
             buddyTemplate: buddyDetail?.tplMission || null,
             journeyTemplate: journeyDetail?.tplMission || null,
             feedbackTemplate: feedbackDetail?.tplMission || null,

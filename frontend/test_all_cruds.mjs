@@ -104,6 +104,11 @@ userStore.deleteUser(newUser.id)
 assert(userStore.allUsers.find(u => u.id === newUser.id) === undefined, 'Delete User: Berhasil menghapus user dari direktori')
 assert(gamificationStore.crewById(newUser.id) === undefined, 'Delete User: Otomatis terhapus dari roster gamifikasi')
 
+// 1.7 BULK USER IMPORT ACTIONS
+assert(typeof userStore.downloadTemplate === 'function', 'Bulk User: Action downloadTemplate tersedia di store')
+assert(typeof userStore.previewBulkUsers === 'function', 'Bulk User: Action previewBulkUsers (Dry Run) tersedia di store')
+assert(typeof userStore.commitBulkUsers === 'function', 'Bulk User: Action commitBulkUsers tersedia di store')
+
 console.log('')
 
 // ==========================================

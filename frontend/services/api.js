@@ -35,7 +35,10 @@ export const userApi = {
   getById: (id) => apiFetch(`/masters/users/${id}`, { method: 'GET' }),
   create: (data) => apiFetch('/masters/users', { method: 'POST', body: data }),
   update: (id, data) => apiFetch(`/masters/users/${id}`, { method: 'PUT', body: data }),
-  delete: (id) => apiFetch(`/masters/users/${id}`, { method: 'DELETE' })
+  delete: (id) => apiFetch(`/masters/users/${id}`, { method: 'DELETE' }),
+  downloadTemplate: () => apiFetch('/masters/users/template', { method: 'GET', responseType: 'blob' }),
+  bulkPreview: (formData) => apiFetch('/masters/users/bulk-preview', { method: 'POST', body: formData }),
+  bulkCommit: (data) => apiFetch('/masters/users/bulk-commit', { method: 'POST', body: data })
 }
 
 // ─── 4. Master Roles Service ────────────────────────────────────────────────

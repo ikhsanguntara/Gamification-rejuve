@@ -178,6 +178,29 @@
           </button>
         </div>
 
+        <!-- Pengaturan Tema / Judul Periode Aktif -->
+        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-slate-50 to-amber-50/40 dark:from-slate-800/80 dark:to-amber-950/20 border border-slate-200/90 dark:border-slate-700/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#831843] dark:bg-[#f472b6] flex-shrink-0"></span>
+            <div>
+              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                Tema / Fokus {{ unitLabel }} {{ activePeriodTab }}
+              </label>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                Judul tema ini akan otomatis tampil pada siklus mingguan penilaian kru & workstation.
+              </p>
+            </div>
+          </div>
+          <div class="flex-1 max-w-sm w-full">
+            <input
+              v-model="periodTitles[activePeriodTab]"
+              type="text"
+              :placeholder="`Contoh: ${form.type === 'JOURNEY' ? 'Customer Greeting & Hygiene SOP' : 'Orientasi Dasar Gerai'}`"
+              class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-900 dark:text-white font-semibold placeholder-slate-400 focus:ring-2 focus:ring-[#831843]"
+            />
+          </div>
+        </div>
+
         <!-- Missions List in Active Period -->
         <div class="space-y-3">
           <div
@@ -443,6 +466,7 @@ const resetForm = (type = 'JOURNEY') => {
   const defaultDurationCode = type === 'JOURNEY' ? 'WEEK' : 'DAY'
   const defaultDurationValue = 1
   periodCount.value = 1
+  periodTitles.value = {}
 
   form.value = {
     type,
@@ -458,6 +482,8 @@ const resetForm = (type = 'JOURNEY') => {
 
   activePeriodTab.value = 1
 }
+
+const periodTitles = ref({})
 
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
@@ -583,6 +609,11 @@ const executeSavePackage = async () => {
   const dCode = form.value.durationCode || (form.value.type === 'JOURNEY' ? 'WEEK' : 'DAY')
   const calcTotalWeeks = totalPeriods.value
 
+  const weeksArray = Array.from({ length: totalPeriods.value }, (_, i) => ({
+    weekNumber: i + 1,
+    title: periodTitles.value[i + 1]?.trim() || (form.value.type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`)
+  }))
+
   const createPayload = {
     code: form.value.code?.trim() || `TPL-${form.value.type}-${Date.now()}`,
     name: form.value.name.trim(),
@@ -593,6 +624,7 @@ const executeSavePackage = async () => {
     category: form.value.category || 'Standar Operasional',
     targetType: form.value.targetType || 'Semua Gerai',
     description: form.value.description?.trim() || '',
+    weeks: weeksArray,
     details: compiledDetails
   }
 

@@ -16,13 +16,24 @@
         </p>
       </div>
 
-      <NuxtLink
-        to="/admin/users/create"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#831843] hover:bg-[#701a40] text-white text-xs font-semibold transition-all shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer self-start sm:self-auto"
-      >
-        <Plus class="w-4 h-4" />
-        <span>Tambah User Baru</span>
-      </NuxtLink>
+      <div class="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
+        <button
+          type="button"
+          @click="showBulkUploadModal = true"
+          class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all shadow-2xs active:scale-95 cursor-pointer"
+        >
+          <FileSpreadsheet class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span>Import Bulk Excel</span>
+        </button>
+
+        <NuxtLink
+          to="/admin/users/create"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#831843] hover:bg-[#701a40] text-white text-xs font-semibold transition-all shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer"
+        >
+          <Plus class="w-4 h-4" />
+          <span>Tambah User Baru</span>
+        </NuxtLink>
+      </div>
     </div>
 
     <!-- Filters & Search Toolbar -->
@@ -169,11 +180,17 @@
         item-label="pengguna"
       />
     </div>
+
+    <!-- Bulk User Excel Import Modal -->
+    <BulkUserUploadModal
+      v-model="showBulkUploadModal"
+      @imported="onBulkImported"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useStoreStore } from '~/stores/store.js'
@@ -181,16 +198,23 @@ import { useToast } from '~/composables/useToast.js'
 import { userApi, roleApi } from '~/services/api.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
 import TanStackTable from '~/components/ui/TanStackTable.vue'
-import { Plus, Edit3, Trash2, Search, Store } from 'lucide-vue-next'
+import BulkUserUploadModal from '~/components/user/BulkUserUploadModal.vue'
+import { Plus, Edit3, Trash2, Search, Store, FileSpreadsheet } from 'lucide-vue-next'
 
 const userStore = useUserStore()
 const batchStore = useBatchStore()
 const storeStore = useStoreStore()
 const toast = useToast()
 
+const showBulkUploadModal = ref(false)
 const searchQuery = ref('')
 const userRoleFilter = ref('ALL')
 const userBatchFilter = ref('ALL')
+
+const onBulkImported = async () => {
+  currentPage.value = 1
+  await loadUsers(1)
+}
 
 const availableRoles = ref([])
 

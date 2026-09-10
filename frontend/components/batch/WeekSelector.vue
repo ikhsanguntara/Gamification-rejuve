@@ -8,7 +8,7 @@
             Weekly Progression Cycle
           </h4>
           <p class="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
-            {{ weeks.length }}-Week Store Operational Sequence
+            {{ sequenceTitle }}
           </p>
         </div>
         <div class="flex items-center gap-2">
@@ -131,6 +131,17 @@ const batchStore = useBatchStore()
 const weeks = computed(() => batchStore.currentBatchWeeks)
 const activeWeekNumber = computed(() => batchStore.activeWeekNumber)
 const selectedWeek = computed(() => batchStore.selectedWeek)
+
+const sequenceTitle = computed(() => {
+  const currentBatch = batchStore.currentBatch
+  if (currentBatch?.templateName) {
+    return `${weeks.value.length}-Week ${currentBatch.templateName}`
+  }
+  if (currentBatch?.description && !currentBatch.description.includes('Siklus')) {
+    return currentBatch.description
+  }
+  return `${weeks.value.length}-Week Store Operational Sequence`
+})
 
 const selectWeek = (weekNumber) => {
   batchStore.selectWeek(weekNumber)
