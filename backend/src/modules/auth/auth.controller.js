@@ -9,6 +9,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const prisma = require('../../config/db');
 const batchService = require('../batches/batch.service');
+const gamificationService = require('../gamification/gamification.service');
+const { emitToUser } = require('../../utils/socketEmitter');
 const { sendSuccess, sendError } = require('../../utils/responseWrapper');
 
 /**
@@ -126,12 +128,45 @@ const login = async (req, res, next) => {
       }
     }
 
+    // Early Bird Reward untuk CREW pada first login
+    let earlyBirdReward = null;
+    const isCrew = user.role?.roleCode === 'CREW';
+    if (isCrew && !user.hasClaimedEarlyBird) {
+      earlyBirdReward = await gamificationService.processEarlyBirdReward(user, activeBatch);
+      if (earlyBirdReward && earlyBirdReward.claimed) {
+        user.stars = earlyBirdReward.totalStars;
+        user.points = earlyBirdReward.totalPoints;
+        user.level = earlyBirdReward.level;
+        user.hasClaimedEarlyBird = true;
+        user.firstLoginAt = new Date();
+
+        emitToUser(user.userId, 'crew:early_bird_reward', {
+          userId: user.userId,
+          starsEarned: earlyBirdReward.starsEarned,
+          pointsEarned: earlyBirdReward.pointsEarned,
+          totalStars: earlyBirdReward.totalStars,
+          dayOffset: earlyBirdReward.dayOffset,
+          tierLabel: earlyBirdReward.tierLabel,
+          message: earlyBirdReward.message
+        });
+
+        emitToUser(user.userId, 'crew:stars_earned', {
+          userId: user.userId,
+          starsEarned: earlyBirdReward.starsEarned,
+          totalStars: earlyBirdReward.totalStars,
+          level: earlyBirdReward.level,
+          reason: 'EARLY_BIRD_LOGIN'
+        });
+      }
+    }
+
     const token = generateToken(user);
 
     return sendSuccess(res, {
       message: 'Login berhasil.',
       data: {
         token,
+        earlyBirdReward: earlyBirdReward?.claimed ? earlyBirdReward : null,
         user: {
           userId: user.userId,
           name: user.name,
@@ -153,6 +188,8 @@ const login = async (req, res, next) => {
           userBuddy: user.userBuddy,
           batchId: user.batchId,
           hasBatch: Boolean(user.batchId),
+          hasClaimedEarlyBird: user.hasClaimedEarlyBird || false,
+          firstLoginAt: user.firstLoginAt || null,
           createdAt: user.createdAt
         }
       }
@@ -228,6 +265,8 @@ const getMe = async (req, res, next) => {
         userBuddy: user.userBuddy,
         batchId: user.batchId,
         hasBatch: Boolean(user.batchId),
+        hasClaimedEarlyBird: user.hasClaimedEarlyBird || false,
+        firstLoginAt: user.firstLoginAt || null,
         createdAt: user.createdAt
       }
     });

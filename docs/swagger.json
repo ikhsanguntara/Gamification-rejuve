@@ -121,8 +121,12 @@
   ],
   "tags": [
     {
+      "name": "0. System & WebSocket Console",
+      "description": "Status sistem, Swagger docs, dan konsol pengujian interaktif WebSocket"
+    },
+    {
       "name": "1. Authentication",
-      "description": "Otentikasi, profil pengguna, ganti password"
+      "description": "Otentikasi JWT, profil pengguna, dan reward Early Bird"
     },
     {
       "name": "2. Master Departments",
@@ -150,15 +154,23 @@
     },
     {
       "name": "8. Batch Generator",
-      "description": "Pembuatan Batch Onboarding & Generator Misi Sekuensial"
+      "description": "Pembuatan Batch Onboarding, generator misi, dan fast-forward lock/unlock"
     },
     {
       "name": "9. Evaluations",
-      "description": "Alur Penilaian Terpadu (Buddy, SL + Upload Foto, DM Review, Crew Feedback)"
+      "description": "Alur Penilaian Terpadu (Buddy, SL, DM Review, Crew Feedback, Rapor Buddy, dan Riwayat Buddy)"
     },
     {
       "name": "10. Lynx Sync",
       "description": "Webhook penerima & sinkronisasi manual dengan Lynx ERP"
+    },
+    {
+      "name": "11. Dashboard & Analytics",
+      "description": "Ringkasan metrik dashboard realtime multi-role (Crew, SL, DM, Admin)"
+    },
+    {
+      "name": "12. Gamification & Leaderboard",
+      "description": "Klasemen kru, podium top 3, dan perolehan bintang & level"
     }
   ],
   "paths": {
@@ -2237,6 +2249,354 @@
         "responses": {
           "201": {
             "description": "User massal berhasil diimpor."
+          }
+        }
+      }
+    },
+    "/batches/{batchId}/details/{batchDetailId}/toggle-lock": {
+      "patch": {
+        "tags": [
+          "8. Batch Generator"
+        ],
+        "summary": "Toggle / Ubah status lock batch detail (Fast-Forward Testing)",
+        "description": "Membuka kunci fase Journey atau mengunci fase secara instan untuk kebutuhan testing tanpa menunggu hari kalender.",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "batchDetailId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isLock": {
+                    "type": "boolean",
+                    "example": false
+                  },
+                  "unlockMissions": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status lock batch detail berhasil diubah.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/summary": {
+      "get": {
+        "tags": [
+          "11. Dashboard & Analytics"
+        ],
+        "summary": "Ringkasan metrik dashboard multi-role",
+        "description": "Mengembalikan metrik dashboard terkini untuk Crew, Store Leader, District Manager, atau Superadmin.",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ringkasan dashboard berhasil diambil.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gamification/leaderboard": {
+      "get": {
+        "tags": [
+          "12. Gamification & Leaderboard"
+        ],
+        "summary": "Klasemen leaderboard kru batch & toko",
+        "description": "Mengembalikan Top 3 Podium, tabel peringkat kru terpaginasi, dan posisi rank user yang login.",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "departmentId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "departmentId[equals]",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stars[gte]",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Leaderboard berhasil diambil.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evaluations/buddy-history": {
+      "get": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Riwayat bimbingan & evaluasi Buddy per batch",
+        "description": "Menampilkan daftar mentee bimbingan dengan progres 22 indikator, breakdown 7 kategori kompetensi, dan status kelulusan.",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "COMPLETED",
+                "IN_PROGRESS"
+              ]
+            }
+          },
+          {
+            "name": "status[equals]",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Riwayat pendampingan Buddy berhasil diambil.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evaluations/buddy-report/{userId}": {
+      "get": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Rapor resmi evaluasi Buddy (JSON)",
+        "description": "Mengambil data agregasi 7 kategori kompetensi rapor Buddy untuk kru tertentu.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "batchId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rapor Buddy berhasil diambil.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evaluations/buddy-report/{userId}/html": {
+      "get": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Rapor resmi evaluasi Buddy (Print-Ready HTML)",
+        "description": "Mengambil halaman HTML resmi berformat kop surat Re.juve yang siap cetak atau simpan ke PDF.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "batchId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Halaman HTML rapor berhasil dimuat.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws-tester": {
+      "get": {
+        "tags": [
+          "0. System & WebSocket Console"
+        ],
+        "summary": "Konsol Pengujian Interaktif WebSocket (Socket.IO Console)",
+        "description": "Menyajikan halaman UI interaktif untuk menguji koneksi Socket.IO, memantau room yang di-join, dan menyimak event live gamifikasi.",
+        "responses": {
+          "200": {
+            "description": "Halaman HTML WebSocket Tester dimuat.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }

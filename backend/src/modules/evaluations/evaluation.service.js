@@ -16,6 +16,7 @@ const batchService = require('../batches/batch.service');
 const gamificationService = require('../gamification/gamification.service');
 const { parsePrismaQuery } = require('../../utils/queryParser');
 const { emitToUser, emitToRole } = require('../../utils/socketEmitter');
+const { normalizeStorageUrl } = require('../../utils/minioStorage');
 
 /**
  * Ambil daftar user missions dengan dynamic query filter.
@@ -905,9 +906,648 @@ const submitCrewFeedback = async (userMissionId, crewId, { submissionNotes }) =>
     include: { mission: true }
   });
 
-  return {
+    return {
     ...updated,
     userMission: updated
+  };
+};
+
+const formatCategoryTitle = (cat) => {
+  const map = {
+    TECHNICAL: 'Keahlian Teknis & Operasional',
+    SOFT_SKILL: 'Pelayanan Pelanggan & Sikap Kerja',
+    LEADERSHIP: 'Kepemimpinan & Tanggung Jawab',
+    PROJECT: 'Pelaksanaan Proyek & Tugas Toko'
+  };
+  return map[cat] || cat.replace(/_/g, ' ');
+};
+
+/**
+ * GET /api/evaluations/buddy-report/:userId?batchId=...
+ * Menghasilkan data agregasi rapor evaluasi Buddy untuk kru tertentu.
+ */
+const getBuddyReport = async (userId, batchId = null, req = null) => {
+  const user = await prisma.user.findUnique({
+    where: { userId },
+    include: {
+      department: true,
+      userBuddy: true,
+      batch: true,
+      activeBatch: true
+    }
+  });
+
+  if (!user) {
+    throw new Error(`Kru dengan id "${userId}" tidak ditemukan.`);
+  }
+
+  const targetBatchId = batchId || user.activeBatchId || user.batchId;
+  if (!targetBatchId) {
+    throw new Error('Batch id tidak ditemukan untuk kru ini.');
+  }
+
+  const batch = await prisma.batch.findUnique({
+    where: { batchId: targetBatchId },
+    include: {
+      details: {
+        include: { tplMission: true }
+      }
+    }
+  });
+
+  if (!batch) {
+    throw new Error(`Batch dengan id "${targetBatchId}" tidak ditemukan.`);
+  }
+
+  // Ambil semua misi BUDDY pada batch ini
+  const missions = await prisma.mission.findMany({
+    where: {
+      batchId: targetBatchId,
+      type: 'BUDDY'
+    },
+    orderBy: [
+      { weekOrDayNumber: 'asc' },
+      { missionTitle: 'asc' }
+    ]
+  });
+
+  // Ambil userMissions milik mentee
+  const userMissions = await prisma.userMission.findMany({
+    where: {
+      userId,
+      mission: {
+        batchId: targetBatchId,
+        type: 'BUDDY'
+      }
+    },
+    include: {
+      tl: {
+        select: { userId: true, name: true, email: true }
+      }
+    }
+  });
+
+  const umMap = new Map();
+  userMissions.forEach(um => umMap.set(um.missionId, um));
+
+  // Ambil evaluator/buddy
+  const primaryEvaluator = userMissions.find(um => um.tl)?.tl || user.userBuddy || null;
+
+  // Kelompokkan indikator pertanyaan berdasarkan category
+  const categoriesMap = new Map();
+  let totalScoreSum = 0;
+  let evaluatedCount = 0;
+
+  missions.forEach(mission => {
+    const um = umMap.get(mission.missionId);
+    const score = um ? (um.finalScore ?? um.tlScore ?? null) : null;
+    const isEvaluated = score !== null && um?.status === 'COMPLETED';
+
+    if (isEvaluated) {
+      totalScoreSum += score;
+      evaluatedCount++;
+    }
+
+    let scoreLabel = '-';
+    if (score !== null) {
+      if (score <= 1.4) scoreLabel = 'Belum Menguasai';
+      else if (score <= 2.4) scoreLabel = 'Butuh Pendampingan';
+      else scoreLabel = 'Kompeten';
+    }
+
+    const catName = mission.category || 'GENERAL';
+    if (!categoriesMap.has(catName)) {
+      categoriesMap.set(catName, {
+        category: catName,
+        categoryTitle: formatCategoryTitle(catName),
+        indicators: []
+      });
+    }
+
+    categoriesMap.get(catName).indicators.push({
+      missionId: mission.missionId,
+      dayNumber: mission.weekOrDayNumber,
+      missionTitle: mission.missionTitle,
+      description: mission.description,
+      score,
+      scoreLabel,
+      notes: um?.tlNotes || null,
+      evidenceUrl: normalizeStorageUrl(um?.evidenceUrl, req),
+      scoredAt: um?.tlScoredAt || null,
+      status: um?.status || 'LOCKED'
+    });
+  });
+
+  const categories = Array.from(categoriesMap.values()).map(cat => {
+    const scoredIndicators = cat.indicators.filter(i => i.score !== null);
+    const catSum = scoredIndicators.reduce((acc, i) => acc + i.score, 0);
+    const catAvg = scoredIndicators.length > 0 ? parseFloat((catSum / scoredIndicators.length).toFixed(2)) : 0;
+    return {
+      ...cat,
+      totalIndicators: cat.indicators.length,
+      evaluatedIndicators: scoredIndicators.length,
+      averageScore: catAvg
+    };
+  });
+
+  const totalIndicators = missions.length;
+  const averageScore = evaluatedCount > 0 ? parseFloat((totalScoreSum / evaluatedCount).toFixed(2)) : 0;
+  const completionPercent = totalIndicators > 0 ? Math.round((evaluatedCount / totalIndicators) * 100) : 0;
+
+  let recommendationStatus = 'IN_PROGRESS';
+  let recommendationText = 'Proses pendampingan masih berlangsung.';
+  if (evaluatedCount === totalIndicators && totalIndicators > 0) {
+    if (averageScore >= 2.5) {
+      recommendationStatus = 'PASSED';
+      recommendationText = 'LULUS (Kompeten & Siap Mandiri)';
+    } else if (averageScore >= 2.0) {
+      recommendationStatus = 'PASSED_WITH_NOTE';
+      recommendationText = 'LULUS BERSYARAT (Perlu Pemantauan Khusus)';
+    } else {
+      recommendationStatus = 'EXTEND_TRAINING';
+      recommendationText = 'PERLU PENDAMPINGAN LANJUTAN (Belum Memenuhi Syarat)';
+    }
+  }
+
+  return {
+    mentee: {
+      userId: user.userId,
+      name: user.name,
+      email: user.email,
+      departmentName: user.department?.departmentName || 'Gerai Re.juve',
+      departmentCode: user.department?.departmentCode || '-'
+    },
+    buddy: primaryEvaluator ? {
+      userId: primaryEvaluator.userId,
+      name: primaryEvaluator.name,
+      email: primaryEvaluator.email
+    } : null,
+    batch: {
+      batchId: batch.batchId,
+      name: batch.name,
+      code: batch.code,
+      startDate: batch.startDate,
+      endDate: batch.endDate,
+      status: batch.status
+    },
+    summary: {
+      totalIndicators,
+      evaluatedCount,
+      completionPercent,
+      averageScore,
+      scaleMax: 3,
+      recommendationStatus,
+      recommendationText
+    },
+    categories
+  };
+};
+
+/**
+ * Menghasilkan markup HTML mandiri untuk Rapor Buddy yang siap cetak (print-ready).
+ */
+const generateBuddyReportHtml = (report) => {
+  const { mentee, buddy, batch, summary, categories } = report;
+
+  const formatDate = (date) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  const statusBadgeColor = summary.recommendationStatus === 'PASSED'
+    ? '#059669'
+    : (summary.recommendationStatus === 'PASSED_WITH_NOTE' ? '#d97706' : '#dc2626');
+
+  return `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Rapor New Hire Re.juve - ${mentee.name}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background: #f8fafc;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    .report-container {
+      max-width: 860px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 36px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+    }
+    .no-print-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #831843;
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background: #6b133a;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid #831843;
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+    }
+    .logo-area h1 {
+      color: #831843;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .logo-area p {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      background: #fdf2f8;
+      border: 1px solid #fbcfe8;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      font-size: 13px;
+    }
+    .meta-item strong {
+      color: #831843;
+      display: inline-block;
+      width: 130px;
+    }
+    .summary-card {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+    .stat-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .stat-box .num {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .stat-box .lbl {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .category-title {
+      background: #831843;
+      color: #ffffff;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px 8px 0 0;
+      margin-top: 24px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      text-align: center;
+    }
+    .col-no { width: 35px; text-align: center; }
+    .col-score { width: 90px; text-align: center; font-weight: bold; }
+    .scale-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .scale-3 { background: #d1fae5; color: #065f46; }
+    .scale-2 { background: #fef3c7; color: #92400e; }
+    .scale-1 { background: #fee2e2; color: #991b1b; }
+    .scale-none { background: #f1f5f9; color: #64748b; }
+    .signature-section {
+      margin-top: 36px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .sign-box {
+      border-top: 1px solid #94a3b8;
+      padding-top: 8px;
+      font-size: 12px;
+      margin-top: 60px;
+    }
+    .sign-role { font-size: 11px; color: #64748b; font-weight: 600; }
+    @media print {
+      body { background: #ffffff; padding: 0; }
+      .report-container { box-shadow: none; border: none; padding: 0; }
+      .no-print-bar { display: none !important; }
+      @page { size: A4 portrait; margin: 15mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="report-container">
+    <div class="no-print-bar">
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+    </div>
+
+    <div class="header">
+      <div class="logo-area">
+        <h1>RE.JUVE — RAPOR NEW HIRE</h1>
+        <p>Program Pendampingan & Evaluasi Buddy</p>
+      </div>
+      <div style="text-align: right; font-size: 12px; color: #64748b;">
+        <div>Batch: <strong>${batch.name}</strong></div>
+        <div>Periode: ${formatDate(batch.startDate)} - ${formatDate(batch.endDate)}</div>
+      </div>
+    </div>
+
+    <div class="meta-grid">
+      <div>
+        <div class="meta-item"><strong>Nama Mentee:</strong> ${mentee.name}</div>
+        <div class="meta-item"><strong>Email / ID:</strong> ${mentee.email}</div>
+        <div class="meta-item"><strong>Gerai / Toko:</strong> ${mentee.departmentName} (${mentee.departmentCode})</div>
+      </div>
+      <div>
+        <div class="meta-item"><strong>Mentor (Buddy):</strong> ${buddy?.name || '-'}</div>
+        <div class="meta-item"><strong>Email Mentor:</strong> ${buddy?.email || '-'}</div>
+        <div class="meta-item"><strong>Status Batch:</strong> ${batch.status}</div>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="stat-box">
+        <div class="num">${summary.totalIndicators}</div>
+        <div class="lbl">Total Indikator</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">${summary.evaluatedCount} / ${summary.totalIndicators}</div>
+        <div class="lbl">Selesai Dinilai</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color: #831843;">${summary.averageScore} / 3.0</div>
+        <div class="lbl">Rata-rata Nilai</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color: ${statusBadgeColor}; font-size: 15px; margin-top: 4px;">
+          ${summary.recommendationStatus === 'PASSED' ? 'LULUS' : summary.recommendationStatus === 'IN_PROGRESS' ? 'PROGRES' : 'EVALUASI'}
+        </div>
+        <div class="lbl">${summary.recommendationText}</div>
+      </div>
+    </div>
+
+    ${categories.map((cat, cIdx) => `
+      <div class="category-title">${cIdx + 1}. ${cat.categoryTitle} (Rata-rata: ${cat.averageScore})</div>
+      <table>
+        <thead>
+          <tr>
+            <th class="col-no">No</th>
+            <th>Indikator Kompetensi & Penjelasan</th>
+            <th class="col-score">Nilai (1-3)</th>
+            <th>Catatan Pembimbing</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${cat.indicators.map((ind, iIdx) => {
+            const scoreClass = ind.score === 3 ? 'scale-3' : (ind.score === 2 ? 'scale-2' : (ind.score === 1 ? 'scale-1' : 'scale-none'));
+            return `
+              <tr>
+                <td class="col-no">${iIdx + 1}</td>
+                <td>
+                  <strong>${ind.missionTitle}</strong>
+                  ${ind.description ? `<div style="color: #64748b; font-size: 11px; margin-top: 2px;">${ind.description}</div>` : ''}
+                </td>
+                <td class="col-score">
+                  <span class="scale-pill ${scoreClass}">${ind.score !== null ? ind.score : '-'}</span>
+                  <div style="font-size: 9px; color: #64748b; margin-top: 2px;">${ind.scoreLabel}</div>
+                </td>
+                <td style="font-size: 11px; color: #334155;">${ind.notes || '-'}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `).join('')}
+
+    <div class="signature-section">
+      <div>
+        <div class="sign-role">Kru yang Dinilai (Mentee)</div>
+        <div class="sign-box">${mentee.name}</div>
+      </div>
+      <div>
+        <div class="sign-role">Pembimbing (Buddy / Mentor)</div>
+        <div class="sign-box">${buddy?.name || 'Buddy Mentor'}</div>
+      </div>
+      <div>
+        <div class="sign-role">Mengetahui (Store Leader)</div>
+        <div class="sign-box">Store Leader / Supervisor</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+};
+
+/**
+ * GET /api/evaluations/buddy-history
+ * Mengambil rekapitulasi riwayat pendampingan Buddy per batch untuk setiap mentee.
+ */
+const getBuddyHistory = async (currentUser, query = {}) => {
+  const currentUserId = currentUser.id || currentUser.userId;
+  const userRole = currentUser.role?.roleCode || currentUser.role || 'SUPERADMIN';
+  const isSuper = userRole === 'SUPERADMIN' || userRole === 'HEAD';
+
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 10));
+  const skip = (page - 1) * limit;
+
+  const whereMentee = {
+    role: { roleCode: 'CREW' },
+    isActive: true
+  };
+
+  if (!isSuper) {
+    whereMentee.OR = [
+      { userBuddyId: currentUserId },
+      { missions: { some: { tlId: currentUserId, mission: { type: 'BUDDY' } } } }
+    ];
+  } else if (query.buddyId) {
+    whereMentee.OR = [
+      { userBuddyId: query.buddyId },
+      { missions: { some: { tlId: query.buddyId, mission: { type: 'BUDDY' } } } }
+    ];
+  }
+
+  if (query.batchId) {
+    whereMentee.AND = [
+      {
+        OR: [
+          { batchId: query.batchId },
+          { activeBatchId: query.batchId },
+          { missions: { some: { mission: { batchId: query.batchId, type: 'BUDDY' } } } }
+        ]
+      }
+    ];
+  }
+
+  if (query.search || query.q) {
+    const s = (query.search || query.q).trim();
+    whereMentee.name = { contains: s, mode: 'insensitive' };
+  }
+
+  const [total, mentees] = await Promise.all([
+    prisma.user.count({ where: whereMentee }),
+    prisma.user.findMany({
+      where: whereMentee,
+      skip,
+      take: limit,
+      include: {
+        department: true,
+        userBuddy: true,
+        batch: true,
+        activeBatch: true
+      },
+      orderBy: { name: 'asc' }
+    })
+  ]);
+
+  const menteeIds = mentees.map(m => m.userId);
+
+  const userMissions = await prisma.userMission.findMany({
+    where: {
+      userId: { in: menteeIds },
+      mission: { type: 'BUDDY' }
+    },
+    include: {
+      mission: true,
+      tl: { select: { userId: true, name: true, email: true } }
+    }
+  });
+
+  const missionsByMentee = {};
+  userMissions.forEach(um => {
+    if (!missionsByMentee[um.userId]) missionsByMentee[um.userId] = [];
+    missionsByMentee[um.userId].push(um);
+  });
+
+  const historyList = mentees.map(mentee => {
+    const mBatch = mentee.batch || mentee.activeBatch;
+    const mList = missionsByMentee[mentee.userId] || [];
+    const totalIndicators = mList.length;
+    const evaluatedMissions = mList.filter(m => m.status === 'COMPLETED');
+    const evaluatedCount = evaluatedMissions.length;
+    const completionRate = totalIndicators > 0 ? Math.round((evaluatedCount / totalIndicators) * 100) : 0;
+
+    const scoredMissions = mList.filter(m => m.finalScore !== null || m.tlScore !== null);
+    const avgScore = scoredMissions.length > 0
+      ? parseFloat((scoredMissions.reduce((acc, m) => acc + (m.finalScore ?? m.tlScore ?? 0), 0) / scoredMissions.length).toFixed(1))
+      : 0;
+
+    const isCompleted = totalIndicators > 0 && evaluatedCount === totalIndicators;
+
+    const latestScoredAt = scoredMissions.reduce((latest, m) => {
+      const d = m.tlScoredAt ? new Date(m.tlScoredAt) : null;
+      return d && (!latest || d > latest) ? d : latest;
+    }, null);
+
+    return {
+      mentee: {
+        userId: mentee.userId,
+        name: mentee.name,
+        email: mentee.email,
+        departmentName: mentee.department?.departmentName || 'Gerai Re.juve',
+        departmentCode: mentee.department?.departmentCode || '-',
+        stars: mentee.stars,
+        points: mentee.points
+      },
+      buddy: mentee.userBuddy ? {
+        userId: mentee.userBuddy.userId,
+        name: mentee.userBuddy.name,
+        email: mentee.userBuddy.email
+      } : null,
+      batch: mBatch ? {
+        batchId: mBatch.batchId,
+        name: mBatch.name,
+        code: mBatch.code,
+        status: mBatch.status
+      } : null,
+      progress: {
+        totalIndicators,
+        evaluatedCount,
+        completionRate,
+        avgScore,
+        status: isCompleted ? 'COMPLETED' : 'IN_PROGRESS',
+        lastScoredAt: latestScoredAt
+      },
+      reportUrl: mBatch ? `/api/evaluations/buddy-report/${mentee.userId}?batchId=${mBatch.batchId}` : null
+    };
+  });
+
+  const completedCount = historyList.filter(h => h.progress.status === 'COMPLETED').length;
+  const inProgressCount = historyList.filter(h => h.progress.status === 'IN_PROGRESS').length;
+
+  return {
+    items: historyList,
+    summary: {
+      totalMentees: total,
+      completedMentees: completedCount,
+      inProgressMentees: inProgressCount
+    },
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1
+    }
   };
 };
 
@@ -919,5 +1559,8 @@ module.exports = {
   evaluateBuddyMission,
   evaluateJourneyBySL,
   reviewJourneyByDM,
-  submitCrewFeedback
+  submitCrewFeedback,
+  getBuddyReport,
+  generateBuddyReportHtml,
+  getBuddyHistory
 };

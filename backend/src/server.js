@@ -69,6 +69,11 @@ app.get('/swagger.json', (req, res) => {
   res.send(swaggerDocument);
 });
 
+// ─── WebSocket Live Tester UI ────────────────────────────────────────────────
+app.get(['/ws-tester', '/api/docs/ws-tester'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'ws-tester.html'));
+});
+
 // ─── API Routes ──────────────────────────────────────────────────────────────
 app.use('/api/v1', require('./routes/index'));
 app.use('/api', require('./routes/index'));

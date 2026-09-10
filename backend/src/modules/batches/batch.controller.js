@@ -130,11 +130,27 @@ const deleteBatch = async (req, res, next) => {
   }
 };
 
+const toggleBatchDetailLock = async (req, res, next) => {
+  try {
+    const { batchId, batchDetailId } = req.params;
+    const updaterId = req.user?.id || req.user?.userId || null;
+    const result = await batchService.toggleBatchDetailLock(batchId, batchDetailId, req.body, updaterId);
+
+    return sendSuccess(res, {
+      message: result.message,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getBatches,
   getBatchById,
   createBatch,
   generateBatchMissions,
   updateBatch,
-  deleteBatch
+  deleteBatch,
+  toggleBatchDetailLock
 };

@@ -34,7 +34,7 @@ const uploadMiddleware = multer({
  * @param {string} subFolder - Subfolder tujuan (misal: 'evidence')
  * @returns {Promise<string>} publicUrl - URL publik file yang berhasil disimpan
  */
-const uploadFileToStorage = async (file, subFolder = 'evidence') => {
+const uploadFileToStorage = async (file, subFolder = 'evidence', req = null) => {
   if (!file || !file.buffer) {
     throw new Error('File buffer tidak ditemukan');
   }
@@ -71,13 +71,40 @@ const uploadFileToStorage = async (file, subFolder = 'evidence') => {
   const localFilePath = path.join(localDir, fileName);
   fs.writeFileSync(localFilePath, file.buffer);
 
-  const port = process.env.PORT || 3000;
-  const localUrl = `http://localhost:${port}/uploads/${subFolder}/${fileName}`;
+  let baseUrl = process.env.APP_URL || process.env.BASE_URL;
+  if (!baseUrl && req) {
+    baseUrl = `${req.protocol}://${req.get('host')}`;
+  }
+  if (!baseUrl) {
+    const port = process.env.PORT || 3000;
+    baseUrl = `http://localhost:${port}`;
+  }
+  baseUrl = baseUrl.replace(/\/$/, '');
+
+  const localUrl = `${baseUrl}/uploads/${subFolder}/${fileName}`;
   console.log(`[Storage Local] File disimpan secara lokal: ${localUrl}`);
   return localUrl;
 };
 
+/**
+ * Normalisasi URL storage (mengubah localhost URL dari DB menjadi dynamic host URL).
+ */
+const normalizeStorageUrl = (url, req = null) => {
+  if (!url || typeof url !== 'string') return url;
+  if (!url.includes('localhost:') && !url.includes('127.0.0.1:')) return url;
+
+  let currentOrigin = process.env.APP_URL || process.env.BASE_URL;
+  if (!currentOrigin && req) {
+    currentOrigin = `${req.protocol}://${req.get('host')}`;
+  }
+  if (!currentOrigin) return url;
+  currentOrigin = currentOrigin.replace(/\/$/, '');
+
+  return url.replace(/^https?:\/\/[^/]+/, currentOrigin);
+};
+
 module.exports = {
   uploadMiddleware,
-  uploadFileToStorage
+  uploadFileToStorage,
+  normalizeStorageUrl
 };

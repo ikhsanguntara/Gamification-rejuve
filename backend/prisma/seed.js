@@ -230,6 +230,42 @@ async function main() {
   }
   console.log('✅ Param Group : BUDDY_CATEGORY (7 parameter Rapor Buddy)');
 
+  // 10. Param Group : GAMIFICATION_RULES
+  const groupGamification = await prisma.paramGroup.upsert({
+    where: { code: 'GAMIFICATION_RULES' },
+    update: {
+      name: 'Aturan & Parameter Gamifikasi'
+    },
+    create: {
+      code: 'GAMIFICATION_RULES',
+      name: 'Aturan & Parameter Gamifikasi',
+      createdBy: 'seeder'
+    }
+  });
+
+  const earlyBirdTiers = [
+    { dayOffset: 0, stars: 5, points: 100, label: 'Hari H (Sangat Tepat Waktu)' },
+    { dayOffset: 1, stars: 4, points: 80, label: 'H+1' },
+    { dayOffset: 2, stars: 3, points: 60, label: 'H+2' },
+    { dayOffset: 3, stars: 2, points: 40, label: 'H+3' },
+    { dayOffset: 999, stars: 1, points: 20, label: 'H+4 ke atas (Standar)' }
+  ];
+
+  await prisma.param.upsert({
+    where: { code: 'EARLY_BIRD_SCORES' },
+    update: {
+      paramgroupId: groupGamification.paramgroupId,
+      value: JSON.stringify(earlyBirdTiers)
+    },
+    create: {
+      paramgroupId: groupGamification.paramgroupId,
+      code: 'EARLY_BIRD_SCORES',
+      value: JSON.stringify(earlyBirdTiers),
+      createdBy: 'seeder'
+    }
+  });
+  console.log('✅ Param Group : GAMIFICATION_RULES (EARLY_BIRD_SCORES parameter tier)');
+
   console.log('\n──────────────────────────────────────────────────');
   console.log('🎉 Seeding selesai! Data siap digunakan.\n');
   console.log('Kredensial default (semua user):');

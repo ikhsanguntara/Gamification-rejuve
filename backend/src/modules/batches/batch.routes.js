@@ -14,6 +14,7 @@ router.get('/:id', batchController.getBatchById);
 // ─── Write (HEAD dan SUPERADMIN) ──────────────────────────────────────────────
 router.post('/', authorizeRole(['SUPERADMIN', 'HEAD']), batchController.createBatch);
 router.post('/:id/generate', authorizeRole(['SUPERADMIN', 'HEAD']), batchController.generateBatchMissions);
+router.patch('/:batchId/details/:batchDetailId/toggle-lock', authorizeRole(['SUPERADMIN', 'HEAD', 'STORE_LEADER']), batchController.toggleBatchDetailLock);
 router.patch('/:id', authorizeRole(['SUPERADMIN', 'HEAD']), batchController.updateBatch);
 router.delete('/:id', authorizeRole(['SUPERADMIN']), batchController.deleteBatch);
 

@@ -172,7 +172,7 @@ const executeBatchGeneration = async (tx, {
       status: 'OPEN',
       startDate: journeySchedule.startDate,
       endDate: journeySchedule.endDate,
-      isLock: false,
+      isLock: buddySchedule ? true : false,
       createdBy: creatorId
     }
   });
@@ -832,6 +832,68 @@ const deleteBatch = async (batchId, updaterId = null) => {
   return true;
 };
 
+/**
+ * Toggle atau ubah status isLock pada Batch Detail tertentu.
+ * Jika di-unlock (isLock: false) dan unlockMissions: true, otomatis ubah userMissions terkait dari LOCKED ke ACTIVE.
+ * @param {string} batchId
+ * @param {string} batchDetailId
+ * @param {object} payload - { isLock, unlockMissions = true }
+ * @param {string} updaterId
+ */
+const toggleBatchDetailLock = async (batchId, batchDetailId, payload = {}, updaterId = null) => {
+  const detail = await prisma.batchDetail.findFirst({
+    where: { batchId, batchDetailId },
+    include: {
+      tplMission: true,
+      batch: true
+    }
+  });
+
+  if (!detail) {
+    throw new Error(`Batch detail dengan id "${batchDetailId}" tidak ditemukan pada batch ini.`);
+  }
+
+  const newLock = payload.isLock !== undefined ? Boolean(payload.isLock) : !detail.isLock;
+  const unlockMissions = payload.unlockMissions !== undefined ? Boolean(payload.unlockMissions) : true;
+
+  const updatedDetail = await prisma.batchDetail.update({
+    where: { batchDetailId },
+    data: {
+      isLock: newLock,
+      updatedBy: updaterId
+    },
+    include: {
+      tplMission: true
+    }
+  });
+
+  let unlockedMissionsCount = 0;
+  if (!newLock && unlockMissions) {
+    const res = await prisma.userMission.updateMany({
+      where: {
+        mission: {
+          batchId,
+          batchDetailId
+        },
+        status: 'LOCKED'
+      },
+      data: {
+        status: 'ACTIVE'
+      }
+    });
+    unlockedMissionsCount = res.count;
+  }
+
+  return {
+    batchDetail: updatedDetail,
+    isLock: newLock,
+    unlockedMissionsCount,
+    message: newLock
+      ? `Fase ${detail.tplMission?.name || 'Batch Detail'} berhasil dikunci (LOCKED).`
+      : `Fase ${detail.tplMission?.name || 'Batch Detail'} berhasil dibuka (UNLOCKED). ${unlockedMissionsCount} misi kru diaktifkan!`
+  };
+};
+
 module.exports = {
   createBatch,
   generateBatch,
@@ -840,5 +902,6 @@ module.exports = {
   updateBatch,
   deleteBatch,
   getUserAvailableBatches,
-  getScopedBatchWhere
+  getScopedBatchWhere,
+  toggleBatchDetailLock
 };

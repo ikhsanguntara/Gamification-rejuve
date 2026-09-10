@@ -19,6 +19,11 @@ router.use(authenticate);
 router.get('/crews', evaluationController.getWorkstationCrews);
 router.get('/crews/:userId/missions', evaluationController.getCrewMissions);
 
+// ─── Buddy Report & History Endpoints ─────────────────────────────────────────
+router.get('/buddy-history', evaluationController.getBuddyHistory);
+router.get('/buddy-report/:userId', evaluationController.getBuddyReport);
+router.get('/buddy-report/:userId/html', evaluationController.getBuddyReportHtml);
+
 // ─── Read User Missions ───────────────────────────────────────────────────────
 router.get('/user-missions', evaluationController.getUserMissions);
 router.get('/user-missions/:id', evaluationController.getUserMissionById);

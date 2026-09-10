@@ -19,5 +19,7 @@ router.use('/templates', require('../modules/templates/template.routes'));
 router.use('/administration', require('../modules/admin/admin.routes'));
 router.use('/admin', require('../modules/admin/admin.routes'));
 router.use('/evaluations', require('../modules/evaluations/evaluation.routes'));
+router.use('/dashboard', require('../modules/dashboard/dashboard.routes'));
+router.use('/gamification', require('../modules/gamification/gamification.routes'));
 
 module.exports = router;

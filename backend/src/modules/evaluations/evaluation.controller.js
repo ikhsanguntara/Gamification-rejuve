@@ -85,7 +85,7 @@ const evaluateBuddy = async (req, res, next) => {
     let { score, notes, evidenceUrl } = req.body;
 
     if (req.file) {
-      evidenceUrl = await uploadFileToStorage(req.file, 'evidence');
+      evidenceUrl = await uploadFileToStorage(req.file, 'evidence', req);
     }
 
     const result = await evaluationService.evaluateBuddyMission(id, evaluatorId, {
@@ -113,7 +113,7 @@ const evaluateJourneyBySL = async (req, res, next) => {
     let { score, notes, evidenceUrl } = req.body;
 
     if (req.file) {
-      evidenceUrl = await uploadFileToStorage(req.file, 'evidence');
+      evidenceUrl = await uploadFileToStorage(req.file, 'evidence', req);
     }
 
     const data = await evaluationService.evaluateJourneyBySL(id, slId, {
@@ -186,6 +186,64 @@ const submitCrewFeedback = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/evaluations/buddy-report/:userId?batchId=...
+ * Mengambil data rapor Buddy dalam format JSON.
+ */
+const getBuddyReport = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { batchId } = req.query;
+    const data = await evaluationService.getBuddyReport(userId, batchId, req);
+
+    return sendSuccess(res, {
+      message: 'Rapor Buddy berhasil diambil.',
+      data
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/evaluations/buddy-report/:userId/html?batchId=...
+ * Mengambil tampilan HTML rapor Buddy resmi Re.juve yang siap dicetak.
+ */
+const getBuddyReportHtml = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { batchId } = req.query;
+    const reportData = await evaluationService.getBuddyReport(userId, batchId, req);
+    const html = evaluationService.generateBuddyReportHtml(reportData);
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(html);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/evaluations/buddy-history
+ * Mengambil riwayat pendampingan Buddy per batch.
+ */
+const getBuddyHistory = async (req, res, next) => {
+  try {
+    const result = await evaluationService.getBuddyHistory(req.user, req.query);
+
+    return sendSuccess(res, {
+      message: 'Riwayat pendampingan Buddy berhasil diambil.',
+      data: result.items,
+      meta: {
+        ...result.pagination,
+        summary: result.summary
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUserMissions,
   getUserMissionById,
@@ -194,5 +252,8 @@ module.exports = {
   evaluateBuddy,
   evaluateJourneyBySL,
   reviewJourneyByDM,
-  submitCrewFeedback
+  submitCrewFeedback,
+  getBuddyReport,
+  getBuddyReportHtml,
+  getBuddyHistory
 };
