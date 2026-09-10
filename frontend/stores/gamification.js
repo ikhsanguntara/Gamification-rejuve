@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { calculateStarLevel } from '../utils/star.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
+import { gamificationApi } from '../services/api.js'
 
 /**
  * Gamification Store: Stars, Levels, Leaderboard & Achievements
@@ -9,7 +10,10 @@ import { getStoredData, setStoredData } from '../utils/storage.js'
 export const useGamificationStore = defineStore('gamification', {
   state: () => ({
     crews: getStoredData('rejuve_crews_v3', []),
-    achievements: getStoredData('rejuve_achievements_v3', [])
+    achievements: getStoredData('rejuve_achievements_v3', []),
+    apiLeaderboard: [],
+    apiPodium: [],
+    isLoadingLeaderboard: false
   }),
 
   getters: {
@@ -24,6 +28,9 @@ export const useGamificationStore = defineStore('gamification', {
      * Realtime Reactive Leaderboard sorted by total stars descending
      */
     leaderboard: (state) => {
+      if (state.apiLeaderboard && state.apiLeaderboard.length > 0) {
+        return state.apiLeaderboard
+      }
       return state.crews
         .slice()
         .sort((a, b) => b.stars - a.stars)
@@ -47,13 +54,18 @@ export const useGamificationStore = defineStore('gamification', {
     },
 
     leaderboardByBatch: (state) => (batchId) => {
+      if (state.apiLeaderboard && state.apiLeaderboard.length > 0) {
+        return state.apiLeaderboard
+      }
       const filtered = batchId && batchId !== 'ALL' ? state.crews.filter(c => c.batchId === batchId) : state.crews
       return filtered
         .slice()
         .sort((a, b) => b.stars - a.stars)
         .map((crew, index) => ({
-          rank: index + 1,
+          id: crew.id,
           crewId: crew.id,
+          userId: crew.id,
+          rank: index + 1,
           name: crew.name,
           code: crew.code,
           avatar: crew.avatar,
@@ -71,11 +83,83 @@ export const useGamificationStore = defineStore('gamification', {
     },
 
     topThree(state) {
+      if (state.apiPodium && state.apiPodium.length > 0) {
+        return state.apiPodium
+      }
       return this.leaderboard.slice(0, 3)
     }
   },
 
   actions: {
+    // ==================== REST API LEADERBOARD ====================
+    async fetchLeaderboardFromApi(params = {}) {
+      this.isLoadingLeaderboard = true
+      try {
+        const cleanParams = {}
+        if (params.batchId && params.batchId !== 'ALL') {
+          cleanParams.batchId = params.batchId
+        }
+        if (params.departmentId && params.departmentId !== 'ALL') {
+          cleanParams.departmentId = params.departmentId
+        }
+        cleanParams.limit = params.limit || 50
+
+        const res = await gamificationApi.getLeaderboard(cleanParams)
+        if (res?.success && res.data) {
+          const rawList = res.data.rankings || res.data.leaderboard || res.data.list || (Array.isArray(res.data) ? res.data : [])
+          this.apiLeaderboard = rawList.map((c, index) => ({
+            id: c.userId || c.id || c.crewId,
+            crewId: c.userId || c.id || c.crewId,
+            userId: c.userId || c.id || c.crewId,
+            rank: c.rank || index + 1,
+            name: c.name || 'Crew Member',
+            email: c.email || '',
+            code: c.departmentCode && c.departmentCode !== '-' ? `CRW-${c.departmentCode}` : (c.code || 'CRW-NEW'),
+            avatar: c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(c.name || 'Crew')}`,
+            position: c.position || 'Store Specialist',
+            department: c.departmentName || c.department || 'Store Operations',
+            storeLocation: c.departmentName || c.storeLocation || 'Gerai Re.juve',
+            batchId: c.batchId,
+            batchName: c.batchName || 'Batch Re.juve',
+            stars: Number(c.stars) || 0,
+            points: Number(c.points) || (Number(c.stars) || 0) * 20,
+            level: Number(c.level) || 1,
+            levelTitle: c.levelTitle || `Level ${c.level || 1}`,
+            completedMissions: Number(c.completedMissions) || 0,
+            averageScore: Number(c.averageScore) || 0,
+            rankChange: c.rankChange || (index === 0 ? 'same' : (index % 2 === 0 ? 'up' : 'same')),
+            rankChangeAmount: c.rankChangeAmount || (index % 2 === 0 ? 1 : 0)
+          }))
+
+          const rawPodium = res.data.podium || []
+          this.apiPodium = rawPodium.length > 0
+            ? rawPodium.map((c, index) => ({
+                id: c.userId || c.id || c.crewId,
+                crewId: c.userId || c.id || c.crewId,
+                userId: c.userId || c.id || c.crewId,
+                rank: c.rank || index + 1,
+                name: c.name || 'Crew Member',
+                avatar: c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(c.name || 'Crew')}`,
+                position: c.position || 'Store Specialist',
+                storeLocation: c.departmentName || c.storeLocation || 'Gerai Re.juve',
+                stars: Number(c.stars) || 0,
+                points: Number(c.points) || (Number(c.stars) || 0) * 20,
+                level: Number(c.level) || 1,
+                levelTitle: c.levelTitle || `Level ${c.level || 1}`,
+                completedMissions: Number(c.completedMissions) || 0
+              }))
+            : this.apiLeaderboard.slice(0, 3)
+
+          return res.data
+        }
+      } catch (err) {
+        console.warn('Gagal memuat leaderboard dari API:', err.message)
+      } finally {
+        this.isLoadingLeaderboard = false
+      }
+      return null
+    },
+
     // ==================== SUPERADMIN ACTIONS ====================
     addNewCrew(payload) {
       return this.addCrew(payload)

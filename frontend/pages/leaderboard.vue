@@ -33,6 +33,9 @@ import { Star } from 'lucide-vue-next'
 const gamificationStore = useGamificationStore()
 
 const totalBatchStars = computed(() => {
-  return gamificationStore.allCrews.reduce((acc, c) => acc + (c.stars || 0), 0)
+  const list = gamificationStore.leaderboard && gamificationStore.leaderboard.length > 0
+    ? gamificationStore.leaderboard
+    : gamificationStore.allCrews
+  return list.reduce((acc, c) => acc + (Number(c.stars) || 0), 0)
 })
 </script>

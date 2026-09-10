@@ -136,3 +136,14 @@ export const syncApi = {
   pullDepartments: () => apiFetch('/sync/departments/pull-all', { method: 'POST' }),
   pullUsers: () => apiFetch('/sync/users/pull-all', { method: 'POST' })
 }
+
+// ─── 11. Dashboard & Analytics Service ──────────────────────────────────────
+export const dashboardApi = {
+  getSummary: (params) => apiFetch('/dashboard/summary', { method: 'GET', params })
+}
+
+// ─── 12. Gamification & Leaderboard Service ─────────────────────────────────
+export const gamificationApi = {
+  getLeaderboard: (params) => apiFetch('/gamification/leaderboard', { method: 'GET', params })
+}
+
