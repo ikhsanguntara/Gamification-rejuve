@@ -33,6 +33,7 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 
 | ID | Tanggal & Waktu (WIB) | Target Environment | Komponen | Commit Hash & Branch | Hasil Unit Test | Port / URL Akses | Status |
 | :---: | :--- | :--- | :--- | :--- | :---: | :--- | :---: |
+| **DEP-007** | 2026-09-10 18:50 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `8339783` (`main`) | **86/86 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-006** | 2026-09-09 14:20 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `4b496e7` (`main`) | **86/86 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-005** | 2026-09-07 17:44 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `4b496e7` (`main`) | **86/86 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-004** | 2026-09-07 14:15 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `0c42431` (`main`) | **86/86 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
@@ -43,6 +44,25 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 ---
 
 ## 📝 Rincian Log Tiap Deployment
+
+### [DEP-007] — 2026-09-10 18:50 WIB
+- **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"deploy firebase"*)
+- **Target Host**: Google Firebase Hosting (`gamification-dde4b`)
+- **Komponen Di-Deploy**: 
+  - Nuxt 3 Frontend SPA ter-generate ke static distribution (`.output/public`)
+  - Target REST API: `https://cagelike-flukily-niels.ngrok-free.dev/api`
+  - Perbaikan kalkulasi dinamis siklus minggu batch (Week 1 s/d 5+) pada selector & header
+  - Filter real API khusus `type: 'JOURNEY'` pada katalog dan modal petualangan ekspedisi
+  - Penghapusan 100% seluruh string & array fallback dummy (murni baca data database)
+  - Sinkronisasi instan hasil approval District Manager ke kartu misi dan reward bintang
+- **Branch & Commit**: `8339783` di branch `main`
+- **Hasil Pengujian Unit Test Sebelum Deploy**:
+  - **CRUD Test Suite**: `49/49 Tests PASS (100%)`
+  - **QA Unit Tester Suite**: `37/37 Tests PASS (100%)`
+  - **Total Pengujian**: `86/86 Tests PASS (0 Failed)`
+- **Verifikasi Live Hosting Pasca Deploy**:
+  - Hosting URL $\rightarrow$ **`https://gamification-dde4b.web.app`**
+  - Status Distribusi $\rightarrow$ **200 OK / Live & Online**
 
 ### [DEP-006] — 2026-09-09 14:20 WIB
 - **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"deploy ke firebase"*)
