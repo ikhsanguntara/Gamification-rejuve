@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { calculateStarLevel } from '../utils/star.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { gamificationApi } from '../services/api.js'
+import { cachedApiCall, invalidateApiCache } from '../utils/apiCache.js'
 
 /**
  * Gamification Store: Stars, Levels, Leaderboard & Achievements
@@ -82,20 +83,30 @@ export const useGamificationStore = defineStore('gamification', {
         }))
     },
 
-    topThree(state) {
+    podiumTopThree: (state) => {
       if (state.apiPodium && state.apiPodium.length > 0) {
         return state.apiPodium
       }
-      return this.leaderboard.slice(0, 3)
+      return state.leaderboard.slice(0, 3)
+    },
+
+    podiumTopThreeByBatch: (state) => (batchId) => {
+      if (state.apiPodium && state.apiPodium.length > 0) {
+        return state.apiPodium
+      }
+      return state.leaderboardByBatch(batchId).slice(0, 3)
     }
   },
 
   actions: {
     // ==================== REST API LEADERBOARD ====================
-    async fetchLeaderboardFromApi(params = {}) {
+    async fetchLeaderboardFromApi(params = {}, forceRefresh = false) {
       this.isLoadingLeaderboard = true
       try {
         const cleanParams = {}
+        if (params.search && params.search.trim()) {
+          cleanParams.search = params.search.trim()
+        }
         if (params.batchId && params.batchId !== 'ALL') {
           cleanParams.batchId = params.batchId
         }
@@ -104,7 +115,8 @@ export const useGamificationStore = defineStore('gamification', {
         }
         cleanParams.limit = params.limit || 50
 
-        const res = await gamificationApi.getLeaderboard(cleanParams)
+        const cacheKey = `leaderboard:${JSON.stringify(cleanParams)}`
+        const res = await cachedApiCall(cacheKey, () => gamificationApi.getLeaderboard(cleanParams), 20000, forceRefresh)
         if (res?.success && res.data) {
           const rawList = res.data.rankings || res.data.leaderboard || res.data.list || (Array.isArray(res.data) ? res.data : [])
           this.apiLeaderboard = rawList.map((c, index) => ({

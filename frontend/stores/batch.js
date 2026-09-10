@@ -4,6 +4,7 @@ import { useUserStore } from './user.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { batchApi, authApi } from '../services/api.js'
 import { buildPrismaQuery } from '../utils/queryBuilder.js'
+import { cachedApiCall, invalidateApiCache } from '../utils/apiCache.js'
 
 /**
  * Helper: Format date to short readable string e.g. "01 Sep"
@@ -249,7 +250,7 @@ export const useBatchStore = defineStore('batch', {
       }
     },
 
-    async fetchBatchesFromApi(params = {}) {
+    async fetchBatchesFromApi(params = {}, forceRefresh = false) {
       try {
         const contains = {}
         const exact = {}
@@ -268,7 +269,8 @@ export const useBatchStore = defineStore('batch', {
           exact
         })
 
-        const res = await batchApi.getAll(query)
+        const cacheKey = `batches:${JSON.stringify(query)}`
+        const res = await cachedApiCall(cacheKey, () => batchApi.getAll(query), 30000, forceRefresh)
         if (res && res.data && Array.isArray(res.data)) {
           this.isLiveApi = true
           this.batches = res.data.map(b => {
@@ -485,6 +487,7 @@ export const useBatchStore = defineStore('batch', {
       this.selectedBatchId = newBatch.id
       this.customSelectedWeek = currentActiveWeek
       setStoredData('rejuve_batches_v4', this.batches)
+      invalidateApiCache('batches')
 
       // ⚡ Automatically apply template package (12 missions) if enabled!
       if (payload.applyTemplatePackage !== false) {
@@ -530,6 +533,7 @@ export const useBatchStore = defineStore('batch', {
       })
 
       setStoredData('rejuve_batches_v4', this.batches)
+      invalidateApiCache('batches')
       return batch
     },
 
@@ -542,6 +546,7 @@ export const useBatchStore = defineStore('batch', {
           this.customSelectedWeek = null
         }
         setStoredData('rejuve_batches_v4', this.batches)
+        invalidateApiCache('batches')
         return removed
       }
       return null

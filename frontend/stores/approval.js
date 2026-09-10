@@ -8,6 +8,7 @@ import { calculateStars } from '../utils/star.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { evaluationApi } from '../services/api.js'
 import { buildPrismaQuery } from '../utils/queryBuilder.js'
+import { cachedApiCall, invalidateApiCache } from '../utils/apiCache.js'
 
 /**
  * Approval Store: District Manager Review Workspace (Approve with Option to Adjust Score)
@@ -47,7 +48,7 @@ export const useApprovalStore = defineStore('approval', {
   },
 
   actions: {
-    async fetchApprovalsFromApi(params = {}) {
+    async fetchApprovalsFromApi(params = {}, forceRefresh = false) {
       try {
         const inList = {}
         const exact = {
@@ -67,7 +68,8 @@ export const useApprovalStore = defineStore('approval', {
           inList
         })
 
-        const res = await evaluationApi.getUserMissions(query)
+        const cacheKey = `approvals:${JSON.stringify(query)}`
+        const res = await cachedApiCall(cacheKey, () => evaluationApi.getUserMissions(query), 15000, forceRefresh)
         if (res && res.data && Array.isArray(res.data)) {
           // Filter ketat: Hanya misi JOURNEY yang statusnya siap di-review DM atau sudah disetujui
           const eligibleMissions = res.data.filter(m => {
@@ -244,6 +246,9 @@ export const useApprovalStore = defineStore('approval', {
       })
 
       setStoredData('rejuve_approvals_v4', this.approvals)
+      invalidateApiCache('approvals')
+      invalidateApiCache('leaderboard')
+      invalidateApiCache('batches')
       return {
         success: true,
         awardedStars,
@@ -277,6 +282,7 @@ export const useApprovalStore = defineStore('approval', {
       })
 
       setStoredData('rejuve_approvals_v4', this.approvals)
+      invalidateApiCache('approvals')
       return {
         success: approvedCount > 0,
         approvedCount,

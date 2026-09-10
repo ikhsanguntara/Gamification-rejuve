@@ -4,6 +4,7 @@ import { useBatchStore } from './batch.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { departmentApi } from '../services/api.js'
 import { buildPrismaQuery } from '../utils/queryBuilder.js'
+import { cachedApiCall, invalidateApiCache } from '../utils/apiCache.js'
 
 /**
  * Store Store: Manage Master Stores/Outlets, Location, Store Leader & District Manager Assignments
@@ -71,7 +72,7 @@ export const useStoreStore = defineStore('store', {
       this.selectedStoreId = id
     },
 
-    async fetchStoresFromApi(params = {}) {
+    async fetchStoresFromApi(params = {}, forceRefresh = false) {
       this.isLoading = true
       try {
         const contains = {}
@@ -94,7 +95,8 @@ export const useStoreStore = defineStore('store', {
           exact
         })
 
-        const res = await departmentApi.getAll(query)
+        const cacheKey = `stores:${JSON.stringify(query)}`
+        const res = await cachedApiCall(cacheKey, () => departmentApi.getAll(query), 30000, forceRefresh)
         if (res && res.data && Array.isArray(res.data)) {
           this.isLiveApi = true
           this.stores = res.data.map(d => ({
@@ -117,8 +119,8 @@ export const useStoreStore = defineStore('store', {
           const meta = res.meta || res.pagination || {}
           this.serverPagination = {
             total: meta.total !== undefined ? meta.total : res.data.length,
-            page: meta.page || page,
-            limit: meta.limit || limit,
+            page: meta.page || params.page || 1,
+            limit: meta.limit || params.limit || 9,
             totalPages: meta.totalPages || 1
           }
 
@@ -161,7 +163,9 @@ export const useStoreStore = defineStore('store', {
       }
 
       this.stores.unshift(newStore)
+      this.selectedStoreId = newStore.id
       setStoredData('rejuve_stores_v1', this.stores)
+      invalidateApiCache('stores')
 
       // Sync ke backend API jika online
       departmentApi.create({

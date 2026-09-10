@@ -15,6 +15,7 @@ import { getStoredData, setStoredData } from '../utils/storage.js'
 import { authApi, userApi } from '../services/api.js'
 import { getAuthToken, setAuthToken } from '../composables/useApi.js'
 import { buildPrismaQuery } from '../utils/queryBuilder.js'
+import { cachedApiCall, invalidateApiCache } from '../utils/apiCache.js'
 
 function extractRoleCode(raw) {
   if (!raw) return ''
@@ -244,7 +245,7 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    async fetchUsersFromApi(params = {}) {
+    async fetchUsersFromApi(params = {}, forceRefresh = false) {
       try {
         const contains = {}
         const exact = {}
@@ -269,7 +270,8 @@ export const useUserStore = defineStore('user', {
           exact
         })
 
-        const res = await userApi.getAll(query)
+        const cacheKey = `users:${JSON.stringify(query)}`
+        const res = await cachedApiCall(cacheKey, () => userApi.getAll(query), 30000, forceRefresh)
         if (res && res.data && Array.isArray(res.data)) {
           this.isLiveApi = true
           this.userDirectory = res.data.map(apiU => {
@@ -297,8 +299,8 @@ export const useUserStore = defineStore('user', {
           const meta = res.meta || res.pagination || {}
           this.serverPagination = {
             total: meta.total !== undefined ? meta.total : res.data.length,
-            page: meta.page || page,
-            limit: meta.limit || limit,
+            page: meta.page || params.page || 1,
+            limit: meta.limit || params.limit || 10,
             totalPages: meta.totalPages || 1
           }
 
@@ -357,39 +359,47 @@ export const useUserStore = defineStore('user', {
       this.notifications.forEach(n => { n.isRead = true })
     },
 
-    // ==================== USER MANAGEMENT ACTIONS ====================
+    // ==================== SUPERADMIN USER ACTIONS ====================
 
     createUser(payload) {
-      const id = payload.id || `user-${Date.now()}`
-      let roleTitle = 'Store Specialist'
-      if (payload.role === 'STORE_LEADER' || payload.role === 'SUPERVISOR') roleTitle = 'Store Leader'
-      else if (payload.role === 'DISTRICT_MANAGER' || payload.role === 'HEAD') roleTitle = 'District Manager'
-      else if (payload.role === 'SUPERADMIN') roleTitle = 'System Superadmin'
+      const id = payload.id || `usr-${Date.now()}`
+      const role = payload.role || 'CREW'
+      const roleTitle = payload.roleTitle || resolveRoleTitle({ role })
 
-      let storeLocation = payload.storeLocation || 'Belum Ditugaskan'
-      let batchId = payload.batchId || null
+      let storeLocation = payload.storeLocation || 'Re.juve Jakarta Selatan'
       let storeId = payload.storeId || null
+      let batchId = payload.batchId || null
+
+      if (batchId && batchId !== 'UNASSIGNED') {
+        const batchStore = useBatchStore()
+        const b = batchStore.batchById(batchId)
+        if (b) {
+          storeLocation = b.name
+          storeId = b.id
+        }
+      }
 
       const newUser = {
         id,
         name: payload.name,
-        role: payload.role,
-        roleTitle: payload.roleTitle || roleTitle,
-        email: payload.email || `${payload.name.toLowerCase().replace(/[^a-z]/g, '.')}@rejuve.co.id`,
+        role,
+        roleTitle,
+        email: payload.email || `${payload.name.toLowerCase().replace(/\s+/g, '.')}@rejuve.co.id`,
         avatar: payload.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
         department: payload.department || (payload.role === 'CREW' ? 'Store Operations' : 'Management'),
         position: payload.position || roleTitle,
         storeId,
         storeLocation,
         batchId,
-        stars: 0,
-        level: 1,
+        stars: payload.stars || 0,
+        level: payload.level || 1,
         isBuddy: Boolean(payload.isBuddy),
         userBuddyId: payload.userBuddyId || null
       }
 
       this.userDirectory.push(newUser)
       setStoredData('rejuve_users_v3', this.userDirectory)
+      invalidateApiCache('users')
 
       if (newUser.role === 'CREW') {
         const gamificationStore = useGamificationStore()
@@ -418,6 +428,7 @@ export const useUserStore = defineStore('user', {
         gamificationStore.updateCrew(id, payload)
       }
       setStoredData('rejuve_users_v3', this.userDirectory)
+      invalidateApiCache('users')
       return user
     },
 
@@ -430,6 +441,7 @@ export const useUserStore = defineStore('user', {
           gamificationStore.removeCrew(id)
         }
         setStoredData('rejuve_users_v3', this.userDirectory)
+        invalidateApiCache('users')
         return true
       }
       return false

@@ -3,6 +3,7 @@ import { calculateStars } from '../utils/star.js'
 import { useGamificationStore } from './gamification.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { batchApi, evaluationApi } from '../services/api.js'
+import { cachedApiCall, invalidateApiCache } from '../utils/apiCache.js'
 
 /**
  * Mission Store: Manages store-wide missions across batches and weeks, and Superadmin CRUD
@@ -38,19 +39,27 @@ export const useMissionStore = defineStore('mission', {
   },
 
   actions: {
-    async fetchMissionsFromApi() {
+    async fetchMissionsFromApi(forceRefresh = false) {
       try {
-        const [batchRes, missionRes] = await Promise.allSettled([
-          batchApi.getAll(),
-          evaluationApi.getUserMissions()
-        ])
+        const cacheKey = 'missions:all'
+        const resData = await cachedApiCall(cacheKey, async () => {
+          const [batchRes, missionRes] = await Promise.allSettled([
+            batchApi.getAll(),
+            evaluationApi.getUserMissions()
+          ])
 
-        const userMissions = (missionRes.status === 'fulfilled' && missionRes.value?.data && Array.isArray(missionRes.value.data))
-          ? missionRes.value.data
-          : []
-        const batches = (batchRes.status === 'fulfilled' && batchRes.value?.data && Array.isArray(batchRes.value.data))
-          ? batchRes.value.data
-          : []
+          const userMissions = (missionRes.status === 'fulfilled' && missionRes.value?.data && Array.isArray(missionRes.value.data))
+            ? missionRes.value.data
+            : []
+          const batches = (batchRes.status === 'fulfilled' && batchRes.value?.data && Array.isArray(batchRes.value.data))
+            ? batchRes.value.data
+            : []
+
+          return { userMissions, batches }
+        }, 20000, forceRefresh)
+
+        const userMissions = resData?.userMissions || []
+        const batches = resData?.batches || []
 
         if (userMissions.length > 0) {
           this.missions = userMissions.map((um, idx) => {
