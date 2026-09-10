@@ -30,16 +30,39 @@ const getUserMissions = async (query = {}, currentUser = null) => {
   delete queryClone.page;
   delete queryClone.limit;
 
-  if (queryClone.type) {
-    queryClone['mission.type'] = queryClone.type.toUpperCase();
-    delete queryClone.type;
-  }
-  if (queryClone.batchId) {
-    queryClone['mission.batchId'] = queryClone.batchId;
-    delete queryClone.batchId;
+  const where = parsePrismaQuery(queryClone, ['submissionNotes', 'tlNotes', 'dmNotes']);
+
+  // Pindahkan filter yang merupakan properti model Mission ke where.mission
+  const missionFields = ['type', 'batchId', 'weekOrDayNumber', 'category', 'batchDetailId'];
+  for (const field of missionFields) {
+    if (where[field] !== undefined) {
+      where.mission = where.mission || {};
+      where.mission[field] = where[field];
+      delete where[field];
+    }
   }
 
-  const where = parsePrismaQuery(queryClone, ['submissionNotes', 'tlNotes', 'dmNotes']);
+  // Alias filter week / day -> weekOrDayNumber
+  if (queryClone.week !== undefined) {
+    where.mission = where.mission || {};
+    where.mission.weekOrDayNumber = parseInt(queryClone.week, 10);
+    delete where.week;
+  }
+  if (queryClone.day !== undefined) {
+    where.mission = where.mission || {};
+    where.mission.weekOrDayNumber = parseInt(queryClone.day, 10);
+    delete where.day;
+  }
+
+  // Pindahkan filter yang merupakan properti model User ke where.user
+  const userFields = ['departmentId', 'userBuddyId'];
+  for (const field of userFields) {
+    if (where[field] !== undefined) {
+      where.user = where.user || {};
+      where.user[field] = where[field];
+      delete where[field];
+    }
+  }
 
   // Jika batchId tidak ditentukan secara eksplisit di query, gunakan activeBatchId user jika ada
   let userActiveBatchId = currentUser?.activeBatchId;

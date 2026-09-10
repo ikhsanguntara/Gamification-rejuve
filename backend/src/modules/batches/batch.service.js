@@ -652,6 +652,177 @@ const getScopedBatchWhere = async (currentUser, baseWhere = {}) => {
 };
 
 /**
+ * Lengkapi array batch dengan kalkulasi properti totalWeeks secara dinamis.
+ */
+const enrichBatchesWithTotalWeeks = async (batches) => {
+  if (!batches || batches.length === 0) return batches;
+  const batchIds = batches.map(b => b.batchId);
+
+  // Ambil max weekOrDayNumber dari misi JOURNEY batch-batch ini
+  const journeyWeeks = await prisma.mission.groupBy({
+    by: ['batchId'],
+    where: {
+      batchId: { in: batchIds },
+      type: 'JOURNEY'
+    },
+    _max: {
+      weekOrDayNumber: true
+    }
+  });
+
+  const maxWeeksMap = {};
+  for (const j of journeyWeeks) {
+    if (j._max?.weekOrDayNumber) {
+      maxWeeksMap[j.batchId] = j._max.weekOrDayNumber;
+    }
+  }
+
+  // Ambil semua misi Journey dan user missions untuk menghitung completionRate per minggu
+  const allJourneyMissions = await prisma.mission.findMany({
+    where: {
+      batchId: { in: batchIds },
+      type: 'JOURNEY'
+    },
+    select: {
+      missionId: true,
+      batchId: true,
+      weekOrDayNumber: true
+    }
+  });
+
+  const allMissionIds = allJourneyMissions.map(m => m.missionId);
+  const allUserMissions = allMissionIds.length > 0
+    ? await prisma.userMission.findMany({
+        where: { missionId: { in: allMissionIds } },
+        select: { status: true, missionId: true }
+      })
+    : [];
+
+  const missionStatusMap = {};
+  for (const um of allUserMissions) {
+    missionStatusMap[um.missionId] = missionStatusMap[um.missionId] || [];
+    missionStatusMap[um.missionId].push(um.status);
+  }
+
+  for (const b of batches) {
+    let maxW = maxWeeksMap[b.batchId];
+    const journeyDetail = b.details?.find(d => d.tplMission?.type === 'JOURNEY');
+    
+    if (!maxW && journeyDetail) {
+      if (journeyDetail.tplMission?.details?.length) {
+        maxW = journeyDetail.tplMission.details.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1);
+      } else if (journeyDetail.startDate && journeyDetail.endDate) {
+        const jDiff = Math.round((new Date(journeyDetail.endDate) - new Date(journeyDetail.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+        maxW = Math.max(1, Math.round(jDiff / 7));
+      }
+    }
+    
+    if (!maxW && b.startDate && b.endDate) {
+      const diffDays = Math.round((new Date(b.endDate) - new Date(b.startDate)) / (1000 * 60 * 60 * 24));
+      if (diffDays > 0) maxW = Math.max(1, Math.round(diffDays / 7));
+    }
+    
+    b.totalWeeks = maxW || 5;
+    if (journeyDetail?.startDate) {
+      b.journeyStartDate = journeyDetail.startDate;
+      b.journeyEndDate = journeyDetail.endDate;
+    }
+
+    // Hitung completion per minggu untuk batch ini
+    const batchMissions = allJourneyMissions.filter(m => m.batchId === b.batchId);
+    b.weeks = Array.from({ length: b.totalWeeks }, (_, i) => {
+      const wNum = i + 1;
+      const weekMissions = batchMissions.filter(m => (m.weekOrDayNumber || 1) === wNum);
+      let totalUm = 0;
+      let completedUm = 0;
+      for (const wm of weekMissions) {
+        const statuses = missionStatusMap[wm.missionId] || [];
+        totalUm += statuses.length;
+        completedUm += statuses.filter(s => s === 'COMPLETED' || s === 'APPROVED_BY_DM').length;
+      }
+      const completionRate = totalUm > 0 ? Math.round((completedUm / totalUm) * 100) : 0;
+      return {
+        weekNumber: wNum,
+        title: `Minggu ${wNum}: Tema SOP Operasional`,
+        missionCount: weekMissions.length,
+        completionRate,
+        totalEvaluations: totalUm,
+        completedEvaluations: completedUm
+      };
+    });
+  }
+
+  return batches;
+};
+
+/**
+ * Lengkapi single batch dengan kalkulasi totalWeeks, tanggal Journey, dan weeks completionRate.
+ */
+const enrichSingleBatchWithTotalWeeks = async (batch) => {
+  if (!batch) return batch;
+  const journeyMissions = batch.missions?.filter(m => m.type === 'JOURNEY') || [];
+  const maxW = journeyMissions.reduce((max, m) => Math.max(max, m.weekOrDayNumber || 1), 0);
+  const journeyDetail = batch.details?.find(d => d.tplMission?.type === 'JOURNEY');
+  
+  if (maxW > 0) {
+    batch.totalWeeks = maxW;
+  } else if (journeyDetail?.tplMission?.details?.length) {
+    batch.totalWeeks = journeyDetail.tplMission.details.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1);
+  } else if (journeyDetail?.startDate && journeyDetail?.endDate) {
+    const jDiff = Math.round((new Date(journeyDetail.endDate) - new Date(journeyDetail.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+    batch.totalWeeks = Math.max(1, Math.round(jDiff / 7));
+  } else if (batch.startDate && batch.endDate) {
+    const diffDays = Math.round((new Date(batch.endDate) - new Date(batch.startDate)) / (1000 * 60 * 60 * 24));
+    batch.totalWeeks = Math.max(1, Math.round(diffDays / 7));
+  } else {
+    batch.totalWeeks = 5;
+  }
+
+  if (journeyDetail?.startDate) {
+    batch.journeyStartDate = journeyDetail.startDate;
+    batch.journeyEndDate = journeyDetail.endDate;
+  }
+
+  const journeyMissionIds = journeyMissions.map(m => m.missionId);
+  let userMissions = [];
+  if (journeyMissionIds.length > 0) {
+    userMissions = await prisma.userMission.findMany({
+      where: { missionId: { in: journeyMissionIds } },
+      select: { status: true, missionId: true }
+    });
+  }
+
+  const missionStatusMap = {};
+  for (const um of userMissions) {
+    missionStatusMap[um.missionId] = missionStatusMap[um.missionId] || [];
+    missionStatusMap[um.missionId].push(um.status);
+  }
+
+  batch.weeks = Array.from({ length: batch.totalWeeks }, (_, i) => {
+    const wNum = i + 1;
+    const weekMissions = journeyMissions.filter(m => (m.weekOrDayNumber || 1) === wNum);
+    let totalUm = 0;
+    let completedUm = 0;
+    for (const wm of weekMissions) {
+      const statuses = missionStatusMap[wm.missionId] || [];
+      totalUm += statuses.length;
+      completedUm += statuses.filter(s => s === 'COMPLETED' || s === 'APPROVED_BY_DM').length;
+    }
+    const completionRate = totalUm > 0 ? Math.round((completedUm / totalUm) * 100) : 0;
+    return {
+      weekNumber: wNum,
+      title: `Minggu ${wNum}: Tema SOP Operasional`,
+      missionCount: weekMissions.length,
+      completionRate,
+      totalEvaluations: totalUm,
+      completedEvaluations: completedUm
+    };
+  });
+
+  return batch;
+};
+
+/**
  * Ambil daftar ringkas batch yang dapat dipilih oleh pengguna (untuk dropdown FE / session).
  */
 const getUserAvailableBatches = async (currentUser) => {
@@ -682,6 +853,7 @@ const getUserAvailableBatches = async (currentUser) => {
     ]
   });
 
+  await enrichBatchesWithTotalWeeks(batches);
   return batches;
 };
 
@@ -718,6 +890,8 @@ const getBatches = async (query = {}, currentUser = null) => {
       orderBy: { createdAt: 'desc' }
     })
   ]);
+
+  await enrichBatchesWithTotalWeeks(batches);
 
   return { batches, total, page, limit };
 };
@@ -758,7 +932,7 @@ const getBatchById = async (batchId) => {
     }
   });
 
-  return batch;
+  return await enrichSingleBatchWithTotalWeeks(batch);
 };
 
 /**
