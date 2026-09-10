@@ -49,6 +49,14 @@ services:
 
     ports:
       - "84:3005"
+    mem_limit: 256m
+    mem_reservation: 100m
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 100M
 
     environment:
       PORT: 3005
@@ -97,6 +105,14 @@ services:
 
     ports:
       - "82:80"
+    mem_limit: 128m
+    mem_reservation: 32m
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 32M
 
     networks:
       - gamification-network

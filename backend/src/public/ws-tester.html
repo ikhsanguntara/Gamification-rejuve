@@ -517,6 +517,29 @@ export const useGamificationSocket = () => {
     // Set default server URL ke host saat ini
     document.getElementById('serverUrl').value = window.location.origin;
 
+    // Helper decode JWT payload secara aman untuk karakter UTF-8 / non-Latin1
+    function decodeJwtPayload(token) {
+      try {
+        if (!token || typeof token !== 'string') return null;
+        const parts = token.split('.');
+        if (parts.length < 2) return null;
+        const base64Url = parts[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(function (c) {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            })
+            .join('')
+        );
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        console.warn('Gagal decode JWT payload:', e);
+        return null;
+      }
+    }
+
     // Helper Fill Form Cepat (Bukan auto-login kaku, hanya mengisi form input)
     function fillLoginForm(email, password) {
       document.getElementById('loginEmail').value = email;
@@ -637,9 +660,9 @@ export const useGamificationSocket = () => {
         updateStatus('CONNECTED', socket.id);
         document.getElementById('sessSocketId').textContent = socket.id;
 
-        // Decode payload token JWT untuk info kartu identitas
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
+        // Decode payload token JWT untuk info kartu identitas secara aman (UTF-8 safe)
+        const payload = decodeJwtPayload(token);
+        if (payload) {
           document.getElementById('sessName').textContent = payload.name || payload.email || payload.userId || 'User';
           document.getElementById('sessRole').textContent = payload.role || payload.roleCode || 'CREW';
           
@@ -653,8 +676,6 @@ export const useGamificationSocket = () => {
             span.textContent = r;
             roomsContainer.appendChild(span);
           });
-        } catch (e) {
-          // ignore decode error
         }
 
         logConsole('SYS', 'SOCKET_CONNECTED', {
@@ -751,7 +772,7 @@ export const useGamificationSocket = () => {
       if (emptyPrompt) emptyPrompt.style.display = 'none';
 
       const logEntry = {
-        id: Date.now() + Math.random(),
+        id: 'log_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
         category,
         eventName,
         payload,
@@ -799,7 +820,7 @@ export const useGamificationSocket = () => {
               </span>
               <span class="text-[10px] text-slate-500">${log.time}</span>
             </div>
-            <button onclick="copyToClipboard('${btoa(jsonString)}')" class="text-[10px] text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-900 border border-slate-800">
+            <button onclick="copyLogById('${log.id}')" class="text-[10px] text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-900 border border-slate-800 transition-colors">
               Salin JSON
             </button>
           </div>
@@ -835,10 +856,36 @@ export const useGamificationSocket = () => {
       if (!isPaused) renderLogs();
     }
 
-    function copyToClipboard(b64) {
-      const text = atob(b64);
-      navigator.clipboard.writeText(text);
-      alert('Payload JSON berhasil disalin ke clipboard!');
+    function copyLogById(id) {
+      const item = allLogs.find(l => l.id === id);
+      if (!item) return;
+      const text = JSON.stringify(item.payload, null, 2);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert('Payload JSON berhasil disalin ke clipboard!');
+        }).catch(() => {
+          fallbackCopyText(text);
+        });
+      } else {
+        fallbackCopyText(text);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        alert('Payload JSON berhasil disalin ke clipboard!');
+      } catch (e) {
+        alert('Gagal menyalin: ' + e.message);
+      }
+      document.body.removeChild(ta);
     }
 
     function escapeHtml(string) {

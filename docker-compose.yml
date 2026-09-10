@@ -12,6 +12,14 @@ services:
     restart: unless-stopped
     ports:
       - "3005:3005"
+    mem_limit: 256m
+    mem_reservation: 100m
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 100M
     networks:
       - default
       - asco_network
@@ -46,6 +54,14 @@ services:
     restart: unless-stopped
     ports:
       - "3006:80"
+    mem_limit: 128m
+    mem_reservation: 32m
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 32M
     networks:
       - default
     depends_on:
