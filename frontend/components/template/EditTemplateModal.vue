@@ -191,6 +191,29 @@
           </button>
         </div>
 
+        <!-- Pengaturan Tema / Judul Periode Aktif -->
+        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-slate-50 to-amber-50/40 dark:from-slate-800/80 dark:to-amber-950/20 border border-slate-200/90 dark:border-slate-700/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#831843] dark:bg-[#f472b6] flex-shrink-0"></span>
+            <div>
+              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                Tema / Fokus {{ unitLabel }} {{ activePeriodTab }}
+              </label>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                Judul tema ini akan otomatis tampil pada siklus mingguan penilaian kru & workstation.
+              </p>
+            </div>
+          </div>
+          <div class="flex-1 max-w-sm w-full">
+            <input
+              v-model="periodTitles[activePeriodTab]"
+              type="text"
+              :placeholder="`Contoh: ${form.type === 'JOURNEY' ? 'Customer Greeting & Hygiene SOP' : 'Orientasi Dasar Gerai'}`"
+              class="w-full text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-900 dark:text-white font-semibold placeholder-slate-400 focus:ring-2 focus:ring-[#831843]"
+            />
+          </div>
+        </div>
+
         <!-- Missions List in Active Period -->
         <div class="space-y-3">
           <div
@@ -430,6 +453,7 @@ const activeModalSection = ref('MISSIONS')
 
 const activePeriodTab = ref(1)
 const periodCount = ref(3)
+const periodTitles = ref({})
 
 const form = ref({
   id: '',
@@ -523,44 +547,62 @@ watch(() => props.modelValue, (isOpen) => {
     if (props.template) {
       const rawDetails = props.template.templates || props.template.details || []
 
-    const mappedDetails = rawDetails.map((item, idx) => {
-      const reqs = Array.isArray(item.sopChecklist)
-        ? item.sopChecklist.join('\n')
-        : (Array.isArray(item.requirements)
-          ? item.requirements.join('\n')
-          : (item.sopChecklist || item.requirements || ''))
-
-      return {
-        tempId: item.id || item.tplMissionDetailId || `item-${Date.now()}-${idx}`,
-        durationNumber: Number(item.week || item.durationNumber || 1),
-        missionTitle: item.title || item.missionTitle || `Misi SOP ${idx + 1}`,
-        description: item.description || '',
-        category: mapCategoryEnum(item.category),
-        inputType: mapInputTypeEnum(item.inputType),
-        requirementsText: reqs,
-        scaleConfig: item.scaleConfig || { min: 0, max: 100, step: 20, starPerStep: 1 }
+      // Inisialisasi Judul / Tema per Periode
+      const titles = {}
+      if (Array.isArray(props.template.weeks)) {
+        props.template.weeks.forEach(w => {
+          if (w.weekNumber && w.title) {
+            titles[w.weekNumber] = w.title
+          }
+        })
       }
-    })
 
-    const maxInDetails = mappedDetails.reduce((max, d) => Math.max(max, Number(d.durationNumber || 1)), 1)
-    periodCount.value = Math.max(maxInDetails, 1)
+      const mappedDetails = rawDetails.map((item, idx) => {
+        const reqs = Array.isArray(item.sopChecklist)
+          ? item.sopChecklist.join('\n')
+          : (Array.isArray(item.requirements)
+            ? item.requirements.join('\n')
+            : (item.sopChecklist || item.requirements || ''))
 
-    form.value = {
-      id: props.template.id || props.template.tplMissionId,
-      code: props.template.code || '',
-      name: props.template.name || '',
-      type: props.template.type || 'JOURNEY',
-      durationCode: props.template.durationCode || (props.template.type === 'JOURNEY' ? 'WEEK' : 'DAY'),
-      durationValue: Number(props.template.durationValue || 1),
-      description: props.template.description || '',
-      details: mappedDetails
+        const durationNum = Number(item.week || item.durationNumber || 1)
+        const tTitle = item.scaleConfig?.periodTitle || item.scaleConfig?.weekTitle || item.periodTitle || item.weekTitle
+        if (tTitle && !titles[durationNum]) {
+          titles[durationNum] = tTitle
+        }
+
+        return {
+          tempId: item.id || item.tplMissionDetailId || `item-${Date.now()}-${idx}`,
+          durationNumber: durationNum,
+          missionTitle: item.title || item.missionTitle || `Misi SOP ${idx + 1}`,
+          description: item.description || '',
+          category: mapCategoryEnum(item.category),
+          inputType: mapInputTypeEnum(item.inputType),
+          requirementsText: reqs,
+          scaleConfig: item.scaleConfig || { min: 0, max: 100, step: 20, starPerStep: 1 }
+        }
+      })
+
+      periodTitles.value = titles
+
+      const maxInDetails = mappedDetails.reduce((max, d) => Math.max(max, Number(d.durationNumber || 1)), 1)
+      periodCount.value = Math.max(maxInDetails, 1)
+
+      form.value = {
+        id: props.template.id || props.template.tplMissionId,
+        code: props.template.code || '',
+        name: props.template.name || '',
+        type: props.template.type || 'JOURNEY',
+        durationCode: props.template.durationCode || (props.template.type === 'JOURNEY' ? 'WEEK' : 'DAY'),
+        durationValue: Number(props.template.durationValue || 1),
+        description: props.template.description || '',
+        details: mappedDetails
+      }
+
+      // Default ke Misi SOP dan Periode 1
+      activeModalSection.value = 'MISSIONS'
+      activePeriodTab.value = 1
     }
-
-    // Default ke Misi SOP dan Periode 1
-    activeModalSection.value = 'MISSIONS'
-    activePeriodTab.value = 1
   }
-}
 })
 
 const handleDurationCodeChange = () => {
@@ -664,7 +706,7 @@ const executeSaveAll = async () => {
     }
   }
 
-  // Compile clean details payload according to Prisma backend schema
+  // Compile clean details payload
   const compiledDetails = form.value.details.map((item) => {
     const checklistArr = item.requirementsText
       ? item.requirementsText.split('\n').map(r => r.trim()).filter(Boolean)
@@ -682,6 +724,11 @@ const executeSaveAll = async () => {
     }
   })
 
+  const weeksArray = Array.from({ length: totalPeriods.value }, (_, i) => ({
+    weekNumber: i + 1,
+    title: periodTitles.value[i + 1]?.trim() || (form.value.type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`)
+  }))
+
   // Full unified payload
   const fullPayload = {
     name: form.value.name.trim(),
@@ -689,6 +736,7 @@ const executeSaveAll = async () => {
     durationValue: Number(form.value.durationValue || 1),
     totalWeeks: totalPeriods.value,
     description: form.value.description?.trim() || '',
+    weeks: weeksArray,
     details: compiledDetails
   }
 

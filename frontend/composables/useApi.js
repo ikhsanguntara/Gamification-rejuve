@@ -100,7 +100,7 @@ export async function apiFetch(path, options = {}) {
 
   const headers = {
     'ngrok-skip-browser-warning': 'true',
-    'Accept': 'application/json',
+    ...(options.responseType === 'blob' ? {} : { 'Accept': 'application/json' }),
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...(options.headers || {})
   }
@@ -116,11 +116,15 @@ export async function apiFetch(path, options = {}) {
     // Gunakan $fetch jika tersedia (Nuxt), atau fallback ke global fetch
     if (typeof $fetch !== 'undefined') {
       try {
-        const res = await $fetch(url, {
+        const fetchOptions = {
           method,
           body: options.body,
           headers
-        })
+        }
+        if (options.responseType) {
+          fetchOptions.responseType = options.responseType
+        }
+        const res = await $fetch(url, fetchOptions)
         return res
       } catch (err) {
         const errData = err.data || {}
@@ -139,6 +143,15 @@ export async function apiFetch(path, options = {}) {
         headers,
         body: requestBody
       })
+
+      if (options.responseType === 'blob') {
+        if (!response.ok) {
+          const err = new Error(`HTTP error ${response.status}`)
+          err.statusCode = response.status
+          throw err
+        }
+        return await response.blob()
+      }
 
       const contentType = response.headers.get('content-type') || ''
       let data = null
