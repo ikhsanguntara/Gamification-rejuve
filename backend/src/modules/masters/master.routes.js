@@ -24,7 +24,7 @@ router.delete('/departments/:id', masterController.deleteDepartment);
 
 // ─── Users & Bulk Import ─────────────────────────────────────────────────────
 router.get('/users/template', masterController.downloadUserTemplate);
-router.post('/users/bulk-preview', uploadExcel.single('file'), masterController.bulkPreviewUsers);
+router.post('/users/bulk-preview', uploadExcel.any(), masterController.bulkPreviewUsers);
 router.post('/users/bulk-commit', masterController.bulkCommitUsers);
 router.get('/users', masterController.getUsers);
 router.get('/users/:id', masterController.getUserById);

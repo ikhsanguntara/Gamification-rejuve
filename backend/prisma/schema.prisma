@@ -133,6 +133,14 @@ model User {
   scoredMissions    UserMission[] @relation("TlMissions")
   reviewedMissions  UserMission[] @relation("DmMissions")
 
+  notifications     Notification[]
+  feedbacks         CrewFeedback[] @relation("CrewFeedbacks")
+
+  @@index([roleId])
+  @@index([departmentId])
+  @@index([batchId])
+  @@index([userBuddyId])
+  @@index([isActive])
   @@map("m_users")
 }
 
@@ -252,12 +260,14 @@ model TplMissionDetail {
   description        String?          @db.Text
   category           MissionCategory
   durationNumber     Int              @default(1)                   @map("duration_number")
+  periodTitle        String?                                        @map("period_title") @db.VarChar(255)
   inputType          MissionInputType @default(SCALE)               @map("input_type")
   scaleConfig        Json?                                          @map("scale_config")
   sopChecklist       Json?                                          @map("sop_checklist")
 
   tplMission         TplMission       @relation(fields: [tplMissionId], references: [tplMissionId], onDelete: Cascade)
 
+  @@index([tplMissionId])
   @@map("m_tpl_mission_details")
 }
 
@@ -278,12 +288,15 @@ model Batch {
   missions     Mission[]
   users        User[]
   activeUsers  User[]   @relation("UserActiveBatch")
+  feedbacks    CrewFeedback[]
 
   createdAt    DateTime @default(now())              @map("created_at")
   createdBy    String?                               @map("created_by")
   updatedAt    DateTime @updatedAt                   @map("updated_at")
   updatedBy    String?                               @map("updated_by")
 
+  @@index([status])
+  @@index([startDate, endDate])
   @@map("t_batches")
 }
 
@@ -306,6 +319,8 @@ model BatchDetail {
   updatedAt     DateTime @updatedAt                   @map("updated_at")
   updatedBy     String?                               @map("updated_by")
 
+  @@index([batchId])
+  @@index([tplMissionId])
   @@map("t_batches_detail")
 }
 
@@ -332,6 +347,9 @@ model Mission {
 
   createdAt        DateTime         @default(now())              @map("created_at")
 
+  @@index([batchId])
+  @@index([batchDetailId])
+  @@index([weekOrDayNumber])
   @@map("t_missions")
 }
 
@@ -366,5 +384,56 @@ model UserMission {
   createdAt        DateTime @default(now())              @map("created_at")
   updatedAt        DateTime @updatedAt                   @map("updated_at")
 
+  @@index([userId])
+  @@index([missionId])
+  @@index([status])
+  @@index([userId, status])
+  @@index([tlId])
+  @@index([dmId])
   @@map("t_user_missions")
+}
+
+// =============================================================================
+// NOTIFICATIONS & FEEDBACK
+// =============================================================================
+
+model Notification {
+  notificationId String   @id @default(uuid()) @db.Uuid @map("notification_id")
+  userId         String   @db.Uuid                      @map("user_id")
+  title          String   @db.VarChar(255)
+  message        String   @db.Text
+  type           String   @default("INFO")              @db.VarChar(50)
+  isRead         Boolean  @default(false)               @map("is_read")
+  linkUrl        String?                                @map("link_url")
+  createdAt      DateTime @default(now())              @map("created_at")
+
+  user           User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt(sort: Desc)])
+  @@map("t_notifications")
+}
+
+model CrewFeedback {
+  feedbackId    String   @id @default(uuid()) @db.Uuid @map("feedback_id")
+  crewId        String   @db.Uuid                      @map("crew_id")
+  batchId       String?  @db.Uuid                      @map("batch_id")
+  crewName      String                                 @map("crew_name")
+  storeLocation String                                 @map("store_location")
+  buddyName     String                                 @map("buddy_name")
+  ratings       Json
+  essayAnswer   String?  @db.Text                      @map("essay_answer")
+  avgScore      Float                                  @map("avg_score")
+  submittedAt   DateTime @default(now())              @map("submitted_at")
+
+  createdAt     DateTime @default(now())              @map("created_at")
+  updatedAt     DateTime @updatedAt                   @map("updated_at")
+
+  crew          User     @relation("CrewFeedbacks", fields: [crewId], references: [userId], onDelete: Cascade)
+  batch         Batch?   @relation(fields: [batchId], references: [batchId], onDelete: SetNull)
+
+  @@index([crewId])
+  @@index([batchId])
+  @@index([submittedAt])
+  @@map("t_crew_feedbacks")
 }

@@ -17,6 +17,7 @@ const gamificationService = require('../gamification/gamification.service');
 const { parsePrismaQuery } = require('../../utils/queryParser');
 const { emitToUser, emitToRole } = require('../../utils/socketEmitter');
 const { normalizeStorageUrl } = require('../../utils/minioStorage');
+const notificationService = require('../notifications/notification.service');
 
 /**
  * Ambil daftar user missions dengan dynamic query filter.
@@ -634,6 +635,13 @@ const evaluateBuddyMission = async (userMissionId, evaluatorId, { score, notes, 
     notes
   });
 
+  notificationService.createNotification({
+    userId: userMission.userId,
+    title: 'Evaluasi Buddy Selesai',
+    message: `Buddy telah menyelesaikan evaluasi misi "${userMission.mission?.missionTitle || 'Onboarding'}". Skor: ${numScore}`,
+    type: 'BUDDY_EVALUATED'
+  }).catch(() => {});
+
   return {
     ...result,
     userMission: result
@@ -696,9 +704,22 @@ const evaluateJourneyBySL = async (userMissionId, slId, { score, notes, evidence
 
   if (userMission.dmId) {
     emitToUser(userMission.dmId, 'evaluation:scored', dmPayload);
+    notificationService.createNotification({
+      userId: userMission.dmId,
+      title: 'Misi Menunggu Review DM',
+      message: `Store Leader telah menilai misi "${userMission.mission?.missionTitle}" kru ${userMission.user?.name || ''}. Menunggu persetujuan Anda.`,
+      type: 'MISSION_SCORED'
+    }).catch(() => {});
   } else {
     emitToRole('DISTRICT_MANAGER', 'evaluation:scored', dmPayload);
   }
+
+  notificationService.createNotification({
+    userId: userMission.userId,
+    title: 'Misi Telah Dinilai Store Leader',
+    message: `Misi "${userMission.mission?.missionTitle}" telah dinilai oleh Store Leader. Skor: ${numScore}`,
+    type: 'MISSION_SCORED'
+  }).catch(() => {});
 
   return {
     ...updated,
@@ -761,6 +782,12 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
     };
     if (userMission.tlId) {
       emitToUser(userMission.tlId, 'evaluation:revised', revisePayload);
+      notificationService.createNotification({
+        userId: userMission.tlId,
+        title: 'Misi Perlu Direvisi',
+        message: `District Manager meminta revisi untuk evaluasi misi "${userMission.mission?.missionTitle}" kru ${userMission.user?.name || ''}.`,
+        type: 'DM_REVISE'
+      }).catch(() => {});
     } else {
       emitToRole('STORE_LEADER', 'evaluation:revised', revisePayload);
     }
@@ -881,8 +908,22 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
       status: 'APPROVED_BY_DM',
       missionTitle: userMission.mission?.missionTitle
     };
-    if (userMission.tlId) emitToUser(userMission.tlId, 'evaluation:approved', approvePayload);
+    if (userMission.tlId) {
+      emitToUser(userMission.tlId, 'evaluation:approved', approvePayload);
+      notificationService.createNotification({
+        userId: userMission.tlId,
+        title: 'Evaluasi Misi Disetujui DM',
+        message: `Evaluasi misi "${userMission.mission?.missionTitle}" kru ${userMission.user?.name || ''} telah disetujui DM.`,
+        type: 'DM_APPROVED'
+      }).catch(() => {});
+    }
     emitToUser(userMission.userId, 'evaluation:approved', approvePayload);
+    notificationService.createNotification({
+      userId: userMission.userId,
+      title: 'Misi Disetujui District Manager! 🌟',
+      message: `Selamat! Misi "${userMission.mission?.missionTitle}" telah disetujui. Anda memperoleh ${starsEarned || 0} bintang!`,
+      type: 'DM_APPROVED'
+    }).catch(() => {});
 
     // Emit perolehan bintang & poin real-time ke Crew
     if (result.gamification) {

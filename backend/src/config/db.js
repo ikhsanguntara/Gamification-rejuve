@@ -22,10 +22,10 @@ if (!process.env.DATABASE_URL) {
 // Buat connection pool PostgreSQL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // Pool settings untuk efisiensi koneksi di lingkungan production
-  max: 10,               // maksimum 10 koneksi paralel
+  // Pool settings untuk efisiensi koneksi di lingkungan production & pencegahan timeout
+  max: 20,               // maksimum 20 koneksi paralel
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000, // 10 detik agar tidak mudah timeout saat beban tinggi
 });
 
 // Bungkus pool dengan adapter Prisma untuk PostgreSQL

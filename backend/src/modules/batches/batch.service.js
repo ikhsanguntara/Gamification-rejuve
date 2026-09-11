@@ -182,6 +182,13 @@ const executeBatchGeneration = async (tx, {
     const mStart = addDays(journeySchedule.startDate, weekIndex * journeySchedule.unitDays);
     const mEnd = addDays(mStart, journeySchedule.unitDays - 1);
 
+    const missionScaleConfig = detail.scaleConfig && typeof detail.scaleConfig === 'object' && !Array.isArray(detail.scaleConfig)
+      ? { ...detail.scaleConfig }
+      : (detail.inputType === 'SCALE' ? { min: 0, max: 100, step: 10, starPerStep: 1 } : {});
+    if (detail.periodTitle) {
+      missionScaleConfig.periodTitle = detail.periodTitle;
+    }
+
     const mission = await tx.mission.create({
       data: {
         batchId,
@@ -192,7 +199,7 @@ const executeBatchGeneration = async (tx, {
         category: detail.category,
         type: 'JOURNEY',
         inputType: detail.inputType || 'SCALE',
-        scaleConfig: detail.scaleConfig || null,
+        scaleConfig: Object.keys(missionScaleConfig).length > 0 ? missionScaleConfig : null,
         sopChecklist: detail.sopChecklist || null,
         startDate: mStart,
         endDate: mEnd
@@ -686,7 +693,8 @@ const enrichBatchesWithTotalWeeks = async (batches) => {
     select: {
       missionId: true,
       batchId: true,
-      weekOrDayNumber: true
+      weekOrDayNumber: true,
+      scaleConfig: true
     }
   });
 
@@ -741,9 +749,10 @@ const enrichBatchesWithTotalWeeks = async (batches) => {
         completedUm += statuses.filter(s => s === 'COMPLETED' || s === 'APPROVED_BY_DM').length;
       }
       const completionRate = totalUm > 0 ? Math.round((completedUm / totalUm) * 100) : 0;
+      const customTitle = weekMissions.find(wm => wm.scaleConfig && wm.scaleConfig.periodTitle)?.scaleConfig?.periodTitle;
       return {
         weekNumber: wNum,
-        title: `Minggu ${wNum}: Tema SOP Operasional`,
+        title: customTitle || `Minggu ${wNum}: Tema SOP Operasional`,
         missionCount: weekMissions.length,
         completionRate,
         totalEvaluations: totalUm,

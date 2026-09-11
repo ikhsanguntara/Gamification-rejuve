@@ -96,6 +96,24 @@ const apiLogger = (req, res, next) => {
 
     console.log(`[${method}] ${originalUrl} - ${statusColor}${statusCode}${resetColor} (${duration}ms)`);
 
+    // Batasi ukuran payload response agar tidak membebani database I/O dan event loop
+    let safeResponseData = resBody;
+    if (safeResponseData) {
+      try {
+        const str = JSON.stringify(safeResponseData);
+        if (str.length > 20000) {
+          safeResponseData = {
+            _truncated: true,
+            _message: 'Payload response dipersingkat karena ukuran > 20KB.',
+            sizeBytes: str.length,
+            preview: typeof safeResponseData === 'object' && safeResponseData.message ? safeResponseData.message : 'OK'
+          };
+        }
+      } catch (e) {
+        safeResponseData = { _error: 'Failed to serialize response' };
+      }
+    }
+
     // --- QUEUE LOGGING KE DB ---
     logQueue.push({
       method,
@@ -103,7 +121,7 @@ const apiLogger = (req, res, next) => {
       statusCode,
       duration,
       requestData: reqBody,
-      responseData: resBody,
+      responseData: safeResponseData,
       timestamp: new Date()
     });
 

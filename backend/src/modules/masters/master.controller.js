@@ -307,9 +307,19 @@ const createUser = async (req, res, next) => {
       }
     }
 
-    // Password default: CREW menggunakan prefix email sebelum '@', role lain menggunakan 'password123'
+    // Password default: CREW menggunakan prefix email sebelum '@', role lain membaca UserPolicy DB atau default 'password123'
+    let defaultNonCrewPassword = 'password123';
+    try {
+      const pwPolicy = await prisma.userPolicy.findFirst({
+        where: { userpolicyCode: 'DEFAULT_PASSWORD' }
+      });
+      if (pwPolicy?.userpolicyValue) {
+        defaultNonCrewPassword = pwPolicy.userpolicyValue;
+      }
+    } catch (e) {}
+
     const emailPrefix = (email && email.includes('@')) ? email.split('@')[0] : (email || 'crew123');
-    const rawPassword = password || (isCrew ? emailPrefix : 'password123');
+    const rawPassword = password || (isCrew ? emailPrefix : defaultNonCrewPassword);
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
     const user = await prisma.user.create({
@@ -562,7 +572,11 @@ const { generateUserImportTemplate, parseUserImportFile } = require('../../utils
 
 const downloadUserTemplate = async (req, res, next) => {
   try {
-    const buffer = generateUserImportTemplate();
+    const [roles, departments] = await Promise.all([
+      prisma.role.findMany({ select: { roleCode: true, roleName: true }, orderBy: { roleCode: 'asc' } }),
+      prisma.department.findMany({ select: { departmentCode: true, departmentName: true }, orderBy: { departmentCode: 'asc' } })
+    ]);
+    const buffer = generateUserImportTemplate(roles, departments);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="template_import_user.xlsx"');
     return res.send(buffer);
@@ -573,11 +587,12 @@ const downloadUserTemplate = async (req, res, next) => {
 
 const bulkPreviewUsers = async (req, res, next) => {
   try {
-    if (!req.file || !req.file.buffer) {
-      return sendError(res, { statusCode: 400, message: 'File Excel/CSV wajib diunggah (field: "file").' });
+    const uploadedFile = req.file || (Array.isArray(req.files) ? (req.files.find(f => f.fieldname === 'file' || f.fieldname === 'excel') || req.files[0]) : null);
+    if (!uploadedFile || !uploadedFile.buffer) {
+      return sendError(res, { statusCode: 400, message: 'File Excel/CSV wajib diunggah (field: "file" atau "excel").' });
     }
 
-    const parsedRows = parseUserImportFile(req.file.buffer);
+    const parsedRows = parseUserImportFile(uploadedFile.buffer);
     if (!parsedRows || parsedRows.length === 0) {
       return sendError(res, { statusCode: 400, message: 'File Excel tidak memiliki baris data atau kosong.' });
     }
@@ -742,7 +757,16 @@ const bulkCommitUsers = async (req, res, next) => {
     }
 
     const currentUserId = req.user?.id || req.user?.userId || null;
-    const defaultPasswordHash = await bcrypt.hash('password123', 10);
+    let defaultNonCrewPassword = 'password123';
+    try {
+      const pwPolicy = await prisma.userPolicy.findFirst({
+        where: { userpolicyCode: 'DEFAULT_PASSWORD' }
+      });
+      if (pwPolicy?.userpolicyValue) {
+        defaultNonCrewPassword = pwPolicy.userpolicyValue;
+      }
+    } catch (e) {}
+    const defaultPasswordHash = await bcrypt.hash(defaultNonCrewPassword, 10);
 
     // Kumpulkan email dan data yang akan diproses
     const incomingEmails = users.map(u => (u.email || '').toLowerCase()).filter(Boolean);

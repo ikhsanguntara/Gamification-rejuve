@@ -21,5 +21,7 @@ router.use('/admin', require('../modules/admin/admin.routes'));
 router.use('/evaluations', require('../modules/evaluations/evaluation.routes'));
 router.use('/dashboard', require('../modules/dashboard/dashboard.routes'));
 router.use('/gamification', require('../modules/gamification/gamification.routes'));
+router.use('/notifications', require('../modules/notifications/notification.routes'));
+router.use('/feedback', require('../modules/feedback/feedback.routes'));
 
 module.exports = router;

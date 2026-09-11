@@ -10,7 +10,7 @@ const xlsx = require('xlsx');
 /**
  * Menghasilkan buffer file Excel template import user (.xlsx)
  */
-const generateUserImportTemplate = () => {
+const generateUserImportTemplate = (rolesList = [], deptsList = []) => {
   const headers = [
     'Nama Lengkap',
     'Email',
@@ -58,15 +58,70 @@ const generateUserImportTemplate = () => {
   ws['!cols'] = [
     { wch: 25 }, // Nama Lengkap
     { wch: 32 }, // Email
-    { wch: 20 }, // Role Code
-    { wch: 20 }, // Department Code
-    { wch: 12 }, // Is Buddy
+    { wch: 22 }, // Role Code
+    { wch: 25 }, // Department Code
+    { wch: 14 }, // Is Buddy
     { wch: 32 }, // Buddy Email
     { wch: 20 }  // Batch Code
   ];
 
   const wb = xlsx.utils.book_new();
   xlsx.utils.book_append_sheet(wb, ws, 'Template Import User');
+
+  // Sheet 2: Referensi Master Data (Kode Role & Kode Departemen)
+  const defaultRoles = [
+    ['CREW', 'Crew Barista / Store Crew'],
+    ['STORE_LEADER', 'Store Leader / Supervisor'],
+    ['DISTRICT_MANAGER', 'District Manager / Area Head'],
+    ['SUPERADMIN', 'Superadmin Gamification']
+  ];
+  const rolesData = (rolesList.length > 0 ? rolesList.map(r => [r.roleCode, r.roleName]) : defaultRoles);
+
+  const defaultDepts = [
+    ['BKI_01', 'Re.juve Bintaro Xchange'],
+    ['GI_01', 'Re.juve Grand Indonesia'],
+    ['PIM_02', 'Re.juve Pondok Indah Mall 2'],
+    ['CP_01', 'Re.juve Central Park'],
+    ['SEN_01', 'Re.juve Senayan City']
+  ];
+  const deptsData = (deptsList.length > 0 ? deptsList.map(d => [d.departmentCode, d.departmentName]) : defaultDepts);
+
+  const maxRows = Math.max(rolesData.length, deptsData.length);
+  const refHeader = ['Pilihan Role Code', 'Nama Role', '', 'Pilihan Department Code', 'Nama Gerai / Toko', '', 'Pilihan Is Buddy', 'Keterangan'];
+  const refRows = [refHeader];
+
+  for (let i = 0; i < maxRows; i++) {
+    const roleRow = rolesData[i] || ['', ''];
+    const deptRow = deptsData[i] || ['', ''];
+    let buddyChoice = '';
+    let buddyDesc = '';
+    if (i === 0) { buddyChoice = 'TRUE'; buddyDesc = 'User adalah mentor / pendamping buddy'; }
+    if (i === 1) { buddyChoice = 'FALSE'; buddyDesc = 'User bukan buddy (default untuk Crew)'; }
+
+    refRows.push([
+      roleRow[0],
+      roleRow[1],
+      '',
+      deptRow[0],
+      deptRow[1],
+      '',
+      buddyChoice,
+      buddyDesc
+    ]);
+  }
+
+  const wsRef = xlsx.utils.aoa_to_sheet(refRows);
+  wsRef['!cols'] = [
+    { wch: 22 },
+    { wch: 32 },
+    { wch: 5 },
+    { wch: 25 },
+    { wch: 35 },
+    { wch: 5 },
+    { wch: 18 },
+    { wch: 45 }
+  ];
+  xlsx.utils.book_append_sheet(wb, wsRef, 'Daftar Referensi Dropdown');
 
   return xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
 };

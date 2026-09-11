@@ -117,6 +117,7 @@ const createTemplate = async (payload, userId = null) => {
         description: d.description || null,
         category: d.category || 'TECHNICAL',
         durationNumber: Number(d.durationNumber) || 1,
+        periodTitle: d.periodTitle || d.period_title || null,
         inputType: d.inputType || 'SCALE',
         scaleConfig: d.scaleConfig || (d.inputType === 'SCALE' ? defaultScaleConfig : null),
         sopChecklist: d.sopChecklist || null
@@ -190,6 +191,7 @@ const updateTemplate = async (id, payload, userId = null) => {
           description: d.description || null,
           category: d.category || 'TECHNICAL',
           durationNumber: Number(d.durationNumber) || 1,
+          periodTitle: d.periodTitle || d.period_title || null,
           inputType: d.inputType || 'SCALE',
           scaleConfig: d.scaleConfig || (d.inputType === 'SCALE' ? defaultScaleConfig : null),
           sopChecklist: d.sopChecklist || null
