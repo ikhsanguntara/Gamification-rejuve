@@ -210,25 +210,42 @@ const getWorkstationCrews = async (currentUser, query = {}) => {
     }
   ];
 
-  // Penilaian Buddy (murni relasi 1-on-1 Buddy-Mentee via userBuddyId / tlId)
+  // Penilaian Buddy (murni relasi 1-on-1 Buddy-Mentee via userBuddyId / tlId ATAU gerai Store Leader)
   if (missionType === 'BUDDY') {
     if (userRole !== 'SUPERADMIN' && userRole !== 'HEAD') {
-      andConditions.push({
-        OR: [
-          { userBuddyId: currentUser.userId },
-          {
-            missions: {
-              some: {
-                tlId: currentUser.userId,
-                mission: {
-                  batchId,
-                  type: 'BUDDY'
-                }
+      const buddyOrConditions = [
+        { userBuddyId: currentUser.userId },
+        {
+          missions: {
+            some: {
+              tlId: currentUser.userId,
+              mission: {
+                batchId,
+                type: 'BUDDY'
               }
             }
           }
-        ]
-      });
+        }
+      ];
+
+      // Jika Store Leader, sertakan seluruh kru di gerai/departemen miliknya
+      if (userRole === 'STORE_LEADER') {
+        const depts = await prisma.department.findMany({
+          where: {
+            OR: [
+              { userSlId: currentUser.userId },
+              ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
+            ]
+          },
+          select: { departmentId: true }
+        });
+        const deptIds = depts.map(d => d.departmentId);
+        if (deptIds.length > 0) {
+          buddyOrConditions.push({ departmentId: { in: deptIds } });
+        }
+      }
+
+      andConditions.push({ OR: buddyOrConditions });
     } else {
       if (query.buddyId) {
         andConditions.push({ userBuddyId: query.buddyId });
@@ -574,8 +591,12 @@ const evaluateBuddyMission = async (userMissionId, evaluatorId, { score, notes, 
   if (!isSuper) {
     const isAssignedBuddy = userMission.user?.userBuddyId === evaluatorId;
     const isAssignedTl = userMission.tlId === evaluatorId;
-    if (!isAssignedBuddy && !isAssignedTl) {
-      throw new Error('Anda tidak memiliki wewenang untuk menilai misi ini karena bukan mentor/buddy yang ditugaskan.');
+    const isStoreLeaderOfDept = evalRole === 'STORE_LEADER' && (
+      userMission.user?.department?.userSlId === evaluatorId ||
+      evaluatorUser?.departmentId === userMission.user?.departmentId
+    );
+    if (!isAssignedBuddy && !isAssignedTl && !isStoreLeaderOfDept) {
+      throw new Error('Anda tidak memiliki wewenang untuk menilai misi ini karena bukan mentor/buddy atau Store Leader gerai yang ditugaskan.');
     }
   }
 

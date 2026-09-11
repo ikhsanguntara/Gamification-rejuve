@@ -1,29 +1,15 @@
 /**
- * Utility for robust LocalStorage data persistence across client reloads and role transitions
+ * Utility for Clean Storage without stale mock persistence
+ * Mencegah data mock/cache lokal lama menimpa data realtime dari Backend API
  */
 
 export function getStoredData(key, fallback) {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      const item = localStorage.getItem(key)
-      if (item) {
-        return JSON.parse(item)
-      }
-    } catch (e) {
-      console.warn(`Error reading localStorage for ${key}`, e)
-    }
-  }
+  // Selalu gunakan clean fallback untuk store state agar murni diisi response live API
   return JSON.parse(JSON.stringify(fallback))
 }
 
 export function setStoredData(key, data) {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      localStorage.setItem(key, JSON.stringify(data))
-    } catch (e) {
-      console.warn(`Error writing localStorage for ${key}`, e)
-    }
-  }
+  // No-op untuk store entity agar tidak menyimpan cache kadaluarsa di localStorage
 }
 
 export function clearAllStoredData() {
@@ -50,17 +36,20 @@ export function clearAllStoredData() {
       'rejuve_crew_feedbacks_v1',
       'rejuve_newhire_reports_v1'
     ]
-    keys.forEach(k => localStorage.removeItem(k))
+    keys.forEach(k => {
+      try {
+        localStorage.removeItem(k)
+      } catch (e) {
+        // Ignore restricted storage contexts
+      }
+    })
   }
 }
 
-// Auto-purge residual mock data once on client load
+// Auto-purge all leftover mock/cache keys on client load
 if (typeof window !== 'undefined' && window.localStorage) {
   try {
-    if (localStorage.getItem('rejuve_mock_purged_v3') !== 'true') {
-      clearAllStoredData()
-      localStorage.setItem('rejuve_mock_purged_v3', 'true')
-    }
+    clearAllStoredData()
   } catch (e) {
     // Ignore storage errors in restricted contexts
   }

@@ -8,24 +8,24 @@
             <Handshake class="w-4 h-4" />
           </div>
           <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Rapor New Hire Re.juve
+            Penilaian Buddy New Hire
           </h2>
-          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
+          <span v-if="batchStore.currentBatch?.name" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
             {{ batchStore.currentBatch?.name }}
           </span>
-          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold">
-            ⚡ Rapor Resmi 7 Kompetensi
+          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-bold">
+            ⚡ Pre-Batch 3 Hari
           </span>
         </div>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-          Formulir evaluasi pendampingan <strong>selama 3 hari pra-batch</strong> oleh Store Captain / Store Leader mencakup <strong>7 pilar kompetensi & 22 indikator penilaian</strong>.
+          Formulir evaluasi pendampingan <strong>3 hari pra-batch</strong> oleh Store Leader / Buddy untuk memvalidasi kesiapan kru baru di gerai.
         </p>
       </div>
 
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-900 dark:text-purple-300 border border-purple-300 dark:border-purple-800 shadow-sm flex items-center gap-1.5">
           <Award class="w-3.5 h-3.5 text-purple-600" />
-          <span>Format Rapor New Hire</span>
+          <span>Evaluasi SOP Lapangan</span>
         </span>
       </div>
     </div>
@@ -89,16 +89,17 @@
                 </div>
               </div>
 
-              <!-- Crew Rapor Summary Tag -->
+              <!-- Crew Summary Tag -->
               <div class="text-right flex-shrink-0">
                 <span
-                  class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                  :class="getCrewRaporBadgeClass(crew.id)"
+                  class="text-[10px] font-bold px-2 py-0.5 rounded-full inline-block"
+                  :class="getCrewStatusBadgeClass(crew)"
                 >
-                  {{ getCrewRaporStatusText(crew.id) }}
+                  {{ getCrewStatusText(crew) }}
                 </span>
                 <div class="text-[11px] text-slate-400 mt-0.5 flex items-center justify-end gap-1 font-semibold">
-                  <span>{{ getCrewCompetencyScore(crew.id) }}%</span>
+                  <span v-if="crew.totalMissionsCount > 0">{{ crew.evaluatedCount || 0 }}/{{ crew.totalMissionsCount }} Misi</span>
+                  <span v-else class="text-[10px] text-slate-400">0 Misi</span>
                 </div>
               </div>
             </div>
@@ -117,7 +118,7 @@
       <div class="lg:col-span-8 space-y-4">
         <template v-if="selectedCrew">
           
-          <!-- Sheet Header: Form Metadata Banner (RAPOR NEW HIRE RE.JUVE) -->
+          <!-- Sheet Header: Form Metadata Banner -->
           <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-sm space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div class="flex items-center gap-3">
@@ -139,19 +140,19 @@
                 </div>
               </div>
 
-              <!-- Progress & Score Badge -->
+              <!-- Real API Progress & Score Badge -->
               <div class="flex items-center gap-3 bg-purple-50 dark:bg-purple-950/40 p-3 rounded-2xl border border-purple-100 dark:border-purple-900/60">
                 <div class="text-center px-2">
                   <span class="text-[10px] font-semibold text-purple-600 dark:text-purple-400 uppercase">Skor Kompetensi</span>
                   <p class="text-base font-bold text-slate-900 dark:text-white">
-                    {{ currentSummary.scorePercent }}%
+                    {{ selectedCrewStats.scorePercent }}%
                   </p>
                 </div>
                 <div class="h-6 w-px bg-purple-200 dark:bg-purple-800"></div>
                 <div class="text-center px-2">
                   <span class="text-[10px] font-semibold text-purple-600 dark:text-purple-400 uppercase">Dinilai</span>
                   <p class="text-xs font-bold text-slate-900 dark:text-white mt-0.5">
-                    {{ currentSummary.rated }} / {{ totalIndicatorCount }}
+                    {{ selectedCrewStats.evaluated }} / {{ selectedCrewStats.total }}
                   </p>
                 </div>
                 <div class="h-6 w-px bg-purple-200 dark:bg-purple-800"></div>
@@ -159,9 +160,9 @@
                   <span class="text-[10px] font-semibold text-purple-600 dark:text-purple-400 uppercase">Status</span>
                   <span
                     class="text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 inline-block"
-                    :class="raporForm.status === 'RECOMMENDED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'"
+                    :class="selectedCrewStats.statusBadgeClass"
                   >
-                    {{ raporForm.status === 'RECOMMENDED' ? 'Siap Batch' : 'Dalam Bimbingan' }}
+                    {{ selectedCrewStats.statusText }}
                   </span>
                 </div>
               </div>
@@ -170,16 +171,16 @@
             <!-- Form Information Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-1">
-                <span class="text-[10px] font-bold uppercase text-slate-400">Store Training:</span>
+                <span class="text-[10px] font-bold uppercase text-slate-400">Store Training / Gerai:</span>
                 <p class="font-bold text-slate-900 dark:text-white">
                   {{ selectedCrew.storeLocation || batchStore.currentBatch?.name || 'Gerai Re.juve' }}
                 </p>
               </div>
 
               <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-1">
-                <span class="text-[10px] font-bold uppercase text-slate-400">Store Captain / Buddy:</span>
+                <span class="text-[10px] font-bold uppercase text-slate-400">Store Leader / Evaluator:</span>
                 <p class="font-bold text-slate-900 dark:text-white">
-                  {{ userStore.currentUser?.name || '-' }} (Store Leader)
+                  {{ userStore.currentUser?.name || 'Store Leader' }} (Store Leader)
                 </p>
               </div>
 
@@ -190,35 +191,28 @@
                     3 Hari Pra-Batch (H-3 s/d H-1 sebelum kompetisi batch)
                   </p>
                 </div>
-                <div class="flex items-center gap-2">
-                  <input
-                    v-model="raporForm.trainingPeriod"
-                    type="text"
-                    placeholder="Contoh: 1 - 3 September 2026"
-                    class="text-xs rounded-xl bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 px-3 py-1.5 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-purple-600"
-                  />
+                <div class="text-xs text-purple-700 dark:text-purple-300 font-medium">
+                  ⚡ Auto-Unlock Journey Week 1 saat seluruh misi dinilai
                 </div>
-              </div>
-            </div>
-
-            <!-- Official Disclaimer Note from PDF Form -->
-            <div class="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300 leading-relaxed flex items-start gap-2">
-              <span class="text-base flex-shrink-0">📌</span>
-              <div>
-                <strong>Catatan Evaluasi 3 Hari:</strong> Poin bertanda bintang (<strong>*</strong>) tetap wajib diberikan pembekalan. Namun, mengingat periode pendampingan hanya 3 hari, kru dapat dimaklumi apabila belum mendapatkan kesempatan praktik secara langsung.
               </div>
             </div>
           </div>
 
-          <!-- DAFTAR PENUGASAN MISI BUDDY DARI REST API (Jika Batch Memiliki Misi Buddy) -->
-          <div v-if="buddyStore.selectedCrewMissions && buddyStore.selectedCrewMissions.length > 0" class="space-y-3">
+          <!-- Loading State for Missions -->
+          <div v-if="buddyStore.isLoadingMissions" class="py-12 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800">
+            <Loader2 class="w-6 h-6 animate-spin mx-auto text-purple-600 mb-2" />
+            <p class="text-xs font-semibold">Memuat penugasan misi Buddy...</p>
+          </div>
+
+          <!-- DAFTAR PENUGASAN MISI BUDDY DARI REAL API -->
+          <div v-else-if="buddyStore.selectedCrewMissions && buddyStore.selectedCrewMissions.length > 0" class="space-y-3">
             <div class="flex items-center justify-between px-1">
               <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <Award class="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                <span>Penugasan Misi Buddy Pre-Batch ({{ buddyStore.selectedCrewMissions.length }} Misi Terdaftar di Backend)</span>
+                <span>Daftar Misi Buddy ({{ buddyStore.selectedCrewMissions.length }} Misi Terdaftar di Server)</span>
               </h3>
               <span class="text-[11px] text-purple-600 dark:text-purple-400 font-semibold">
-                ⚡ Auto-Unlock Journey Week 1 saat seluruh misi selesai
+                {{ selectedCrewStats.evaluated }} dari {{ selectedCrewStats.total }} Selesai
               </span>
             </div>
 
@@ -429,7 +423,7 @@
 
                   <!-- Action Button Row -->
                   <div class="flex items-center justify-between gap-2.5 pt-1">
-                    <!-- Lampiran Bukti yang Sudah Ada (jika mode edit dan sebelumnya punya bukti) -->
+                    <!-- Lampiran Bukti yang Sudah Ada -->
                     <div>
                       <div
                         v-if="bm.evidenceUrl"
@@ -472,7 +466,7 @@
                   </div>
                 </div>
 
-                <!-- Tampilan Catatan & Bukti ketika Selesai (Read-only view yang bersih) -->
+                <!-- Tampilan Catatan & Bukti ketika Selesai (Read-only view) -->
                 <div v-else class="space-y-2">
                   <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-xs">
                     <MessageSquare class="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
@@ -529,93 +523,16 @@
             </div>
           </div>
 
-          <!-- TABEL / BLOK EVALUASI 7 PILAR KOMPETENSI RE.JUVE -->
-          <div class="space-y-4">
-            <div
-              v-for="comp in activeBuddyTemplateCompetencies"
-              :key="comp.id"
-              class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-xs space-y-3"
-            >
-              <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                <div class="flex items-center gap-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
-                  <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    {{ comp.name }}
-                  </h4>
-                </div>
-                <span class="text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2.5 py-0.5 rounded-full">
-                  {{ comp.indicators?.length || 0 }} Indikator Penilaian
-                </span>
-              </div>
-
-              <!-- List of Indicators in this Competency -->
-              <div class="space-y-2">
-                <div
-                  v-for="ind in (comp.indicators || [])"
-                  :key="ind.id"
-                  class="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 flex flex-col md:flex-row md:items-center justify-between gap-3"
-                >
-                  <div class="space-y-1 min-w-0 max-w-xl">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                      <span class="text-xs font-bold text-slate-900 dark:text-white">
-                        {{ ind.name }}
-                      </span>
-                      <span
-                        v-if="ind.isStar"
-                        class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300"
-                      >
-                        * Pembekalan Wajib
-                      </span>
-                    </div>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                      {{ ind.description }}
-                    </p>
-                  </div>
-
-                  <!-- 3-Choice Radio Buttons (Belum Menguasai / Butuh Pendampingan / Kompeten) -->
-                  <div class="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
-                    <button
-                      type="button"
-                      @click="setRating(ind.id, 'BELUM_MENGUASAI')"
-                      class="px-2.5 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer flex items-center gap-1"
-                      :class="[
-                        raporForm.indicatorRatings[ind.id] === 'BELUM_MENGUASAI'
-                          ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-                          : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-rose-400'
-                      ]"
-                    >
-                      <span>Belum Menguasai</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      @click="setRating(ind.id, 'BUTUH_PENDAMPINGAN')"
-                      class="px-2.5 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer flex items-center gap-1"
-                      :class="[
-                        raporForm.indicatorRatings[ind.id] === 'BUTUH_PENDAMPINGAN'
-                          ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                          : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-amber-400'
-                      ]"
-                    >
-                      <span>Butuh Pendampingan</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      @click="setRating(ind.id, 'KOMPETEN')"
-                      class="px-2.5 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer flex items-center gap-1"
-                      :class="[
-                        raporForm.indicatorRatings[ind.id] === 'KOMPETEN'
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                          : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
-                      ]"
-                    >
-                      <span>✓ Kompeten</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+          <!-- Empty State when Crew has No Missions -->
+          <div
+            v-else
+            class="p-12 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 text-xs space-y-2"
+          >
+            <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+              <Award class="w-6 h-6" />
             </div>
+            <p class="font-bold text-slate-700 dark:text-slate-300">Belum Ada Misi Buddy untuk Kru Ini</p>
+            <p class="text-slate-500">Kru ini belum memiliki penugasan misi Buddy pada batch aktif.</p>
           </div>
 
         </template>
@@ -623,7 +540,7 @@
           v-else
           class="p-12 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 text-xs"
         >
-          Silakan pilih kru dari daftar di sebelah kiri untuk mengisi Rapor New Hire.
+          Silakan pilih kru dari daftar di sebelah kiri untuk mengisi Penilaian Buddy.
         </div>
       </div>
 
@@ -735,15 +652,12 @@ const openPreviewModal = (evidenceUrl, caption = 'Bukti Misi Buddy') => {
   }
 }
 
-// Get crews in current active batch (from buddyStore.workstationCrews if available, fallback to userStore)
+// Get crews from real API (buddyStore.workstationCrews)
 const currentBatchCrews = computed(() => {
   const activeBatchId = batchStore.selectedBatchId || batchStore.currentBatch?.batchId || batchStore.currentBatch?.id
   const activeBatchCode = batchStore.currentBatch?.code
 
   if (buddyStore.workstationCrews && buddyStore.workstationCrews.length > 0) {
-    // Saring kru yang relevan dengan batch aktif:
-    // 1. Kru yang batchId-nya sesuai dengan batch aktif
-    // 2. ATAU kru yang memiliki misi pada batch ini (totalMissionsCount > 0)
     const matchingCrews = buddyStore.workstationCrews.filter(c => {
       const matchBatchId = c.batchId && (c.batchId === activeBatchId || c.batchId === activeBatchCode)
       const hasMissionsInBatch = Number(c.totalMissionsCount) > 0
@@ -760,14 +674,28 @@ const currentBatchCrews = computed(() => {
       code: c.departmentCode || 'CRW-NEW',
       position: c.position || 'Store Specialist New Hire',
       storeLocation: c.storeLocation || 'Standby Gerai',
-      totalMissionsCount: c.totalMissionsCount || 0,
-      evaluatedCount: c.evaluatedCount || 0,
+      totalMissionsCount: Number(c.totalMissionsCount) || 0,
+      evaluatedCount: Number(c.evaluatedCount) || 0,
       status: c.status || 'NEEDS_SCORING',
-      avgScore: c.avgScore || 0
+      avgScore: Number(c.avgScore) || 0
     }))
   }
   if (!batchStore.currentBatch) return []
-  return userStore.allUsers.filter(u => u.role === 'CREW' && (u.batchId === activeBatchId || !u.batchId))
+  return userStore.allUsers
+    .filter(u => u.role === 'CREW' && (u.batchId === activeBatchId || !u.batchId))
+    .map(u => ({
+      id: u.userId || u.id,
+      userId: u.userId || u.id,
+      name: u.name,
+      avatar: u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name)}`,
+      code: u.departmentCode || 'CRW-NEW',
+      position: u.position || 'Store Specialist New Hire',
+      storeLocation: u.storeLocation || 'Standby Gerai',
+      totalMissionsCount: 0,
+      evaluatedCount: 0,
+      status: 'NEEDS_SCORING',
+      avgScore: 0
+    }))
 })
 
 const filteredCrewList = computed(() => {
@@ -780,55 +708,47 @@ const selectedCrew = computed(() => {
   return currentBatchCrews.value.find(c => c.id === selectedCrewId.value) || currentBatchCrews.value[0] || null
 })
 
-// Competencies template from store
-const activeBuddyTemplateCompetencies = computed(() => {
-  const defaultPkg = buddyStore.defaultPackage
-  return defaultPkg?.competencies || []
-})
-
-const totalIndicatorCount = computed(() => {
-  return activeBuddyTemplateCompetencies.value.reduce((acc, c) => acc + (c.indicators?.length || 0), 0)
-})
-
-// Reactive Form State for Selected Crew
-const raporForm = ref({
-  trainingPeriod: '1 - 3 September 2026',
-  recommendationNote: '',
-  status: 'IN_PROGRESS',
-  captainSigned: true,
-  crewSigned: true,
-  indicatorRatings: {}
-})
-
-// Load evaluation data for selected crew
-const loadSelectedCrewRapor = () => {
-  if (!selectedCrew.value || !batchStore.currentBatch) return
-
-  const batchId = batchStore.currentBatch.batchId || batchStore.currentBatch.id
-  const crewId = selectedCrew.value.id
-  const existing = buddyStore.evaluationForCrew(batchId, crewId)
-
-  if (existing) {
-    raporForm.value = {
-      trainingPeriod: existing.trainingPeriod || '1 - 3 September 2026',
-      recommendationNote: existing.recommendationNote || '',
-      status: existing.status || 'IN_PROGRESS',
-      captainSigned: existing.captainSigned !== undefined ? existing.captainSigned : true,
-      crewSigned: existing.crewSigned !== undefined ? existing.crewSigned : true,
-      indicatorRatings: { ...(existing.indicatorRatings || {}) }
-    }
-  } else {
-    // Default pre-fill
-    raporForm.value = {
-      trainingPeriod: '1 - 3 September 2026',
-      recommendationNote: '',
-      status: 'IN_PROGRESS',
-      captainSigned: true,
-      crewSigned: false,
-      indicatorRatings: {}
-    }
+// Real-time computed stats for selected crew
+const selectedCrewStats = computed(() => {
+  const missions = buddyStore.selectedCrewMissions || []
+  const total = missions.length
+  const evaluated = missions.filter(m => m.status === 'COMPLETED').length
+  
+  const scoredMissions = missions.filter(m => m.status === 'COMPLETED' && (m.tlScore !== null || m.finalScore !== null))
+  let avgScore = 0
+  let scorePercent = 0
+  if (scoredMissions.length > 0) {
+    const totalScore = scoredMissions.reduce((acc, m) => {
+      const val = m.tlScore !== null && m.tlScore !== undefined ? m.tlScore : m.finalScore
+      return acc + (Number(val) || 0)
+    }, 0)
+    avgScore = parseFloat((totalScore / scoredMissions.length).toFixed(1))
+    scorePercent = Math.min(100, Math.round((avgScore / 3) * 100))
   }
-}
+
+  let statusText = 'Belum Dinilai'
+  let statusBadgeClass = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+
+  if (total === 0) {
+    statusText = 'Belum Ada Misi'
+    statusBadgeClass = 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+  } else if (evaluated >= total) {
+    statusText = 'Siap Batch'
+    statusBadgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+  } else if (evaluated > 0) {
+    statusText = 'Dalam Bimbingan'
+    statusBadgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+  }
+
+  return {
+    total,
+    evaluated,
+    avgScore,
+    scorePercent,
+    statusText,
+    statusBadgeClass
+  }
+})
 
 const getBuddyScoreBadge = (score) => {
   const num = Number(score)
@@ -883,7 +803,6 @@ const loadBuddyScores = () => {
         buddyMissionNotes[m.userMissionId] = m.tlNotes
       }
     }
-    // Misi yang belum dinilai (belum COMPLETED) dibiarkan undefined tanpa nilai default
   })
 }
 
@@ -910,7 +829,6 @@ watch(selectedCrewId, async (newId) => {
     const batchId = batchStore.selectedBatchId || batchStore.currentBatch?.batchId || batchStore.currentBatch?.id
     await buddyStore.fetchBuddyMissions(newId, { batchId })
     loadBuddyScores()
-    loadSelectedCrewRapor()
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 120, behavior: 'smooth' })
     }
@@ -931,7 +849,6 @@ onMounted(async () => {
   } catch (err) {
     console.error('Failed to fetch users/batches in buddy page:', err)
   }
-  loadSelectedCrewRapor()
 })
 
 const submitBuddyMission = async (userMissionId) => {
@@ -964,102 +881,24 @@ const submitBuddyMission = async (userMissionId) => {
   }
 }
 
-// Set rating for an indicator
-const setRating = (indicatorId, rating) => {
-  raporForm.value.indicatorRatings[indicatorId] = rating
-}
-
-// Current summary score & completion
-const currentSummary = computed(() => {
-  if (!selectedCrew.value || !batchStore.currentBatch) {
-    return { scorePercent: 0, rated: 0 }
-  }
-  const ratings = Object.values(raporForm.value.indicatorRatings || {})
-  const total = totalIndicatorCount.value || 22
-  const rated = ratings.length
-
-  let weightedPoints = 0
-  ratings.forEach(r => {
-    if (r === 'KOMPETEN') weightedPoints += 100
-    else if (r === 'BUTUH_PENDAMPINGAN') weightedPoints += 60
-    else if (r === 'BELUM_MENGUASAI') weightedPoints += 20
-  })
-
-  const scorePercent = total > 0 ? Math.round(weightedPoints / total) : 0
-  return { scorePercent, rated }
-})
-
-// Save Rapor to store & sync to backend
-const saveCurrentRapor = async () => {
-  if (!selectedCrew.value || !batchStore.currentBatch) return
-  const batchId = batchStore.currentBatch.batchId || batchStore.currentBatch.id
-
-  buddyStore.saveBuddyEvaluation({
-    batchId,
-    crewId: selectedCrew.value.id,
-    crewName: selectedCrew.value.name,
-    storeTraining: selectedCrew.value.storeLocation || batchStore.currentBatch.name,
-    storeCaptain: `${userStore.currentUser?.name || 'Store Leader'} (Store Leader)`,
-    evaluatorId: userStore.currentUser?.id || userStore.currentUserId || '',
-    trainingPeriod: raporForm.value.trainingPeriod,
-    indicatorRatings: raporForm.value.indicatorRatings,
-    recommendationNote: raporForm.value.recommendationNote,
-    status: raporForm.value.status,
-    captainSigned: raporForm.value.captainSigned,
-    crewSigned: raporForm.value.crewSigned
-  })
-
-  // Sinkronkan ke API untuk misi Buddy yang belum COMPLETED
-  if (buddyStore.selectedCrewMissions && buddyStore.selectedCrewMissions.length > 0) {
-    for (const bm of buddyStore.selectedCrewMissions) {
-      if (bm.status !== 'COMPLETED') {
-        try {
-          await buddyStore.submitBuddyScore(bm.userMissionId, {
-            score: currentSummary.value.scorePercent || 90,
-            notes: raporForm.value.recommendationNote || 'Evaluasi Rapor New Hire 7 Kompetensi selesai.'
-          })
-        } catch (e) {
-          console.warn('Sync buddy mission score error:', e.message)
-        }
-      }
-    }
-  }
-
-  toast.success('Rapor Berhasil Disimpan', `Rapor New Hire untuk ${selectedCrew.value.name} berhasil disimpan dan disinkronkan ke sistem! 🎉`)
-}
-
 // Helpers for sidebar badge
-const getCrewRaporBadgeClass = (crewId) => {
-  const crew = currentBatchCrews.value.find(c => c.id === crewId)
-  if (crew && crew.status === 'COMPLETED') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-  if (!batchStore.currentBatch) return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-  const summary = buddyStore.crewCompetencySummary(batchStore.currentBatch.batchId || batchStore.currentBatch.id, crewId)
-  const status = buddyStore.crewOverallStatus(batchStore.currentBatch.batchId || batchStore.currentBatch.id, crewId)
-
-  if (status === 'RECOMMENDED') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-  if (status === 'NEED_RETRAINING') return 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-  if (summary.rated > 0) return 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
+const getCrewStatusBadgeClass = (crew) => {
+  if (!crew) return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+  if (crew.totalMissionsCount > 0 && crew.evaluatedCount >= crew.totalMissionsCount) {
+    return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+  }
+  if (crew.evaluatedCount > 0) {
+    return 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+  }
   return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
 }
 
-const getCrewRaporStatusText = (crewId) => {
-  const crew = currentBatchCrews.value.find(c => c.id === crewId)
-  if (crew && crew.status === 'COMPLETED') return 'Selesai'
-  if (!batchStore.currentBatch) return 'Belum Dinilai'
-  const status = buddyStore.crewOverallStatus(batchStore.currentBatch.batchId || batchStore.currentBatch.id, crewId)
-  const summary = buddyStore.crewCompetencySummary(batchStore.currentBatch.batchId || batchStore.currentBatch.id, crewId)
-
-  if (status === 'RECOMMENDED') return 'Siap Batch'
-  if (status === 'NEED_RETRAINING') return 'Butuh Review'
-  if (summary.rated > 0) return 'Sedang Dinilai'
+const getCrewStatusText = (crew) => {
+  if (!crew) return 'Belum Dinilai'
+  if (crew.totalMissionsCount === 0) return '0 Misi'
+  if (crew.evaluatedCount >= crew.totalMissionsCount) return 'Selesai'
+  if (crew.evaluatedCount > 0) return 'Proses'
   return 'Belum Dinilai'
 }
-
-const getCrewCompetencyScore = (crewId) => {
-  const crew = currentBatchCrews.value.find(c => c.id === crewId)
-  if (crew && crew.avgScore) return crew.avgScore
-  if (!batchStore.currentBatch) return 0
-  const summary = buddyStore.crewCompetencySummary(batchStore.currentBatch.batchId || batchStore.currentBatch.id, crewId)
-  return summary.scorePercent || 0
-}
 </script>
+
