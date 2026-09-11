@@ -90,17 +90,22 @@ const weekIcon = computed(() => {
 
 const weekTitle = computed(() => props.week.title || `Week ${props.week.weekNumber}`)
 
-const missionsCount = computed(() => props.missions.length || props.week.totalMissions || 4)
+const missionsCount = computed(() => {
+  if (Array.isArray(props.missions)) {
+    return props.missions.length
+  }
+  return Number(props.week?.totalMissions || 0)
+})
 
 const completedMissionsCount = computed(() => {
-  if (props.missions.length > 0) {
+  if (props.missions && props.missions.length > 0) {
     return props.missions.filter(m => m.status === 'COMPLETED' || m.status === 'APPROVED').length
   }
-  return props.week.completedMissions || 0
+  return Number(props.week?.completedMissions || 0)
 })
 
 const totalStarsEarned = computed(() => {
-  if (props.missions.length > 0) {
+  if (props.missions && props.missions.length > 0) {
     return props.missions.reduce((acc, m) => {
       if (m.status === 'COMPLETED' || m.status === 'APPROVED') {
         return acc + Number(m.awardedStars || m.calculatedStars || 5)
@@ -112,7 +117,7 @@ const totalStarsEarned = computed(() => {
 })
 
 const weekState = computed(() => {
-  if (props.week.status === 'COMPLETED' || completedMissionsCount.value >= missionsCount.value) {
+  if (props.week.status === 'COMPLETED' || (missionsCount.value > 0 && completedMissionsCount.value >= missionsCount.value)) {
     return 'completed'
   }
   if (props.isActiveWeek || props.week.status === 'ACTIVE') {

@@ -94,7 +94,18 @@
               </span>
             </div>
 
+            <div v-if="missions.length === 0" class="p-6 rounded-2xl bg-black/5 border border-dashed border-[#8B6914]/30 text-center space-y-2">
+              <div class="w-10 h-10 mx-auto rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center text-lg">
+                📋
+              </div>
+              <h5 class="text-xs font-bold text-slate-800">Belum Ada Misi Pada Week {{ week.weekNumber }}</h5>
+              <p class="text-[11px] text-slate-600 max-w-xs mx-auto">
+                Misi untuk minggu ini belum ditugaskan ke dalam batch atau template yang digunakan belum memiliki butir misi di minggu ke-{{ week.weekNumber }}.
+              </p>
+            </div>
+
             <div
+              v-else
               v-for="(m, idx) in missions"
               :key="m.id"
               class="mission-detail-card"
