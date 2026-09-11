@@ -710,33 +710,29 @@ const executeSaveAll = async () => {
   const compiledDetails = form.value.details.map((item) => {
     const checklistArr = item.requirementsText
       ? item.requirementsText.split('\n').map(r => r.trim()).filter(Boolean)
-      : []
+      : (Array.isArray(item.sopChecklist) ? item.sopChecklist : (Array.isArray(item.requirements) ? item.requirements : []))
+
+    const durNum = Number(item.durationNumber || 1)
+    const periodTitle = periodTitles.value[durNum]?.trim() || (form.value.type === 'JOURNEY' ? `Minggu ${durNum}: Tema SOP Operasional` : `Hari ${durNum}: Agenda Orientasi`)
 
     return {
-      durationNumber: Number(item.durationNumber || 1),
+      periodTitle,
+      durationNumber: durNum,
       missionTitle: item.missionTitle.trim(),
       description: item.description?.trim() || '',
       category: mapCategoryEnum(item.category),
       inputType: mapInputTypeEnum(item.inputType),
       scaleConfig: item.inputType === 'SCALE' ? (item.scaleConfig || { min: 0, max: 100, step: 20, starPerStep: 1 }) : null,
-      sopChecklist: checklistArr,
-      requirements: checklistArr
+      sopChecklist: checklistArr
     }
   })
 
-  const weeksArray = Array.from({ length: totalPeriods.value }, (_, i) => ({
-    weekNumber: i + 1,
-    title: periodTitles.value[i + 1]?.trim() || (form.value.type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`)
-  }))
-
-  // Full unified payload
+  // Full unified payload for BE
   const fullPayload = {
     name: form.value.name.trim(),
     durationCode: form.value.durationCode,
-    durationValue: Number(form.value.durationValue || 1),
-    totalWeeks: totalPeriods.value,
+    durationValue: Number(totalPeriods.value || form.value.durationValue || 1),
     description: form.value.description?.trim() || '',
-    weeks: weeksArray,
     details: compiledDetails
   }
 

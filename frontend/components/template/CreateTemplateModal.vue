@@ -588,31 +588,28 @@ const executeSavePackage = async () => {
   }
 
   // Compile clean details payload according to Prisma backend schema
-  const compiledDetails = form.value.details.map((item, idx) => {
+  const compiledDetails = form.value.details.map((item) => {
     const reqList = item.requirementsText
       ? item.requirementsText.split('\n').map(r => r.trim()).filter(Boolean)
-      : []
+      : (Array.isArray(item.sopChecklist) ? item.sopChecklist : (Array.isArray(item.requirements) ? item.requirements : []))
+
+    const durNum = Number(item.durationNumber || 1)
+    const periodTitle = periodTitles.value[durNum]?.trim() || (form.value.type === 'JOURNEY' ? `Minggu ${durNum}: Tema SOP Operasional` : `Hari ${durNum}: Agenda Orientasi`)
 
     return {
-      durationNumber: Number(item.durationNumber || 1),
+      periodTitle,
+      durationNumber: durNum,
       missionTitle: item.missionTitle.trim(),
       description: item.description?.trim() || '',
       category: mapCategoryEnum(item.category),
       inputType: mapInputTypeEnum(item.inputType),
       scaleConfig: item.inputType === 'SCALE' ? (item.scaleConfig || { min: 0, max: 100, step: 20, starPerStep: 1 }) : null,
-      sopChecklist: reqList,
-      requirements: reqList
+      sopChecklist: reqList
     }
   })
 
-  const dVal = Number(form.value.durationValue || 1)
+  const dVal = Number(totalPeriods.value || form.value.durationValue || 1)
   const dCode = form.value.durationCode || (form.value.type === 'JOURNEY' ? 'WEEK' : 'DAY')
-  const calcTotalWeeks = totalPeriods.value
-
-  const weeksArray = Array.from({ length: totalPeriods.value }, (_, i) => ({
-    weekNumber: i + 1,
-    title: periodTitles.value[i + 1]?.trim() || (form.value.type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`)
-  }))
 
   const createPayload = {
     code: form.value.code?.trim() || `TPL-${form.value.type}-${Date.now()}`,
@@ -620,11 +617,9 @@ const executeSavePackage = async () => {
     type: form.value.type,
     durationCode: dCode,
     durationValue: dVal,
-    totalWeeks: calcTotalWeeks,
     category: form.value.category || 'Standar Operasional',
     targetType: form.value.targetType || 'Semua Gerai',
     description: form.value.description?.trim() || '',
-    weeks: weeksArray,
     details: compiledDetails
   }
 

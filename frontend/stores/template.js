@@ -426,11 +426,11 @@ export const useTemplateStore = defineStore('template', {
     async createPackage(payload) {
       const type = payload.type || 'JOURNEY'
       const durationCode = payload.durationCode || (type === 'JOURNEY' ? 'WEEK' : 'DAY')
-      const durationValue = Number(payload.durationValue || 1)
 
       const inputDetails = Array.isArray(payload.details) ? payload.details : []
-      const maxDur = inputDetails.reduce((max, d) => Math.max(max, Number(d.durationNumber || 1)), 1)
-      const totalTabs = Math.max(Number(payload.totalWeeks) || 1, maxDur, 1)
+      const maxDur = inputDetails.reduce((max, d) => Math.max(max, Number(d.durationNumber || d.week || 1)), 1)
+      const totalTabs = Math.max(Number(payload.durationValue) || Number(payload.totalWeeks) || 1, maxDur, 1)
+      const durationValue = Number(payload.durationValue || totalTabs)
 
       const payloadCode = payload.code?.trim() || `PKG-${String(this.packages.length + 1).padStart(2, '0')}`
 
@@ -447,7 +447,7 @@ export const useTemplateStore = defineStore('template', {
       }
       inputDetails.forEach(d => {
         const num = Number(d.week || d.durationNumber || 1)
-        const t = d.scaleConfig?.periodTitle || d.scaleConfig?.weekTitle || d.periodTitle || d.weekTitle
+        const t = d.periodTitle || d.scaleConfig?.periodTitle || d.scaleConfig?.weekTitle || d.weekTitle
         if (t && !periodTitlesMap[num]) {
           periodTitlesMap[num] = t
         }
@@ -458,6 +458,47 @@ export const useTemplateStore = defineStore('template', {
         title: periodTitlesMap[i + 1] || (type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`)
       }))
 
+      // Validasi & pemetaan details untuk payload API
+      const validCategories = ['TECHNICAL', 'SOFT_SKILL', 'LEADERSHIP', 'PROJECT']
+      const validInputs = ['SCALE', 'CHECKBOX', 'RADIO', 'TEXT']
+
+      const mappedApiDetails = inputDetails.map((d, idx) => {
+        const durNum = Number(d.week || d.durationNumber || 1)
+        const pTitle = d.periodTitle || periodTitlesMap[durNum] || (type === 'JOURNEY' ? `Minggu ${durNum}: Tema SOP Operasional` : `Hari ${durNum}: Agenda Orientasi`)
+
+        let cat = (d.category || 'TECHNICAL').toUpperCase()
+        if (!validCategories.includes(cat)) {
+          if (cat.includes('SOFT') || cat.includes('PELAYANAN') || cat.includes('SERVICE')) cat = 'SOFT_SKILL'
+          else if (cat.includes('LEAD') || cat.includes('MANAGER')) cat = 'LEADERSHIP'
+          else if (cat.includes('PROJ')) cat = 'PROJECT'
+          else cat = 'TECHNICAL'
+        }
+
+        let inp = (d.inputType || 'SCALE').toUpperCase()
+        if (!validInputs.includes(inp)) {
+          inp = 'SCALE'
+        }
+
+        const scaleConfig = d.scaleConfig || (inp === 'SCALE' ? { min: 0, max: 100, step: 20, starPerStep: 1 } : null)
+
+        const checklistArr = Array.isArray(d.sopChecklist)
+          ? d.sopChecklist
+          : (Array.isArray(d.requirements)
+            ? d.requirements
+            : (d.requirementsText ? d.requirementsText.split('\n').map(r => r.trim()).filter(Boolean) : []))
+
+        return {
+          periodTitle: pTitle,
+          missionTitle: d.missionTitle || d.title || `Butir SOP ${idx + 1}`,
+          description: d.description || '',
+          durationNumber: durNum,
+          category: cat,
+          inputType: inp,
+          scaleConfig,
+          sopChecklist: checklistArr
+        }
+      })
+
       // Send to live backend API first if available
       try {
         const res = await templateApi.create({
@@ -466,10 +507,8 @@ export const useTemplateStore = defineStore('template', {
           type,
           durationCode,
           durationValue,
-          totalWeeks: payload.totalWeeks || totalTabs,
           description: payload.description || '',
-          weeks: payload.weeks || weeks,
-          details: inputDetails
+          details: mappedApiDetails
         })
         if (res && res.data) {
           apiResponseData = res.data
@@ -479,30 +518,27 @@ export const useTemplateStore = defineStore('template', {
         // If in browser and real API rejection, rethrow so UI can display error; in node test environment, fallback gracefully
         const statusCode = err.statusCode || err.status || err.data?.statusCode
         console.warn('templateApi.create background sync warning:', err.message)
+        if (typeof window !== 'undefined' && statusCode && statusCode >= 400) {
+          throw err
+        }
       }
 
       const id = apiCreatedId || payload.id || payload.tplMissionId || `pkg-${Date.now()}`
 
-      const mappedTemplates = inputDetails.map((d, idx) => {
-        const checklistArr = Array.isArray(d.sopChecklist)
-          ? d.sopChecklist
-          : (Array.isArray(d.requirements)
-            ? d.requirements
-            : (d.requirementsText ? d.requirementsText.split('\n').map(r => r.trim()).filter(Boolean) : []))
-
-        return {
-          id: d.id || d.tempId || `mis-${Date.now()}-${idx}`,
-          codePrefix: d.codePrefix || `M-W${d.durationNumber || 1}-${String(idx + 1).padStart(2, '0')}`,
-          title: d.missionTitle || d.title || `Butir SOP ${idx + 1}`,
-          description: d.description || '',
-          week: Number(d.durationNumber) || 1,
-          category: d.category || 'TECHNICAL',
-          inputType: d.inputType || 'SCALE',
-          scaleConfig: d.scaleConfig || null,
-          sopChecklist: checklistArr,
-          requirements: checklistArr
-        }
-      })
+      const mappedTemplates = mappedApiDetails.map((d, idx) => ({
+        id: inputDetails[idx]?.id || inputDetails[idx]?.tempId || `mis-${Date.now()}-${idx}`,
+        codePrefix: d.codePrefix || `M-W${d.durationNumber || 1}-${String(idx + 1).padStart(2, '0')}`,
+        title: d.missionTitle,
+        missionTitle: d.missionTitle,
+        description: d.description || '',
+        week: d.durationNumber,
+        durationNumber: d.durationNumber,
+        category: d.category,
+        inputType: d.inputType,
+        scaleConfig: d.scaleConfig,
+        sopChecklist: d.sopChecklist,
+        requirements: d.sopChecklist
+      }))
 
       const newPkg = normalizePackage({
         id,
@@ -519,7 +555,7 @@ export const useTemplateStore = defineStore('template', {
         totalWeeks: totalTabs,
         weeks,
         templates: mappedTemplates,
-        details: apiResponseData?.details || inputDetails
+        details: apiResponseData?.details || mappedApiDetails
       })
 
       if (type === 'JOURNEY') {
@@ -749,18 +785,22 @@ export const useTemplateStore = defineStore('template', {
       })
 
       const maxDurationNum = sourceDetails.reduce((max, d) => Math.max(max, Number(d.week || d.durationNumber || 1)), 1)
-      const targetCount = Math.max(Number(payload.totalWeeks) || 1, maxDurationNum, 1)
+      const targetCount = Math.max(Number(payload.durationValue) || Number(payload.totalWeeks) || 1, maxDurationNum, 1)
       pkg.weeks = Array.from({ length: targetCount }, (_, i) => ({
         weekNumber: i + 1,
         title: periodTitlesMap[i + 1] || (pkg.type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`)
       }))
       pkg.totalWeeks = pkg.weeks.length
+      pkg.durationValue = Number(payload.durationValue || pkg.weeks.length)
 
       // Prepare full JSON payload for backend API
       const validCategories = ['TECHNICAL', 'SOFT_SKILL', 'LEADERSHIP', 'PROJECT']
       const validInputs = ['SCALE', 'CHECKBOX', 'RADIO', 'TEXT']
 
       const mappedDetails = sourceDetails.map((item, idx) => {
+        const durNum = Number(item.week || item.durationNumber || 1)
+        const pTitle = item.periodTitle || periodTitlesMap[durNum] || (pkg.type === 'JOURNEY' ? `Minggu ${durNum}: Tema SOP Operasional` : `Hari ${durNum}: Agenda Orientasi`)
+
         let cat = (item.category || 'TECHNICAL').toUpperCase()
         if (!validCategories.includes(cat)) {
           if (cat.includes('SOFT') || cat.includes('PELAYANAN') || cat.includes('SERVICE')) cat = 'SOFT_SKILL'
@@ -783,14 +823,14 @@ export const useTemplateStore = defineStore('template', {
             : (item.requirementsText ? item.requirementsText.split('\n').map(r => r.trim()).filter(Boolean) : []))
 
         return {
-          durationNumber: Number(item.week || item.durationNumber || 1),
+          periodTitle: pTitle,
           missionTitle: item.title || item.missionTitle || `Misi SOP ${idx + 1}`,
           description: item.description || '',
+          durationNumber: durNum,
           category: cat,
           inputType: inp,
           scaleConfig,
-          sopChecklist: checklistArr,
-          requirements: checklistArr
+          sopChecklist: checklistArr
         }
       })
 
@@ -798,9 +838,7 @@ export const useTemplateStore = defineStore('template', {
         name: pkg.name,
         durationCode: pkg.durationCode || (pkg.type === 'JOURNEY' ? 'WEEK' : 'DAY'),
         durationValue: Number(pkg.durationValue || pkg.totalWeeks || 1),
-        totalWeeks: Number(pkg.totalWeeks || totalTabs),
         description: pkg.description || '',
-        weeks: payload.weeks || pkg.weeks || weeks,
         details: mappedDetails
       }
 

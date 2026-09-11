@@ -288,6 +288,10 @@ export const useBatchStore = defineStore('batch', {
             const journeyDetail = b.details?.find(d => d.tplMission?.type === 'JOURNEY')
             const feedbackDetail = b.details?.find(d => d.tplMission?.type === 'FEEDBACK')
 
+            const maxWeeksFromTpl = (journeyDetail?.tplMission?.details || []).reduce((max, d) => Math.max(max, Number(d.durationNumber || d.week || 1)), 1)
+            const maxWeeksFromDuration = Number(journeyDetail?.tplMission?.durationValue) || 0
+            const maxWeeksFromMissions = (b.missions || []).reduce((max, m) => Math.max(max, Number(m.weekOrDayNumber || m.week || 1)), 1)
+
             const periodTitlesMap = {}
             ;(journeyDetail?.tplMission?.details || []).forEach(d => {
               const num = Number(d.durationNumber || d.week || 1)
@@ -400,6 +404,10 @@ export const useBatchStore = defineStore('batch', {
           const users = Array.isArray(b.users) ? b.users : []
           const missions = Array.isArray(b.missions) ? b.missions : []
           const crewIds = users.map(u => u.userId || u.id)
+
+          const maxWeeksFromTpl = (journeyDetail?.tplMission?.details || []).reduce((max, d) => Math.max(max, Number(d.durationNumber || d.week || 1)), 1)
+          const maxWeeksFromDuration = Number(journeyDetail?.tplMission?.durationValue) || 0
+          const maxWeeksFromMissions = (missions || []).reduce((max, m) => Math.max(max, Number(m.weekOrDayNumber || m.week || 1)), 1)
 
           const periodTitlesMap = {}
           ;(journeyDetail?.tplMission?.details || []).forEach(d => {
