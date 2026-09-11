@@ -33,6 +33,7 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 
 | ID | Tanggal & Waktu (WIB) | Target Environment | Komponen | Commit Hash & Branch | Hasil Unit Test | Port / URL Akses | Status |
 | :---: | :--- | :--- | :--- | :--- | :---: | :--- | :---: |
+| **DEP-010** | 2026-09-11 15:58 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `2d2f7fd` (`main`) | **93/93 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-009** | 2026-09-11 14:07 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `b057f73` (`main`) | **91/91 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-008** | 2026-09-10 23:44 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `54fe832` (`main`) | **91/91 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-007** | 2026-09-10 18:50 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `8339783` (`main`) | **86/86 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
@@ -46,6 +47,26 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 ---
 
 ## 📝 Rincian Log Tiap Deployment
+ 
+### [DEP-010] — 2026-09-11 15:58 WIB
+- **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"push dan deploy firebase"*)
+- **Target Host**: Google Firebase Hosting (`gamification-dde4b`)
+- **Komponen Di-Deploy**: 
+  - Nuxt 3 Frontend SPA ter-generate ke static distribution (`.output/public`)
+  - Target REST API: `https://cagelike-flukily-niels.ngrok-free.dev/api`
+  - Integrasi penuh REST API Feedback Kru Onboarding (Swagger #14: `/feedback/questions`, `/feedback/my-feedback`, `/feedback/surveys`)
+  - Proteksi satu kali pengisian pada modal Journey Map (`CrewFeedbackModal.vue`) dan halaman survei (`/feedback`): status banner, mode read-only disabled, dan penghapusan tombol submit jika sudah pernah mengisi
+  - Perbaikan form-data single file upload pada Bulk User Preview (`POST /masters/users/bulk-preview`) dan struktur JSON payload Bulk Commit (`POST /masters/users/bulk-commit`) sesuai kontrak Swagger
+- **Branch & Commit**: `2d2f7fd` di branch `main`
+- **Hasil Pengujian Unit Test Sebelum Deploy**:
+  - **CRUD Test Suite**: `56/56 Tests PASS (100%)`
+  - **QA Unit Tester Suite**: `37/37 Tests PASS (100%)`
+  - **Total Pengujian**: `93/93 Tests PASS (0 Failed)`
+- **Verifikasi Live Hosting Pasca Deploy**:
+  - Hosting URL $\rightarrow$ **`https://gamification-dde4b.web.app`**
+  - Status Distribusi $\rightarrow$ **200 OK / Live & Online**
+  - Prerendered Routes: 32 routes
+- **Status Akhir**: 🟢 **SUCCESS (BERHASIL 100%)**
 
 ### [DEP-009] — 2026-09-11 14:07 WIB
 - **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"deploy firebase"*)
