@@ -33,6 +33,7 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 
 | ID | Tanggal & Waktu (WIB) | Target Environment | Komponen | Commit Hash & Branch | Hasil Unit Test | Port / URL Akses | Status |
 | :---: | :--- | :--- | :--- | :--- | :---: | :--- | :---: |
+| **DEP-012** | 2026-09-12 00:24 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `3299515` (`main`) | **99/99 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-011** | 2026-09-11 19:19 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `321a492` (`main`) | **93/93 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-010** | 2026-09-11 15:58 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `2d2f7fd` (`main`) | **93/93 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-009** | 2026-09-11 14:07 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `b057f73` (`main`) | **91/91 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
@@ -48,7 +49,25 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 ---
 
 ## 📝 Rincian Log Tiap Deployment
- 
+
+### [DEP-012] — 2026-09-12 00:24 WIB
+- **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"deploy firebase"*)
+- **Target Host**: Google Firebase Hosting (`gamification-dde4b`)
+- **Komponen Di-Deploy**: 
+  - Nuxt 3 Frontend SPA ter-generate ke static distribution (`.output/public`)
+  - Target REST API: `http://103.168.147.133:3005/api` (Staging Environment)
+  - Rilis dinamisasi durasi siklus batch (DAY, WEEK, MONTH), sinkronisasi tanggal/tab periode, perbaikan loading halaman detail batch (`/batches/[id]`), dan proteksi komprehensif *null-safety* terhadap error 500 SSR.
+- **Branch & Commit**: `3299515` di branch `main`
+- **Hasil Pengujian Unit Test Sebelum Deploy**:
+  - `test_all_cruds.mjs`: **62/62 PASS (100%)**
+  - `test_unit_tester_suite.mjs`: **37/37 PASS (100%)**
+  - **Total**: **99/99 PASS (100% Lolos)**
+- **Hasil Deployment**:
+  - `nuxt generate`: Selesai menghasilkan 32 routes static prerendered.
+  - `firebase deploy`: 149 files ter-deploy ke hosting channel release.
+  - **URL Akses**: [https://gamification-dde4b.web.app](https://gamification-dde4b.web.app)
+  - **Status**: 🟢 **SUCCESS (200 OK)**
+
 ### [DEP-011] — 2026-09-11 19:19 WIB
 - **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"push dan deploy firebase"*)
 - **Target Host**: Google Firebase Hosting (`gamification-dde4b`)
