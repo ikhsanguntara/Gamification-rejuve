@@ -488,7 +488,6 @@ export const useUserStore = defineStore('user', {
     async previewBulkUsers(file) {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('excel', file)
       const res = await userApi.bulkPreview(formData)
       return res?.data || res
     },

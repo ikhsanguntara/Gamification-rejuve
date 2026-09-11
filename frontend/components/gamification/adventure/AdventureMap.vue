@@ -283,12 +283,16 @@ const liveBuddyReport = ref(null)
 onMounted(async () => {
   if (currentCrewId.value) {
     try {
-      const res = await buddyStore.fetchBuddyReport(currentCrewId.value)
-      if (res) {
-        liveBuddyReport.value = res?.data || res
-      }
+      await Promise.allSettled([
+        buddyStore.fetchBuddyReport(currentCrewId.value).then(res => {
+          if (res) {
+            liveBuddyReport.value = res?.data || res
+          }
+        }),
+        feedbackStore.fetchMyFeedbackFromApi()
+      ])
     } catch (e) {
-      console.warn('Map fetch buddy report warning:', e.message)
+      console.warn('Map fetch buddy/feedback report warning:', e.message)
     }
   }
 })

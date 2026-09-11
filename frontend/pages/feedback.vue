@@ -20,6 +20,22 @@
       </p>
     </div>
 
+    <!-- Banner Status Jika Sudah Pernah Mengisi -->
+    <div
+      v-if="hasSubmitted"
+      class="p-5 rounded-3xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-start sm:items-center gap-3 text-emerald-900 dark:text-emerald-200 shadow-sm"
+    >
+      <div class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
+        <CheckCircle2 class="w-5 h-5" />
+      </div>
+      <div class="space-y-0.5">
+        <h3 class="text-sm font-bold">Survei Feedback Onboarding Telah Terkirim</h3>
+        <p class="text-xs text-emerald-700 dark:text-emerald-300/90 leading-relaxed">
+          Terima kasih atas partisipasi Anda. Jawaban survei telah tersimpan dengan skor rata-rata kepuasan <strong>{{ submittedData?.avgScore || '10' }}/10</strong>. Kuesioner ini hanya dapat diisi 1 kali dan tidak dapat diubah kembali.
+        </p>
+      </div>
+    </div>
+
     <!-- Info Banner Kru & Gerai -->
     <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-4">
       <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -34,8 +50,14 @@
           <input
             v-model="surveyForm.crewName"
             type="text"
-            required
-            class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600"
+            :disabled="hasSubmitted"
+            :required="!hasSubmitted"
+            class="w-full text-xs font-bold rounded-xl border-none px-3.5 py-2.5 text-slate-900 dark:text-white transition-colors"
+            :class="[
+              hasSubmitted
+                ? 'bg-slate-100/70 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed'
+                : 'bg-slate-100 dark:bg-slate-800 focus:ring-2 focus:ring-blue-600'
+            ]"
           />
         </div>
 
@@ -46,8 +68,14 @@
           <input
             v-model="surveyForm.storeLocation"
             type="text"
-            required
-            class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600"
+            :disabled="hasSubmitted"
+            :required="!hasSubmitted"
+            class="w-full text-xs font-bold rounded-xl border-none px-3.5 py-2.5 text-slate-900 dark:text-white transition-colors"
+            :class="[
+              hasSubmitted
+                ? 'bg-slate-100/70 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed'
+                : 'bg-slate-100 dark:bg-slate-800 focus:ring-2 focus:ring-blue-600'
+            ]"
           />
         </div>
 
@@ -58,8 +86,14 @@
           <input
             v-model="surveyForm.buddyName"
             type="text"
-            required
-            class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600"
+            :disabled="hasSubmitted"
+            :required="!hasSubmitted"
+            class="w-full text-xs font-bold rounded-xl border-none px-3.5 py-2.5 text-slate-900 dark:text-white transition-colors"
+            :class="[
+              hasSubmitted
+                ? 'bg-slate-100/70 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed'
+                : 'bg-slate-100 dark:bg-slate-800 focus:ring-2 focus:ring-blue-600'
+            ]"
           />
         </div>
       </div>
@@ -79,7 +113,7 @@
           </span>
           <div class="space-y-1">
             <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-relaxed">
-              {{ q.text }} <span class="text-rose-500">*</span>
+              {{ q.text }} <span v-if="!hasSubmitted" class="text-rose-500">*</span>
             </h4>
             <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">
               Fokus: {{ q.category }}
@@ -94,12 +128,17 @@
               v-for="val in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
               :key="val"
               type="button"
-              @click="surveyForm.ratings[q.id] = val"
-              class="min-w-[40px] h-10 sm:min-w-0 sm:h-10 flex-shrink-0 sm:flex-shrink rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center shadow-2xs active:scale-95"
+              :disabled="hasSubmitted"
+              @click="!hasSubmitted && (surveyForm.ratings[q.id] = val)"
+              class="min-w-[40px] h-10 sm:min-w-0 sm:h-10 flex-shrink-0 sm:flex-shrink rounded-xl text-xs font-bold border transition-all flex items-center justify-center shadow-2xs"
               :class="[
                 surveyForm.ratings[q.id] === val
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-600/30 scale-105'
-                  : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:border-blue-300'
+                  ? (hasSubmitted
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
+                      : 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-600/30 scale-105 cursor-pointer')
+                  : (hasSubmitted
+                      ? 'bg-slate-100/50 dark:bg-slate-800/30 border-slate-200/60 dark:border-slate-800 text-slate-400 opacity-60 cursor-not-allowed'
+                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:border-blue-300 cursor-pointer')
               ]"
             >
               {{ val }}
@@ -118,16 +157,33 @@
           <textarea
             v-model="surveyForm.essayAnswer"
             rows="4"
-            required
+            :required="!hasSubmitted"
+            :disabled="hasSubmitted"
+            :readonly="hasSubmitted"
             placeholder="Tuliskan pengalaman Anda secara detail di sini..."
-            class="w-full text-xs rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-3 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-600 resize-none leading-relaxed"
+            class="w-full text-xs rounded-2xl border p-3 text-slate-900 dark:text-white placeholder-slate-400 resize-none leading-relaxed transition-colors"
+            :class="[
+              hasSubmitted
+                ? 'bg-slate-100/70 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 cursor-not-allowed'
+                : 'bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-600'
+            ]"
           ></textarea>
         </div>
       </div>
 
-      <!-- Action Submit Button -->
+      <!-- Action Submit / Completed Box -->
       <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div class="space-y-0.5">
+        <div v-if="hasSubmitted" class="space-y-0.5">
+          <div class="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 class="w-4 h-4" />
+            <span>Survei Telah Selesai</span>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            Feedback telah tercatat permanen dalam sistem evaluasi Re.juve Onboarding.
+          </p>
+        </div>
+
+        <div v-else class="space-y-0.5">
           <span class="text-xs font-bold text-slate-900 dark:text-white">
             Konfirmasi Pengiriman Feedback
           </span>
@@ -136,7 +192,16 @@
           </p>
         </div>
 
+        <NuxtLink
+          v-if="hasSubmitted"
+          to="/dashboard"
+          class="px-6 py-3 rounded-2xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <span>Kembali ke Dashboard</span>
+        </NuxtLink>
+
         <button
+          v-else
           type="submit"
           class="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-lg shadow-blue-600/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
@@ -150,19 +215,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useFeedbackStore } from '~/stores/feedback.js'
 import { useToast } from '~/composables/useToast.js'
-import { Send } from 'lucide-vue-next'
+import { Send, CheckCircle2 } from 'lucide-vue-next'
 
 const router = useRouter()
 const userStore = useUserStore()
 const batchStore = useBatchStore()
 const feedbackStore = useFeedbackStore()
 const toast = useToast()
+
+const currentCrewId = computed(() => userStore.currentUserId || userStore.currentUser?.id || userStore.currentUser?.userId || '')
+
+const submittedData = computed(() => {
+  return feedbackStore.feedbackByCrewId(currentCrewId.value)
+})
+
+const hasSubmitted = computed(() => !!submittedData.value)
 
 const surveyForm = ref({
   crewName: userStore.currentUser?.name || 'Kru',
@@ -172,17 +245,21 @@ const surveyForm = ref({
   essayAnswer: ''
 })
 
-onMounted(() => {
-  const currentCrewId = userStore.currentUserId
-  const existing = feedbackStore.feedbackByCrewId(currentCrewId)
+onMounted(async () => {
+  await Promise.allSettled([
+    feedbackStore.fetchQuestionsFromApi(),
+    feedbackStore.fetchMyFeedbackFromApi()
+  ])
+
+  const existing = submittedData.value
   
   if (existing) {
     surveyForm.value = {
-      crewName: existing.crewName,
-      storeLocation: existing.storeLocation,
-      buddyName: existing.buddyName,
-      ratings: { ...existing.ratings },
-      essayAnswer: existing.essayAnswer
+      crewName: existing.crewName || userStore.currentUser?.name || 'Kru',
+      storeLocation: existing.storeLocation || userStore.currentUser?.storeLocation || userStore.currentUser?.department || 'Gerai Re.juve',
+      buddyName: existing.buddyName || 'Store Leader / Mentor',
+      ratings: { ...(existing.ratings || {}) },
+      essayAnswer: existing.essayAnswer || ''
     }
   } else {
     // Default all ratings to 10
@@ -196,23 +273,30 @@ onMounted(() => {
   }
 })
 
-const submitFeedback = () => {
-  const currentCrewId = userStore.currentUserId || ''
+const submitFeedback = async () => {
+  if (hasSubmitted.value) {
+    toast.info('Sudah Mengisi Feedback', 'Anda sudah pernah mengisi survei onboarding ini.')
+    return
+  }
 
-  feedbackStore.submitCrewFeedback({
-    crewId: currentCrewId,
-    crewName: surveyForm.value.crewName,
-    storeLocation: surveyForm.value.storeLocation,
-    buddyName: surveyForm.value.buddyName,
-    ratings: surveyForm.value.ratings,
-    essayAnswer: surveyForm.value.essayAnswer
-  })
+  try {
+    await feedbackStore.submitSurveyToApi({
+      crewId: currentCrewId.value,
+      crewName: surveyForm.value.crewName,
+      storeLocation: surveyForm.value.storeLocation,
+      buddyName: surveyForm.value.buddyName,
+      ratings: surveyForm.value.ratings,
+      essayAnswer: surveyForm.value.essayAnswer
+    })
 
-  toast.success(
-    'Feedback Berhasil Terkirim!',
-    'Terima kasih atas masukan berharga Anda untuk evaluasi program Onboarding & Buddy.'
-  )
+    toast.success(
+      'Feedback Berhasil Terkirim!',
+      'Terima kasih atas masukan berharga Anda untuk evaluasi program Onboarding & Buddy.'
+    )
 
-  router.push('/dashboard')
+    router.push('/dashboard')
+  } catch (err) {
+    toast.error('Gagal Mengirim Feedback', err.message || 'Terjadi kesalahan saat menyimpan feedback.')
+  }
 }
 </script>

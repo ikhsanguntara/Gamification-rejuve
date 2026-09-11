@@ -154,3 +154,12 @@ export const gamificationApi = {
   getLeaderboard: (params) => apiFetch('/gamification/leaderboard', { method: 'GET', params })
 }
 
+// ─── 13. Feedback Kru Onboarding Service ────────────────────────────────────
+export const feedbackApi = {
+  getQuestions: () => apiFetch('/feedback/questions', { method: 'GET' }),
+  getMyFeedback: () => apiFetch('/feedback/my-feedback', { method: 'GET' }),
+  submitSurvey: (data) => apiFetch('/feedback/surveys', { method: 'POST', body: data }),
+  getSurveys: (params) => apiFetch('/feedback/surveys', { method: 'GET', params }),
+  getSurveyById: (id) => apiFetch(`/feedback/surveys/${id}`, { method: 'GET' })
+}
+

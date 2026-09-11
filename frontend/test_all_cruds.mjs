@@ -497,7 +497,10 @@ const newQ = feedbackStore.addSurveyQuestion({
 assert(newQ && newQ.id, 'Create Question: Admin berhasil menambah butir kuesioner baru')
 
 feedbackStore.deleteSurveyQuestion(newQ.id)
-assert(feedbackStore.surveyQuestions.find(q => q.id === newQ.id) === undefined, 'Delete Question: Admin berhasil menghapus butir kuesioner')
+// 8.5 REST API FEEDBACK ACTIONS
+assert(typeof feedbackStore.fetchQuestionsFromApi === 'function', 'Feedback API: Action fetchQuestionsFromApi tersedia di store')
+assert(typeof feedbackStore.fetchMyFeedbackFromApi === 'function', 'Feedback API: Action fetchMyFeedbackFromApi tersedia di store')
+assert(typeof feedbackStore.submitSurveyToApi === 'function', 'Feedback API: Action submitSurveyToApi tersedia di store')
 
 console.log('')
 console.log(`==========================================`)

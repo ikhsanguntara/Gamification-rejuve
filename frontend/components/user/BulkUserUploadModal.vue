@@ -533,9 +533,14 @@ async function handleRunPreview() {
       name: r.name || r.fullName || r.nama || '',
       email: r.email || '',
       role: r.role || r.roleCode || 'CREW',
+      roleCode: r.roleCode || r.role || 'CREW',
       department: r.department || r.departmentCode || r.storeLocation || r.store || '',
+      departmentCode: r.departmentCode || r.department || '',
+      isBuddy: Boolean(r.isBuddy),
+      buddyEmail: r.buddyEmail || null,
+      batchCode: r.batchCode || null,
       isValid: r.isValid !== undefined ? r.isValid : (r.status ? r.status === 'VALID' : !r.error),
-      errorMessage: r.errorMessage || r.error || (r.errors ? r.errors.join(', ') : '')
+      errorMessage: r.errorMessage || r.error || (Array.isArray(r.errors) ? r.errors.join(', ') : '')
     }))
 
     if (previewRows.value.length === 0) {
@@ -559,11 +564,21 @@ async function handleCommit() {
 
   isCommitting.value = true
   try {
-    const validRows = previewRows.value.filter(r => r.isValid !== false && r.status !== 'INVALID' && !r.error)
+    const validRows = previewRows.value
+      .filter(r => r.isValid !== false && r.status !== 'INVALID' && !r.errorMessage && !r.error)
+      .map(r => ({
+        name: r.name,
+        email: r.email,
+        roleCode: (r.roleCode || r.role || 'CREW').toUpperCase(),
+        departmentCode: r.departmentCode || r.department || null,
+        isBuddy: Boolean(r.isBuddy),
+        buddyEmail: r.buddyEmail || null,
+        batchCode: r.batchCode || null
+      }))
+
     const payload = {
-      token: previewData.value?.token || previewData.value?.previewToken || null,
-      users: validRows,
-      data: validRows
+      onDuplicate: 'SKIP',
+      users: validRows
     }
 
     const res = await userStore.commitBulkUsers(payload)
@@ -579,7 +594,7 @@ async function handleCommit() {
       // Non-blocking animation failure
     }
     emit('imported', res)
-    toast.success('Bulk Import Selesai', `Berhasil menyimpan ${previewSummary.value.validCount} pengguna ke database.`)
+    toast.success('Bulk Import Selesai', `Berhasil menyimpan ${validRows.length} pengguna ke database.`)
   } catch (err) {
     toast.error('Gagal Commit Data', err.message || 'Terjadi kesalahan saat menyimpan data ke database.')
   } finally {
