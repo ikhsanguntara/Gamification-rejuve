@@ -325,7 +325,7 @@ const openEditPackageModal = async (pkg) => {
     return
   }
   const targetId = pkg.id || pkg.tplMissionId
-  if (targetId && (!pkg.templates || pkg.templates.length === 0)) {
+  if (targetId) {
     await templateStore.fetchTemplateById(targetId, pkg.type || 'JOURNEY').catch(() => {})
   }
   const freshPkg = templateStore.packageById(targetId) || pkg

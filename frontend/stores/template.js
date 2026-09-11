@@ -15,41 +15,31 @@ function normalizePackage(pkg) {
   const baseCount = Math.max(Number(pkg.totalWeeks) || 1, maxDur, (pkg.weeks || []).length || 1)
 
   const periodTitlesMap = {}
-  if (Array.isArray(pkg.weeks)) {
-    pkg.weeks.forEach(w => {
-      if (w.weekNumber && w.title) {
-        periodTitlesMap[w.weekNumber] = w.title
-      }
-    })
-  }
+
+  // 1. Prioritaskan periodTitle langsung dari detail item (API / DB)
   details.forEach(d => {
     const num = Number(d.week || d.durationNumber || 1)
-    const title = d.scaleConfig?.periodTitle || d.scaleConfig?.weekTitle || d.periodTitle || d.weekTitle
+    const title = d.periodTitle || d.scaleConfig?.periodTitle || d.scaleConfig?.weekTitle || d.weekTitle
     if (title && !periodTitlesMap[num]) {
       periodTitlesMap[num] = title
     }
   })
 
-  if (!pkg.weeks || !Array.isArray(pkg.weeks) || pkg.weeks.length === 0) {
-    pkg.weeks = Array.from({ length: baseCount }, (_, i) => ({
-      weekNumber: i + 1,
-      title: periodTitlesMap[i + 1] || (pkg.type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`)
-    }))
-  } else {
+  // 2. Jika ada pkg.weeks dengan judul non-default
+  if (Array.isArray(pkg.weeks)) {
     pkg.weeks.forEach(w => {
-      if (periodTitlesMap[w.weekNumber]) {
-        w.title = periodTitlesMap[w.weekNumber]
+      if (w.weekNumber && w.title && !periodTitlesMap[w.weekNumber] && !w.title.includes('Tema SOP Operasional') && !w.title.includes('Agenda Orientasi')) {
+        periodTitlesMap[w.weekNumber] = w.title
       }
     })
-    if (pkg.weeks.length < maxDur) {
-      for (let i = pkg.weeks.length + 1; i <= maxDur; i++) {
-        pkg.weeks.push({
-          weekNumber: i,
-          title: periodTitlesMap[i] || (pkg.type === 'JOURNEY' ? `Minggu ${i}: Tema SOP Operasional` : `Hari ${i}: Agenda Orientasi`)
-        })
-      }
-    }
   }
+
+  // 3. Susun array weeks dengan judul yang akurat
+  pkg.weeks = Array.from({ length: baseCount }, (_, i) => ({
+    weekNumber: i + 1,
+    title: periodTitlesMap[i + 1] || (pkg.type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`)
+  }))
+
   if (Array.isArray(pkg.templates)) {
     pkg.templates.forEach(t => {
       if (!t.sopChecklist) {
@@ -57,6 +47,9 @@ function normalizePackage(pkg) {
       }
       if (!t.requirements) {
         t.requirements = t.sopChecklist
+      }
+      if (!t.periodTitle && periodTitlesMap[t.week || t.durationNumber]) {
+        t.periodTitle = periodTitlesMap[t.week || t.durationNumber]
       }
     })
   }
@@ -159,8 +152,10 @@ export const useTemplateStore = defineStore('template', {
                 tplMissionDetailId: d.tplMissionDetailId,
                 week: d.durationNumber || 1,
                 durationNumber: d.durationNumber || 1,
+                codePrefix: `M-W${d.durationNumber || 1}-0${idx + 1}`,
                 title: d.missionTitle,
                 missionTitle: d.missionTitle,
+                periodTitle: d.periodTitle || d.scaleConfig?.periodTitle || d.scaleConfig?.weekTitle || '',
                 category: d.category || 'TECHNICAL',
                 inputType: d.inputType || 'SCALE',
                 scaleConfig: d.scaleConfig || null,
@@ -264,6 +259,7 @@ export const useTemplateStore = defineStore('template', {
               codePrefix: `M-W${d.durationNumber || 1}-0${idx + 1}`,
               title: d.missionTitle,
               missionTitle: d.missionTitle,
+              periodTitle: d.periodTitle || d.scaleConfig?.periodTitle || d.scaleConfig?.weekTitle || '',
               category: d.category || (actualType === 'FEEDBACK' ? 'SOFT_SKILL' : 'TECHNICAL'),
               inputType: d.inputType || 'SCALE',
               scaleConfig: d.scaleConfig || null,
@@ -276,10 +272,6 @@ export const useTemplateStore = defineStore('template', {
           const maxDur = (data.details || []).reduce((max, d) => Math.max(max, Number(d.durationNumber || 1)), 1)
           const totalTabsCount = Math.max(maxDur, 1)
           const durationVal = Number(data.durationValue || 1)
-          const weeks = Array.from({ length: totalTabsCount }, (_, i) => ({
-            weekNumber: i + 1,
-            title: actualType === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`
-          }))
 
           const mapped = normalizePackage({
             id: actualId,
@@ -294,7 +286,6 @@ export const useTemplateStore = defineStore('template', {
             targetType: 'Semua Gerai',
             category: actualType === 'JOURNEY' ? 'Standar Operasional' : (actualType === 'BUDDY' ? 'Orientasi Buddy' : 'Feedback & Evaluasi'),
             details: data.details || [],
-            weeks,
             templates
           })
 

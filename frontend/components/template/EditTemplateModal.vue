@@ -545,13 +545,26 @@ watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     loadMissionCategoriesFromApi()
     if (props.template) {
-      const rawDetails = props.template.templates || props.template.details || []
+      const rawDetails = (props.template.details && props.template.details.length > 0)
+        ? props.template.details
+        : (props.template.templates || [])
 
       // Inisialisasi Judul / Tema per Periode
       const titles = {}
+
+      // 1. Ekstrak tema dari detail asli (API DB) terlebih dahulu
+      rawDetails.forEach((item) => {
+        const durationNum = Number(item.week || item.durationNumber || 1)
+        const tTitle = item.periodTitle || item.scaleConfig?.periodTitle || item.scaleConfig?.weekTitle || item.weekTitle
+        if (tTitle && !titles[durationNum]) {
+          titles[durationNum] = tTitle
+        }
+      })
+
+      // 2. Jika ada props.template.weeks dengan judul non-default
       if (Array.isArray(props.template.weeks)) {
         props.template.weeks.forEach(w => {
-          if (w.weekNumber && w.title) {
+          if (w.weekNumber && w.title && !titles[w.weekNumber] && !w.title.includes('Tema SOP Operasional') && !w.title.includes('Agenda Orientasi')) {
             titles[w.weekNumber] = w.title
           }
         })
@@ -565,7 +578,7 @@ watch(() => props.modelValue, (isOpen) => {
             : (item.sopChecklist || item.requirements || ''))
 
         const durationNum = Number(item.week || item.durationNumber || 1)
-        const tTitle = item.scaleConfig?.periodTitle || item.scaleConfig?.weekTitle || item.periodTitle || item.weekTitle
+        const tTitle = item.periodTitle || item.scaleConfig?.periodTitle || item.scaleConfig?.weekTitle || item.weekTitle
         if (tTitle && !titles[durationNum]) {
           titles[durationNum] = tTitle
         }
@@ -574,6 +587,7 @@ watch(() => props.modelValue, (isOpen) => {
           tempId: item.id || item.tplMissionDetailId || `item-${Date.now()}-${idx}`,
           durationNumber: durationNum,
           missionTitle: item.title || item.missionTitle || `Misi SOP ${idx + 1}`,
+          periodTitle: tTitle || titles[durationNum] || '',
           description: item.description || '',
           category: mapCategoryEnum(item.category),
           inputType: mapInputTypeEnum(item.inputType),
