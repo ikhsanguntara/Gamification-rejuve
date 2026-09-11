@@ -48,32 +48,17 @@ const getUnitDays = (durationCode, durationValue = 1) => {
  * Hitung jadwal timeline sekuensial untuk Buddy -> Journey -> Feedback.
  */
 const calculateTimeline = (batchStartDate, tplBuddy, tplJourney, tplFeedback) => {
-  const start = toDateOnly(batchStartDate);
-  let currentCursor = new Date(start);
+  // batchStartDate dari input FE adalah tanggal mulai JOURNEY (misal 11 Sep 2026)
+  const journeyStart = toDateOnly(batchStartDate);
 
-  let buddySchedule = null;
-  if (tplBuddy) {
-    const buddyUnitDays = getUnitDays(tplBuddy.durationCode, tplBuddy.durationValue);
-    const maxNumber = tplBuddy.details.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1);
-    const totalDays = buddyUnitDays * maxNumber;
-    const buddyEnd = addDays(currentCursor, totalDays - 1);
-
-    buddySchedule = {
-      template: tplBuddy,
-      startDate: new Date(currentCursor),
-      endDate: buddyEnd,
-      unitDays: buddyUnitDays
-    };
-
-    // Journey dimulai 1 hari setelah Buddy selesai
-    currentCursor = addDays(buddyEnd, 1);
-  }
-
-  // Journey Schedule (Mandatory)
-  const journeyUnitDays = getUnitDays(tplJourney.durationCode, tplJourney.durationValue);
-  const maxJourneyWeek = tplJourney.details.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1);
+  // 1. Journey Schedule (Mandatory)
+  // Durasi minggu dihitung dari max durationNumber di details atau durationValue dari template (default 1)
+  const maxJourneyWeek = Math.max(
+    tplJourney.details?.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1) || 1,
+    tplJourney.durationCode?.toUpperCase() === 'WEEK' ? (Number(tplJourney.durationValue) || 1) : 1
+  );
+  const journeyUnitDays = 7; // Durasi per minggu Journey adalah 7 hari
   const totalJourneyDays = journeyUnitDays * maxJourneyWeek;
-  const journeyStart = new Date(currentCursor);
   const journeyEnd = addDays(journeyStart, totalJourneyDays - 1);
 
   const journeySchedule = {
@@ -84,27 +69,57 @@ const calculateTimeline = (batchStartDate, tplBuddy, tplJourney, tplFeedback) =>
     maxWeeks: maxJourneyWeek
   };
 
-  currentCursor = addDays(journeyEnd, 1);
+  // 2. Buddy Schedule (Opsi A: Pra-Journey / Orientasi H-N sebelum Journey Dimulai)
+  let buddySchedule = null;
+  if (tplBuddy) {
+    const buddyDurationVal = Number(tplBuddy.durationValue) || 1;
+    let totalBuddyDays = 3;
+    if (tplBuddy.durationCode?.toUpperCase() === 'DAY') {
+      const maxNumber = tplBuddy.details?.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1) || 1;
+      totalBuddyDays = Math.max(buddyDurationVal, maxNumber);
+    } else {
+      totalBuddyDays = getUnitDays(tplBuddy.durationCode, buddyDurationVal);
+    }
 
-  let feedbackSchedule = null;
-  if (tplFeedback) {
-    const feedbackUnitDays = getUnitDays(tplFeedback.durationCode, tplFeedback.durationValue);
-    const maxFeedbackNumber = tplFeedback.details.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1);
-    const totalFeedbackDays = feedbackUnitDays * maxFeedbackNumber;
-    const feedbackEnd = addDays(currentCursor, totalFeedbackDays - 1);
+    // Buddy berakhir 1 hari sebelum Journey mulai (H-1)
+    const buddyEnd = addDays(journeyStart, -1);
+    const buddyStart = addDays(buddyEnd, -(totalBuddyDays - 1));
 
-    feedbackSchedule = {
-      template: tplFeedback,
-      startDate: new Date(currentCursor),
-      endDate: feedbackEnd,
-      unitDays: feedbackUnitDays
+    buddySchedule = {
+      template: tplBuddy,
+      startDate: buddyStart,
+      endDate: buddyEnd,
+      unitDays: Math.max(1, Math.round(totalBuddyDays / (tplBuddy.details?.length || 1))),
+      totalDays: totalBuddyDays
     };
   }
 
-  // Sesuai konfirmasi spesifikasi: masa batch berakhir saat seluruh Journey selesai
+  // 3. Feedback Schedule (Pasca-Journey / Evaluasi Setelah Journey Selesai)
+  let feedbackSchedule = null;
+  if (tplFeedback) {
+    const feedbackUnitDays = getUnitDays(tplFeedback.durationCode, tplFeedback.durationValue);
+    const maxFeedbackNumber = tplFeedback.details?.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1) || 1;
+    const totalFeedbackDays = feedbackUnitDays * maxFeedbackNumber;
+
+    // Feedback dimulai 1 hari setelah Journey selesai
+    const feedbackStart = addDays(journeyEnd, 1);
+    const feedbackEnd = addDays(feedbackStart, totalFeedbackDays - 1);
+
+    feedbackSchedule = {
+      template: tplFeedback,
+      startDate: feedbackStart,
+      endDate: feedbackEnd,
+      unitDays: feedbackUnitDays,
+      totalDays: totalFeedbackDays
+    };
+  }
+
+  // Sesuai konfirmasi spesifikasi: masa batch pada tabel t_batches murni periode Journey
+  const batchStartDateResolved = new Date(journeyStart);
   const batchEndDate = new Date(journeyEnd);
 
   return {
+    batchStartDate: batchStartDateResolved,
     batchEndDate,
     buddySchedule,
     journeySchedule,
@@ -172,15 +187,15 @@ const executeBatchGeneration = async (tx, {
       status: 'OPEN',
       startDate: journeySchedule.startDate,
       endDate: journeySchedule.endDate,
-      isLock: buddySchedule ? true : false,
+      isLock: false, // Default false: memberi dispensasi DM jika batch lewat deadline
       createdBy: creatorId
     }
   });
 
   for (const detail of journeySchedule.template.details) {
     const weekIndex = (detail.durationNumber || 1) - 1;
-    const mStart = addDays(journeySchedule.startDate, weekIndex * journeySchedule.unitDays);
-    const mEnd = addDays(mStart, journeySchedule.unitDays - 1);
+    const mStart = addDays(journeySchedule.startDate, weekIndex * 7);
+    const mEnd = addDays(mStart, 6);
 
     const missionScaleConfig = detail.scaleConfig && typeof detail.scaleConfig === 'object' && !Array.isArray(detail.scaleConfig)
       ? { ...detail.scaleConfig }
@@ -274,11 +289,7 @@ const executeBatchGeneration = async (tx, {
       } else if (mission.templateType === 'JOURNEY') {
         tlId = storeLeaderId;
         dmId = districtManagerId;
-        if (!buddySchedule && mission.weekOrDayNumber === 1) {
-          initialStatus = 'ACTIVE';
-        } else {
-          initialStatus = 'LOCKED';
-        }
+        initialStatus = mission.weekOrDayNumber === 1 ? 'ACTIVE' : 'LOCKED';
       } else if (mission.templateType === 'FEEDBACK') {
         initialStatus = 'LOCKED';
       }
@@ -659,9 +670,10 @@ const getScopedBatchWhere = async (currentUser, baseWhere = {}) => {
 };
 
 /**
- * Lengkapi array batch dengan kalkulasi properti totalWeeks secara dinamis.
+ * Lengkapi array batch dengan kalkulasi properti totalWeeks secara dinamis,
+ * interval tanggal minggu, status mingguan (UPCOMING, ACTIVE, CLOSED), dan scoped completionRate.
  */
-const enrichBatchesWithTotalWeeks = async (batches) => {
+const enrichBatchesWithTotalWeeks = async (batches, currentUser = null) => {
   if (!batches || batches.length === 0) return batches;
   const batchIds = batches.map(b => b.batchId);
 
@@ -702,15 +714,39 @@ const enrichBatchesWithTotalWeeks = async (batches) => {
   const allUserMissions = allMissionIds.length > 0
     ? await prisma.userMission.findMany({
         where: { missionId: { in: allMissionIds } },
-        select: { status: true, missionId: true }
+        select: {
+          status: true,
+          missionId: true,
+          userId: true,
+          tlId: true,
+          tlScore: true,
+          dmScore: true,
+          finalScore: true,
+          stars: true,
+          user: { select: { departmentId: true } }
+        }
       })
     : [];
 
   const missionStatusMap = {};
   for (const um of allUserMissions) {
     missionStatusMap[um.missionId] = missionStatusMap[um.missionId] || [];
-    missionStatusMap[um.missionId].push(um.status);
+    missionStatusMap[um.missionId].push({
+      status: um.status,
+      userId: um.userId,
+      tlId: um.tlId,
+      departmentId: um.user?.departmentId
+    });
   }
+
+  const isStoreLeader = currentUser && (
+    (currentUser.role?.roleCode || currentUser.role || '').toUpperCase() === 'STORE_LEADER'
+  );
+  const slUserId = currentUser?.userId || currentUser?.id;
+  const slDeptId = currentUser?.departmentId || currentUser?.user?.departmentId;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   for (const b of batches) {
     let maxW = maxWeeksMap[b.batchId];
@@ -734,31 +770,101 @@ const enrichBatchesWithTotalWeeks = async (batches) => {
     if (journeyDetail?.startDate) {
       b.journeyStartDate = journeyDetail.startDate;
       b.journeyEndDate = journeyDetail.endDate;
+    } else if (b.startDate) {
+      b.journeyStartDate = b.startDate;
+      b.journeyEndDate = b.endDate;
     }
 
-    // Hitung completion per minggu untuk batch ini
+    const baseDate = b.journeyStartDate || b.startDate;
+
+    // Hitung completion dan status per minggu untuk batch ini
     const batchMissions = allJourneyMissions.filter(m => m.batchId === b.batchId);
     b.weeks = Array.from({ length: b.totalWeeks }, (_, i) => {
       const wNum = i + 1;
       const weekMissions = batchMissions.filter(m => (m.weekOrDayNumber || 1) === wNum);
+      
+      const wStart = addDays(baseDate, (wNum - 1) * 7);
+      const wEnd = addDays(wStart, 6);
+
+      const wStartTime = new Date(wStart).setHours(0, 0, 0, 0);
+      const wEndTime = new Date(wEnd).setHours(23, 59, 59, 999);
+
+      let weekStatus = 'UPCOMING';
+      if (today >= wStartTime && today <= wEndTime) {
+        weekStatus = 'ACTIVE';
+      } else if (today > wEndTime) {
+        weekStatus = 'CLOSED';
+      }
+
       let totalUm = 0;
       let completedUm = 0;
+      let myStoreTotalUm = 0;
+      let myStoreCompletedUm = 0;
+
       for (const wm of weekMissions) {
-        const statuses = missionStatusMap[wm.missionId] || [];
-        totalUm += statuses.length;
-        completedUm += statuses.filter(s => s === 'COMPLETED' || s === 'APPROVED_BY_DM').length;
+        const list = missionStatusMap[wm.missionId] || [];
+        totalUm += list.length;
+        completedUm += list.filter(item => 
+          item.status === 'COMPLETED' || item.status === 'APPROVED_BY_DM' || item.status === 'SCORED_BY_TL'
+        ).length;
+
+        if (isStoreLeader) {
+          const myStoreList = list.filter(item => 
+            (slDeptId && item.departmentId === slDeptId) || item.tlId === slUserId
+          );
+          myStoreTotalUm += myStoreList.length;
+          myStoreCompletedUm += myStoreList.filter(item => 
+            item.status === 'COMPLETED' || item.status === 'APPROVED_BY_DM' || item.status === 'SCORED_BY_TL'
+          ).length;
+        }
       }
-      const completionRate = totalUm > 0 ? Math.round((completedUm / totalUm) * 100) : 0;
+
+      const globalCompletionRate = totalUm > 0 ? Math.round((completedUm / totalUm) * 100) : 0;
+      const myStoreCompletionRate = myStoreTotalUm > 0 ? Math.round((myStoreCompletedUm / myStoreTotalUm) * 100) : 0;
+      const effectiveCompletionRate = isStoreLeader ? myStoreCompletionRate : globalCompletionRate;
+
       const customTitle = weekMissions.find(wm => wm.scaleConfig && wm.scaleConfig.periodTitle)?.scaleConfig?.periodTitle;
       return {
         weekNumber: wNum,
         title: customTitle || `Minggu ${wNum}: Tema SOP Operasional`,
+        startDate: wStart,
+        endDate: wEnd,
+        status: weekStatus,
+        isCurrent: weekStatus === 'ACTIVE',
         missionCount: weekMissions.length,
-        completionRate,
-        totalEvaluations: totalUm,
-        completedEvaluations: completedUm
+        completionRate: effectiveCompletionRate,
+        globalCompletionRate,
+        myStoreCompletionRate: isStoreLeader ? myStoreCompletionRate : null,
+        totalEvaluations: isStoreLeader ? myStoreTotalUm : totalUm,
+        completedEvaluations: isStoreLeader ? myStoreCompletedUm : completedUm
       };
     });
+
+    // ─── Kalkulasi Summary Metrics untuk Kartu Batch (Rata-rata Skor, Misi Selesai, Total Bintang) ─
+    const bJourneyMissionIds = allJourneyMissions.filter(m => m.batchId === b.batchId).map(m => m.missionId);
+    const bUms = allUserMissions.filter(um => bJourneyMissionIds.includes(um.missionId));
+    const scopedBUms = isStoreLeader
+      ? bUms.filter(um => (slDeptId && um.user?.departmentId === slDeptId) || um.tlId === slUserId)
+      : bUms;
+
+    const completedBUms = scopedBUms.filter(um => 
+      ['COMPLETED', 'APPROVED_BY_DM', 'SCORED_BY_TL'].includes(um.status)
+    );
+    const scoredBUms = completedBUms.filter(um => 
+      um.finalScore !== null || um.tlScore !== null || um.dmScore !== null
+    );
+    const bScoreSum = scoredBUms.reduce((acc, um) => {
+      const s = um.finalScore !== null ? um.finalScore : (um.tlScore !== null ? um.tlScore : um.dmScore);
+      return acc + Number(s || 0);
+    }, 0);
+    const bAvgScore = scoredBUms.length > 0 ? Math.round(bScoreSum / scoredBUms.length) : 0;
+    const bStarsSum = scopedBUms.reduce((acc, um) => acc + Number(um.stars || 0), 0);
+
+    b.completedMissions = completedBUms.length;
+    b.totalMissions = scopedBUms.length > 0 ? scopedBUms.length : (b._count?.missions || 0);
+    b.averageScore = bAvgScore;
+    b.totalStars = parseFloat(bStarsSum.toFixed(1));
+    b.totalCrew = b.users?.length ?? b._count?.users ?? 0;
   }
 
   return batches;
@@ -767,7 +873,7 @@ const enrichBatchesWithTotalWeeks = async (batches) => {
 /**
  * Lengkapi single batch dengan kalkulasi totalWeeks, tanggal Journey, dan weeks completionRate.
  */
-const enrichSingleBatchWithTotalWeeks = async (batch) => {
+const enrichSingleBatchWithTotalWeeks = async (batch, currentUser = null) => {
   if (!batch) return batch;
   const journeyMissions = batch.missions?.filter(m => m.type === 'JOURNEY') || [];
   const maxW = journeyMissions.reduce((max, m) => Math.max(max, m.weekOrDayNumber || 1), 0);
@@ -790,43 +896,139 @@ const enrichSingleBatchWithTotalWeeks = async (batch) => {
   if (journeyDetail?.startDate) {
     batch.journeyStartDate = journeyDetail.startDate;
     batch.journeyEndDate = journeyDetail.endDate;
+  } else if (batch.startDate) {
+    batch.journeyStartDate = batch.startDate;
+    batch.journeyEndDate = batch.endDate;
   }
+
+  const baseDate = batch.journeyStartDate || batch.startDate;
 
   const journeyMissionIds = journeyMissions.map(m => m.missionId);
   let userMissions = [];
   if (journeyMissionIds.length > 0) {
     userMissions = await prisma.userMission.findMany({
       where: { missionId: { in: journeyMissionIds } },
-      select: { status: true, missionId: true }
+      select: {
+        status: true,
+        missionId: true,
+        userId: true,
+        tlId: true,
+        tlScore: true,
+        dmScore: true,
+        finalScore: true,
+        stars: true,
+        user: { select: { departmentId: true } }
+      }
     });
   }
 
   const missionStatusMap = {};
   for (const um of userMissions) {
     missionStatusMap[um.missionId] = missionStatusMap[um.missionId] || [];
-    missionStatusMap[um.missionId].push(um.status);
+    missionStatusMap[um.missionId].push({
+      status: um.status,
+      userId: um.userId,
+      tlId: um.tlId,
+      departmentId: um.user?.departmentId
+    });
   }
+
+  const isStoreLeader = currentUser && (
+    (currentUser.role?.roleCode || currentUser.role || '').toUpperCase() === 'STORE_LEADER'
+  );
+  const slUserId = currentUser?.userId || currentUser?.id;
+  const slDeptId = currentUser?.departmentId || currentUser?.user?.departmentId;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   batch.weeks = Array.from({ length: batch.totalWeeks }, (_, i) => {
     const wNum = i + 1;
     const weekMissions = journeyMissions.filter(m => (m.weekOrDayNumber || 1) === wNum);
+    
+    const wStart = addDays(baseDate, (wNum - 1) * 7);
+    const wEnd = addDays(wStart, 6);
+
+    const wStartTime = new Date(wStart).setHours(0, 0, 0, 0);
+    const wEndTime = new Date(wEnd).setHours(23, 59, 59, 999);
+
+    let weekStatus = 'UPCOMING';
+    if (today >= wStartTime && today <= wEndTime) {
+      weekStatus = 'ACTIVE';
+    } else if (today > wEndTime) {
+      weekStatus = 'CLOSED';
+    }
+
     let totalUm = 0;
     let completedUm = 0;
+    let myStoreTotalUm = 0;
+    let myStoreCompletedUm = 0;
+
     for (const wm of weekMissions) {
-      const statuses = missionStatusMap[wm.missionId] || [];
-      totalUm += statuses.length;
-      completedUm += statuses.filter(s => s === 'COMPLETED' || s === 'APPROVED_BY_DM').length;
+      const list = missionStatusMap[wm.missionId] || [];
+      totalUm += list.length;
+      completedUm += list.filter(item => 
+        item.status === 'COMPLETED' || item.status === 'APPROVED_BY_DM' || item.status === 'SCORED_BY_TL'
+      ).length;
+
+      if (isStoreLeader) {
+        const myStoreList = list.filter(item => 
+          (slDeptId && item.departmentId === slDeptId) || item.tlId === slUserId
+        );
+        myStoreTotalUm += myStoreList.length;
+        myStoreCompletedUm += myStoreList.filter(item => 
+          item.status === 'COMPLETED' || item.status === 'APPROVED_BY_DM' || item.status === 'SCORED_BY_TL'
+        ).length;
+      }
     }
-    const completionRate = totalUm > 0 ? Math.round((completedUm / totalUm) * 100) : 0;
+
+    const globalCompletionRate = totalUm > 0 ? Math.round((completedUm / totalUm) * 100) : 0;
+    const myStoreCompletionRate = myStoreTotalUm > 0 ? Math.round((myStoreCompletedUm / myStoreTotalUm) * 100) : 0;
+    const effectiveCompletionRate = isStoreLeader ? myStoreCompletionRate : globalCompletionRate;
+
+    const customTitle = weekMissions.find(wm => wm.scaleConfig && wm.scaleConfig.periodTitle)?.scaleConfig?.periodTitle;
     return {
       weekNumber: wNum,
-      title: `Minggu ${wNum}: Tema SOP Operasional`,
+      title: customTitle || `Minggu ${wNum}: Tema SOP Operasional`,
+      startDate: wStart,
+      endDate: wEnd,
+      status: weekStatus,
+      isCurrent: weekStatus === 'ACTIVE',
       missionCount: weekMissions.length,
-      completionRate,
-      totalEvaluations: totalUm,
-      completedEvaluations: completedUm
+      completionRate: effectiveCompletionRate,
+      globalCompletionRate,
+      myStoreCompletionRate: isStoreLeader ? myStoreCompletionRate : null,
+      totalEvaluations: isStoreLeader ? myStoreTotalUm : totalUm,
+      completedEvaluations: isStoreLeader ? myStoreCompletedUm : completedUm
     };
   });
+
+  // ─── Kalkulasi Summary Metrics untuk Header Batch (Rata-rata Skor, Misi Selesai, Total Bintang) ─
+  const scopedBatchUms = isStoreLeader
+    ? userMissions.filter(um => (slDeptId && um.user?.departmentId === slDeptId) || um.tlId === slUserId)
+    : userMissions;
+
+  const completedBatchUms = scopedBatchUms.filter(um => 
+    ['COMPLETED', 'APPROVED_BY_DM', 'SCORED_BY_TL'].includes(um.status)
+  );
+
+  const scoredBatchUms = completedBatchUms.filter(um => 
+    um.finalScore !== null || um.tlScore !== null || um.dmScore !== null
+  );
+
+  const scoreSum = scoredBatchUms.reduce((acc, um) => {
+    const s = um.finalScore !== null ? um.finalScore : (um.tlScore !== null ? um.tlScore : um.dmScore);
+    return acc + Number(s || 0);
+  }, 0);
+
+  const avgScore = scoredBatchUms.length > 0 ? Math.round(scoreSum / scoredBatchUms.length) : 0;
+  const starsSum = scopedBatchUms.reduce((acc, um) => acc + Number(um.stars || 0), 0);
+
+  batch.totalCrew = batch.users?.length ?? batch._count?.users ?? 0;
+  batch.totalMissions = scopedBatchUms.length > 0 ? scopedBatchUms.length : (batch.missions?.length ?? batch._count?.missions ?? 0);
+  batch.completedMissions = completedBatchUms.length;
+  batch.averageScore = avgScore;
+  batch.totalStars = parseFloat(starsSum.toFixed(1));
 
   return batch;
 };
@@ -862,7 +1064,7 @@ const getUserAvailableBatches = async (currentUser) => {
     ]
   });
 
-  await enrichBatchesWithTotalWeeks(batches);
+  await enrichBatchesWithTotalWeeks(batches, currentUser);
   return batches;
 };
 
@@ -900,7 +1102,7 @@ const getBatches = async (query = {}, currentUser = null) => {
     })
   ]);
 
-  await enrichBatchesWithTotalWeeks(batches);
+  await enrichBatchesWithTotalWeeks(batches, currentUser);
 
   return { batches, total, page, limit };
 };
@@ -908,7 +1110,7 @@ const getBatches = async (query = {}, currentUser = null) => {
 /**
  * Ambil batch detail berdasarkan ID.
  */
-const getBatchById = async (batchId) => {
+const getBatchById = async (batchId, currentUser = null) => {
   const batch = await prisma.batch.findUnique({
     where: { batchId },
     include: {
@@ -941,7 +1143,7 @@ const getBatchById = async (batchId) => {
     }
   });
 
-  return await enrichSingleBatchWithTotalWeeks(batch);
+  return await enrichSingleBatchWithTotalWeeks(batch, currentUser);
 };
 
 /**
@@ -1086,5 +1288,8 @@ module.exports = {
   deleteBatch,
   getUserAvailableBatches,
   getScopedBatchWhere,
-  toggleBatchDetailLock
+  toggleBatchDetailLock,
+  calculateTimeline,
+  enrichSingleBatchWithTotalWeeks,
+  enrichBatchesWithTotalWeeks
 };

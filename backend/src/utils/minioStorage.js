@@ -44,6 +44,18 @@ const uploadFileToStorage = async (file, subFolder = 'evidence', req = null) => 
   const fileName = `${subFolder}-${Date.now()}-${randomStr}${ext}`;
   const objectPath = `${subFolder}/${fileName}`;
 
+  // Simpan selalu salinan lokal ke disk sebagai fallback/cache cepat
+  try {
+    const localDir = path.join(__dirname, '..', '..', 'uploads', subFolder);
+    if (!fs.existsSync(localDir)) {
+      fs.mkdirSync(localDir, { recursive: true });
+    }
+    const localFilePath = path.join(localDir, fileName);
+    fs.writeFileSync(localFilePath, file.buffer);
+  } catch (localWriteErr) {
+    console.warn('[Storage Local Copy Warning]', localWriteErr.message);
+  }
+
   // 1. Coba upload ke MinIO jika server aktif
   if (minioClient && isMinioOnline()) {
     try {
@@ -53,7 +65,10 @@ const uploadFileToStorage = async (file, subFolder = 'evidence', req = null) => 
 
       await minioClient.putObject(bucketName, objectPath, file.buffer, file.size, metaData);
 
-      const publicBase = process.env.MINIO_PUBLIC_URL || `http://${process.env.MINIO_ENDPOINT || 'localhost'}:${process.env.MINIO_PORT || 9000}/${bucketName}`;
+      let publicBase = process.env.MINIO_PUBLIC_URL || `http://${process.env.MINIO_ENDPOINT || 'localhost'}:${process.env.MINIO_PORT || 9010}/${bucketName}`;
+      if (req) {
+        publicBase = `${req.protocol}://${req.get('host')}/${bucketName}`;
+      }
       const fileUrl = `${publicBase}/${objectPath}`;
       console.log(`[Storage MinIO] File berhasil di-upload ke MinIO: ${fileUrl}`);
       return fileUrl;

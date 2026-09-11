@@ -171,6 +171,14 @@
     {
       "name": "12. Gamification & Leaderboard",
       "description": "Klasemen kru, podium top 3, dan perolehan bintang & level"
+    },
+    {
+      "name": "13. Notifications",
+      "description": "Notifikasi in-app lonceng real-time untuk kru, store leader, dan DM"
+    },
+    {
+      "name": "14. Feedback Kru Onboarding",
+      "description": "Survei pengalaman kolaborasi & onboarding 1 bulan Re.juve"
     }
   ],
   "paths": {
@@ -1311,6 +1319,11 @@
                             "Verifikasi checklist standar operasional",
                             "Pemeriksaan kepatuhan & sanitasi"
                           ]
+                        },
+                        "periodTitle": {
+                          "type": "string",
+                          "description": "Judul tema mingguan/harian misi, misal \"Minggu 1: Sanitasi & Kalibrasi\"",
+                          "example": "Minggu 1: Kalibrasi & Sanitasi"
                         }
                       }
                     }
@@ -2597,6 +2610,301 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": [
+          "13. Notifications"
+        ],
+        "summary": "Mengambil daftar notifikasi pengguna",
+        "description": "Menampilkan riwayat notifikasi in-app untuk pengguna yang sedang login. Mendukung filter status isRead dan paginasi.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "isRead",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter notifikasi belum dibaca (false) atau sudah dibaca (true)"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar notifikasi berhasil diambil."
+          }
+        }
+      }
+    },
+    "/notifications/unread-count": {
+      "get": {
+        "tags": [
+          "13. Notifications"
+        ],
+        "summary": "Menghitung total notifikasi yang belum dibaca",
+        "description": "Digunakan oleh icon lonceng pada header frontend untuk menampilkan badge merah counter notifikasi.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jumlah unread count berhasil diperoleh."
+          }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "patch": {
+        "tags": [
+          "13. Notifications"
+        ],
+        "summary": "Menandai 1 notifikasi telah dibaca",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID Notifikasi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifikasi berhasil ditandai sebagai dibaca."
+          }
+        }
+      }
+    },
+    "/notifications/mark-all-read": {
+      "patch": {
+        "tags": [
+          "13. Notifications"
+        ],
+        "summary": "Menandai seluruh notifikasi pengguna sebagai terbaca",
+        "description": "Menandai seluruh notifikasi user aktif sebagai isRead: true dalam satu operasi.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Seluruh notifikasi berhasil ditandai sebagai dibaca."
+          }
+        }
+      }
+    },
+    "/feedback/questions": {
+      "get": {
+        "tags": [
+          "14. Feedback Kru Onboarding"
+        ],
+        "summary": "Daftar 17 butir pertanyaan survei onboarding kru",
+        "description": "Mengambil 16 butir pertanyaan evaluasi skala rating 0-10 dan 1 pertanyaan esai terbuka.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar pertanyaan survei berhasil diambil."
+          }
+        }
+      }
+    },
+    "/feedback/my-feedback": {
+      "get": {
+        "tags": [
+          "14. Feedback Kru Onboarding"
+        ],
+        "summary": "Cek feedback milik kru aktif",
+        "description": "Memeriksa apakah kru yang sedang login sudah pernah mengirimkan formulir survei pengalaman onboarding.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data feedback kru berhasil diambil."
+          }
+        }
+      }
+    },
+    "/feedback/surveys": {
+      "post": {
+        "tags": [
+          "14. Feedback Kru Onboarding"
+        ],
+        "summary": "Kirimkan (submit) survei feedback pengalaman onboarding",
+        "description": "Menyimpan evaluasi kepuasan pendampingan buddy & fasilitas store dari kru baru. Otomatis menghitung rata-rata skor kepuasan.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ratings"
+                ],
+                "properties": {
+                  "batchId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "crewName": {
+                    "type": "string",
+                    "example": "Rizki Crew"
+                  },
+                  "storeLocation": {
+                    "type": "string",
+                    "example": "Re.juve Blok M Plaza"
+                  },
+                  "buddyName": {
+                    "type": "string",
+                    "example": "Anita Wijaya"
+                  },
+                  "ratings": {
+                    "type": "object",
+                    "description": "Map butir pertanyaan ke skor rating (0 - 10)",
+                    "example": {
+                      "sq-01": 10,
+                      "sq-02": 9,
+                      "sq-03": 10
+                    }
+                  },
+                  "essayAnswer": {
+                    "type": "string",
+                    "example": "Program pendampingan sangat jelas dan mentor membimbing dengan sabar."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Feedback berhasil disimpan."
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "14. Feedback Kru Onboarding"
+        ],
+        "summary": "Daftar hasil survei feedback onboarding kru",
+        "description": "Mengambil rekapitulasi masukan kru dengan dukungan filter batch, lokasi toko, dan paginasi.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter berdasarkan batch"
+          },
+          {
+            "name": "storeLocation",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter nama toko / gerai"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar feedback berhasil diambil."
+          }
+        }
+      }
+    },
+    "/feedback/surveys/{id}": {
+      "get": {
+        "tags": [
+          "14. Feedback Kru Onboarding"
+        ],
+        "summary": "Detail evaluasi survei feedback satu kru",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail feedback berhasil ditemukan."
           }
         }
       }

@@ -572,11 +572,20 @@ const { generateUserImportTemplate, parseUserImportFile } = require('../../utils
 
 const downloadUserTemplate = async (req, res, next) => {
   try {
-    const [roles, departments] = await Promise.all([
+    const [roles, departments, buddies] = await Promise.all([
       prisma.role.findMany({ select: { roleCode: true, roleName: true }, orderBy: { roleCode: 'asc' } }),
-      prisma.department.findMany({ select: { departmentCode: true, departmentName: true }, orderBy: { departmentCode: 'asc' } })
+      prisma.department.findMany({ select: { departmentCode: true, departmentName: true }, orderBy: { departmentCode: 'asc' } }),
+      prisma.user.findMany({
+        where: { isBuddy: true, isActive: true },
+        select: {
+          email: true,
+          name: true,
+          department: { select: { departmentCode: true, departmentName: true } }
+        },
+        orderBy: { name: 'asc' }
+      })
     ]);
-    const buffer = generateUserImportTemplate(roles, departments);
+    const buffer = generateUserImportTemplate(roles, departments, buddies);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="template_import_user.xlsx"');
     return res.send(buffer);

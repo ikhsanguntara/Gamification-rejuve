@@ -5,8 +5,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install openssl untuk Prisma engine dan curl untuk healthcheck
-RUN apk add --no-cache openssl curl
+# Install openssl untuk Prisma engine, curl untuk healthcheck, dan tzdata untuk timezone WIB
+RUN apk add --no-cache openssl curl tzdata
 
 # Copy file package dependencies dan konfigurasi prisma
 COPY package*.json ./
@@ -29,6 +29,7 @@ EXPOSE 3005
 
 ENV NODE_ENV=production
 ENV PORT=3005
+ENV TZ=Asia/Jakarta
 
 # Saat container start: jalankan prisma db push otomatis lalu start server Express
 CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node src/server.js"]

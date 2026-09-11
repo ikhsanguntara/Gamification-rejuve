@@ -59,6 +59,7 @@ services:
           memory: 100M
 
     environment:
+      TZ: Asia/Jakarta
       PORT: 3005
       NODE_ENV: production
 

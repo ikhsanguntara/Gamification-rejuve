@@ -26,6 +26,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
+      TZ: Asia/Jakarta
       PORT: ${PORT:-3005}
       NODE_ENV: ${NODE_ENV:-production}
       DATABASE_URL: ${DATABASE_URL}

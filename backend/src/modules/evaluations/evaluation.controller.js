@@ -65,7 +65,7 @@ const getWorkstationCrews = async (req, res, next) => {
 const getCrewMissions = async (req, res, next) => {
   try {
     const { userId } = req.params;
-    const result = await evaluationService.getCrewMissions(userId, req.user, req.query);
+    const result = await evaluationService.getCrewMissions(userId, req.user, req.query, req);
     return sendSuccess(res, {
       message: 'Daftar misi kru berhasil diambil.',
       data: result

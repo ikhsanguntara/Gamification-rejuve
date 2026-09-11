@@ -10,7 +10,7 @@ const xlsx = require('xlsx');
 /**
  * Menghasilkan buffer file Excel template import user (.xlsx)
  */
-const generateUserImportTemplate = (rolesList = [], deptsList = []) => {
+const generateUserImportTemplate = (rolesList = [], deptsList = [], buddiesList = []) => {
   const headers = [
     'Nama Lengkap',
     'Email',
@@ -68,7 +68,7 @@ const generateUserImportTemplate = (rolesList = [], deptsList = []) => {
   const wb = xlsx.utils.book_new();
   xlsx.utils.book_append_sheet(wb, ws, 'Template Import User');
 
-  // Sheet 2: Referensi Master Data (Kode Role & Kode Departemen)
+  // Sheet 2: Referensi Master Data (Kode Role, Kode Departemen, & Daftar Buddy Aktif)
   const defaultRoles = [
     ['CREW', 'Crew Barista / Store Crew'],
     ['STORE_LEADER', 'Store Leader / Supervisor'],
@@ -86,13 +86,23 @@ const generateUserImportTemplate = (rolesList = [], deptsList = []) => {
   ];
   const deptsData = (deptsList.length > 0 ? deptsList.map(d => [d.departmentCode, d.departmentName]) : defaultDepts);
 
-  const maxRows = Math.max(rolesData.length, deptsData.length);
-  const refHeader = ['Pilihan Role Code', 'Nama Role', '', 'Pilihan Department Code', 'Nama Gerai / Toko', '', 'Pilihan Is Buddy', 'Keterangan'];
+  const buddiesData = (buddiesList && buddiesList.length > 0)
+    ? buddiesList.map(b => [b.email, b.name, b.department?.departmentCode ? `${b.department.departmentCode} - ${b.department.departmentName}` : ''])
+    : [];
+
+  const maxRows = Math.max(rolesData.length, deptsData.length, buddiesData.length, 2);
+  const refHeader = [
+    'Pilihan Role Code', 'Nama Role', '',
+    'Pilihan Department Code', 'Nama Gerai / Toko', '',
+    'Pilihan Is Buddy', 'Keterangan', '',
+    'Daftar Email Buddy Aktif', 'Nama Buddy', 'Gerai Buddy'
+  ];
   const refRows = [refHeader];
 
   for (let i = 0; i < maxRows; i++) {
     const roleRow = rolesData[i] || ['', ''];
     const deptRow = deptsData[i] || ['', ''];
+    const buddyRow = buddiesData[i] || ['', '', ''];
     let buddyChoice = '';
     let buddyDesc = '';
     if (i === 0) { buddyChoice = 'TRUE'; buddyDesc = 'User adalah mentor / pendamping buddy'; }
@@ -106,20 +116,28 @@ const generateUserImportTemplate = (rolesList = [], deptsList = []) => {
       deptRow[1],
       '',
       buddyChoice,
-      buddyDesc
+      buddyDesc,
+      '',
+      buddyRow[0],
+      buddyRow[1],
+      buddyRow[2]
     ]);
   }
 
   const wsRef = xlsx.utils.aoa_to_sheet(refRows);
   wsRef['!cols'] = [
-    { wch: 22 },
-    { wch: 32 },
-    { wch: 5 },
-    { wch: 25 },
-    { wch: 35 },
-    { wch: 5 },
-    { wch: 18 },
-    { wch: 45 }
+    { wch: 22 }, // Role Code
+    { wch: 32 }, // Nama Role
+    { wch: 5 },  // spacing
+    { wch: 25 }, // Dept Code
+    { wch: 35 }, // Nama Toko
+    { wch: 5 },  // spacing
+    { wch: 18 }, // Is Buddy
+    { wch: 45 }, // Keterangan Buddy
+    { wch: 5 },  // spacing
+    { wch: 32 }, // Email Buddy Aktif
+    { wch: 25 }, // Nama Buddy
+    { wch: 35 }  // Gerai Buddy
   ];
   xlsx.utils.book_append_sheet(wb, wsRef, 'Daftar Referensi Dropdown');
 
@@ -133,11 +151,11 @@ const normalizeKey = (key) => {
   if (!key) return '';
   const clean = String(key).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
   if (clean.includes('nama') || clean === 'name') return 'name';
+  if (clean.includes('buddyemail') || clean.includes('emailbuddy')) return 'buddyEmail';
   if (clean === 'email') return 'email';
   if (clean.includes('role')) return 'roleCode';
   if (clean.includes('department') || clean.includes('dept') || clean.includes('toko') || clean.includes('gerai')) return 'departmentCode';
-  if (clean.includes('isbuddy') || clean === 'buddy') return 'isBuddy';
-  if (clean.includes('buddyemail')) return 'buddyEmail';
+  if (clean.includes('isbuddy') || clean.includes('apakahbuddy') || clean.includes('statusbuddy') || clean.includes('sebagaibuddy') || clean === 'buddy') return 'isBuddy';
   if (clean.includes('batch')) return 'batchCode';
   return key;
 };

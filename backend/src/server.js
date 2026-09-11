@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 const dotenv = require('dotenv');
 
 // Load environment variables
@@ -30,6 +31,46 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
+// ─── Public Evidence Proxy (MinIO & Local Disk Fallback) ─────────────────────
+const { minioClient, bucketName, isMinioOnline } = require('./config/minio');
+app.get([
+  '/gamification/evidence/:fileName',
+  '/uploads/evidence/:fileName',
+  '/api/uploads/evidence/:fileName'
+], async (req, res, next) => {
+  const fileName = req.params.fileName;
+  
+  // 1. Cek ketersediaan file di disk lokal
+  const localFilePath = path.join(__dirname, '..', 'uploads', 'evidence', fileName);
+  if (fs.existsSync(localFilePath)) {
+    return res.sendFile(localFilePath);
+  }
+
+  // 2. Stream langsung dari MinIO jika tersedia
+  if (minioClient && isMinioOnline()) {
+    try {
+      const dataStream = await minioClient.getObject(bucketName, `evidence/${fileName}`);
+      const ext = path.extname(fileName).toLowerCase();
+      const mimeTypes = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.webp': 'image/webp',
+        '.pdf': 'application/pdf'
+      };
+      if (mimeTypes[ext]) {
+        res.setHeader('Content-Type', mimeTypes[ext]);
+      }
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return dataStream.pipe(res);
+    } catch (err) {
+      console.warn(`[Evidence Proxy] File evidence/${fileName} tidak ditemukan di MinIO:`, err.message);
+    }
+  }
+
+  return res.status(404).json({ success: false, message: 'Foto bukti tidak ditemukan.' });
+});
 
 // ─── Health Check ──────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
@@ -104,6 +145,10 @@ initSocket(httpServer);
 // ─── MinIO Storage Initialization ────────────────────────────────────────────
 const { initMinIO } = require('./config/minio');
 initMinIO();
+
+// ─── Scheduled Background Jobs ───────────────────────────────────────────────
+const { initBatchProgressionJob } = require('./jobs/batchProgression.job');
+initBatchProgressionJob();
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;

@@ -453,7 +453,7 @@ const getWorkstationCrews = async (currentUser, query = {}) => {
  * GET /api/evaluations/crews/:userId/missions
  * Mengambil seluruh kartu misi kru tertentu saat card di sidebar diklik.
  */
-const getCrewMissions = async (targetUserId, currentUser, query = {}) => {
+const getCrewMissions = async (targetUserId, currentUser, query = {}, req = null) => {
   // 1. Resolve Active Batch
   let batchId = query.batchId;
   if (!batchId && currentUser?.userId) {
@@ -528,12 +528,17 @@ const getCrewMissions = async (targetUserId, currentUser, query = {}) => {
     throw new Error(`User dengan ID "${targetUserId}" tidak ditemukan.`);
   }
 
+  const formattedMissions = missions.map(m => ({
+    ...m,
+    evidenceUrl: normalizeStorageUrl(m.evidenceUrl, req)
+  }));
+
   return {
     user,
     batchId,
     week: query.week ? parseInt(query.week, 10) : null,
     totalMissions: missions.length,
-    missions
+    missions: formattedMissions
   };
 };
 
@@ -562,6 +567,18 @@ const evaluateBuddyMission = async (userMissionId, evaluatorId, { score, notes, 
 
   if (userMission.status === 'LOCKED') {
     throw new Error('Misi Buddy ini masih berstatus LOCKED.');
+  }
+
+  // Validasi batas waktu: Buddy hanya boleh menilai selama periode Buddy belum berakhir
+  if (userMission.mission.endDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const bEnd = new Date(userMission.mission.endDate);
+    bEnd.setHours(23, 59, 59, 999);
+    if (today > bEnd) {
+      const bEndStr = userMission.mission.endDate.toISOString().split('T')[0];
+      throw new Error(`Periode penilaian Buddy telah berakhir pada ${bEndStr}. Penilaian susulan tidak diizinkan.`);
+    }
   }
 
   // Otorisasi: Pastikan evaluator adalah Buddy dari user ini, atau bertindak sebagai tlId, atau ber-role SUPERADMIN / HEAD
@@ -673,6 +690,30 @@ const evaluateJourneyBySL = async (userMissionId, slId, { score, notes, evidence
     throw new Error('Misi ini masih berstatus LOCKED.');
   }
 
+  // // WAKTU EVALUASI UNTUK SL:
+  // // SL hanya boleh menilai jika minggu tersebut sudah mulai dan belum berakhir! isLock TIDAK berlaku untuk SL.
+  // if (userMission.mission.startDate) {
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+  //   const mStart = new Date(userMission.mission.startDate);
+  //   mStart.setHours(0, 0, 0, 0);
+  //   if (today < mStart) {
+  //     const mStartStr = userMission.mission.startDate.toISOString().split('T')[0];
+  //     throw new Error(`Masa penilaian untuk misi minggu ke-${userMission.mission.weekOrDayNumber} belum dimulai (periode mulai: ${mStartStr}).`);
+  //   }
+  // }
+
+  // if (userMission.mission.endDate) {
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+  //   const mEnd = new Date(userMission.mission.endDate);
+  //   mEnd.setHours(23, 59, 59, 999);
+  //   if (today > mEnd) {
+  //     const mEndStr = userMission.mission.endDate.toISOString().split('T')[0];
+  //     throw new Error(`Masa penilaian untuk misi minggu ke-${userMission.mission.weekOrDayNumber} telah ditutup pada ${mEndStr}. Store Leader tidak dapat melakukan penilaian susulan.`);
+  //   }
+  // }
+
   const numScore = parseFloat(Math.max(0, Math.min(100, Number(score) || 0)).toFixed(1));
 
   const updated = await prisma.userMission.update({
@@ -739,7 +780,11 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
   const userMission = await prisma.userMission.findUnique({
     where: { userMissionId },
     include: {
-      mission: true,
+      mission: {
+        include: {
+          batchDetail: true
+        }
+      },
       user: true
     }
   });
@@ -750,6 +795,23 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
 
   if (userMission.mission.type !== 'JOURNEY') {
     throw new Error('Hanya misi bertipe JOURNEY yang memerlukan approval DM.');
+  }
+
+  // WAKTU REVIEW & KEBIJAKAN isLock UNTUK DM:
+  // isLock HANYA berlaku bagi District Manager (DM).
+  // Jika periode template Journey telah berakhir dan template dikunci (isLock === true), DM ditolak.
+  // Jika isLock === false (dispensasi aktif), DM tetap diizinkan mereview pasca-deadline.
+  const batchDetail = userMission.mission?.batchDetail;
+  if (batchDetail && batchDetail.endDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const periodEnd = new Date(batchDetail.endDate);
+    periodEnd.setHours(23, 59, 59, 999);
+
+    if (today > periodEnd && batchDetail.isLock) {
+      const endStr = batchDetail.endDate.toISOString().split('T')[0];
+      throw new Error(`Periode Journey telah berakhir pada ${endStr} dan template terkunci (isLock: true). District Manager tidak dapat melakukan review evaluasi.`);
+    }
   }
 
   if (userMission.status !== 'SCORED_BY_TL' && userMission.status !== 'REVISED_BY_DM') {
