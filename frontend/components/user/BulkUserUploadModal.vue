@@ -569,7 +569,15 @@ async function handleCommit() {
     const res = await userStore.commitBulkUsers(payload)
     commitResult.value = res
     currentStep.value = 3
-    confetti.triggerExplosion()
+    try {
+      if (confetti?.triggerExplosion) {
+        confetti.triggerExplosion()
+      } else if (confetti?.triggerStarBurst) {
+        confetti.triggerStarBurst()
+      }
+    } catch {
+      // Non-blocking animation failure
+    }
     emit('imported', res)
     toast.success('Bulk Import Selesai', `Berhasil menyimpan ${previewSummary.value.validCount} pengguna ke database.`)
   } catch (err) {

@@ -63,8 +63,25 @@ export function useConfetti() {
     frame()
   }
 
+  const triggerExplosion = (origin = { x: 0.5, y: 0.6 }) => {
+    if (typeof window === 'undefined') return
+
+    try {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin,
+        colors: ['#831843', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6']
+      })
+    } catch (err) {
+      console.warn('Confetti animation failed:', err)
+    }
+  }
+
   return {
     triggerStarBurst,
-    triggerLevelUp
+    triggerLevelUp,
+    triggerExplosion
   }
 }
+
