@@ -16,12 +16,59 @@ export function formatShortDate(dateObj) {
   return `${d} ${m}`
 }
 
+export function getUnitDays(durationCode = 'WEEK') {
+  const code = String(durationCode || 'WEEK').toUpperCase()
+  switch (code) {
+    case 'DAY':
+      return 1
+    case 'MONTH':
+      return 30
+    case 'YEAR':
+      return 365
+    case 'WEEK':
+    default:
+      return 7
+  }
+}
+
+export function getDurationUnitLabel(durationCode = 'WEEK') {
+  const code = String(durationCode || 'WEEK').toUpperCase()
+  switch (code) {
+    case 'DAY':
+      return 'Hari'
+    case 'MONTH':
+      return 'Bulan'
+    case 'YEAR':
+      return 'Tahun'
+    case 'WEEK':
+    default:
+      return 'Minggu'
+  }
+}
+
+export function getDurationUnitCode(durationCode = 'WEEK') {
+  const code = String(durationCode || 'WEEK').toUpperCase()
+  switch (code) {
+    case 'DAY':
+      return 'Day'
+    case 'MONTH':
+      return 'Month'
+    case 'YEAR':
+      return 'Year'
+    case 'WEEK':
+    default:
+      return 'Week'
+  }
+}
+
 /**
  * Helper: Calculate which week is active based on batch startDate and today's date
  */
 export function calculateActiveWeek(batch) {
   if (!batch || !batch.startDate) return batch?.currentWeek || 1
   const totalWeeks = batch?.weeks?.length || batch?.totalWeeks || 3
+  const durationCode = batch.durationCode || batch.journeyTemplate?.durationCode || batch.details?.find(d => d.tplMission?.type === 'JOURNEY')?.tplMission?.durationCode || 'WEEK'
+  const unitDays = getUnitDays(durationCode)
   
   try {
     const today = new Date()
@@ -35,7 +82,7 @@ export function calculateActiveWeek(batch) {
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
     if (diffDays < 0) return 1
-    const weekIndex = Math.floor(diffDays / 7) + 1
+    const weekIndex = Math.floor(diffDays / unitDays) + 1
     return Math.min(Math.max(weekIndex, 1), totalWeeks)
   } catch {
     return batch?.currentWeek || 1
@@ -45,25 +92,51 @@ export function calculateActiveWeek(batch) {
 /**
  * Helper: Compute weeks calendar dates and status dynamically (2, 3, 4, 5+ weeks)
  */
-export function computeWeeksLifecycle(startDateStr, customWeeks = [], totalWeeksOverride = null) {
+export function computeWeeksLifecycle(startDateStr, customWeeks = [], totalWeeksOverride = null, durationCode = 'WEEK') {
   const defaultStartDate = startDateStr || new Date().toISOString().split('T')[0]
   const parts = defaultStartDate.split('-').map(Number)
   const baseStart = new Date(parts[0], parts[1] - 1, parts[2])
 
+  const unitDays = getUnitDays(durationCode)
+  const unitLabel = getDurationUnitLabel(durationCode)
+  const unitCode = getDurationUnitCode(durationCode)
+
   const totalWeeksCount = Math.max(
     Number(totalWeeksOverride) || 0,
     customWeeks.length > 0 ? customWeeks.length : 0,
-    3
+    1
   )
-  const activeWeek = calculateActiveWeek({ startDate: defaultStartDate, totalWeeks: totalWeeksCount })
+  const activeWeek = calculateActiveWeek({ startDate: defaultStartDate, totalWeeks: totalWeeksCount, durationCode })
 
   const weekNums = Array.from({ length: totalWeeksCount }, (_, i) => i + 1)
 
   return weekNums.map(wNum => {
     const custom = customWeeks[wNum - 1] || {}
-    const wStart = new Date(baseStart.getTime() + (wNum - 1) * 7 * 24 * 60 * 60 * 1000)
-    const wEnd = new Date(wStart.getTime() + 6 * 24 * 60 * 60 * 1000)
-    const title = custom.title || `Minggu ${wNum}: Tema SOP Operasional`
+    let sShort = ''
+    let eShort = ''
+
+    if (custom.startDate && typeof custom.startDate === 'string' && custom.startDate.includes('-')) {
+      const p = custom.startDate.split('T')[0].split('-').map(Number)
+      sShort = formatShortDate(new Date(p[0], p[1] - 1, p[2]))
+    } else if (custom.startDate) {
+      sShort = custom.startDate
+    } else {
+      const wStart = new Date(baseStart.getTime() + (wNum - 1) * unitDays * 24 * 60 * 60 * 1000)
+      sShort = formatShortDate(wStart)
+    }
+
+    if (custom.endDate && typeof custom.endDate === 'string' && custom.endDate.includes('-')) {
+      const p = custom.endDate.split('T')[0].split('-').map(Number)
+      eShort = formatShortDate(new Date(p[0], p[1] - 1, p[2]))
+    } else if (custom.endDate) {
+      eShort = custom.endDate
+    } else {
+      const wStart = new Date(baseStart.getTime() + (wNum - 1) * unitDays * 24 * 60 * 60 * 1000)
+      const wEnd = new Date(wStart.getTime() + (unitDays - 1) * 24 * 60 * 60 * 1000)
+      eShort = formatShortDate(wEnd)
+    }
+
+    const title = custom.title || `${unitLabel} ${wNum}: Tema SOP Operasional`
 
     let status = 'LOCKED'
     let isLocked = true
@@ -78,12 +151,19 @@ export function computeWeeksLifecycle(startDateStr, customWeeks = [], totalWeeks
     return {
       weekNumber: wNum,
       title,
-      startDate: formatShortDate(wStart),
-      endDate: formatShortDate(wEnd),
+      startDate: sShort,
+      endDate: eShort,
+      rawStartDate: custom.startDate || null,
+      rawEndDate: custom.endDate || null,
+      isSingleDay: sShort === eShort,
       status: custom.status || status,
       isLocked: custom.isLocked !== undefined ? custom.isLocked : isLocked,
-      missionCount: custom.missionCount || 4,
-      completionRate: custom.completionRate !== undefined ? custom.completionRate : (wNum < activeWeek ? 100 : 0)
+      missionCount: custom.missionCount !== undefined ? custom.missionCount : (custom.missions ? custom.missions.length : 0),
+      completionRate: custom.completionRate !== undefined ? custom.completionRate : (wNum < activeWeek ? 100 : 0),
+      totalEvaluations: custom.totalEvaluations || 0,
+      completedEvaluations: custom.completedEvaluations || 0,
+      unitLabel,
+      unitCode
     }
   })
 }
@@ -137,46 +217,49 @@ export const useBatchStore = defineStore('batch', {
   }),
 
   getters: {
-    allBatches: (state) => state.batches,
+    allBatches: (state) => state.batches || [],
     accessibleBatches: (state) => {
       const userStore = useUserStore()
-      if (userStore.isSuperadmin) return state.batches
+      const batches = state.batches || []
+      if (userStore.isSuperadmin) return batches
       if (userStore.isStoreLeader) {
-        const my = state.batches.filter(b => 
+        const my = batches.filter(b => 
           b.assignment?.storeLeaderId === userStore.currentUserId ||
           b.assignment?.supervisorId === userStore.currentUserId ||
           b.storeLeaderId === userStore.currentUserId
         )
-        return my.length > 0 ? my : state.batches
+        return my.length > 0 ? my : batches
       }
       if (userStore.isDistrictManager) {
-        const my = state.batches.filter(b => 
+        const my = batches.filter(b => 
           b.assignment?.districtManagerId === userStore.currentUserId ||
           b.assignment?.headId === userStore.currentUserId ||
           b.districtManagerId === userStore.currentUserId
         )
-        return my.length > 0 ? my : state.batches
+        return my.length > 0 ? my : batches
       }
       if (userStore.isCrew) {
         const cBatch = userStore.currentUser?.batchId
-        const my = state.batches.filter(b => b.id === cBatch || b.assignment?.crewIds?.includes(userStore.currentUserId))
-        return my.length > 0 ? my : state.batches
+        const my = batches.filter(b => b.id === cBatch || b.assignment?.crewIds?.includes(userStore.currentUserId))
+        return my.length > 0 ? my : batches
       }
-      return state.batches
+      return batches
     },
     currentBatch: (state) => {
-      const found = state.batches.find(b => b.id === state.selectedBatchId)
+      const batches = state.batches || []
+      const found = batches.find(b => b.id === state.selectedBatchId)
       if (found) return found
       const userStore = useUserStore()
       if (userStore.isStoreLeader || userStore.isDistrictManager || userStore.isCrew) {
         const acc = state.accessibleBatches
         if (acc && acc.length > 0) return acc[0]
       }
-      return state.batches[0] || EMPTY_BATCH_FALLBACK
+      return batches[0] || EMPTY_BATCH_FALLBACK
     },
-    batchById: (state) => (id) => state.batches.find(b => b.id === id),
+    batchById: (state) => (id) => (state.batches || []).find(b => b.id === id),
     activeWeekNumber: (state) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      const batches = state.batches || []
+      const batch = batches.find(b => b.id === state.selectedBatchId) || batches[0] || EMPTY_BATCH_FALLBACK
       return calculateActiveWeek(batch)
     },
     selectedWeek: (state) => {
@@ -186,10 +269,25 @@ export const useBatchStore = defineStore('batch', {
       const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
       return calculateActiveWeek(batch)
     },
+    currentBatchDurationCode: (state) => {
+      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      return (batch.durationCode || batch.journeyTemplate?.durationCode || batch.details?.find(d => d.tplMission?.type === 'JOURNEY')?.tplMission?.durationCode || 'WEEK').toUpperCase()
+    },
+    currentBatchUnitLabel: (state) => {
+      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      const dCode = (batch.durationCode || batch.journeyTemplate?.durationCode || batch.details?.find(d => d.tplMission?.type === 'JOURNEY')?.tplMission?.durationCode || 'WEEK').toUpperCase()
+      return getDurationUnitLabel(dCode)
+    },
+    currentBatchUnitCode: (state) => {
+      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      const dCode = (batch.durationCode || batch.journeyTemplate?.durationCode || batch.details?.find(d => d.tplMission?.type === 'JOURNEY')?.tplMission?.durationCode || 'WEEK').toUpperCase()
+      return getDurationUnitCode(dCode)
+    },
     currentBatchWeeks: (state) => {
       const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
       const totalWeeks = batch.totalWeeks || (Array.isArray(batch.weeks) ? batch.weeks.length : 3)
-      return computeWeeksLifecycle(batch.startDate, batch.weeks || [], totalWeeks)
+      const durationCode = batch.durationCode || batch.journeyTemplate?.durationCode || batch.details?.find(d => d.tplMission?.type === 'JOURNEY')?.tplMission?.durationCode || 'WEEK'
+      return computeWeeksLifecycle(batch.startDate, batch.weeks || [], totalWeeks, durationCode)
     },
     isWeekSelectedLocked: (state) => {
       const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
@@ -320,10 +418,14 @@ export const useBatchStore = defineStore('batch', {
               3
             )
 
+            const durationCode = (b.durationCode || journeyDetail?.tplMission?.durationCode || 'WEEK').toUpperCase()
+            const durationValue = Number(b.durationValue || journeyDetail?.tplMission?.durationValue || 1)
+
             const finalWeeks = computeWeeksLifecycle(
               startDate,
               (Array.isArray(b.weeks) && b.weeks.length > 0) ? b.weeks : customWeeksFromTpl,
-              calculatedTotalWeeks
+              calculatedTotalWeeks,
+              durationCode
             )
 
             return {
@@ -334,6 +436,8 @@ export const useBatchStore = defineStore('batch', {
               description: b.name || `Siklus onboarding ${b.name}`,
               currentWeek: b.currentWeek || 1,
               totalWeeks: calculatedTotalWeeks,
+              durationCode,
+              durationValue,
               startDate,
               endDate,
               status: b.status || 'OPEN',
@@ -437,10 +541,14 @@ export const useBatchStore = defineStore('batch', {
             3
           )
 
+          const durationCode = (b.durationCode || journeyDetail?.tplMission?.durationCode || 'WEEK').toUpperCase()
+          const durationValue = Number(b.durationValue || journeyDetail?.tplMission?.durationValue || 1)
+
           const finalWeeks = computeWeeksLifecycle(
             startDate,
             (Array.isArray(b.weeks) && b.weeks.length > 0) ? b.weeks : customWeeksFromTpl,
-            calculatedTotalWeeks
+            calculatedTotalWeeks,
+            durationCode
           )
 
           const formattedBatch = {
@@ -452,6 +560,8 @@ export const useBatchStore = defineStore('batch', {
             description: b.name || `Siklus gamifikasi ${b.name}`,
             currentWeek: b.currentWeek || 1,
             totalWeeks: calculatedTotalWeeks,
+            durationCode,
+            durationValue,
             startDate,
             endDate,
             status: b.status || 'OPEN',

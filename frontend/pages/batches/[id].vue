@@ -77,7 +77,7 @@
         <div class="flex items-center justify-between mb-5">
           <div>
             <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
-              Misi Minggu {{ batchStore.selectedWeek }}
+              Misi {{ batchStore.currentBatchUnitLabel || 'Minggu' }} {{ batchStore.selectedWeek }}
             </h3>
             <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
               Penugasan operasional untuk siklus ini
@@ -103,12 +103,12 @@
           v-if="weekMissions.length === 0"
           class="py-8 text-center text-slate-400 text-xs"
         >
-          Belum ada misi yang dijadwalkan untuk Minggu {{ batchStore.selectedWeek }}.
+          Belum ada misi yang dijadwalkan untuk {{ batchStore.currentBatchUnitLabel || 'Minggu' }} {{ batchStore.selectedWeek }}.
         </div>
       </div>
 
       <!-- Crew Roster Component -->
-      <CrewList />
+      <CrewList :batch-id="currentBatch?.id" />
     </template>
   </div>
 </template>
@@ -118,6 +118,7 @@ import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useBatchStore } from '~/stores/batch.js'
 import { useMissionStore } from '~/stores/mission.js'
+import { useUserStore } from '~/stores/user.js'
 import WeekSelector from '~/components/batch/WeekSelector.vue'
 import CrewList from '~/components/batch/CrewList.vue'
 import MissionCard from '~/components/mission/MissionCard.vue'
@@ -129,25 +130,56 @@ import {
 const route = useRoute()
 const batchStore = useBatchStore()
 const missionStore = useMissionStore()
+const userStore = useUserStore()
 
-onMounted(() => {
-  if (route.params.id) {
-    batchStore.selectBatch(route.params.id)
+const loadBatchData = async () => {
+  const param = route.params.id
+  if (!param) return
+  await batchStore.fetchBatchesFromApi()
+  const found = (batchStore.batches || []).find(b => b.id === param || b.code === param)
+  const realId = found ? found.id : param
+  if (realId) {
+    batchStore.selectBatch(realId)
+    await Promise.allSettled([
+      batchStore.fetchBatchByIdFromApi(realId),
+      missionStore.fetchMissionsFromApi(true, { batchId: realId }),
+      userStore.fetchUsersFromApi({ exact: { batchId: realId } })
+    ])
   }
+}
+
+onMounted(async () => {
+  await loadBatchData()
 })
 
-watch(() => route.params.id, (newId) => {
-  if (newId) {
-    batchStore.selectBatch(newId)
-  }
+watch(() => route.params.id, async () => {
+  await loadBatchData()
 })
 
 const currentBatch = computed(() => {
-  return batchStore.accessibleBatches.find(b => b.id === route.params.id) || batchStore.currentBatch
+  const param = route.params.id
+  return (batchStore.accessibleBatches || []).find(b => b.id === param || b.code === param) ||
+         (batchStore.batches || []).find(b => b.id === param || b.code === param) ||
+         batchStore.currentBatch
 })
 
 const weekMissions = computed(() => {
   if (!currentBatch.value) return []
-  return missionStore.missionsByWeek(currentBatch.value.id, batchStore.selectedWeek)
+  const fromStore = missionStore.missionsByWeek(currentBatch.value.id, batchStore.selectedWeek)
+  if (fromStore.length > 0) return fromStore
+
+  const batchMissions = currentBatch.value.missions || []
+  return batchMissions
+    .filter(m => (m.type === 'JOURNEY' || !m.type) && Number(m.weekOrDayNumber || m.week || 1) === Number(batchStore.selectedWeek))
+    .map((m, idx) => ({
+      id: m.missionId || `msn-${idx}`,
+      code: m.code || `MSN-0${idx + 1}`,
+      title: m.missionTitle || m.title || 'Misi Standar Operasional',
+      category: m.category || 'TECHNICAL',
+      description: m.description || '',
+      requirements: Array.isArray(m.sopChecklist) ? m.sopChecklist : [],
+      status: m.status || 'IN_PROGRESS',
+      week: Number(m.weekOrDayNumber || m.week || 1)
+    }))
 })
 </script>

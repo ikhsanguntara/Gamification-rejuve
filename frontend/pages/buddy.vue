@@ -681,7 +681,7 @@ const currentBatchCrews = computed(() => {
     }))
   }
   if (!batchStore.currentBatch) return []
-  return userStore.allUsers
+  return (userStore.allUsers || [])
     .filter(u => u.role === 'CREW' && (u.batchId === activeBatchId || !u.batchId))
     .map(u => ({
       id: u.userId || u.id,
@@ -699,22 +699,24 @@ const currentBatchCrews = computed(() => {
 })
 
 const filteredCrewList = computed(() => {
-  if (!crewSearchQuery.value) return currentBatchCrews.value
+  const list = currentBatchCrews.value || []
+  if (!crewSearchQuery.value) return list
   const q = crewSearchQuery.value.toLowerCase()
-  return currentBatchCrews.value.filter(c => c.name.toLowerCase().includes(q))
+  return list.filter(c => c.name.toLowerCase().includes(q))
 })
 
 const selectedCrew = computed(() => {
-  return currentBatchCrews.value.find(c => c.id === selectedCrewId.value) || currentBatchCrews.value[0] || null
+  const list = currentBatchCrews.value || []
+  return list.find(c => c.id === selectedCrewId.value) || list[0] || null
 })
 
 // Real-time computed stats for selected crew
 const selectedCrewStats = computed(() => {
   const missions = buddyStore.selectedCrewMissions || []
   const total = missions.length
-  const evaluated = missions.filter(m => m.status === 'COMPLETED').length
+  const evaluated = (missions || []).filter(m => m.status === 'COMPLETED').length
   
-  const scoredMissions = missions.filter(m => m.status === 'COMPLETED' && (m.tlScore !== null || m.finalScore !== null))
+  const scoredMissions = (missions || []).filter(m => m.status === 'COMPLETED' && (m.tlScore !== null || m.finalScore !== null))
   let avgScore = 0
   let scorePercent = 0
   if (scoredMissions.length > 0) {

@@ -12,7 +12,7 @@
             <Star class="w-3.5 h-3.5 fill-amber-300" />
             <span class="truncate max-w-[160px] sm:max-w-none">{{ currentBatchDisplayName }}</span>
             <span>•</span>
-            <span>Week {{ batchStore.selectedWeek || 1 }}/3</span>
+            <span>{{ batchStore.currentBatchUnitCode || 'Week' }} {{ batchStore.selectedWeek || 1 }}/{{ batchStore.currentBatchWeeks.length || 3 }}</span>
           </div>
 
           <h2 class="text-xl sm:text-3xl font-bold tracking-tight">
@@ -23,7 +23,7 @@
               Re.juve Specialist • Saat ini berada di <strong class="text-amber-300 font-semibold">Level {{ myProgress.currentLevel }} ({{ myProgress.currentLevelTitle }})</strong> dengan <strong class="font-semibold">{{ myStars.toLocaleString() }} ⭐ Stars</strong>. Terus selesaikan seluruh misi di {{ currentBatchDisplayName }}!
             </span>
             <span v-else-if="userStore.isSupervisor">
-              Area Supervisor • Week {{ batchStore.selectedWeek || 1 }} aktif dinilai. Terdapat <strong class="text-amber-300 font-semibold">{{ pendingReviewCount }} misi diajukan</strong> dan <strong class="text-rose-300 font-semibold">{{ revisionCount }} revisi</strong>.
+              Area Supervisor • {{ batchStore.currentBatchUnitCode || 'Week' }} {{ batchStore.selectedWeek || 1 }} aktif dinilai. Terdapat <strong class="text-amber-300 font-semibold">{{ pendingReviewCount }} misi diajukan</strong> dan <strong class="text-rose-300 font-semibold">{{ revisionCount }} revisi</strong>.
             </span>
             <span v-else-if="userStore.isHead">
               Head of Operations & Quality • <strong class="text-amber-300 font-semibold">{{ pendingReviewCount }} evaluasi Batch</strong> menunggu keputusan (Approve / Revise).
@@ -122,7 +122,7 @@
       <StatCard
         title="Cabang Penempatan"
         :value="storeDisplayName"
-        :subtext="`Week ${batchStore.selectedWeek || 1}/3 Aktif`"
+        :subtext="`${batchStore.currentBatchUnitCode || 'Week'} ${batchStore.selectedWeek || 1}/${batchStore.currentBatchWeeks.length || 3} Aktif`"
         :icon="MapPin"
         variant="slate"
         class="col-span-2 sm:col-span-1"
@@ -433,11 +433,11 @@ const myRank = computed(() => {
 
 const myMissions = computed(() => {
   const batchId = userStore.isCrew ? userStore.currentUser?.batchId : batchStore.selectedBatchId
-  return missionStore.missionsByBatch(batchId)
+  return missionStore.missionsByBatch(batchId) || []
 })
 
 const myTotalMissions = computed(() => {
-  return dashboardSummary.value?.metrics?.totalMissions ?? myMissions.value.length ?? 14
+  return dashboardSummary.value?.metrics?.totalMissions ?? (myMissions.value || []).length ?? 14
 })
 
 const myCompletedCount = computed(() => {
@@ -445,7 +445,7 @@ const myCompletedCount = computed(() => {
     return dashboardSummary.value.metrics.completedMissions
   }
   const crewId = userStore.currentUser?.id
-  return myMissions.value.filter(m => {
+  return (myMissions.value || []).filter(m => {
     if (m.crewEvaluations && m.crewEvaluations.length > 0) {
       const e = m.crewEvaluations.find(ce => ce.crewId === crewId)
       return e && (e.status === 'COMPLETED' || m.status === 'COMPLETED')

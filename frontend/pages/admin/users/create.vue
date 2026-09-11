@@ -281,7 +281,7 @@ const buddyOptions = computed(() => {
       sublabel: ''
     }
   ]
-  const buddies = userStore.allUsers.filter(u =>
+  const buddies = (userStore.allUsers || []).filter(u =>
     (u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR') && Boolean(u.isBuddy)
   )
   buddies.forEach(b => {

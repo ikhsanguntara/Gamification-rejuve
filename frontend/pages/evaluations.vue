@@ -18,19 +18,19 @@
           </span>
         </div>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-          Pilih <strong>Crew</strong> terlebih dahulu, lalu nilai <strong>seluruh misi 1 week</strong> satu per satu untuk kru tersebut.
+          Pilih <strong>Crew</strong> terlebih dahulu, lalu nilai <strong>seluruh misi 1 {{ batchStore.currentBatchUnitCode.toLowerCase() }}</strong> satu per satu untuk kru tersebut.
         </p>
       </div>
 
       <div class="flex items-center gap-2">
         <span class="text-xs font-semibold px-3.5 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-sm flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-          <span>Week {{ batchStore.selectedWeek }} Aktif</span>
+          <span>{{ batchStore.currentBatchUnitCode }} {{ batchStore.selectedWeek }} Aktif</span>
         </span>
       </div>
     </div>
 
-    <!-- 3-Week Progression Selector -->
+    <!-- Dynamic Progression Stepper Selector -->
     <WeekSelector />
 
     <!-- Info Banner for District Manager: Clarifying Separation of Workstations -->
@@ -196,7 +196,7 @@
                 </div>
                 <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
                 <div class="text-center px-2">
-                  <span class="text-[10px] font-semibold text-slate-400 uppercase">Bintang Week</span>
+                  <span class="text-[10px] font-semibold text-slate-400 uppercase">Bintang {{ batchStore.currentBatchUnitCode }}</span>
                   <p class="text-sm font-bold text-amber-500 mt-0.5 flex items-center justify-center gap-1">
                     <Star class="w-3.5 h-3.5 fill-amber-400" />
                     {{ currentCrewWeekTotalStars }}
@@ -213,12 +213,12 @@
             </div>
           </div>
 
-          <!-- All 4 Missions in 1 Week (Evaluated 1 by 1) -->
+          <!-- All Missions in Selected Period (Evaluated 1 by 1) -->
           <div class="space-y-4">
             <div class="flex items-center justify-between px-1">
               <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <Target class="w-4 h-4 text-[#831843] dark:text-[#f472b6]" />
-                <span>Misi Operasional Week {{ batchStore.selectedWeek }} ({{ currentWeekMissions.length }} Misi)</span>
+                <span>Misi Operasional {{ batchStore.currentBatchUnitCode }} {{ batchStore.selectedWeek }} ({{ currentWeekMissions.length }} Misi)</span>
               </h3>
               <span class="text-xs text-slate-400">Nilai satu per satu per misi di bawah ini</span>
             </div>
@@ -336,7 +336,7 @@
                 >
                   <span class="flex items-center gap-1.5 font-semibold text-[11px]">
                     <Lock class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                    <span>Week {{ batchStore.selectedWeek }} berstatus terkunci. Input nilai dinonaktifkan.</span>
+                    <span>{{ batchStore.currentBatchUnitCode }} {{ batchStore.selectedWeek }} berstatus terkunci. Input nilai dinonaktifkan.</span>
                   </span>
                   <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                     Hanya Lihat
@@ -579,7 +579,7 @@
                   >
                     <Lock v-if="isWeekLocked" class="w-3 h-3" />
                     <Send v-else class="w-3 h-3" />
-                    <span v-if="isWeekLocked">Minggu Terkunci</span>
+                    <span v-if="isWeekLocked">{{ batchStore.currentBatchUnitLabel }} Terkunci</span>
                     <span v-else>Kirim Misi Ini ke DM</span>
                   </button>
                   <span
@@ -605,7 +605,7 @@
           <div class="p-3 sm:p-3.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-lg flex items-center justify-between gap-3 sticky bottom-4 z-20">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Ringkasan Week {{ batchStore.selectedWeek }}:
+                Ringkasan {{ batchStore.currentBatchUnitCode }} {{ batchStore.selectedWeek }}:
               </span>
               <span class="text-xs font-bold text-slate-900 dark:text-white">
                 Avg {{ currentCrewWeekAvgScore }}% • {{ currentCrewWeekTotalStars }} ⭐ ({{ currentCrewEvaluatedMissionsCount }}/{{ currentWeekMissions.length }} Misi Selesai)
@@ -628,7 +628,7 @@
         <EmptyState
           v-else
           title="Pilih Crew untuk memulai penilaian"
-          description="Pilih salah satu anggota Crew di daftar sebelah kiri untuk menampilkan seluruh misi 1 week dan memberikan nilai satu per satu."
+          :description="`Pilih salah satu anggota Crew di daftar sebelah kiri untuk menampilkan seluruh misi 1 ${batchStore.currentBatchUnitCode.toLowerCase()} dan memberikan nilai satu per satu.`"
           icon="Users"
         />
       </div>
@@ -779,12 +779,12 @@ const batchCrews = computed(() => {
 const selectedCrewId = ref(null)
 
 const filteredCrewList = computed(() => {
-  let list = batchCrews.value
+  let list = batchCrews.value || []
 
   if (activeCrewFilter.value === 'NEEDS_SCORING') {
-    list = list.filter(c => getCrewWeekEvaluatedCount(c.id) < (currentWeekMissions.value.length || 1))
+    list = list.filter(c => getCrewWeekEvaluatedCount(c.id) < ((currentWeekMissions.value || []).length || 1))
   } else if (activeCrewFilter.value === 'COMPLETED') {
-    list = list.filter(c => getCrewWeekEvaluatedCount(c.id) >= (currentWeekMissions.value.length || 1))
+    list = list.filter(c => getCrewWeekEvaluatedCount(c.id) >= ((currentWeekMissions.value || []).length || 1))
   }
 
   if (crewSearchQuery.value.trim()) {
@@ -800,7 +800,7 @@ const filteredCrewList = computed(() => {
 })
 
 const selectedCrew = computed(() => {
-  return batchCrews.value.find(c => c.id === selectedCrewId.value) || null
+  return (batchCrews.value || []).find(c => c.id === selectedCrewId.value) || null
 })
 
 const currentWeekMissions = computed(() => {
@@ -988,7 +988,7 @@ watch(filteredCrewList, (list) => {
 
 // KPI helpers for single crew
 const currentCrewWeekAvgScore = computed(() => {
-  const evaluatedMissions = currentWeekMissions.value.filter(m => {
+  const evaluatedMissions = (currentWeekMissions.value || []).filter(m => {
     const status = getMissionStatus(m.id)
     return status !== 'LOCKED' && status !== 'ACTIVE' && status !== 'UNGRADED' && status !== 'NEEDS_SCORING'
   })
@@ -999,7 +999,7 @@ const currentCrewWeekAvgScore = computed(() => {
 })
 
 const currentCrewWeekTotalStars = computed(() => {
-  const evaluatedMissions = currentWeekMissions.value.filter(m => {
+  const evaluatedMissions = (currentWeekMissions.value || []).filter(m => {
     const status = getMissionStatus(m.id)
     return status !== 'LOCKED' && status !== 'ACTIVE' && status !== 'UNGRADED' && status !== 'NEEDS_SCORING'
   })
@@ -1009,7 +1009,7 @@ const currentCrewWeekTotalStars = computed(() => {
 })
 
 const currentCrewEvaluatedMissionsCount = computed(() => {
-  return currentWeekMissions.value.filter(m => {
+  return (currentWeekMissions.value || []).filter(m => {
     const status = getMissionStatus(m.id)
     return status !== 'LOCKED' && status !== 'ACTIVE' && status !== 'UNGRADED' && status !== 'NEEDS_SCORING'
   }).length
@@ -1020,11 +1020,11 @@ function calculateMissionStars(score) {
 }
 
 function getCrewWeekEvaluatedCount(crewId) {
-  const crew = batchCrews.value.find(c => c.id === crewId)
+  const crew = (batchCrews.value || []).find(c => c.id === crewId)
   if (crew && crew.evaluatedCount !== undefined) {
     return crew.evaluatedCount
   }
-  return currentWeekMissions.value.filter(m => {
+  return (currentWeekMissions.value || []).filter(m => {
     const status = getMissionStatus(m.id)
     return status !== 'LOCKED' && status !== 'ACTIVE' && status !== 'UNGRADED' && status !== 'NEEDS_SCORING'
   }).length
@@ -1165,7 +1165,7 @@ function getMissionComment(missionId) {
 
 async function submitSingleMission(missionId) {
   if (isWeekLocked.value) {
-    toast.warning('Minggu Terkunci', `Minggu ${batchStore.selectedWeek} berstatus terkunci. Evaluasi hanya dapat diinput saat minggu ini menjadi siklus aktif.`)
+    toast.warning(`${batchStore.currentBatchUnitLabel} Terkunci`, `${batchStore.currentBatchUnitLabel} ${batchStore.selectedWeek} berstatus terkunci. Evaluasi hanya dapat diinput saat ${batchStore.currentBatchUnitLabel.toLowerCase()} ini menjadi siklus aktif.`)
     return
   }
   if (!selectedCrew.value) return

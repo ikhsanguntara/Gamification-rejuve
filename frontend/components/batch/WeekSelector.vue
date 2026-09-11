@@ -1,11 +1,11 @@
 <template>
   <div class="space-y-4">
-    <!-- Interactive Weekly Progression Stepper -->
+    <!-- Interactive Weekly/Daily Progression Stepper -->
     <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
       <div class="flex items-center justify-between mb-4">
         <div>
           <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            Weekly Progression Cycle
+            {{ unitCode }} Progression Cycle
           </h4>
           <p class="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
             {{ sequenceTitle }}
@@ -13,12 +13,12 @@
         </div>
         <div class="flex items-center gap-2">
           <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
-            Week {{ activeWeekNumber }} Active
+            {{ unitCode }} {{ activeWeekNumber }} Active
           </span>
         </div>
       </div>
 
-      <!-- Step Cards Grid (Dynamic responsive grid based on weeks count) -->
+      <!-- Step Cards Grid (Dynamic responsive grid based on periods count) -->
       <div
         class="grid gap-3 relative"
         :class="[
@@ -40,7 +40,7 @@
               : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
           ]"
         >
-          <!-- Top row: Week & Status Badge -->
+          <!-- Top row: Period & Status Badge -->
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
               <!-- Icon indicator -->
@@ -52,8 +52,8 @@
                 <span v-else-if="week.weekNumber === activeWeekNumber" class="w-2 h-2 rounded-full bg-[#831843] animate-ping"></span>
                 <Lock v-else class="w-3 h-3 text-slate-400" />
               </div>
-              <span class="text-xs font-bold text-slate-900 dark:text-white">
-                WEEK {{ week.weekNumber }}
+              <span class="text-xs font-bold text-slate-900 dark:text-white uppercase">
+                {{ unitCode }} {{ week.weekNumber }}
               </span>
             </div>
 
@@ -72,7 +72,8 @@
               {{ week.title }}
             </p>
             <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">
-              {{ week.startDate }} – {{ week.endDate }}
+              <span v-if="week.startDate === week.endDate">{{ week.startDate }}</span>
+              <span v-else>{{ week.startDate }} – {{ week.endDate }}</span>
             </p>
           </div>
 
@@ -96,7 +97,7 @@
       </div>
     </div>
 
-    <!-- Locked Week Informational Alert Banner -->
+    <!-- Locked Period Informational Alert Banner -->
     <div
       v-if="selectedWeek !== activeWeekNumber"
       class="flex items-start gap-3 p-3.5 sm:p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
@@ -106,14 +107,14 @@
       </div>
       <div class="text-xs space-y-0.5">
         <p class="font-semibold text-slate-900 dark:text-white">
-          🔒 Week {{ selectedWeek }} Terkunci (Hanya Lihat)
+          🔒 {{ unitCode }} {{ selectedWeek }} Terkunci (Hanya Lihat)
         </p>
         <p class="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
           <span v-if="selectedWeek < activeWeekNumber">
-            Minggu ini telah selesai dan seluruh hasil evaluasi telah difinalisasi. Anda tetap dapat meninjau rincian misi dan skor.
+            {{ unitLabel }} ini telah selesai dan seluruh hasil evaluasi telah difinalisasi. Anda tetap dapat meninjau rincian misi dan skor.
           </span>
           <span v-else>
-            Minggu ini belum dimulai. Evaluasi baru dapat diinput setelah minggu ini menjadi siklus aktif.
+            {{ unitLabel }} ini belum dimulai. Evaluasi baru dapat diinput setelah {{ unitLabel.toLowerCase() }} ini menjadi siklus aktif.
           </span>
         </p>
       </div>
@@ -128,19 +129,23 @@ import { Check, Lock } from 'lucide-vue-next'
 
 const batchStore = useBatchStore()
 
-const weeks = computed(() => batchStore.currentBatchWeeks)
+const weeks = computed(() => batchStore.currentBatchWeeks || [])
 const activeWeekNumber = computed(() => batchStore.activeWeekNumber)
 const selectedWeek = computed(() => batchStore.selectedWeek)
+const unitCode = computed(() => batchStore.currentBatchUnitCode || 'Week')
+const unitLabel = computed(() => batchStore.currentBatchUnitLabel || 'Minggu')
 
 const sequenceTitle = computed(() => {
   const currentBatch = batchStore.currentBatch
+  const unit = unitCode.value
+  const count = (weeks.value || []).length
   if (currentBatch?.templateName) {
-    return `${weeks.value.length}-Week ${currentBatch.templateName}`
+    return `${count}-${unit} ${currentBatch.templateName}`
   }
   if (currentBatch?.description && !currentBatch.description.includes('Siklus')) {
     return currentBatch.description
   }
-  return `${weeks.value.length}-Week Store Operational Sequence`
+  return `${count}-${unit} Store Operational Sequence`
 })
 
 const selectWeek = (weekNumber) => {

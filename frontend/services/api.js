@@ -163,3 +163,11 @@ export const feedbackApi = {
   getSurveyById: (id) => apiFetch(`/feedback/surveys/${id}`, { method: 'GET' })
 }
 
+// ─── 14. Notifications Service ──────────────────────────────────────────────
+export const notificationApi = {
+  getAll: (params) => apiFetch('/notifications', { method: 'GET', params }),
+  getUnreadCount: () => apiFetch('/notifications/unread-count', { method: 'GET' }),
+  markAsRead: (id) => apiFetch(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllAsRead: () => apiFetch('/notifications/mark-all-read', { method: 'PATCH' })
+}
+

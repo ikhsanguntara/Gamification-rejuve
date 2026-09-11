@@ -12,7 +12,7 @@ export const mockUsers = {}
 const initialDirectory = []
 
 import { getStoredData, setStoredData } from '../utils/storage.js'
-import { authApi, userApi } from '../services/api.js'
+import { authApi, userApi, notificationApi } from '../services/api.js'
 import { getAuthToken, setAuthToken } from '../composables/useApi.js'
 import { buildPrismaQuery } from '../utils/queryBuilder.js'
 import { cachedApiCall, invalidateApiCache } from '../utils/apiCache.js'
@@ -52,7 +52,9 @@ export const useUserStore = defineStore('user', {
       limit: 10,
       totalPages: 1
     },
-    notifications: []
+    notifications: [],
+    unreadCount: 0,
+    isLoadingNotifications: false
   }),
 
   getters: {
@@ -129,27 +131,27 @@ export const useUserStore = defineStore('user', {
       return r === 'SUPERADMIN'
     },
 
-    allUsers: (state) => state.userDirectory,
+    allUsers: (state) => state.userDirectory || [],
     userById: (state) => (id) => {
-      const found = state.userDirectory.find(u => u.id === id)
+      const found = (state.userDirectory || []).find(u => u.id === id)
       return found || null
     },
 
-    storeLeaders: (state) => state.userDirectory.filter(u => u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR'),
-    buddyStoreLeaders: (state) => state.userDirectory.filter(u => (u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR') && Boolean(u.isBuddy)),
-    districtManagers: (state) => state.userDirectory.filter(u => u.role === 'DISTRICT_MANAGER' || u.role === 'HEAD'),
-    crews: (state) => state.userDirectory.filter(u => u.role === 'CREW'),
+    storeLeaders: (state) => (state.userDirectory || []).filter(u => u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR'),
+    buddyStoreLeaders: (state) => (state.userDirectory || []).filter(u => (u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR') && Boolean(u.isBuddy)),
+    districtManagers: (state) => (state.userDirectory || []).filter(u => u.role === 'DISTRICT_MANAGER' || u.role === 'HEAD'),
+    crews: (state) => (state.userDirectory || []).filter(u => u.role === 'CREW'),
 
     // Backward compatibility getters
-    supervisors: (state) => state.userDirectory.filter(u => u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR'),
-    heads: (state) => state.userDirectory.filter(u => u.role === 'DISTRICT_MANAGER' || u.role === 'HEAD'),
+    supervisors: (state) => (state.userDirectory || []).filter(u => u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR'),
+    heads: (state) => (state.userDirectory || []).filter(u => u.role === 'DISTRICT_MANAGER' || u.role === 'HEAD'),
 
     assignedBatchId: (state) => {
-      const u = state.userDirectory.find(u => u.id === state.currentUserId)
+      const u = (state.userDirectory || []).find(u => u.id === state.currentUserId)
       return u?.batchId || null
     },
 
-    unreadNotificationCount: (state) => state.notifications.filter(n => !n.isRead).length
+    unreadNotificationCount: (state) => (state.notifications || []).filter(n => !n.isRead).length
   },
 
   actions: {
@@ -498,6 +500,84 @@ export const useUserStore = defineStore('user', {
       invalidateApiCache('/masters/users')
       await this.fetchUsersFromApi({ limit: 100, page: 1 }).catch(() => {})
       return res?.data || res
+    },
+
+    // ─── Notification Actions ───────────────────────────────────────────────
+    async fetchNotifications(params = {}) {
+      this.isLoadingNotifications = true
+      try {
+        const res = await notificationApi.getAll(params)
+        if (res?.data) {
+          const list = Array.isArray(res.data) ? res.data : (res.data.data || [])
+          this.notifications = list
+          this.unreadCount = list.filter(n => !n.isRead).length
+        }
+        return this.notifications
+      } catch (err) {
+        console.warn('Failed to fetch notifications from API:', err.message)
+        return this.notifications
+      } finally {
+        this.isLoadingNotifications = false
+      }
+    },
+
+    async fetchUnreadCount() {
+      try {
+        const res = await notificationApi.getUnreadCount()
+        if (res?.data && typeof res.data.unreadCount === 'number') {
+          this.unreadCount = res.data.unreadCount
+        }
+        return this.unreadCount
+      } catch (err) {
+        console.warn('Failed to fetch unread count:', err.message)
+        return this.unreadNotificationCount
+      }
+    },
+
+    async markNotificationAsRead(notificationId) {
+      const target = this.notifications.find(n => (n.id === notificationId || n.notificationId === notificationId))
+      if (target) {
+        target.isRead = true
+      }
+      if (this.unreadCount > 0) {
+        this.unreadCount = Math.max(0, this.unreadCount - 1)
+      }
+      try {
+        await notificationApi.markAsRead(notificationId)
+      } catch (err) {
+        console.warn('Failed to mark notification as read via API:', err.message)
+      }
+    },
+
+    async markNotificationsAsRead() {
+      return this.markAllNotificationsAsRead()
+    },
+
+    async markAllNotificationsAsRead() {
+      this.notifications.forEach(n => { n.isRead = true })
+      this.unreadCount = 0
+      try {
+        await notificationApi.markAllAsRead()
+      } catch (err) {
+        console.warn('Failed to mark all notifications as read via API:', err.message)
+      }
+    },
+
+    addNotification(notif) {
+      if (!notif) return
+      const item = {
+        id: notif.id || notif.notificationId || `notif-${Date.now()}`,
+        notificationId: notif.id || notif.notificationId || `notif-${Date.now()}`,
+        title: notif.title || 'Notifikasi Baru',
+        message: notif.message || '',
+        type: notif.type || 'INFO',
+        isRead: false,
+        linkUrl: notif.linkUrl || null,
+        createdAt: notif.createdAt || new Date().toISOString(),
+        time: notif.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+      this.notifications.unshift(item)
+      this.unreadCount += 1
     }
   }
 })

@@ -12,7 +12,13 @@ import { buildPrismaQuery } from '../utils/queryBuilder.js'
 function normalizePackage(pkg) {
   const details = pkg.templates || pkg.details || []
   const maxDur = details.reduce((max, d) => Math.max(max, Number(d.week || d.durationNumber || 1)), 1)
-  const baseCount = Math.max(Number(pkg.totalWeeks) || 1, maxDur, (pkg.weeks || []).length || 1)
+  const baseCount = details.length > 0 ? maxDur : Math.max(Number(pkg.totalWeeks) || 1, Number(pkg.durationValue) || 1)
+
+  const durationCode = (pkg.durationCode || (pkg.type === 'JOURNEY' ? 'WEEK' : 'DAY')).toUpperCase()
+  const isDay = durationCode === 'DAY'
+  const isMonth = durationCode === 'MONTH'
+  const isYear = durationCode === 'YEAR'
+  const unitLabel = isDay ? 'Hari' : (isMonth ? 'Bulan' : (isYear ? 'Tahun' : 'Minggu'))
 
   const periodTitlesMap = {}
 
@@ -34,10 +40,10 @@ function normalizePackage(pkg) {
     })
   }
 
-  // 3. Susun array weeks dengan judul yang akurat
+  // 3. Susun array weeks dengan judul yang akurat dan unit label dinamis (Hari / Minggu / Bulan)
   pkg.weeks = Array.from({ length: baseCount }, (_, i) => ({
     weekNumber: i + 1,
-    title: periodTitlesMap[i + 1] || (pkg.type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`)
+    title: periodTitlesMap[i + 1] || `${unitLabel} ${i + 1}: ${pkg.type === 'JOURNEY' ? 'Tema SOP Operasional' : 'Agenda Orientasi'}`
   }))
 
   if (Array.isArray(pkg.templates)) {
@@ -53,6 +59,8 @@ function normalizePackage(pkg) {
       }
     })
   }
+  pkg.durationCode = durationCode
+  pkg.unitLabel = unitLabel
   pkg.totalWeeks = pkg.weeks.length
   return pkg
 }
@@ -100,24 +108,24 @@ export const useTemplateStore = defineStore('template', {
       )
     },
     allTemplates: (state) => {
-      const list = state.journeyTemplates.length > 0 ? state.journeyTemplates : state.packages
+      const list = (state.journeyTemplates && state.journeyTemplates.length > 0) ? state.journeyTemplates : (state.packages || [])
       const pkg = list.find(p => p.id === state.selectedPackageId) || list[0]
-      return pkg ? pkg.templates : []
+      return pkg ? (pkg.templates || []) : []
     },
     templatesByWeek: (state) => (weekNumber) => {
-      const list = state.journeyTemplates.length > 0 ? state.journeyTemplates : state.packages
+      const list = (state.journeyTemplates && state.journeyTemplates.length > 0) ? state.journeyTemplates : (state.packages || [])
       const pkg = list.find(p => p.id === state.selectedPackageId) || list[0]
       if (!pkg || !pkg.templates) return []
-      return pkg.templates.filter(t => t.week === Number(weekNumber))
+      return (pkg.templates || []).filter(t => t.week === Number(weekNumber))
     },
     packageWeeks: (state) => (pkgId) => {
-      const list = state.journeyTemplates.length > 0 ? state.journeyTemplates : state.packages
+      const list = (state.journeyTemplates && state.journeyTemplates.length > 0) ? state.journeyTemplates : (state.packages || [])
       const pkg = list.find(p => p.id === pkgId) || list.find(p => p.id === state.selectedPackageId) || list[0]
       if (!pkg) return []
       if (!pkg.weeks || pkg.weeks.length === 0) {
         normalizePackage(pkg)
       }
-      return pkg.weeks
+      return pkg.weeks || []
     }
   },
 

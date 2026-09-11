@@ -165,7 +165,7 @@ onMounted(async () => {
 })
 
 const filteredMissions = computed(() => {
-  return missionStore.allMissions.filter(m => {
+  return (missionStore.allMissions || []).filter(m => {
     if (searchQuery.value) {
       const q = searchQuery.value.toLowerCase().trim()
       const matchTitle = m.title.toLowerCase().includes(q)

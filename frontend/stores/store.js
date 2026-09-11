@@ -58,13 +58,14 @@ export const useStoreStore = defineStore('store', {
     },
 
     storesByRegion: (state) => (region) => {
-      if (!region || region === 'ALL') return state.stores
-      return state.stores.filter(s => s.region === region)
+      const list = state.stores || []
+      if (!region || region === 'ALL') return list
+      return list.filter(s => s.region === region)
     },
 
-    activeStores: (state) => state.stores.filter(s => s.status === 'ACTIVE'),
-    totalStoreCount: (state) => state.serverPagination.total || state.stores.length,
-    activeStoreCount: (state) => state.stores.filter(s => s.status === 'ACTIVE').length
+    activeStores: (state) => (state.stores || []).filter(s => s.status === 'ACTIVE'),
+    totalStoreCount: (state) => state.serverPagination?.total || (state.stores || []).length,
+    activeStoreCount: (state) => (state.stores || []).filter(s => s.status === 'ACTIVE').length
   },
 
   actions: {

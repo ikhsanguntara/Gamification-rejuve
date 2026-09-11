@@ -113,8 +113,9 @@ const itemsPerPage = 9
 const unlockedCount = computed(() => gamificationStore.unlockedAchievements.length)
 
 const filteredAchievements = computed(() => {
-  if (selectedCategory.value === 'ALL') return gamificationStore.allAchievements
-  return gamificationStore.allAchievements.filter(a => a.category === selectedCategory.value)
+  const list = gamificationStore.allAchievements || []
+  if (selectedCategory.value === 'ALL') return list
+  return list.filter(a => a.category === selectedCategory.value)
 })
 
 watch(selectedCategory, () => {

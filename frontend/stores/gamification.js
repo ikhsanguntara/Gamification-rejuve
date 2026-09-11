@@ -18,12 +18,12 @@ export const useGamificationStore = defineStore('gamification', {
   }),
 
   getters: {
-    allCrews: (state) => state.crews,
-    crewsByBatch: (state) => (batchId) => state.crews.filter(c => c.batchId === batchId),
-    crewById: (state) => (id) => state.crews.find(c => c.id === id),
-    allAchievements: (state) => state.achievements,
-    unlockedAchievements: (state) => state.achievements.filter(a => a.isUnlocked),
-    lockedAchievements: (state) => state.achievements.filter(a => !a.isUnlocked),
+    allCrews: (state) => state.crews || [],
+    crewsByBatch: (state) => (batchId) => (state.crews || []).filter(c => c.batchId === batchId),
+    crewById: (state) => (id) => (state.crews || []).find(c => c.id === id),
+    allAchievements: (state) => state.achievements || [],
+    unlockedAchievements: (state) => (state.achievements || []).filter(a => a.isUnlocked),
+    lockedAchievements: (state) => (state.achievements || []).filter(a => !a.isUnlocked),
 
     /**
      * Realtime Reactive Leaderboard sorted by total stars descending
@@ -32,9 +32,9 @@ export const useGamificationStore = defineStore('gamification', {
       if (state.apiLeaderboard && state.apiLeaderboard.length > 0) {
         return state.apiLeaderboard
       }
-      return state.crews
+      return (state.crews || [])
         .slice()
-        .sort((a, b) => b.stars - a.stars)
+        .sort((a, b) => (b.stars || 0) - (a.stars || 0))
         .map((crew, index) => ({
           rank: index + 1,
           crewId: crew.id,
@@ -58,10 +58,11 @@ export const useGamificationStore = defineStore('gamification', {
       if (state.apiLeaderboard && state.apiLeaderboard.length > 0) {
         return state.apiLeaderboard
       }
-      const filtered = batchId && batchId !== 'ALL' ? state.crews.filter(c => c.batchId === batchId) : state.crews
+      const list = state.crews || []
+      const filtered = batchId && batchId !== 'ALL' ? list.filter(c => c.batchId === batchId) : list
       return filtered
         .slice()
-        .sort((a, b) => b.stars - a.stars)
+        .sort((a, b) => (b.stars || 0) - (a.stars || 0))
         .map((crew, index) => ({
           id: crew.id,
           crewId: crew.id,

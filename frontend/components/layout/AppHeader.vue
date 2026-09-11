@@ -68,10 +68,10 @@
           </DropdownMenuPortal>
         </DropdownMenuRoot>
 
-        <!-- Week Indicator Pill -->
+        <!-- Week / Day Indicator Pill -->
         <span class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 text-xs font-medium text-slate-600 dark:text-slate-400">
           <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-          <span>Week {{ batchStore.selectedWeek }}/{{ currentBatchTotalWeeks }}</span>
+          <span>{{ batchStore.currentBatchUnitCode || 'Week' }} {{ batchStore.selectedWeek }}/{{ currentBatchTotalWeeks }}</span>
         </span>
       </div>
     </div>
@@ -97,43 +97,97 @@
         <PopoverTrigger
           class="relative p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer focus:outline-hidden"
           aria-label="Notifications"
+          @click="onNotificationPopoverOpen"
         >
           <Bell class="w-4 h-4" />
           <span
             v-if="userStore.unreadNotificationCount > 0"
-            class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900"
-          ></span>
+            class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900 animate-pulse"
+          >
+            {{ userStore.unreadNotificationCount > 99 ? '99+' : userStore.unreadNotificationCount }}
+          </span>
         </PopoverTrigger>
 
         <PopoverPortal>
           <PopoverContent
-            class="w-80 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-4 z-50 focus:outline-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            class="w-84 sm:w-96 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-4 z-50 focus:outline-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
             :side-offset="8"
             align="end"
           >
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <span class="text-xs font-bold text-slate-900 dark:text-white">Notifikasi</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-900 dark:text-white">Notifikasi</span>
+                <span
+                  v-if="userStore.unreadNotificationCount > 0"
+                  class="px-1.5 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] text-[10px] font-bold"
+                >
+                  {{ userStore.unreadNotificationCount }} baru
+                </span>
+              </div>
               <button
+                v-if="userStore.unreadNotificationCount > 0"
                 type="button"
-                @click="userStore.markNotificationsAsRead"
-                class="text-[11px] text-[#831843] dark:text-[#f472b6] font-semibold hover:underline cursor-pointer"
+                @click="handleMarkAllRead"
+                class="flex items-center gap-1 text-[11px] text-[#831843] dark:text-[#f472b6] font-semibold hover:underline cursor-pointer"
               >
-                Tandai dibaca
+                <CheckCheck class="w-3.5 h-3.5" />
+                <span>Tandai semua dibaca</span>
               </button>
             </div>
 
-            <div class="py-2 space-y-2 max-h-64 overflow-y-auto">
+            <!-- Notification List -->
+            <div class="py-2 space-y-1.5 max-h-72 overflow-y-auto divide-y divide-slate-100/60 dark:divide-slate-800/60">
+              <!-- Loading Skeleton -->
+              <div v-if="userStore.isLoadingNotifications && userStore.notifications.length === 0" class="py-6 text-center space-y-2">
+                <div class="inline-block w-5 h-5 border-2 border-[#831843] border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-xs text-slate-400">Memuat notifikasi...</p>
+              </div>
+
+              <!-- Empty State -->
+              <div v-else-if="userStore.notifications.length === 0" class="py-8 text-center space-y-2">
+                <div class="w-10 h-10 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                  <Inbox class="w-5 h-5" />
+                </div>
+                <p class="text-xs font-medium text-slate-600 dark:text-slate-300">Belum ada notifikasi</p>
+                <p class="text-[11px] text-slate-400">Aktivitas dan reward terbaru akan muncul di sini.</p>
+              </div>
+
+              <!-- List Items -->
               <div
                 v-for="notif in userStore.notifications"
-                :key="notif.id"
-                class="p-2.5 rounded-xl transition-colors text-xs space-y-0.5"
-                :class="notif.isRead ? 'bg-slate-50 dark:bg-slate-800/40 text-slate-500' : 'bg-[#831843]/5 dark:bg-[#831843]/10 text-slate-900 dark:text-white font-medium'"
+                :key="notif.id || notif.notificationId"
+                @click="handleNotificationItemClick(notif)"
+                class="p-2.5 rounded-xl transition-all text-xs space-y-1 cursor-pointer hover:bg-slate-100/80 dark:hover:bg-slate-800/80 group relative"
+                :class="notif.isRead ? 'bg-transparent opacity-75' : 'bg-[#831843]/5 dark:bg-[#831843]/15 font-medium shadow-xs'"
               >
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-[11px]">{{ notif.title }}</span>
-                  <span class="text-[10px] text-slate-400">{{ notif.time }}</span>
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <!-- Notification Type Badge / Icon -->
+                    <span
+                      class="w-5 h-5 rounded-lg flex items-center justify-center flex-shrink-0 text-[10px]"
+                      :class="getNotifIconClass(notif.type)"
+                    >
+                      <Sparkles v-if="notif.type === 'REWARD' || notif.type === 'EARLY_BIRD'" class="w-3 h-3" />
+                      <CheckCircle2 v-else-if="notif.type === 'SUCCESS' || notif.type === 'APPROVAL'" class="w-3 h-3" />
+                      <AlertCircle v-else-if="notif.type === 'WARNING' || notif.type === 'REVISION'" class="w-3 h-3" />
+                      <Info v-else class="w-3 h-3" />
+                    </span>
+                    <span class="font-bold text-[11px] text-slate-900 dark:text-white truncate">
+                      {{ notif.title }}
+                    </span>
+                  </div>
+                  <span class="text-[10px] text-slate-400 flex-shrink-0">
+                    {{ notif.time || formatTime(notif.createdAt) }}
+                  </span>
                 </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">{{ notif.message }}</p>
+                <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-snug pl-6.5">
+                  {{ notif.message }}
+                </p>
+                <!-- Indicator dot for unread -->
+                <span
+                  v-if="!notif.isRead"
+                  class="absolute right-2 bottom-2 w-1.5 h-1.5 rounded-full bg-[#831843] dark:bg-[#f472b6]"
+                ></span>
               </div>
             </div>
           </PopoverContent>
@@ -230,7 +284,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   DropdownMenuRoot,
@@ -255,6 +309,12 @@ import {
   Sun,
   Moon,
   Bell,
+  CheckCheck,
+  CheckCircle2,
+  AlertCircle,
+  Sparkles,
+  Info,
+  Inbox,
   User,
   Settings,
   LogOut,
@@ -272,6 +332,76 @@ const batchStore = useBatchStore()
 const { isDark, toggleTheme } = useTheme()
 const toast = useToast()
 const { toggleMobile } = useSidebar()
+
+let pollInterval = null
+
+onMounted(async () => {
+  if (userStore.isAuthenticated) {
+    userStore.fetchNotifications().catch(() => {})
+    userStore.fetchUnreadCount().catch(() => {})
+
+    // Polling setiap 30 detik untuk notifikasi baru
+    pollInterval = setInterval(() => {
+      if (userStore.isAuthenticated) {
+        userStore.fetchUnreadCount().catch(() => {})
+      }
+    }, 30000)
+  }
+})
+
+onUnmounted(() => {
+  if (pollInterval) {
+    clearInterval(pollInterval)
+  }
+})
+
+const onNotificationPopoverOpen = () => {
+  if (userStore.isAuthenticated) {
+    userStore.fetchNotifications().catch(() => {})
+  }
+}
+
+const handleMarkAllRead = async () => {
+  await userStore.markAllNotificationsAsRead()
+  toast.success('Notifikasi', 'Semua notifikasi telah ditandai sebagai dibaca.')
+}
+
+const handleNotificationItemClick = async (notif) => {
+  if (!notif) return
+  const notifId = notif.id || notif.notificationId
+  if (!notif.isRead && notifId) {
+    await userStore.markNotificationAsRead(notifId)
+  }
+  if (notif.linkUrl) {
+    router.push(notif.linkUrl)
+  }
+}
+
+const getNotifIconClass = (type) => {
+  switch (type) {
+    case 'REWARD':
+    case 'EARLY_BIRD':
+      return 'bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400'
+    case 'SUCCESS':
+    case 'APPROVAL':
+      return 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400'
+    case 'WARNING':
+    case 'REVISION':
+      return 'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400'
+    default:
+      return 'bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]'
+  }
+}
+
+const formatTime = (dateStr) => {
+  if (!dateStr) return ''
+  try {
+    const d = new Date(dateStr)
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return ''
+  }
+}
 
 const currentBatchTotalWeeks = computed(() => {
   return batchStore.currentBatch?.weeks?.length || batchStore.currentBatch?.totalWeeks || 3
@@ -293,7 +423,6 @@ const handleBatchChange = async (batchId) => {
     console.error('Gagal mengganti batch:', err)
   }
 }
-
 
 const handleLogout = () => {
   userStore.logout()

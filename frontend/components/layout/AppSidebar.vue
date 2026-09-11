@@ -302,7 +302,7 @@
           {{ batchStore.currentBatch?.name || 'Memuat Batch...' }}
         </span>
         <span class="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-          Week {{ batchStore.selectedWeek || 1 }} Active
+          {{ batchStore.currentBatchUnitCode || 'Week' }} {{ batchStore.selectedWeek || 1 }} Active
         </span>
       </div>
       <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">

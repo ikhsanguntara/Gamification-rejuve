@@ -502,6 +502,40 @@ assert(typeof feedbackStore.fetchQuestionsFromApi === 'function', 'Feedback API:
 assert(typeof feedbackStore.fetchMyFeedbackFromApi === 'function', 'Feedback API: Action fetchMyFeedbackFromApi tersedia di store')
 assert(typeof feedbackStore.submitSurveyToApi === 'function', 'Feedback API: Action submitSurveyToApi tersedia di store')
 
+// ==========================================
+// TEST SUITE 9: NOTIFICATIONS CRUD & ACTIONS
+// ==========================================
+console.log('\n📌 9. Menguji Fitur Notifikasi In-App & Realtime:')
+
+userStore.notifications = []
+userStore.unreadCount = 0
+
+// 9.1 ADD NOTIFICATION
+userStore.addNotification({
+  id: 'notif-test-01',
+  title: 'Misi SOP Disetujui',
+  message: 'Store Leader menyetujui evaluasi Minggu 1 Anda.',
+  type: 'APPROVAL'
+})
+assert(userStore.notifications.length === 1 && userStore.unreadNotificationCount === 1, 'Create Notification: Berhasil menambahkan notifikasi baru ke state')
+
+// 9.2 MARK SINGLE NOTIFICATION AS READ
+await userStore.markNotificationAsRead('notif-test-01')
+const readNotif = userStore.notifications.find(n => n.id === 'notif-test-01')
+assert(readNotif && readNotif.isRead === true && userStore.unreadNotificationCount === 0, 'Update Notification: Berhasil menandai satu notifikasi sebagai dibaca')
+
+// 9.3 BULK NOTIFICATIONS & MARK ALL READ
+userStore.addNotification({ id: 'notif-test-02', title: 'Reward Bintang', message: '+25 Stars', type: 'REWARD' })
+userStore.addNotification({ id: 'notif-test-03', title: 'Batch Baru', message: 'Batch telah dibuka', type: 'INFO' })
+assert(userStore.unreadNotificationCount === 2, 'Unread Count: Menghitung total notifikasi belum dibaca secara akurat')
+
+await userStore.markAllNotificationsAsRead()
+assert(userStore.unreadNotificationCount === 0 && userStore.notifications.every(n => n.isRead), 'Mark All Read: Berhasil menandai semua notifikasi sebagai dibaca')
+
+// 9.4 NOTIFICATION API ACTIONS
+assert(typeof userStore.fetchNotifications === 'function', 'Notification API: Action fetchNotifications tersedia di user store')
+assert(typeof userStore.fetchUnreadCount === 'function', 'Notification API: Action fetchUnreadCount tersedia di user store')
+
 console.log('')
 console.log(`==========================================`)
 console.log(`🏁 HASIL AUDIT PENGUJIAN CRUD: ${passedTests}/${totalTests} TESTS BERHASIL (100% PASS)`)

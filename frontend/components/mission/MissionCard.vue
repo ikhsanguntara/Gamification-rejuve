@@ -22,7 +22,7 @@
         class="block group"
       >
         <p class="text-xs font-medium text-slate-400 dark:text-slate-500 mb-1">
-          {{ mission.code }} • Week {{ mission.week }}
+          {{ mission.code }} • {{ batchStore.currentBatchUnitCode || 'Week' }} {{ mission.week }}
         </p>
         <h4 class="text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-[#831843] dark:group-hover:text-[#f472b6] transition-colors line-clamp-2">
           {{ mission.title }}
@@ -64,7 +64,6 @@
             </span>
           </div>
 
-          <!-- Personal Stars -->
           <StarReward
             :stars="myStars"
             size="sm"
@@ -72,7 +71,7 @@
           />
         </template>
 
-        <!-- SUPERVISOR / HEAD / ADMIN Store Aggregate Display -->
+        <!-- STORE Aggregate Display (SL, DM, Superadmin) -->
         <template v-else>
           <div class="flex items-center gap-1.5">
             <span class="text-xs text-slate-500 dark:text-slate-400">Rata-rata:</span>
@@ -80,11 +79,10 @@
               class="text-xs font-semibold"
               :class="mission.averageScore > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400'"
             >
-              {{ mission.averageScore > 0 ? `${mission.averageScore}/100` : '—' }}
+              {{ mission.averageScore > 0 ? `${mission.averageScore}%` : '—' }}
             </span>
           </div>
 
-          <!-- Store Stars -->
           <StarReward
             :stars="mission.awardedStars || mission.calculatedStars || 1"
             size="sm"
@@ -110,6 +108,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useUserStore } from '~/stores/user.js'
+import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { formatDate } from '~/utils/date.js'
 import { calculateStars } from '~/utils/star.js'
@@ -120,6 +119,8 @@ import {
   ChevronRight,
   Users
 } from 'lucide-vue-next'
+
+const batchStore = useBatchStore()
 
 const props = defineProps({
   mission: {

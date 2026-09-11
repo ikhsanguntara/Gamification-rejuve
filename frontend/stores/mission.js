@@ -18,15 +18,15 @@ export const useMissionStore = defineStore('mission', {
   }),
 
   getters: {
-    allMissions: (state) => state.missions,
-    missionsByBatch: (state) => (batchId) => state.missions.filter(m => m.batchId === batchId),
+    allMissions: (state) => state.missions || [],
+    missionsByBatch: (state) => (batchId) => (state.missions || []).filter(m => m.batchId === batchId),
     missionsByWeek: (state) => (batchId, weekNumber) => {
-      return state.missions.filter(m => m.batchId === batchId && m.week === Number(weekNumber))
+      return (state.missions || []).filter(m => m.batchId === batchId && m.week === Number(weekNumber))
     },
-    missionById: (state) => (id) => state.missions.find(m => m.id === id),
-    completedCount: (state) => state.missions.filter(m => m.status === 'COMPLETED' || m.status === 'APPROVED').length,
-    pendingCount: (state) => state.missions.filter(m => m.status === 'PENDING_REVIEW').length,
-    revisionCount: (state) => state.missions.filter(m => m.status === 'REVISION_REQUIRED').length,
+    missionById: (state) => (id) => (state.missions || []).find(m => m.id === id),
+    completedCount: (state) => (state.missions || []).filter(m => m.status === 'COMPLETED' || m.status === 'APPROVED').length,
+    pendingCount: (state) => (state.missions || []).filter(m => m.status === 'PENDING_REVIEW').length,
+    revisionCount: (state) => (state.missions || []).filter(m => m.status === 'REVISION_REQUIRED').length,
 
     /**
      * Get a specific crew's evaluation detail for a given mission

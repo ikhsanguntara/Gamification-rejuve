@@ -151,9 +151,9 @@ onMounted(async () => {
 })
 
 const filteredMissions = computed(() => {
-  const targetBatchId = userStore.isCrew ? userStore.currentUser.batchId : batchStore.selectedBatchId
+  const targetBatchId = userStore.isCrew ? userStore.currentUser?.batchId : batchStore.selectedBatchId
 
-  return missionStore.allMissions.filter(m => {
+  return (missionStore.allMissions || []).filter(m => {
     // Branch Filter
     if (m.batchId !== targetBatchId) return false
 

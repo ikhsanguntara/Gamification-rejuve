@@ -121,32 +121,18 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <!-- Cakupan / Catatan Batch -->
-          <div class="sm:col-span-2">
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Cakupan / Catatan Batch
-            </label>
-            <input
-              :value="batch?.storeLocation || batch?.name || '-'"
-              type="text"
-              readonly
-              disabled
-              class="w-full text-xs font-medium rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-800 dark:text-slate-200 cursor-default select-text"
-            />
-          </div>
-
-          <!-- Min. Skor Bintang 5 -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Min. Skor Bintang 5</label>
-            <input
-              :value="`${batch?.approvalConfig?.minScoreFor5Stars || 90} Poin`"
-              type="text"
-              readonly
-              disabled
-              class="w-full text-xs font-bold rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-800 dark:text-slate-200 cursor-default"
-            />
-          </div>
+        <!-- Cakupan / Catatan Batch -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Cakupan / Catatan Batch
+          </label>
+          <input
+            :value="batch?.storeLocation || batch?.name || '-'"
+            type="text"
+            readonly
+            disabled
+            class="w-full text-xs font-medium rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-800 dark:text-slate-200 cursor-default select-text"
+          />
         </div>
 
         <!-- Tanggal Mulai & Selesai Siklus -->
@@ -530,15 +516,15 @@ const batchMissions = computed(() => {
   if (batch.value?.missions && batch.value.missions.length > 0) {
     return batch.value.missions
   }
-  return missionStore.missionsByBatch(route.params.id)
+  return missionStore.missionsByBatch(route.params.id) || []
 })
 
 const buddyMissionsPreview = computed(() => {
-  return batchMissions.value.filter(m => m.type === 'BUDDY')
+  return (batchMissions.value || []).filter(m => m.type === 'BUDDY')
 })
 
 const journeyMissionsPreview = computed(() => {
-  return batchMissions.value.filter(m => m.type === 'JOURNEY' || !m.type)
+  return (batchMissions.value || []).filter(m => m.type === 'JOURNEY' || !m.type)
 })
 
 const linkedBuddyTemplate = computed(() => {
@@ -568,12 +554,13 @@ const assignedCrews = computed(() => {
 
   // Fallback jika users belum terembed di batch object
   const crewIds = batch.value?.assignment?.crewIds || []
-  return userStore.userDirectory.filter(u => crewIds.includes(u.id))
+  return (userStore.userDirectory || []).filter(u => crewIds.includes(u.id))
 })
 
 const displayedAssignedCrews = computed(() => {
-  if (crewStoreFilter.value === 'ALL') return assignedCrews.value
-  return assignedCrews.value.filter(c => c.storeId === crewStoreFilter.value)
+  const list = assignedCrews.value || []
+  if (crewStoreFilter.value === 'ALL') return list
+  return list.filter(c => c.storeId === crewStoreFilter.value)
 })
 
 const participatingStores = computed(() => {

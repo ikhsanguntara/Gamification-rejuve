@@ -122,7 +122,43 @@ const searchQuery = ref('')
 const targetBatchId = computed(() => props.batchId || batchStore.selectedBatchId)
 
 const batchCrews = computed(() => {
-  return gamificationStore.crewsByBatch(targetBatchId.value)
+  const fromGami = gamificationStore.crewsByBatch(targetBatchId.value) || []
+  if (fromGami.length > 0) return fromGami
+
+  // Cek userStore users yang di-assign ke batch ini
+  const usersList = userStore.allUsers || userStore.userDirectory || []
+  const usersFromStore = usersList.filter(u => u.batchId === targetBatchId.value || u.assignedBatchId === targetBatchId.value)
+  if (usersFromStore.length > 0) {
+    return usersFromStore.map((u, idx) => ({
+      id: u.id,
+      code: u.code || `CRW-0${idx + 1}`,
+      name: u.name,
+      avatar: u.avatar || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`,
+      level: u.level || 1,
+      position: u.role || 'Crew Specialist',
+      storeLocation: u.storeLocation || 'Cabang Re.juve',
+      completedMissions: u.completedMissions || 0,
+      stars: u.stars || 0
+    }))
+  }
+
+  // Fallback ke array users langsung pada objek batch
+  const b = (batchStore.batches || []).find(b => b.id === targetBatchId.value || b.code === targetBatchId.value) || batchStore.currentBatch
+  if (b?.users && Array.isArray(b.users) && b.users.length > 0) {
+    return b.users.map((u, idx) => ({
+      id: u.userId || u.id || `crew-${idx}`,
+      code: u.code || `CRW-0${idx + 1}`,
+      name: u.name || 'Crew Specialist',
+      avatar: u.avatar || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`,
+      level: u.level || 1,
+      position: u.department?.name || u.position || 'Crew Specialist',
+      storeLocation: b.name || 'Cabang Re.juve',
+      completedMissions: u.completedMissions || 0,
+      stars: u.stars || 0
+    }))
+  }
+
+  return []
 })
 
 const filteredCrews = computed(() => {

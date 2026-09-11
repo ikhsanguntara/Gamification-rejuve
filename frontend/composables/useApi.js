@@ -8,7 +8,7 @@ import { useLoading } from './useLoading.js'
 let memoryToken = ''
 
 export function getApiBaseUrl() {
-  let url = 'https://cagelike-flukily-niels.ngrok-free.dev/api'
+  let url = 'http://localhost:5000/api'
   if (typeof window !== 'undefined') {
     try {
       const config = useRuntimeConfig?.()
