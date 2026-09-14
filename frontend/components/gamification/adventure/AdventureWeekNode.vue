@@ -61,6 +61,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { calculateStars } from '~/utils/star.js'
+import { useConfetti } from '~/composables/useConfetti.js'
 import {
   Tent, Waves, Mountain, Compass, Lock, Check,
   Flag, Trees, Sparkles
@@ -161,7 +162,18 @@ const dotClass = computed(() => ({
   'dot-available': weekState.value === 'available',
 }))
 
-const handleClick = () => {
+const confetti = useConfetti()
+
+const handleClick = (e) => {
+  if (weekState.value !== 'locked') {
+    if (typeof window !== 'undefined' && e) {
+      const x = e.clientX / window.innerWidth
+      const y = e.clientY / window.innerHeight
+      confetti.triggerStarBurst({ x, y })
+    } else {
+      confetti.triggerStarBurst()
+    }
+  }
   emit('select', props.week)
 }
 </script>
@@ -187,7 +199,7 @@ const handleClick = () => {
   opacity: 0.8;
 }
 
-/* ── Pulse rings for active week ── */
+/* ── Pulse rings for active week (Beacon Radar) ── */
 .pulse-ring {
   position: absolute;
   top: 26px;
@@ -195,15 +207,16 @@ const handleClick = () => {
   transform: translate(-50%, -50%);
   border-radius: 50%;
   border: 2.5px solid #F59E0B;
+  box-shadow: 0 0 12px 2px rgba(245, 158, 11, 0.6);
   pointer-events: none;
-  animation: weekPulse 2.2s ease-out infinite;
+  animation: weekPulse 2.2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
 }
-.ring-1 { width: 66px; height: 66px; animation-delay: 0s; }
-.ring-2 { width: 84px; height: 84px; animation-delay: 0.7s; }
+.ring-1 { width: 68px; height: 68px; animation-delay: 0s; }
+.ring-2 { width: 92px; height: 92px; animation-delay: 0.75s; }
 
 @keyframes weekPulse {
-  0% { opacity: 0.85; transform: translate(-50%, -50%) scale(0.85); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+  0% { opacity: 0.95; transform: translate(-50%, -50%) scale(0.85); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
 }
 
 /* ── Node Body (Big Outpost Shield) ── */

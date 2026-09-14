@@ -355,10 +355,33 @@ const onMissionListClick = (mission) => {
   grid-template-columns: 1fr auto;
   gap: 14px 20px;
   align-items: center;
-  box-shadow: 0 8px 32px rgba(44, 26, 8, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(44, 26, 8, 0.4), 0 0 20px rgba(245, 158, 11, 0.15);
+  border: 1.5px solid rgba(252, 211, 77, 0.25);
   position: relative;
   overflow: hidden;
+}
+
+.journey-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  animation: heroShimmer 7s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes heroShimmer {
+  0% { left: -120%; }
+  35%, 100% { left: 160%; }
 }
 @media (max-width: 640px) {
   .journey-hero {

@@ -25,8 +25,14 @@
       </svg>
     </div>
 
-    <!-- Sun / warm glow accent -->
+    <!-- Sun / warm glow accent with sunbeams -->
     <div class="sun-glow"></div>
+    <div class="sunbeam-shimmer"></div>
+
+    <!-- ✨ Ambient Golden Fireflies & Sparkles Floating Layer ✨ -->
+    <div class="fireflies-layer">
+      <div v-for="i in 14" :key="`ff-${i}`" :class="`firefly ff-${i}`"></div>
+    </div>
   </div>
 </template>
 
@@ -106,22 +112,93 @@
   to   { transform: translateX(calc(100vw + 380px)); }
 }
 
-/* ── Sun / warm glow ─────────────────────────────────────── */
+/* ── Sun / warm glow & subtle sunbeam shimmer ─────────────── */
 .sun-glow {
   position: absolute;
   top: -40px;
   left: 44%;
-  width: 240px;
-  height: 240px;
+  width: 280px;
+  height: 280px;
   background: radial-gradient(
     circle,
-    rgba(255, 225, 80, 0.3) 0%,
-    rgba(255, 185, 30, 0.14) 45%,
+    rgba(255, 235, 120, 0.45) 0%,
+    rgba(255, 185, 30, 0.22) 45%,
     transparent 70%
   );
   border-radius: 50%;
   filter: blur(28px);
   pointer-events: none;
   transform: translateX(-50%);
+  animation: sunPulsate 6s ease-in-out infinite alternate;
+}
+
+.sunbeam-shimmer {
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 60%;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(254, 240, 138, 0.12) 0%,
+    rgba(253, 224, 71, 0.05) 50%,
+    transparent 80%
+  );
+  pointer-events: none;
+  animation: beamBreathe 8s ease-in-out infinite alternate;
+}
+
+@keyframes sunPulsate {
+  0% { transform: translateX(-50%) scale(0.95); opacity: 0.8; }
+  100% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+}
+
+@keyframes beamBreathe {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* ── ✨ Floating Fireflies & Golden Sparkles ──────────────── */
+.fireflies-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.firefly {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fef08a;
+  box-shadow: 0 0 8px 3px rgba(250, 204, 21, 0.9), 0 0 16px 6px rgba(234, 179, 8, 0.5);
+  animation: fireflyFloat 6s ease-in-out infinite alternate, fireflyGlow 3s ease-in-out infinite alternate;
+}
+
+.ff-1  { top: 62%; left: 12%; animation-duration: 7s, 2.5s; animation-delay: 0s; }
+.ff-2  { top: 52%; left: 24%; animation-duration: 8s, 3.2s; animation-delay: 1.2s; width: 6px; height: 6px; }
+.ff-3  { top: 72%; left: 35%; animation-duration: 6.5s, 2.8s; animation-delay: 0.5s; }
+.ff-4  { top: 48%; left: 45%; animation-duration: 9s, 3.5s; animation-delay: 2s; width: 4px; height: 4px; }
+.ff-5  { top: 65%; left: 56%; animation-duration: 7.5s, 2.7s; animation-delay: 1.5s; width: 6px; height: 6px; }
+.ff-6  { top: 58%; left: 68%; animation-duration: 8.5s, 3.1s; animation-delay: 0.8s; }
+.ff-7  { top: 76%; left: 78%; animation-duration: 6s, 2.4s; animation-delay: 2.5s; width: 7px; height: 7px; }
+.ff-8  { top: 44%; left: 88%; animation-duration: 9.5s, 3.6s; animation-delay: 1.8s; }
+.ff-9  { top: 38%; left: 18%; animation-duration: 7.2s, 3.0s; animation-delay: 3s; width: 4px; height: 4px; }
+.ff-10 { top: 82%; left: 48%; animation-duration: 8.2s, 2.9s; animation-delay: 0.3s; }
+.ff-11 { top: 34%; left: 74%; animation-duration: 7.8s, 3.4s; animation-delay: 2.1s; width: 5px; height: 5px; }
+.ff-12 { top: 85%; left: 85%; animation-duration: 6.8s, 2.6s; animation-delay: 1.4s; width: 6px; height: 6px; }
+.ff-13 { top: 55%; left: 92%; animation-duration: 8.7s, 3.3s; animation-delay: 0.9s; }
+.ff-14 { top: 70%; left: 6%;  animation-duration: 7.1s, 2.7s; animation-delay: 2.8s; width: 5px; height: 5px; }
+
+@keyframes fireflyFloat {
+  0% { transform: translate(0, 0) scale(0.9); }
+  50% { transform: translate(14px, -18px) scale(1.15); }
+  100% { transform: translate(-12px, -30px) scale(1); }
+}
+
+@keyframes fireflyGlow {
+  0%, 100% { opacity: 0.25; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.3); }
 }
 </style>

@@ -56,17 +56,18 @@
             stroke-linejoin="round"
             stroke-dasharray="none"
           />
-          <!-- Trail dots/steps for the path texture -->
+          <!-- Trail dots/steps for the path texture (animated marching steps) -->
           <path
             :d="trailPath"
+            class="trail-marching-dots"
             fill="none"
             stroke="#FDF3DC"
             stroke-width="2.5"
             stroke-linecap="round"
             stroke-dasharray="6 10"
-            opacity="0.7"
+            opacity="0.75"
           />
-          <!-- Completed portion of trail (glowing green) -->
+          <!-- Completed portion of trail (glowing emerald) -->
           <path
             v-if="completedTrailPath"
             :d="completedTrailPath"
@@ -79,12 +80,13 @@
           <path
             v-if="completedTrailPath"
             :d="completedTrailPath"
+            class="trail-marching-completed"
             fill="none"
-            stroke="#34D399"
-            stroke-width="2.5"
+            stroke="#6EE7B7"
+            stroke-width="2.8"
             stroke-linecap="round"
             stroke-dasharray="6 10"
-            opacity="0.9"
+            opacity="0.95"
           />
         </svg>
 
@@ -648,6 +650,23 @@ onUnmounted(() => {
   height: 100%;
   z-index: 2;
   pointer-events: none;
+}
+
+.trail-marching-dots {
+  animation: trailMarch 22s linear infinite;
+}
+
+.trail-marching-completed {
+  animation: trailMarch 16s linear infinite;
+}
+
+@keyframes trailMarch {
+  from {
+    stroke-dashoffset: 64;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* ── Nodes Layer ─────────────────────────────────────────── */
