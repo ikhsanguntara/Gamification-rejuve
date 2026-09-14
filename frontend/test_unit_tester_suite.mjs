@@ -260,7 +260,8 @@ const userStore = useUserStore()
   { id: 'sl-001', name: 'Budi Santoso', role: 'STORE_LEADER', isBuddy: true, email: 'budi.santoso@rejuve.co.id' },
   { id: 'sl-002', name: 'Dewi Lestari', role: 'STORE_LEADER', isBuddy: false, email: 'dewi.lestari@rejuve.co.id' },
   { id: 'dm-001', name: 'Ahmad Dahlan', role: 'DISTRICT_MANAGER', email: 'ahmad.dahlan@rejuve.co.id' },
-  { id: 'crew-001', name: 'Andi Pratama', role: 'CREW', email: 'andi.pratama@rejuve.co.id' }
+  { id: 'crew-001', name: 'Andi Pratama', role: 'CREW', email: 'andi.pratama@rejuve.co.id' },
+  { id: 'crew-002', name: 'Budi Kru', role: 'CREW', email: 'budi.kru@rejuve.co.id' }
 ].forEach(u => userStore.createUser(u))
 
 test('Role Crew: identifikasi role dan ketiadaan akses manajerial', () => {
@@ -380,6 +381,63 @@ test('userStore: dukungan filter parameter exact.batchId pada fetchUsersFromApi'
   const users = userStore.allUsers
   assertTrue(Array.isArray(users), 'allUsers harus mengembalikan array pengguna')
   assertTrue(users.length > 0, 'allUsers harus memiliki data pengguna')
+})
+
+console.log('')
+
+// ============================================================================
+// SUITE 6: CREW MISSION ISOLATION (Journey & Missions Page)
+// ============================================================================
+console.log('📌 6. Menguji Isolasi Data Misi per Kru pada Menu /journey & /missions:')
+
+test('Crew Mission Isolation: Kru hanya melihat misinya sendiri (bukan seluruh misi anggota batch)', () => {
+  const missionStore = useMissionStore()
+
+  // Setup batch dengan 2 kru berbeda di batch yang sama
+  const testBatchId = 'batch-isolation-test'
+  const mockMissions = [
+    // Misi milik crew-001 di Week 1 (3 misi)
+    { id: 'm-c1-w1-1', batchId: testBatchId, week: 1, title: 'Misi C1 1.1', assignedCrewIds: ['crew-001'], crewEvaluations: [{ crewId: 'crew-001', score: 80, status: 'COMPLETED' }], status: 'COMPLETED' },
+    { id: 'm-c1-w1-2', batchId: testBatchId, week: 1, title: 'Misi C1 1.2', assignedCrewIds: ['crew-001'], crewEvaluations: [{ crewId: 'crew-001', score: 90, status: 'IN_PROGRESS' }], status: 'IN_PROGRESS' },
+    { id: 'm-c1-w1-3', batchId: testBatchId, week: 1, title: 'Misi C1 1.3', assignedCrewIds: ['crew-001'], crewEvaluations: [{ crewId: 'crew-001', score: 85, status: 'IN_PROGRESS' }], status: 'IN_PROGRESS' },
+    // Misi milik crew-002 di Week 1 (3 misi)
+    { id: 'm-c2-w1-1', batchId: testBatchId, week: 1, title: 'Misi C2 1.1', assignedCrewIds: ['crew-002'], crewEvaluations: [{ crewId: 'crew-002', score: 95, status: 'COMPLETED' }], status: 'COMPLETED' },
+    { id: 'm-c2-w1-2', batchId: testBatchId, week: 1, title: 'Misi C2 1.2', assignedCrewIds: ['crew-002'], crewEvaluations: [{ crewId: 'crew-002', score: 88, status: 'COMPLETED' }], status: 'COMPLETED' },
+    { id: 'm-c2-w1-3', batchId: testBatchId, week: 1, title: 'Misi C2 1.3', assignedCrewIds: ['crew-002'], crewEvaluations: [{ crewId: 'crew-002', score: 70, status: 'IN_PROGRESS' }], status: 'IN_PROGRESS' },
+  ]
+  missionStore.missions = mockMissions
+
+  // 1. Simulasi login sebagai crew-001
+  userStore.loginAsUser('crew-001')
+  userStore.currentUser.batchId = testBatchId
+
+  function getActiveBatchMissions(isCrew, currentUser) {
+    const list = missionStore.missionsByBatch(testBatchId) || []
+    if (isCrew && currentUser?.id) {
+      const currentCrewId = currentUser.id
+      return list.filter(m => {
+        return (m.assignedCrewIds && m.assignedCrewIds.includes(currentCrewId)) ||
+          (m.crewEvaluations && m.crewEvaluations.some(ce => ce.crewId === currentCrewId))
+      })
+    }
+    return list
+  }
+
+  const c1Missions = getActiveBatchMissions(userStore.isCrew, userStore.currentUser)
+  assertEqual(c1Missions.length, 3, 'crew-001 harus tepat mendapatkan 3 misi di Week 1 (bukan 6)')
+  assertTrue(c1Missions.every(m => m.assignedCrewIds.includes('crew-001')), 'Semua misi harus milik crew-001')
+
+  // 2. Simulasi login sebagai crew-002
+  userStore.loginAsUser('crew-002')
+  userStore.currentUser.batchId = testBatchId
+  const c2Missions = getActiveBatchMissions(userStore.isCrew, userStore.currentUser)
+  assertEqual(c2Missions.length, 3, 'crew-002 harus tepat mendapatkan 3 misi di Week 1 (bukan 6)')
+  assertTrue(c2Missions.every(m => m.assignedCrewIds.includes('crew-002')), 'Semua misi harus milik crew-002')
+
+  // 3. Simulasi login sebagai Store Leader (melihat seluruh 6 misi gerai)
+  userStore.loginAsUser('sl-001')
+  const slMissions = getActiveBatchMissions(userStore.isCrew, userStore.currentUser)
+  assertEqual(slMissions.length, 6, 'Store Leader harus dapat melihat seluruh 6 misi di batch')
 })
 
 console.log('')

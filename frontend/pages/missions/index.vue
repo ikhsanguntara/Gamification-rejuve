@@ -157,6 +157,14 @@ const filteredMissions = computed(() => {
     // Branch Filter
     if (m.batchId !== targetBatchId) return false
 
+    // Crew Isolation Filter
+    if (userStore.isCrew && userStore.currentUser?.id) {
+      const currentCrewId = userStore.currentUser.id
+      const isAssigned = (m.assignedCrewIds && m.assignedCrewIds.includes(currentCrewId)) ||
+        (m.crewEvaluations && m.crewEvaluations.some(ce => ce.crewId === currentCrewId))
+      if (!isAssigned) return false
+    }
+
     // Search
     if (search.value) {
       const q = search.value.toLowerCase().trim()

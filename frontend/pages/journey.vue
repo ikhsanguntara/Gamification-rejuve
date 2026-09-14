@@ -40,9 +40,10 @@ const missionStore = useMissionStore()
 const gamificationStore = useGamificationStore()
 
 onMounted(async () => {
+  const missionParams = (userStore.isCrew && userStore.currentUser?.id) ? { userId: userStore.currentUser.id } : {}
   await Promise.allSettled([
     batchStore.fetchBatchesFromApi(),
-    missionStore.fetchMissionsFromApi(),
+    missionStore.fetchMissionsFromApi(false, missionParams),
     gamificationStore.fetchLeaderboardFromApi()
   ])
 })
