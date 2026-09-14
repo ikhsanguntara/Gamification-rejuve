@@ -5,7 +5,7 @@ const { sendSuccess, sendError, sendPaginated } = require('../../utils/responseW
 
 const getQuestions = async (req, res, next) => {
   try {
-    const questions = feedbackService.getQuestions();
+    const questions = await feedbackService.getQuestions(req.query);
     return sendSuccess(res, {
       statusCode: 200,
       message: 'Daftar butir pertanyaan survei onboarding berhasil diambil.',

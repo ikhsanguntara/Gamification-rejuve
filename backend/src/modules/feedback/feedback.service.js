@@ -22,8 +22,107 @@ const SURVEY_QUESTIONS = [
   { id: 'sq-17', number: 17, text: 'Tuliskan kesan, pesan, atau masukan untuk pengembangan program pendampingan onboarding Re.juve ke depannya.', category: 'Masukan & Saran', type: 'ESSAY' }
 ];
 
-const getQuestions = () => {
-  return SURVEY_QUESTIONS;
+const getQuestions = async (query = {}) => {
+  try {
+    let tplMission = null;
+
+    // 1. Prioritas filter ID template eksplisit
+    const templateId = query.templateId || query.tplMissionId;
+    if (templateId) {
+      tplMission = await prisma.tplMission.findFirst({
+        where: {
+          OR: [
+            { tplMissionId: templateId },
+            { code: templateId }
+          ],
+          type: 'FEEDBACK'
+        },
+        include: {
+          details: true
+        }
+      });
+    }
+
+    // 2. Filter berdasarkan Batch ID jika ada
+    if (!tplMission && query.batchId) {
+      const batchDetail = await prisma.batchDetail.findFirst({
+        where: {
+          batchId: query.batchId,
+          tplMission: { type: 'FEEDBACK' }
+        },
+        include: {
+          tplMission: {
+            include: {
+              details: true
+            }
+          }
+        }
+      });
+      if (batchDetail?.tplMission) {
+        tplMission = batchDetail.tplMission;
+      }
+    }
+
+    // 3. Fallback: ambil Master Template FEEDBACK aktif terbaru
+    if (!tplMission) {
+      tplMission = await prisma.tplMission.findFirst({
+        where: { type: 'FEEDBACK' },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          details: true
+        }
+      });
+    }
+
+    // Jika template dan butir kuesioner ditemukan di database
+    if (tplMission && Array.isArray(tplMission.details) && tplMission.details.length > 0) {
+      // Urutkan berdasarkan questionNumber pada scaleConfig atau durationNumber
+      const sortedDetails = [...tplMission.details].sort((a, b) => {
+        const numA = a.scaleConfig?.questionNumber ?? a.durationNumber ?? 0;
+        const numB = b.scaleConfig?.questionNumber ?? b.durationNumber ?? 0;
+        if (numA !== numB) return numA - numB;
+        return (a.tplMissionDetailId || '').localeCompare(b.tplMissionDetailId || '');
+      });
+
+      return sortedDetails.map((detail, idx) => {
+        const sc = detail.scaleConfig || {};
+        const qNum = sc.questionNumber || (idx + 1);
+        const inputType = detail.inputType;
+
+        // Pemetaan kompatibilitas tipe untuk frontend
+        let mappedType = 'SCALE_0_10';
+        if (inputType === 'TEXT') {
+          mappedType = 'ESSAY';
+        } else if (inputType === 'SCALE') {
+          mappedType = 'SCALE_0_10';
+        } else if (inputType === 'RADIO') {
+          mappedType = 'RADIO';
+        } else if (inputType === 'CHECKBOX') {
+          mappedType = 'CHECKBOX';
+        } else {
+          mappedType = inputType;
+        }
+
+        return {
+          id: detail.tplMissionDetailId,
+          number: qNum,
+          text: detail.missionTitle,
+          category: sc.categoryName || sc.topic || detail.description || 'Umum',
+          type: mappedType,
+          inputType: detail.inputType,
+          scaleConfig: sc,
+          templateId: tplMission.tplMissionId,
+          templateCode: tplMission.code
+        };
+      });
+    }
+
+    // 4. Default fallback aman jika database belum terisi template FEEDBACK
+    return SURVEY_QUESTIONS;
+  } catch (err) {
+    console.error('[feedback.service] Error getQuestions dari DB, menggunakan fallback:', err.message);
+    return SURVEY_QUESTIONS;
+  }
 };
 
 const submitSurvey = async ({ crewId, batchId = null, crewName, storeLocation, buddyName, ratings = {}, essayAnswer = '' }) => {
