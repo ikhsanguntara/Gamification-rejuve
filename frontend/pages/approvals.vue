@@ -176,6 +176,7 @@ import { ref, computed, onMounted } from 'vue'
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from 'reka-ui'
 import { useApprovalStore } from '~/stores/approval.js'
 import { useToast } from '~/composables/useToast.js'
+import { useConfetti } from '~/composables/useConfetti.js'
 import ApprovalCard from '~/components/approval/ApprovalCard.vue'
 import ApprovalModal from '~/components/approval/ApprovalModal.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
@@ -189,6 +190,7 @@ import {
 
 const approvalStore = useApprovalStore()
 const toast = useToast()
+const confetti = useConfetti()
 
 const activeTab = ref('PENDING')
 const isApproveModalOpen = ref(false)
@@ -265,6 +267,9 @@ async function handleBulkApprove() {
   const res = approvalStore.bulkApprove(selectedIds.value)
   selectedIds.value = []
 
+  // Efek semarak bintang gamifikasi
+  confetti.triggerApprovalStars({ x: 0.5, y: 0.35 })
+
   toast.success('Bulk Approve Berhasil', `${res.approvedCount || count} evaluasi misi kru telah disetujui sekaligus. Bintang otomatis dicairkan! 🚀`)
 }
 
@@ -285,6 +290,10 @@ const handleApprove = (overrideData = {}) => {
   if (selectedItem.value) {
     const result = approvalStore.approveMission(selectedItem.value.id, overrideData)
     isApproveModalOpen.value = false
+
+    // Efek semarak bintang gamifikasi
+    confetti.triggerApprovalStars({ x: 0.5, y: 0.35 })
+
     const adjustNote = result.isAdjustedByDm ? ` (Skor Akhir: ${result.score}/100)` : ''
     toast.success('Evaluasi Disetujui', `+${result.awardedStars || 5} ⭐ Bintang telah dicairkan ke akun ${result.crewName || 'kru'}${adjustNote}. 🎉`)
   }

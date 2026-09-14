@@ -690,6 +690,7 @@ import { useUserStore } from '~/stores/user.js'
 import { useApprovalStore } from '~/stores/approval.js'
 import { calculateStars } from '~/utils/star.js'
 import { useToast } from '~/composables/useToast.js'
+import { useConfetti } from '~/composables/useConfetti.js'
 import WeekSelector from '~/components/batch/WeekSelector.vue'
 import MissionStatus from '~/components/mission/MissionStatus.vue'
 import StarReward from '~/components/gamification/StarReward.vue'
@@ -724,6 +725,7 @@ const approvalStore = useApprovalStore()
 const gamificationStore = useGamificationStore()
 const userStore = useUserStore()
 const toast = useToast()
+const confetti = useConfetti()
 
 const isWeekLocked = computed(() => {
   return batchStore.isWeekSelectedLocked || (Number(batchStore.selectedWeek) !== Number(batchStore.activeWeekNumber))
@@ -1230,6 +1232,9 @@ async function submitDmReviewAction(missionId, action) {
         score,
         notes
       })
+    }
+    if (action === 'APPROVE') {
+      confetti.triggerApprovalStars({ x: 0.5, y: 0.35 })
     }
     const actionLabel = action === 'APPROVE' ? 'disetujui' : (action === 'REVISE' ? 'diminta revisi' : 'ditolak')
     toast.success('Review DM Disimpan', `Misi "${targetMission?.title || missionId}" telah berhasil ${actionLabel}!`)

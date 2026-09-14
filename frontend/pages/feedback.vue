@@ -221,6 +221,7 @@ import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useFeedbackStore } from '~/stores/feedback.js'
 import { useToast } from '~/composables/useToast.js'
+import { useConfetti } from '~/composables/useConfetti.js'
 import { Send, CheckCircle2 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -228,6 +229,7 @@ const userStore = useUserStore()
 const batchStore = useBatchStore()
 const feedbackStore = useFeedbackStore()
 const toast = useToast()
+const confetti = useConfetti()
 
 const currentCrewId = computed(() => userStore.currentUserId || userStore.currentUser?.id || userStore.currentUser?.userId || '')
 
@@ -317,6 +319,9 @@ const submitFeedback = async () => {
       essayAnswers: surveyForm.value.essayAnswers,
       essayAnswer: combinedEssayAnswer
     })
+
+    // Efek semarak bintang gamifikasi
+    confetti.triggerApprovalStars({ x: 0.5, y: 0.35 })
 
     toast.success(
       'Feedback Berhasil Terkirim!',

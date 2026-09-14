@@ -611,11 +611,13 @@ import { useBuddyStore } from '~/stores/buddy.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useUserStore } from '~/stores/user.js'
 import { useToast } from '~/composables/useToast.js'
+import { useConfetti } from '~/composables/useConfetti.js'
 
 const buddyStore = useBuddyStore()
 const batchStore = useBatchStore()
 const userStore = useUserStore()
 const toast = useToast()
+const confetti = useConfetti()
 
 const crewSearchQuery = ref('')
 const selectedCrewId = ref('')
@@ -874,6 +876,9 @@ const submitBuddyMission = async (userMissionId) => {
     await buddyStore.submitBuddyScore(userMissionId, payload)
     
     editingMissionIds[userMissionId] = false
+
+    // Efek semarak bintang gamifikasi
+    confetti.triggerApprovalStars({ x: 0.5, y: 0.35 })
 
     toast.success('Misi Buddy Selesai!', `Penilaian berhasil disimpan sebagai "${label}" (Skor: ${score}). 🚀`)
   } catch (err) {
