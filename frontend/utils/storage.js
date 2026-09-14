@@ -34,7 +34,8 @@ export function clearAllStoredData() {
       'rejuve_feedback_survey_tmpl_v1',
       'rejuve_newhire_rapor_tmpl_v1',
       'rejuve_crew_feedbacks_v1',
-      'rejuve_newhire_reports_v1'
+      'rejuve_newhire_reports_v1',
+      'rejuve_api_base'
     ]
     keys.forEach(k => {
       try {

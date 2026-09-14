@@ -333,13 +333,6 @@
         </p>
       </div>
       <div class="flex items-center gap-1">
-        <NuxtLink
-          to="/settings"
-          class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          title="Settings & Simulation Controls"
-        >
-          <Settings class="w-4 h-4" />
-        </NuxtLink>
         <button
           type="button"
           @click="handleLogout"

@@ -240,7 +240,7 @@
               </div>
             </div>
 
-            <!-- Profile & Settings Navigation Links -->
+            <!-- Profile Navigation Links -->
             <div class="py-1">
               <DropdownMenuItem as-child>
                 <NuxtLink
@@ -249,16 +249,6 @@
                 >
                   <User class="w-3.5 h-3.5" />
                   <span>Profil & Statistik Saya</span>
-                </NuxtLink>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem as-child>
-                <NuxtLink
-                  to="/settings"
-                  class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer focus:outline-hidden"
-                >
-                  <Settings class="w-3.5 h-3.5" />
-                  <span>Pengaturan & Simulasi</span>
                 </NuxtLink>
               </DropdownMenuItem>
             </div>
@@ -317,7 +307,6 @@ import {
   Info,
   Inbox,
   User,
-  Settings,
   LogOut,
   Menu,
   Compass,
