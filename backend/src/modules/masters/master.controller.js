@@ -29,8 +29,6 @@ const enrichDepartmentsWithManagers = async (departments) => {
 
   if (managerIds.length === 0) {
     for (const d of departments) {
-      d.storeLeader = null;
-      d.districtManager = null;
       d.userSl = null;
       d.userDm = null;
     }
@@ -72,13 +70,8 @@ const enrichDepartmentsWithManagers = async (departments) => {
   }
 
   for (const d of departments) {
-    const sl = d.userSlId ? userMap.get(d.userSlId) || null : null;
-    const dm = d.userDmId ? userMap.get(d.userDmId) || null : null;
-
-    d.storeLeader = sl;
-    d.districtManager = dm;
-    d.userSl = sl;
-    d.userDm = dm;
+    d.userSl = d.userSlId ? userMap.get(d.userSlId) || null : null;
+    d.userDm = d.userDmId ? userMap.get(d.userDmId) || null : null;
   }
 
   return departments;
