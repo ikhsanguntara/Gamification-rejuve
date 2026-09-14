@@ -34,15 +34,15 @@ const uploadMiddleware = multer({
  * @param {string} subFolder - Subfolder tujuan (misal: 'evidence')
  * @returns {Promise<string>} publicUrl - URL publik file yang berhasil disimpan
  */
-const uploadFileToStorage = async (file, subFolder = 'evidence', req = null) => {
+const uploadFileToStorage = async (file, subFolder = 'evidences', req = null, filePrefix = null) => {
   if (!file || !file.buffer) {
     throw new Error('File buffer tidak ditemukan');
   }
 
   const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
   const randomStr = crypto.randomBytes(6).toString('hex');
-  const cleanSubFolder = subFolder ? subFolder.replace(/^\/+|\/+$/g, '') : 'evidence';
-  const prefix = path.basename(cleanSubFolder) || 'evidence';
+  const cleanSubFolder = subFolder ? subFolder.replace(/^\/+|\/+$/g, '') : 'evidences';
+  const prefix = filePrefix || path.basename(cleanSubFolder) || 'evidence';
   const fileName = `${prefix}-${Date.now()}-${randomStr}${ext}`;
   const objectPath = `${cleanSubFolder}/${fileName}`;
 

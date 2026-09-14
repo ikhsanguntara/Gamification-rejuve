@@ -34,12 +34,15 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ─── Public Evidence Proxy (MinIO & Local Disk Fallback) ─────────────────────
 const { minioClient, bucketName, isMinioOnline } = require('./config/minio');
-app.use(['/gamification', '/uploads', '/api/uploads'], async (req, res, next) => {
+app.use(['/gamification', '/uploads', '/api/uploads', '/evidences', '/api/evidences'], async (req, res, next) => {
   if (req.method !== 'GET') {
     return next();
   }
 
-  const relativePath = (req.path || '').replace(/^\/+/, '');
+  let relativePath = (req.path || '').replace(/^\/+/, '');
+  if (req.baseUrl && req.baseUrl.includes('evidences') && !relativePath.startsWith('evidences')) {
+    relativePath = `evidences/${relativePath}`;
+  }
   if (!relativePath) {
     return next();
   }

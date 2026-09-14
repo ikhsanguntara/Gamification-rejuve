@@ -1217,6 +1217,46 @@ const getBatchById = async (batchId, currentUser = null, req = null) => {
     }
   }
 
+  // Kelompokkan missions & users ke dalam masing-masing batch.details secara in-memory (O(N), 0 query tambahan DB)
+  if (Array.isArray(batch.details)) {
+    const missionsByDetailId = new Map();
+    const missionsByType = new Map();
+
+    if (Array.isArray(batch.missions)) {
+      for (const m of batch.missions) {
+        if (m.batchDetailId) {
+          if (!missionsByDetailId.has(m.batchDetailId)) {
+            missionsByDetailId.set(m.batchDetailId, []);
+          }
+          missionsByDetailId.get(m.batchDetailId).push(m);
+        }
+        if (m.type) {
+          if (!missionsByType.has(m.type)) {
+            missionsByType.set(m.type, []);
+          }
+          missionsByType.get(m.type).push(m);
+        }
+      }
+    }
+
+    const batchUsers = Array.isArray(batch.users) ? batch.users : [];
+
+    for (const d of batch.details) {
+      let detailMissions = missionsByDetailId.get(d.batchDetailId);
+      if (!detailMissions && d.tplMission?.type) {
+        detailMissions = missionsByType.get(d.tplMission.type);
+      }
+      detailMissions = detailMissions || [];
+
+      d.missions = detailMissions;
+      d.users = batchUsers;
+      if (d.tplMission) {
+        d.tplMission.missions = detailMissions;
+        d.tplMission.users = batchUsers;
+      }
+    }
+  }
+
   return await enrichSingleBatchWithTotalWeeks(batch, currentUser);
 };
 

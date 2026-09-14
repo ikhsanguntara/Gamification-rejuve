@@ -1687,11 +1687,13 @@ const getBuddyHistory = async (currentUser, query = {}) => {
 };
 
 /**
- * Helper untuk menentukan struktur folder MinIO berbasis Batch & Kru (Pola User-First):
- * batches/{batchCode}/crews/{crew_name}_{shortId}/{programType}[/week-{n}]
+/**
+ * Helper untuk menentukan struktur folder MinIO & prefix nama file:
+ * evidences/batches/{batchCode}/{crewName}/{type}[/week-{n}]
+ * Prefix file: mission_{shortMissionId}
  * 
  * @param {string} userMissionId
- * @returns {Promise<string>} folder path
+ * @returns {Promise<{folder: string, filePrefix: string, missionId: string, batchCode: string, crewName: string, programType: string}>}
  */
 const resolveEvidenceFolder = async (userMissionId) => {
   try {
@@ -1701,6 +1703,7 @@ const resolveEvidenceFolder = async (userMissionId) => {
         user: { select: { userId: true, name: true } },
         mission: {
           select: {
+            missionId: true,
             type: true,
             weekOrDayNumber: true,
             batch: { select: { batchId: true, code: true } }
@@ -1709,7 +1712,17 @@ const resolveEvidenceFolder = async (userMissionId) => {
       }
     });
 
-    if (!um) return 'evidence';
+    if (!um) {
+      return {
+        folder: 'evidences',
+        filePrefix: 'evidence',
+        missionId: '',
+        batchCode: 'general',
+        crewName: 'crew',
+        programType: 'general',
+        toString() { return this.folder; }
+      };
+    }
 
     const batchCode = (um.mission?.batch?.code || um.mission?.batch?.batchId || 'general')
       .replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -1718,20 +1731,39 @@ const resolveEvidenceFolder = async (userMissionId) => {
       .replace(/[^a-z0-9]/g, '_')
       .replace(/_+/g, '_')
       .replace(/^_|_$/g, '');
-    const shortId = (um.user?.userId || '').replace(/-/g, '').slice(0, 6);
-    const crewFolder = `${rawName || 'crew'}_${shortId}`;
-    const programType = (um.mission?.type || 'evidence').toLowerCase();
+    const crewName = rawName || 'crew';
+    const programType = (um.mission?.type || 'journey').toLowerCase();
 
-    let folder = `batches/${batchCode}/crews/${crewFolder}/${programType}`;
+    let folder = `evidences/batches/${batchCode}/${crewName}/${programType}`;
     if (programType === 'journey') {
       const weekNum = um.mission?.weekOrDayNumber || 1;
       folder += `/week-${weekNum}`;
     }
 
-    return folder;
+    const missionId = um.mission?.missionId || um.missionId || '';
+    const shortMissionId = missionId ? missionId.replace(/-/g, '').slice(0, 8) : 'general';
+    const filePrefix = `mission_${shortMissionId}`;
+
+    return {
+      folder,
+      filePrefix,
+      missionId,
+      batchCode,
+      crewName,
+      programType,
+      toString() { return this.folder; }
+    };
   } catch (err) {
     console.warn('[Evidence Folder Resolver Error]', err.message);
-    return 'evidence';
+    return {
+      folder: 'evidences',
+      filePrefix: 'evidence',
+      missionId: '',
+      batchCode: 'general',
+      crewName: 'crew',
+      programType: 'general',
+      toString() { return this.folder; }
+    };
   }
 };
 
