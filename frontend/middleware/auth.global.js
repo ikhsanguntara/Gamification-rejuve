@@ -3,7 +3,11 @@ import { useUserStore } from '~/stores/user.js'
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const userStore = useUserStore()
-  await userStore.initAuth()
+  if (!userStore.apiUser && userStore.token) {
+    await userStore.initAuth()
+  } else if (!userStore.isAuthenticated) {
+    await userStore.initAuth()
+  }
 
   // Allow navigation to login page
   if (to.path === '/login') {

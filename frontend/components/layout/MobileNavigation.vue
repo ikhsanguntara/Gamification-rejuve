@@ -62,22 +62,22 @@ const navItems = computed(() => {
       { label: 'Admin', path: '/admin', icon: Sliders },
       { label: 'Beranda', path: '/dashboard', icon: LayoutDashboard },
       { label: 'Batch', path: '/batches', icon: Layers },
-      { label: 'Misi', path: '/missions', icon: Target },
       {
         label: 'Approval',
         path: '/approvals',
         icon: ShieldCheck,
         hasBadge: approvalStore.pendingApprovals.length > 0
-      }
+      },
+      { label: 'Peringkat', path: '/leaderboard', icon: Medal }
     ]
   }
 
   if (role === 'CREW') {
     return [
       { label: 'Petualangan', path: '/journey', icon: Compass },
-      { label: 'Misi', path: '/missions', icon: Target },
       { label: 'Survei', path: '/feedback', icon: MessageSquareText },
       { label: 'Peringkat', path: '/leaderboard', icon: Medal },
+      { label: 'Pencapaian', path: '/achievements', icon: Trophy },
       { label: 'Profil', path: '/profile', icon: User }
     ]
   }
@@ -92,8 +92,8 @@ const navItems = computed(() => {
         icon: ClipboardCheck,
         hasBadge: missionStore.revisionCount > 0
       },
-      { label: 'Misi', path: '/missions', icon: Target },
-      { label: 'Peringkat', path: '/leaderboard', icon: Medal }
+      { label: 'Peringkat', path: '/leaderboard', icon: Medal },
+      { label: 'Lencana', path: '/achievements', icon: Trophy }
     ]
   }
 

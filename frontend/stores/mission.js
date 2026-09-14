@@ -23,7 +23,7 @@ export const useMissionStore = defineStore('mission', {
     missionsByWeek: (state) => (batchId, weekNumber) => {
       return (state.missions || []).filter(m => m.batchId === batchId && m.week === Number(weekNumber))
     },
-    missionById: (state) => (id) => (state.missions || []).find(m => m.id === id),
+    missionById: (state) => (id) => (state.missions || []).find(m => m.id === id || m.missionId === id || m.userMissionId === id),
     completedCount: (state) => (state.missions || []).filter(m => m.status === 'COMPLETED' || m.status === 'APPROVED').length,
     pendingCount: (state) => (state.missions || []).filter(m => m.status === 'PENDING_REVIEW').length,
     revisionCount: (state) => (state.missions || []).filter(m => m.status === 'REVISION_REQUIRED').length,
@@ -32,7 +32,7 @@ export const useMissionStore = defineStore('mission', {
      * Get a specific crew's evaluation detail for a given mission
      */
     crewEvaluationForMission: (state) => (missionId, crewId) => {
-      const mission = state.missions.find(m => m.id === missionId)
+      const mission = state.missions.find(m => m.id === missionId || m.missionId === missionId)
       if (!mission || !mission.crewEvaluations) return null
       return mission.crewEvaluations.find(ce => ce.crewId === crewId)
     }
@@ -70,8 +70,12 @@ export const useMissionStore = defineStore('mission', {
 
           const targetList = journeyUserMissions.length > 0 ? journeyUserMissions : userMissions
 
-          this.missions = targetList.map((um, idx) => {
+          const missionMap = new Map()
+
+          targetList.forEach((um, idx) => {
             const m = um.mission || {}
+            const missionKey = m.missionId || um.userMissionId || `msn-${idx}`
+
             let status = 'IN_PROGRESS'
             if (um.status === 'LOCKED') status = 'LOCKED'
             else if (um.status === 'SCORED_BY_TL') status = 'PENDING_REVIEW'
@@ -82,42 +86,77 @@ export const useMissionStore = defineStore('mission', {
             const score = Number(um.finalScore !== null && um.finalScore !== undefined ? um.finalScore : (um.dmScore !== null && um.dmScore !== undefined ? um.dmScore : (um.tlScore || 0)))
             const earnedStars = calculateStars(score)
 
-            // Extract real SOP Checklist from database (tanpa hardcode string palsu)
+            // Extract real SOP Checklist from database
             let sopChecklist = []
             if (Array.isArray(m.sopChecklist) && m.sopChecklist.length > 0) {
               sopChecklist = m.sopChecklist.map(s => typeof s === 'string' ? s : (s.item || s.text || s.title || JSON.stringify(s)))
             }
 
-            return {
-              id: um.userMissionId || m.missionId || `msn-${idx}`,
-              missionId: m.missionId,
-              userMissionId: um.userMissionId,
-              batchId: m.batchId || (batches[0]?.batchId) || (batches[0]?.id) || '',
-              week: Number(m.weekOrDayNumber || m.week || 1),
-              code: m.code || `MSN-0${idx + 1}`,
-              title: m.missionTitle || 'Misi Standar Operasional',
-              category: m.category || 'TECHNICAL',
-              description: m.description || `Evaluasi standar operasional ${m.missionTitle || 'misi'}`,
-              assignedCrewIds: [um.userId],
-              crewEvaluations: [{
-                crewId: um.userId,
-                crewName: um.user?.name || 'Crew',
-                score: score,
-                calculatedStars: earnedStars,
-                awardedStars: (status === 'COMPLETED') ? earnedStars : 0,
-                status
-              }],
-              status,
-              averageScore: score,
+            const crewEval = {
+              crewId: um.userId,
+              crewName: um.user?.name || 'Crew',
+              score: score,
               calculatedStars: earnedStars,
               awardedStars: (status === 'COMPLETED') ? earnedStars : 0,
-              deadline: m.endDate?.split('T')[0] || '',
-              requirements: sopChecklist,
-              supervisorId: um.tlId || '',
-              reviewerId: um.dmId || '',
-              createdAt: um.createdAt || new Date().toISOString()
+              status
+            }
+
+            if (!missionMap.has(missionKey)) {
+              missionMap.set(missionKey, {
+                id: missionKey,
+                missionId: m.missionId || missionKey,
+                userMissionId: um.userMissionId,
+                batchId: m.batchId || (batches[0]?.batchId) || (batches[0]?.id) || '',
+                week: Number(m.weekOrDayNumber || m.week || 1),
+                code: m.code || `MSN-0${missionMap.size + 1}`,
+                title: m.missionTitle || 'Misi Standar Operasional',
+                category: m.category || 'TECHNICAL',
+                description: m.description || `Evaluasi standar operasional ${m.missionTitle || 'misi'}`,
+                assignedCrewIds: um.userId ? [um.userId] : [],
+                crewEvaluations: [crewEval],
+                status,
+                averageScore: score,
+                calculatedStars: earnedStars,
+                awardedStars: (status === 'COMPLETED') ? earnedStars : 0,
+                deadline: m.endDate?.split('T')[0] || '',
+                requirements: sopChecklist,
+                supervisorId: um.tlId || '',
+                reviewerId: um.dmId || '',
+                createdAt: um.createdAt || new Date().toISOString()
+              })
+            } else {
+              const existing = missionMap.get(missionKey)
+              if (um.userId && !existing.assignedCrewIds.includes(um.userId)) {
+                existing.assignedCrewIds.push(um.userId)
+              }
+              const evalIdx = existing.crewEvaluations.findIndex(e => e.crewId === um.userId)
+              if (evalIdx !== -1) {
+                existing.crewEvaluations[evalIdx] = crewEval
+              } else {
+                existing.crewEvaluations.push(crewEval)
+              }
+
+              // Hitung rata-rata skor dan status gabungan seluruh kru
+              const validScores = existing.crewEvaluations.map(e => e.score).filter(s => s > 0)
+              const avgScore = validScores.length > 0
+                ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length)
+                : 0
+              existing.averageScore = avgScore
+              existing.calculatedStars = calculateStars(avgScore)
+
+              const allDone = existing.crewEvaluations.length > 0 && existing.crewEvaluations.every(e => e.status === 'COMPLETED')
+              const anyRev = existing.crewEvaluations.some(e => e.status === 'REVISION_REQUIRED')
+              const anyPending = existing.crewEvaluations.some(e => e.status === 'PENDING_REVIEW')
+              if (allDone) existing.status = 'COMPLETED'
+              else if (anyRev) existing.status = 'REVISION_REQUIRED'
+              else if (anyPending) existing.status = 'PENDING_REVIEW'
+              else existing.status = 'IN_PROGRESS'
+
+              existing.awardedStars = (existing.status === 'COMPLETED') ? existing.calculatedStars : 0
             }
           })
+
+          this.missions = Array.from(missionMap.values())
           setStoredData('rejuve_missions_v4', this.missions)
           return this.missions
         }

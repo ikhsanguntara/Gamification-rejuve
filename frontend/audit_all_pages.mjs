@@ -87,12 +87,27 @@ Promise.all([
   import('./stores/template.js'),
   import('./stores/approval.js'),
   import('./stores/store.js'),
-  import('./stores/user.js')
-]).then(([batch, mission, template, approval, store, user]) => {
+  import('./stores/user.js'),
+  import('./stores/buddy.js'),
+  import('./stores/feedback.js'),
+  import('./stores/gamification.js'),
+  import('./stores/evaluation.js')
+]).then(([batch, mission, template, approval, store, user, buddy, feedback, gamification, evaluation]) => {
   totalChecks++
-  if (batch.useBatchStore && mission.useMissionStore && template.useTemplateStore && approval.useApprovalStore && store.useStoreStore && user.useUserStore) {
+  if (
+    batch.useBatchStore &&
+    mission.useMissionStore &&
+    template.useTemplateStore &&
+    approval.useApprovalStore &&
+    store.useStoreStore &&
+    user.useUserStore &&
+    buddy.useBuddyStore &&
+    feedback.useFeedbackStore &&
+    gamification.useGamificationStore &&
+    evaluation.useEvaluationStore
+  ) {
     passedChecks++
-    console.log(`  ✅ [PASS Pinia Stores] Seluruh store utama terdefinisi secara utuh tanpa dependensi mock`)
+    console.log(`  ✅ [PASS Pinia Stores] Seluruh 10 store utama terdefinisi secara utuh tanpa dependensi mock`)
   } else {
     failedChecks++
     issues.push(`❌ [Pinia Stores] Terdapat store yang gagal dimuat`)

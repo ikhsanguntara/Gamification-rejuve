@@ -115,15 +115,6 @@
               <span>Generate Misi</span>
             </button>
           </div>
-
-          <button
-            type="button"
-            @click="confirmDeleteBatch(b)"
-            class="text-xs font-semibold text-rose-500 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
-          >
-            <Trash2 class="w-3.5 h-3.5" />
-            <span>Hapus</span>
-          </button>
         </div>
       </div>
     </div>
@@ -153,7 +144,7 @@ import { useBatchStore } from '~/stores/batch.js'
 import { useToast } from '~/composables/useToast.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
-import { Plus, Eye, Trash2, MapPin, Zap } from 'lucide-vue-next'
+import { Plus, Eye, MapPin, Zap } from 'lucide-vue-next'
 import { batchApi } from '~/services/api.js'
 import { confirmDeleteDialog } from '~/utils/dialog.js'
 
@@ -194,25 +185,6 @@ const handleGenerateMissions = async (batch) => {
     } catch (err) {
       console.error('Generate missions error:', err)
       toast.error('Gagal Generate Misi', err.message || 'Tidak dapat meng-generate misi dari backend.')
-    }
-  }
-}
-
-const confirmDeleteBatch = async (batch) => {
-  const isConfirmed = await confirmDeleteDialog({
-    title: 'Hapus Batch Gerai?',
-    text: `Apakah Anda yakin ingin menghapus "${batch.name}"? Seluruh alokasi misi pada batch ini akan dihapus.`,
-    confirmButtonText: 'Ya, Hapus Batch'
-  })
-
-  if (isConfirmed) {
-    try {
-      await batchApi.delete(batch.id)
-      toast.success('Batch Dihapus', `Batch ${batch.name} telah dihapus dari backend server.`)
-      await loadBatches(currentPage.value)
-    } catch (err) {
-      console.error('Delete batch error:', err)
-      toast.error('Gagal Menghapus Batch', err.message || 'Tidak dapat menghapus data dari server.')
     }
   }
 }

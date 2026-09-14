@@ -137,8 +137,8 @@
                   </p>
                 </div>
               </div>
-              <span v-if="store.storeLeader" class="text-[10px] text-slate-400 truncate max-w-[80px]">
-                {{ store.storeLeader.position }}
+              <span v-if="store.storeLeader" class="text-[10px] text-slate-400 truncate max-w-[90px]">
+                {{ store.storeLeader.position || store.storeLeader.role || 'Store Leader' }}
               </span>
             </div>
 
@@ -163,8 +163,8 @@
                   </p>
                 </div>
               </div>
-              <span v-if="store.districtManager" class="text-[10px] text-slate-400 truncate max-w-[80px]">
-                {{ store.districtManager.position }}
+              <span v-if="store.districtManager" class="text-[10px] text-slate-400 truncate max-w-[90px]">
+                {{ store.districtManager.position || store.districtManager.role || 'District Manager' }}
               </span>
             </div>
           </div>

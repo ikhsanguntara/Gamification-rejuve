@@ -160,7 +160,9 @@ export const useUserStore = defineStore('user', {
       if (savedToken) {
         this.token = savedToken
         this.isAuthenticated = true
-        await this.fetchMe()
+        if (!this.apiUser) {
+          await this.fetchMe()
+        }
       } else {
         if (this.currentUserId && this.userDirectory && this.userDirectory.find(u => u.id === this.currentUserId)) {
           this.isAuthenticated = true
@@ -228,7 +230,10 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    async fetchMe() {
+    async fetchMe(force = false) {
+      if (!force && this.apiUser) {
+        return this.apiUser
+      }
       try {
         const res = await authApi.me()
         if (res && res.data) {

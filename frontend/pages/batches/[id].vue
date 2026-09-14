@@ -83,12 +83,9 @@
               Penugasan operasional untuk siklus ini
             </p>
           </div>
-          <NuxtLink
-            to="/missions"
-            class="text-xs font-semibold text-[#831843] dark:text-[#f472b6] hover:underline"
-          >
-            Lihat di Katalog Misi
-          </NuxtLink>
+          <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
+            {{ weekMissions.length }} Misi Terjadwal
+          </span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -171,15 +168,22 @@ const weekMissions = computed(() => {
   const batchMissions = currentBatch.value.missions || []
   return batchMissions
     .filter(m => (m.type === 'JOURNEY' || !m.type) && Number(m.weekOrDayNumber || m.week || 1) === Number(batchStore.selectedWeek))
-    .map((m, idx) => ({
-      id: m.missionId || `msn-${idx}`,
-      code: m.code || `MSN-0${idx + 1}`,
-      title: m.missionTitle || m.title || 'Misi Standar Operasional',
-      category: m.category || 'TECHNICAL',
-      description: m.description || '',
-      requirements: Array.isArray(m.sopChecklist) ? m.sopChecklist : [],
-      status: m.status || 'IN_PROGRESS',
-      week: Number(m.weekOrDayNumber || m.week || 1)
-    }))
+    .map((m, idx) => {
+      const existing = missionStore.missionById(m.missionId)
+      return {
+        id: m.missionId || `msn-${idx}`,
+        missionId: m.missionId,
+        code: m.code || `MSN-0${idx + 1}`,
+        title: m.missionTitle || m.title || 'Misi Standar Operasional',
+        category: m.category || 'TECHNICAL',
+        description: m.description || '',
+        requirements: Array.isArray(m.sopChecklist) ? m.sopChecklist : [],
+        status: m.status || existing?.status || 'IN_PROGRESS',
+        week: Number(m.weekOrDayNumber || m.week || 1),
+        batchId: currentBatch.value.id,
+        crewEvaluations: existing?.crewEvaluations || [],
+        assignedCrewIds: existing?.assignedCrewIds || []
+      }
+    })
 })
 </script>

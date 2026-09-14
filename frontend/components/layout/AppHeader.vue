@@ -285,7 +285,7 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
@@ -300,6 +300,7 @@ import {
 } from 'reka-ui'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
+import { useMissionStore } from '~/stores/mission.js'
 import { useTheme } from '~/composables/useTheme.js'
 import { useToast } from '~/composables/useToast.js'
 import { useSidebar } from '~/composables/useSidebar.js'
@@ -327,8 +328,10 @@ import {
 } from 'lucide-vue-next'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const batchStore = useBatchStore()
+const missionStore = useMissionStore()
 const { isDark, toggleTheme } = useTheme()
 const toast = useToast()
 const { toggleMobile } = useSidebar()
@@ -411,13 +414,21 @@ const handleBatchChange = async (batchId) => {
   if (batchStore.selectedBatchId === batchId) return
 
   try {
-    toast.info('Mengganti Batch...', `Menyinkronkan data untuk ${batchStore.batches.find(b => b.id === batchId)?.name || 'Batch'}...`)
+    const targetBatch = batchStore.batches.find(b => b.id === batchId)
+    toast.info('Mengganti Batch...', `Menyinkronkan data untuk ${targetBatch?.name || 'Batch'}...`)
     await batchStore.selectBatch(batchId)
 
-    if (typeof window !== 'undefined') {
-      setTimeout(() => {
-        window.location.reload()
-      }, 300)
+    const currentPath = route.path
+    if (currentPath.startsWith('/batches/') && currentPath !== '/batches') {
+      await router.push(`/batches/${batchId}`)
+    } else if (currentPath.startsWith('/admin/batches/') && currentPath !== '/admin/batches' && currentPath !== '/admin/batches/create') {
+      await router.push(`/admin/batches/${batchId}`)
+    } else {
+      await Promise.allSettled([
+        batchStore.fetchBatchByIdFromApi(batchId),
+        missionStore.fetchMissionsFromApi(true, { batchId }),
+        userStore.fetchUsersFromApi({ exact: { batchId } }, true)
+      ])
     }
   } catch (err) {
     console.error('Gagal mengganti batch:', err)

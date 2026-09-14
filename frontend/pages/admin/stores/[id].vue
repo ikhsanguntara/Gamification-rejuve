@@ -243,49 +243,6 @@
           </div>
         </div>
 
-        <!-- 3. Hubungan Batch & Status -->
-        <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            3. Hubungan Batch Misi & Status
-          </h3>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Hubungkan ke Batch Misi -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Hubungkan ke Siklus Batch
-              </label>
-              <select
-                v-model="form.batchId"
-                class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-              >
-                <option :value="null">Belum Ditugaskan ke Batch (Standby)</option>
-                <option
-                  v-for="b in batchStore.allBatches"
-                  :key="b.id"
-                  :value="b.id"
-                >
-                  {{ b.name }} ({{ b.code }}) — {{ b.storeLocation }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Status Outlet -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Status Operasional Gerai
-              </label>
-              <select
-                v-model="form.status"
-                class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-              >
-                <option value="ACTIVE">Aktif (Beroperasi)</option>
-                <option value="INACTIVE">Non-Aktif (Tutup Sementara)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
         <!-- Form Actions -->
         <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
           <NuxtLink
@@ -368,16 +325,18 @@ const form = reactive({
 
 const isLoadingData = ref(false)
 
-onMounted(async () => {
+const loadStoreDetail = async () => {
   isLoadingData.value = true
   try {
-    // 1. Ambil seluruh data master user dari live API backend
-    await userStore.fetchUsersFromApi({ limit: 100 })
+    const sId = route.params.id
+    if (!sId) return
 
-    // 2. Pastikan data store tersedia dari backend
-    if (!store.value) {
-      await storeStore.fetchStoresFromApi({ page: 1, limit: 100 })
-    }
+    // 1. Ambil detail store dari API backend (/masters/departments/:id)
+    await Promise.allSettled([
+      storeStore.fetchStoreByIdFromApi(sId, true),
+      userStore.fetchUsersFromApi({ limit: 100 }),
+      batchStore.fetchBatchesFromApi()
+    ])
 
     if (store.value) {
       form.name = store.value.name
@@ -397,6 +356,14 @@ onMounted(async () => {
   } finally {
     isLoadingData.value = false
   }
+}
+
+onMounted(() => {
+  loadStoreDetail()
+})
+
+watch(() => route.params.id, () => {
+  loadStoreDetail()
 })
 
 const selectedStoreLeader = computed(() => {

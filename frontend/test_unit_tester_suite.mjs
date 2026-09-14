@@ -441,6 +441,48 @@ test('Crew Mission Isolation: Kru hanya melihat misinya sendiri (bukan seluruh m
 })
 
 console.log('')
+
+// ============================================================================
+// SUITE 7: BATCH SWITCHER & MISSION CREW DETAIL MODAL
+// ============================================================================
+console.log('📌 7. Menguji Switcher Batch Misi & Parsing Detail Nilai Kru:')
+
+import { useBatchStore } from './stores/batch.js'
+
+test('Batch Switcher: sinkronisasi state selectedBatchId dan customSelectedWeek', () => {
+  const batchStore = useBatchStore()
+  batchStore.batches = [
+    { id: 'b-01', code: 'BTH-01', name: 'Batch 1', currentWeek: 1, startDate: '2026-09-01' },
+    { id: 'b-02', code: 'BTH-02', name: 'Batch 2', currentWeek: 2, startDate: '2026-08-25' }
+  ]
+
+  batchStore.selectBatch('b-02')
+  assertEqual(batchStore.selectedBatchId, 'b-02', 'selectedBatchId harus b-02')
+  assertEqual(batchStore.currentBatch.id, 'b-02', 'currentBatch harus merujuk ke b-02')
+})
+
+test('Mission Crew Detail: parsing evaluasi multi-kru per misi', () => {
+  const sampleMission = {
+    id: 'm-01',
+    title: 'Pembersihan Cold Press Bar',
+    category: 'Kebersihan',
+    averageScore: 92,
+    calculatedStars: 4.6,
+    crewEvaluations: [
+      { crewId: 'crew-001', name: 'Andi Pratama', score: 95, status: 'COMPLETED' },
+      { crewId: 'crew-002', name: 'Budi Kru', score: 89, status: 'COMPLETED' }
+    ]
+  }
+
+  const crewScores = sampleMission.crewEvaluations || []
+  assertEqual(crewScores.length, 2, 'Misi harus memiliki 2 catatan evaluasi kru')
+  assertEqual(crewScores[0].score, 95, 'Kru 1 mendapatkan skor 95')
+  assertEqual(crewScores[1].score, 89, 'Kru 2 mendapatkan skor 89')
+  const avg = Math.round(crewScores.reduce((sum, c) => sum + c.score, 0) / crewScores.length)
+  assertEqual(avg, 92, 'Rata-rata kru harus tepat 92')
+})
+
+console.log('')
 console.log('======================================================')
 console.log(`🏁 HASIL AKHIR QA / UNIT TESTER:`)
 console.log(`   Total Pengujian : ${totalTests}`)

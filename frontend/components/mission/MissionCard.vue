@@ -16,10 +16,10 @@
         <MissionStatus :status="mission.status" />
       </div>
 
-      <!-- Title & Code -->
-      <NuxtLink
-        :to="`/missions/${mission.id}`"
-        class="block group"
+      <!-- Title & Code (Click to open detail modal) -->
+      <div
+        class="block group cursor-pointer"
+        @click="isDetailModalOpen = true"
       >
         <p class="text-xs font-medium text-slate-400 dark:text-slate-500 mb-1">
           {{ mission.code }} • {{ batchStore.currentBatchUnitCode || 'Week' }} {{ mission.week }}
@@ -27,7 +27,7 @@
         <h4 class="text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-[#831843] dark:group-hover:text-[#f472b6] transition-colors line-clamp-2">
           {{ mission.title }}
         </h4>
-      </NuxtLink>
+      </div>
 
       <!-- Description preview -->
       <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2 leading-relaxed">
@@ -93,26 +93,34 @@
 
       <!-- Action Button / Link -->
       <div class="pt-2">
-        <NuxtLink
-          :to="`/missions/${mission.id}`"
+        <button
+          type="button"
+          @click="isDetailModalOpen = true"
           class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] dark:hover:text-white text-slate-700 dark:text-slate-200 transition-all group cursor-pointer"
         >
           <span>{{ userStore.isCrew ? 'Lihat Evaluasi & SOP Misi' : 'Lihat Detail Misi' }}</span>
           <ChevronRight class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-        </NuxtLink>
+        </button>
       </div>
     </div>
+
+    <!-- Modal Detail Misi (Rincian Nilai Seluruh Kru) -->
+    <MissionDetailModal
+      v-model="isDetailModalOpen"
+      :mission="mission"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { formatDate } from '~/utils/date.js'
 import { calculateStars } from '~/utils/star.js'
 import MissionStatus from './MissionStatus.vue'
+import MissionDetailModal from './MissionDetailModal.vue'
 import StarReward from '~/components/gamification/StarReward.vue'
 import {
   Calendar,
@@ -120,6 +128,7 @@ import {
   Users
 } from 'lucide-vue-next'
 
+const isDetailModalOpen = ref(false)
 const batchStore = useBatchStore()
 
 const props = defineProps({
@@ -141,7 +150,7 @@ const assignedCrewList = computed(() => {
 
 const myEvaluation = computed(() => {
   if (!props.mission.crewEvaluations) return null
-  return props.mission.crewEvaluations.find(e => e.crewId === userStore.currentUser.id)
+  return props.mission.crewEvaluations.find(e => e.crewId === userStore.currentUser?.id)
 })
 
 const myScore = computed(() => {

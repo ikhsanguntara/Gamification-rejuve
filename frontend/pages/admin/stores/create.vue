@@ -233,49 +233,6 @@
           </div>
         </div>
 
-        <!-- 3. Hubungan Batch & Status -->
-        <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            3. Hubungan Batch Misi & Status
-          </h3>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Hubungkan ke Batch Misi -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Hubungkan ke Siklus Batch
-              </label>
-              <select
-                v-model="form.batchId"
-                class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-              >
-                <option :value="null">Belum Ditugaskan ke Batch (Standby)</option>
-                <option
-                  v-for="b in batchStore.allBatches"
-                  :key="b.id"
-                  :value="b.id"
-                >
-                  {{ b.name }} ({{ b.code }}) — {{ b.storeLocation }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Status Outlet -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Status Operasional Gerai
-              </label>
-              <select
-                v-model="form.status"
-                class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-              >
-                <option value="ACTIVE">Aktif (Beroperasi)</option>
-                <option value="INACTIVE">Non-Aktif (Tutup Sementara)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
         <!-- Form Actions -->
         <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
           <NuxtLink

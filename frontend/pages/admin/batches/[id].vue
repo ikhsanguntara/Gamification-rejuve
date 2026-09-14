@@ -604,6 +604,10 @@ onMounted(() => {
   loadBatchData()
 })
 
+watch(() => route.params.id, () => {
+  loadBatchData()
+})
+
 const handleGenerateMissions = async () => {
   const isConfirmed = await confirmDeleteDialog({
     title: 'Generate Misi Batch?',

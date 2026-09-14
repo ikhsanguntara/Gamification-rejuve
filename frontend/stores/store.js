@@ -28,9 +28,11 @@ export const useStoreStore = defineStore('store', {
     allStores: (state) => {
       const userStore = useUserStore()
       const batchStore = useBatchStore()
-      return state.stores.map(s => {
-        const storeLeader = s.storeLeader || userStore.userById(s.storeLeaderId) || null
-        const districtManager = s.districtManager || userStore.userById(s.districtManagerId) || null
+      return (state.stores || []).map(s => {
+        const slFromUser = s.storeLeaderId ? userStore.userById(s.storeLeaderId) : null
+        const dmFromUser = s.districtManagerId ? userStore.userById(s.districtManagerId) : null
+        const storeLeader = s.storeLeader || slFromUser || null
+        const districtManager = s.districtManager || dmFromUser || null
         const batch = s.batchId ? batchStore.batchById(s.batchId) || null : null
         return {
           ...s,
@@ -44,10 +46,12 @@ export const useStoreStore = defineStore('store', {
     storeById: (state) => (id) => {
       const userStore = useUserStore()
       const batchStore = useBatchStore()
-      const s = state.stores.find(item => item.id === id)
+      const s = (state.stores || []).find(item => item.id === id)
       if (!s) return null
-      const storeLeader = s.storeLeader || userStore.userById(s.storeLeaderId) || null
-      const districtManager = s.districtManager || userStore.userById(s.districtManagerId) || null
+      const slFromUser = s.storeLeaderId ? userStore.userById(s.storeLeaderId) : null
+      const dmFromUser = s.districtManagerId ? userStore.userById(s.districtManagerId) : null
+      const storeLeader = s.storeLeader || slFromUser || null
+      const districtManager = s.districtManager || dmFromUser || null
       const batch = s.batchId ? batchStore.batchById(s.batchId) || null : null
       return {
         ...s,
@@ -100,24 +104,47 @@ export const useStoreStore = defineStore('store', {
         const res = await cachedApiCall(cacheKey, () => departmentApi.getAll(query), 30000, forceRefresh)
         if (res && res.data && Array.isArray(res.data)) {
           this.isLiveApi = true
-          this.stores = res.data.map(d => ({
-            id: d.departmentId,
-            name: d.departmentName,
-            code: d.departmentCode,
-            region: d.regionCode || 'JABODETABEK',
-            mallName: d.departmentName,
-            address: d.departmentName,
-            phone: '021-29465000',
-            storeLeaderId: d.userSlId,
-            districtManagerId: d.userDmId,
-            storeLeader: d.storeLeader || d.userSl || null,
-            districtManager: d.districtManager || d.userDm || null,
-            batchId: null,
-            totalCrews: 4,
-            status: d.isActive ? 'ACTIVE' : 'INACTIVE',
-            openingHours: '10:00 - 22:00',
-            createdAt: d.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
-          }))
+          this.stores = res.data.map(d => {
+            const rawSl = d.userSl || d.storeLeader || null
+            const rawDm = d.userDm || d.districtManager || null
+
+            const storeLeader = rawSl ? {
+              id: rawSl.userId || rawSl.id || d.userSlId,
+              userId: rawSl.userId || rawSl.id || d.userSlId,
+              name: rawSl.name || 'Store Leader',
+              email: rawSl.email || '',
+              position: rawSl.position || rawSl.roleDetails?.roleName || rawSl.role || 'Store Leader',
+              avatar: rawSl.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(rawSl.name || 'SL')}`
+            } : null
+
+            const districtManager = rawDm ? {
+              id: rawDm.userId || rawDm.id || d.userDmId,
+              userId: rawDm.userId || rawDm.id || d.userDmId,
+              name: rawDm.name || 'District Manager',
+              email: rawDm.email || '',
+              position: rawDm.position || rawDm.roleDetails?.roleName || rawDm.role || 'District Manager',
+              avatar: rawDm.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(rawDm.name || 'DM')}`
+            } : null
+
+            return {
+              id: d.departmentId || d.id,
+              name: d.departmentName || d.name,
+              code: d.departmentCode || d.code,
+              region: d.regionCode || d.region || 'JABODETABEK',
+              mallName: d.departmentName || d.mallName || d.name,
+              address: d.departmentName || d.address || '',
+              phone: d.phone || '021-29465000',
+              storeLeaderId: d.userSlId || d.storeLeaderId || storeLeader?.id || null,
+              districtManagerId: d.userDmId || d.districtManagerId || districtManager?.id || null,
+              storeLeader,
+              districtManager,
+              batchId: d.batchId || null,
+              totalCrews: d.totalCrews || 4,
+              status: d.isActive !== undefined ? (d.isActive ? 'ACTIVE' : 'INACTIVE') : (d.status || 'ACTIVE'),
+              openingHours: d.openingHours || '10:00 - 22:00',
+              createdAt: d.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
+            }
+          })
 
           const meta = res.meta || res.pagination || {}
           this.serverPagination = {
@@ -137,6 +164,66 @@ export const useStoreStore = defineStore('store', {
       } finally {
         this.isLoading = false
       }
+    },
+
+    async fetchStoreByIdFromApi(id, forceRefresh = false) {
+      if (!id) return null
+      try {
+        const cacheKey = `store:${id}`
+        const res = await cachedApiCall(cacheKey, () => departmentApi.getById(id), 30000, forceRefresh)
+        const d = res?.data?.data || res?.data
+        if (d && (d.departmentId || d.id)) {
+          const rawSl = d.userSl || d.storeLeader || null
+          const rawDm = d.userDm || d.districtManager || null
+
+          const storeLeader = rawSl ? {
+            id: rawSl.userId || rawSl.id || d.userSlId,
+            userId: rawSl.userId || rawSl.id || d.userSlId,
+            name: rawSl.name || 'Store Leader',
+            email: rawSl.email || '',
+            position: rawSl.position || rawSl.roleDetails?.roleName || rawSl.role || 'Store Leader',
+            avatar: rawSl.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(rawSl.name || 'SL')}`
+          } : null
+
+          const districtManager = rawDm ? {
+            id: rawDm.userId || rawDm.id || d.userDmId,
+            userId: rawDm.userId || rawDm.id || d.userDmId,
+            name: rawDm.name || 'District Manager',
+            email: rawDm.email || '',
+            position: rawDm.position || rawDm.roleDetails?.roleName || rawDm.role || 'District Manager',
+            avatar: rawDm.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(rawDm.name || 'DM')}`
+          } : null
+
+          const storeItem = {
+            id: d.departmentId || d.id,
+            name: d.departmentName || d.name,
+            code: d.departmentCode || d.code,
+            region: d.regionCode || d.region || 'JABODETABEK',
+            mallName: d.departmentName || d.mallName || d.name || '',
+            address: d.departmentName || d.address || '',
+            phone: d.phone || '021-29465000',
+            storeLeaderId: d.userSlId || d.storeLeaderId || storeLeader?.id || null,
+            districtManagerId: d.userDmId || d.districtManagerId || districtManager?.id || null,
+            storeLeader,
+            districtManager,
+            batchId: d.batchId || null,
+            totalCrews: d.totalCrews || 4,
+            status: d.isActive !== undefined ? (d.isActive ? 'ACTIVE' : 'INACTIVE') : (d.status || 'ACTIVE'),
+            openingHours: d.openingHours || '10:00 - 22:00',
+            createdAt: d.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
+          }
+          const idx = this.stores.findIndex(s => s.id === storeItem.id)
+          if (idx !== -1) {
+            this.stores[idx] = { ...this.stores[idx], ...storeItem }
+          } else {
+            this.stores.push(storeItem)
+          }
+          return storeItem
+        }
+      } catch (err) {
+        console.warn('fetchStoreByIdFromApi failed:', err.message)
+      }
+      return null
     },
 
     createStore(payload) {

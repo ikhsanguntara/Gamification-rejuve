@@ -312,6 +312,12 @@ export const useBatchStore = defineStore('batch', {
         this.selectedBatchId = targetId
       }
 
+      if (typeof localStorage !== 'undefined' && targetId) {
+        try {
+          localStorage.setItem('rejuve_selected_batch_id', targetId)
+        } catch (e) {}
+      }
+
       invalidateApiCache()
 
       const userStore = useUserStore()
@@ -478,7 +484,8 @@ export const useBatchStore = defineStore('batch', {
           }
 
           const userStore = useUserStore()
-          const preferredId = userStore.apiUser?.activeBatchId
+          const storedSelectedId = (typeof localStorage !== 'undefined' ? localStorage.getItem('rejuve_selected_batch_id') : null)
+          const preferredId = this.selectedBatchId || storedSelectedId || userStore.apiUser?.activeBatchId
           if (preferredId && this.batches.find(b => b.id === preferredId)) {
             this.selectedBatchId = preferredId
           } else if (this.batches.length > 0 && (!this.selectedBatchId || !this.batches.find(b => b.id === this.selectedBatchId))) {

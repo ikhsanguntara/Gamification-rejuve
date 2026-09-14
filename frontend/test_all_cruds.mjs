@@ -337,6 +337,9 @@ assert(updatedStore.name === 'Re.juve Kota Kasablanka Extension' && updatedStore
 storeStore.deleteStore(newStore.id)
 assert(storeStore.storeById(newStore.id) === null, 'Delete Store: Berhasil menghapus gerai dari Master Store')
 
+// 6.5 STORE DETAIL API ACTION
+assert(typeof storeStore.fetchStoreByIdFromApi === 'function', 'Store Detail API: Action fetchStoreByIdFromApi tersedia di store')
+
 console.log('')
 
 // ==========================================
