@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# Script Automasi Deploy / Update Gamification Backend (Dev Server)
+# Script Automasi Deploy / Update Gamification Backend (Dev Server - Optimized)
 # Jalankan script ini: ./deploy-be-gamification.sh
 # ==============================================================================
 set -e
@@ -16,32 +16,54 @@ else
 fi
 
 echo "=================================================================="
-echo "🚀 [1/4] Mengambil pembaruan kode backend terbaru dari Git..."
+echo "🚀 [1/5] Mengambil pembaruan kode backend terbaru dari Git..."
 echo "=================================================================="
 git pull origin main || git pull
 
 echo "=================================================================="
-echo "📦 [2/4] Build & Restart HANYA container gamification-backend..."
+echo "📦 [2/5] Build & Start container gamification-backend..."
 echo "   (Container ASCO & aplikasi lain tidak akan disentuh/disenggol)"
 echo "=================================================================="
 docker compose up -d --build gamification-backend
 
 echo "=================================================================="
-echo "⏳ [3/4] Menunggu inisialisasi database (Prisma db push)..."
+echo "⏳ [3/5] Sinkronisasi Skema Database (Prisma db push 1x)..."
 echo "=================================================================="
-sleep 5
+docker compose exec -T gamification-backend npx prisma db push --accept-data-loss
 
 echo "=================================================================="
-echo "🔍 [4/4] Memeriksa Status Container & Log Backend..."
+echo "🏥 [4/5] Memeriksa Healthcheck API Backend..."
 echo "=================================================================="
-docker ps --filter "name=gamification-backend"
-echo ""
-docker logs --tail 20 gamification-backend
+MAX_RETRIES=15
+COUNTER=0
+SUCCESS=false
 
-SERVER_IP=$(curl -s --max-time 3 ifconfig.me || echo "IP_SERVER_ANDA")
+while [ $COUNTER -lt $MAX_RETRIES ]; do
+  HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3005/health || echo "000")
+  if [ "$HTTP_STATUS" -eq 200 ]; then
+    SUCCESS=true
+    break
+  fi
+  echo "Menunggu API siap... ($((COUNTER+1))/$MAX_RETRIES) - HTTP $HTTP_STATUS"
+  sleep 2
+  COUNTER=$((COUNTER+1))
+done
+
+if [ "$SUCCESS" = false ]; then
+  echo "❌ Backend gagal merespons dalam waktu yang ditentukan. Menampilkan log error:"
+  docker logs --tail 50 gamification-backend
+  exit 1
+fi
 
 echo "=================================================================="
-echo "🎉 DEPLOYMENT GAMIFICATION BACKEND BERHASIL!"
+echo "🧹 [5/5] Membersihkan cache image lama yang tidak terpakai..."
+echo "=================================================================="
+docker image prune -f >/dev/null 2>&1 || true
+
+SERVER_IP=$(curl -s --max-time 3 ifconfig.me || echo "103.168.147.133")
+
+echo "=================================================================="
+echo "🎉 DEPLOYMENT GAMIFICATION BACKEND BERHASIL & SEHAT!"
 echo "📡 Base URL Backend : http://${SERVER_IP}:3005"
 echo "📑 Swagger API Docs : http://${SERVER_IP}:3005/swagger"
 echo "=================================================================="

@@ -31,5 +31,5 @@ ENV NODE_ENV=production
 ENV PORT=3005
 ENV TZ=Asia/Jakarta
 
-# Saat container start: jalankan prisma db push otomatis lalu start server Express
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node src/server.js"]
+# Start server Express
+CMD ["node", "src/server.js"]
