@@ -60,6 +60,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { calculateStars } from '~/utils/star.js'
 import {
   Tent, Waves, Mountain, Compass, Lock, Check,
   Flag, Trees, Sparkles
@@ -106,12 +107,14 @@ const completedMissionsCount = computed(() => {
 
 const totalStarsEarned = computed(() => {
   if (props.missions && props.missions.length > 0) {
-    return props.missions.reduce((acc, m) => {
+    const sum = props.missions.reduce((acc, m) => {
       if (m.status === 'COMPLETED' || m.status === 'APPROVED') {
-        return acc + Number(m.awardedStars || m.calculatedStars || 5)
+        const raw = Number(m.awardedStars || m.calculatedStars || (m.averageScore ? calculateStars(m.averageScore) : 5))
+        return acc + raw
       }
       return acc
     }, 0)
+    return Math.round(sum * 10) / 10
   }
   return 0
 })

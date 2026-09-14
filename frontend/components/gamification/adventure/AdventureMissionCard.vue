@@ -119,6 +119,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { calculateStars } from '~/utils/star.js'
 import {
   X, Lock, CheckCircle2, ClipboardList, CalendarDays,
   Tent, Waves, Mountain, ChevronRight, RotateCcw, Clock
@@ -141,10 +142,11 @@ const isRevision = computed(() => props.mission?.status === 'REVISION_REQUIRED')
 const isLocked = computed(() => props.mission?.status === 'LOCKED' || props.mission?.weekLocked)
 
 const earnedStars = computed(() => {
-  if (isCompleted.value) return Number(props.mission?.awardedStars || props.mission?.calculatedStars || 5)
-  if (props.mission?.awardedStars) return Number(props.mission.awardedStars)
-  if (props.mission?.calculatedStars) return Number(props.mission.calculatedStars)
-  return 0
+  let stars = 0
+  if (isCompleted.value) stars = Number(props.mission?.awardedStars || props.mission?.calculatedStars || (props.mission?.averageScore ? calculateStars(props.mission.averageScore) : 5))
+  else if (props.mission?.awardedStars) stars = Number(props.mission.awardedStars)
+  else if (props.mission?.calculatedStars) stars = Number(props.mission.calculatedStars)
+  return Math.round(stars * 10) / 10
 })
 
 const starLabel = computed(() => {

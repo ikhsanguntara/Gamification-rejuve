@@ -239,6 +239,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { calculateStars } from '~/utils/star.js'
 import {
   X, Lock, CheckCircle2, ChevronRight, ChevronLeft,
   Tent, Waves, Mountain, Compass, Flag, AlertTriangle,
@@ -326,12 +327,13 @@ const maxPossibleStars = computed(() => {
 })
 
 const totalStarsEarned = computed(() => {
-  return props.missions.reduce((acc, m) => {
+  const sum = props.missions.reduce((acc, m) => {
     if (isMissionCompleted(m)) {
       return acc + getMissionStars(m)
     }
     return acc
   }, 0)
+  return Math.round(sum * 10) / 10
 })
 
 const weekPercent = computed(() => {
@@ -367,9 +369,11 @@ const isMissionCompleted = (m) => m.status === 'COMPLETED' || m.status === 'APPR
 
 const getMissionStars = (m) => {
   if (isMissionCompleted(m)) {
-    return Number(m.awardedStars || m.calculatedStars || 5)
+    const raw = Number(m.awardedStars || m.calculatedStars || (m.averageScore ? calculateStars(m.averageScore) : 5))
+    return Math.round(raw * 10) / 10
   }
-  return Number(m.awardedStars || m.calculatedStars || 0)
+  const raw = Number(m.awardedStars || m.calculatedStars || 0)
+  return Math.round(raw * 10) / 10
 }
 
 const missionCardClass = (m) => ({
