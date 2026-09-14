@@ -41,12 +41,14 @@ const uploadFileToStorage = async (file, subFolder = 'evidence', req = null) => 
 
   const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
   const randomStr = crypto.randomBytes(6).toString('hex');
-  const fileName = `${subFolder}-${Date.now()}-${randomStr}${ext}`;
-  const objectPath = `${subFolder}/${fileName}`;
+  const cleanSubFolder = subFolder ? subFolder.replace(/^\/+|\/+$/g, '') : 'evidence';
+  const prefix = path.basename(cleanSubFolder) || 'evidence';
+  const fileName = `${prefix}-${Date.now()}-${randomStr}${ext}`;
+  const objectPath = `${cleanSubFolder}/${fileName}`;
 
   // Simpan selalu salinan lokal ke disk sebagai fallback/cache cepat
   try {
-    const localDir = path.join(__dirname, '..', '..', 'uploads', subFolder);
+    const localDir = path.join(__dirname, '..', '..', 'uploads', cleanSubFolder);
     if (!fs.existsSync(localDir)) {
       fs.mkdirSync(localDir, { recursive: true });
     }
@@ -78,7 +80,7 @@ const uploadFileToStorage = async (file, subFolder = 'evidence', req = null) => 
   }
 
   // 2. Fallback: Simpan ke folder uploads lokal
-  const localDir = path.join(__dirname, '..', '..', 'uploads', subFolder);
+  const localDir = path.join(__dirname, '..', '..', 'uploads', cleanSubFolder);
   if (!fs.existsSync(localDir)) {
     fs.mkdirSync(localDir, { recursive: true });
   }
@@ -91,12 +93,12 @@ const uploadFileToStorage = async (file, subFolder = 'evidence', req = null) => 
     baseUrl = `${req.protocol}://${req.get('host')}`;
   }
   if (!baseUrl) {
-    const port = process.env.PORT || 3000;
+    const port = process.env.PORT || 3005;
     baseUrl = `http://localhost:${port}`;
   }
   baseUrl = baseUrl.replace(/\/$/, '');
 
-  const localUrl = `${baseUrl}/uploads/${subFolder}/${fileName}`;
+  const localUrl = `${baseUrl}/uploads/${cleanSubFolder}/${fileName}`;
   console.log(`[Storage Local] File disimpan secara lokal: ${localUrl}`);
   return localUrl;
 };

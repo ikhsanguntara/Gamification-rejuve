@@ -35,23 +35,29 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 // ─── Public Evidence Proxy (MinIO & Local Disk Fallback) ─────────────────────
 const { minioClient, bucketName, isMinioOnline } = require('./config/minio');
 app.get([
+  '/gamification/*',
+  '/uploads/*',
+  '/api/uploads/*',
   '/gamification/evidence/:fileName',
   '/uploads/evidence/:fileName',
   '/api/uploads/evidence/:fileName'
 ], async (req, res, next) => {
-  const fileName = req.params.fileName;
-  
+  const relativePath = (req.params[0] || (req.params.fileName ? `evidence/${req.params.fileName}` : '')).replace(/^\/+/, '');
+  if (!relativePath) {
+    return next();
+  }
+
   // 1. Cek ketersediaan file di disk lokal
-  const localFilePath = path.join(__dirname, '..', 'uploads', 'evidence', fileName);
-  if (fs.existsSync(localFilePath)) {
+  const localFilePath = path.join(__dirname, '..', 'uploads', relativePath);
+  if (fs.existsSync(localFilePath) && fs.statSync(localFilePath).isFile()) {
     return res.sendFile(localFilePath);
   }
 
   // 2. Stream langsung dari MinIO jika tersedia
   if (minioClient && isMinioOnline()) {
     try {
-      const dataStream = await minioClient.getObject(bucketName, `evidence/${fileName}`);
-      const ext = path.extname(fileName).toLowerCase();
+      const dataStream = await minioClient.getObject(bucketName, relativePath);
+      const ext = path.extname(relativePath).toLowerCase();
       const mimeTypes = {
         '.jpg': 'image/jpeg',
         '.jpeg': 'image/jpeg',
@@ -65,7 +71,7 @@ app.get([
       res.setHeader('Cache-Control', 'public, max-age=86400');
       return dataStream.pipe(res);
     } catch (err) {
-      console.warn(`[Evidence Proxy] File evidence/${fileName} tidak ditemukan di MinIO:`, err.message);
+      console.warn(`[Evidence Proxy] File ${relativePath} tidak ditemukan di MinIO:`, err.message);
     }
   }
 

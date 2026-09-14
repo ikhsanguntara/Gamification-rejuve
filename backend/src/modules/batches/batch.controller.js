@@ -26,7 +26,7 @@ const getBatches = async (req, res, next) => {
 const getBatchById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const batch = await batchService.getBatchById(id, req.user);
+    const batch = await batchService.getBatchById(id, req.user, req);
 
     if (!batch) {
       return sendError(res, {

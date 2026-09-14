@@ -85,7 +85,8 @@ const evaluateBuddy = async (req, res, next) => {
     let { score, notes, evidenceUrl } = req.body;
 
     if (req.file) {
-      evidenceUrl = await uploadFileToStorage(req.file, 'evidence', req);
+      const folder = await evaluationService.resolveEvidenceFolder(id);
+      evidenceUrl = await uploadFileToStorage(req.file, folder, req);
     }
 
     const result = await evaluationService.evaluateBuddyMission(id, evaluatorId, {
@@ -113,7 +114,8 @@ const evaluateJourneyBySL = async (req, res, next) => {
     let { score, notes, evidenceUrl } = req.body;
 
     if (req.file) {
-      evidenceUrl = await uploadFileToStorage(req.file, 'evidence', req);
+      const folder = await evaluationService.resolveEvidenceFolder(id);
+      evidenceUrl = await uploadFileToStorage(req.file, folder, req);
     }
 
     const data = await evaluationService.evaluateJourneyBySL(id, slId, {

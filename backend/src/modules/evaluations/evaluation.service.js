@@ -1686,6 +1686,55 @@ const getBuddyHistory = async (currentUser, query = {}) => {
   };
 };
 
+/**
+ * Helper untuk menentukan struktur folder MinIO berbasis Batch & Kru (Pola User-First):
+ * batches/{batchCode}/crews/{crew_name}_{shortId}/{programType}[/week-{n}]
+ * 
+ * @param {string} userMissionId
+ * @returns {Promise<string>} folder path
+ */
+const resolveEvidenceFolder = async (userMissionId) => {
+  try {
+    const um = await prisma.userMission.findUnique({
+      where: { userMissionId },
+      include: {
+        user: { select: { userId: true, name: true } },
+        mission: {
+          select: {
+            type: true,
+            weekOrDayNumber: true,
+            batch: { select: { batchId: true, code: true } }
+          }
+        }
+      }
+    });
+
+    if (!um) return 'evidence';
+
+    const batchCode = (um.mission?.batch?.code || um.mission?.batch?.batchId || 'general')
+      .replace(/[^a-zA-Z0-9_-]/g, '_');
+    const rawName = (um.user?.name || 'crew')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '');
+    const shortId = (um.user?.userId || '').replace(/-/g, '').slice(0, 6);
+    const crewFolder = `${rawName || 'crew'}_${shortId}`;
+    const programType = (um.mission?.type || 'evidence').toLowerCase();
+
+    let folder = `batches/${batchCode}/crews/${crewFolder}/${programType}`;
+    if (programType === 'journey') {
+      const weekNum = um.mission?.weekOrDayNumber || 1;
+      folder += `/week-${weekNum}`;
+    }
+
+    return folder;
+  } catch (err) {
+    console.warn('[Evidence Folder Resolver Error]', err.message);
+    return 'evidence';
+  }
+};
+
 module.exports = {
   getUserMissions,
   getUserMissionById,
@@ -1697,5 +1746,6 @@ module.exports = {
   submitCrewFeedback,
   getBuddyReport,
   generateBuddyReportHtml,
-  getBuddyHistory
+  getBuddyHistory,
+  resolveEvidenceFolder
 };

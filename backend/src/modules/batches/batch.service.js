@@ -7,6 +7,7 @@
 
 const prisma = require('../../config/db');
 const { parsePrismaQuery } = require('../../utils/queryParser');
+const { normalizeStorageUrl } = require('../../utils/minioStorage');
 
 /**
  * Helper untuk format date ke Date object tanpa jam (UTC / midnight).
@@ -1106,7 +1107,7 @@ const getBatches = async (query = {}, currentUser = null) => {
 /**
  * Ambil batch detail berdasarkan ID.
  */
-const getBatchById = async (batchId, currentUser = null) => {
+const getBatchById = async (batchId, currentUser = null, req = null) => {
   const batch = await prisma.batch.findUnique({
     where: { batchId },
     include: {
@@ -1116,8 +1117,64 @@ const getBatchById = async (batchId, currentUser = null) => {
       missions: {
         orderBy: [
           { type: 'asc' },
-          { weekOrDayNumber: 'asc' }
-        ]
+          { weekOrDayNumber: 'asc' },
+          { createdAt: 'asc' }
+        ],
+        include: {
+          batchDetail: {
+            select: {
+              tplMissionId: true,
+              tplMission: {
+                select: {
+                  tplMissionId: true,
+                  code: true,
+                  name: true,
+                  type: true,
+                  durationCode: true,
+                  durationValue: true
+                }
+              }
+            }
+          },
+          userMissions: {
+            select: {
+              userMissionId: true,
+              userId: true,
+              status: true,
+              tlId: true,
+              tlScore: true,
+              tlNotes: true,
+              tlScoredAt: true,
+              dmId: true,
+              dmScore: true,
+              dmNotes: true,
+              dmReviewedAt: true,
+              finalScore: true,
+              stars: true,
+              evidenceUrl: true,
+              user: {
+                select: {
+                  userId: true,
+                  name: true,
+                  email: true,
+                  stars: true,
+                  points: true,
+                  level: true,
+                  department: {
+                    select: {
+                      departmentId: true,
+                      departmentCode: true,
+                      departmentName: true
+                    }
+                  }
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'asc'
+            }
+          }
+        }
       },
       users: {
         select: {
@@ -1138,6 +1195,27 @@ const getBatchById = async (batchId, currentUser = null) => {
       }
     }
   });
+
+  if (!batch) return null;
+
+  // Sematkan tplMission langsung di tiap objek mission dan sediakan score efektif & normalisasi evidenceUrl
+  if (Array.isArray(batch.missions)) {
+    for (const m of batch.missions) {
+      if (m.batchDetail?.tplMission) {
+        m.tplMission = m.batchDetail.tplMission;
+      }
+      if (Array.isArray(m.userMissions)) {
+        for (const um of m.userMissions) {
+          if (um.evidenceUrl) {
+            um.evidenceUrl = normalizeStorageUrl(um.evidenceUrl, req);
+          }
+          um.score = um.finalScore !== null && um.finalScore !== undefined
+            ? um.finalScore
+            : (um.tlScore !== null && um.tlScore !== undefined ? um.tlScore : (um.dmScore ?? 0));
+        }
+      }
+    }
+  }
 
   return await enrichSingleBatchWithTotalWeeks(batch, currentUser);
 };
