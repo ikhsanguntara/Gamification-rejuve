@@ -122,12 +122,12 @@
           <!-- Esai / Masukan Terbuka -->
           <div v-else class="pt-1">
             <textarea
-              v-model="form.essayAnswer"
+              v-model="form.essayAnswers[q.id]"
               rows="3"
               :required="!hasSubmitted"
               :disabled="hasSubmitted"
               :readonly="hasSubmitted"
-              placeholder="Ceritakan pengalaman, kendala, atau hal berkesan selama 1 bulan onboarding..."
+              :placeholder="`Tuliskan masukan untuk ${q.text}...`"
               class="w-full text-xs rounded-xl border p-2.5 text-slate-900 dark:text-white placeholder-slate-400 resize-none leading-relaxed transition-colors"
               :class="[
                 hasSubmitted
@@ -202,6 +202,7 @@ const form = ref({
   storeLocation: '',
   buddyName: '',
   ratings: {},
+  essayAnswers: {},
   essayAnswer: ''
 })
 
@@ -210,19 +211,42 @@ const initForm = () => {
   const existing = submittedData.value
 
   if (existing) {
+    const existingEssayAnswers = { ...(existing.essayAnswers || {}) }
+    if (existing.essayAnswer && Object.keys(existingEssayAnswers).length === 0) {
+      feedbackStore.surveyQuestions.forEach(q => {
+        if (q.type === 'ESSAY') {
+          existingEssayAnswers[q.id] = existing.essayAnswer
+        }
+      })
+    }
+
     form.value = {
       crewName: existing.crewName || c?.name || 'Kru',
       storeLocation: existing.storeLocation || c?.storeLocation || 'Gerai Re.juve',
       buddyName: existing.buddyName || 'Store Leader',
       ratings: { ...(existing.ratings || {}) },
+      essayAnswers: existingEssayAnswers,
       essayAnswer: existing.essayAnswer || ''
     }
   } else {
-    // Default ratings 10 untuk 16 butir
+    // Default ratings 10 untuk butir rating
     const defaultRatings = {}
+    const defaultEssayAnswers = {}
+
     feedbackStore.surveyQuestions.forEach(q => {
       if (q.type === 'SCALE_0_10') {
         defaultRatings[q.id] = 10
+      } else {
+        const textLower = (q.text || '').toLowerCase()
+        if (textLower.includes('nama kru') || textLower === 'nama') {
+          defaultEssayAnswers[q.id] = c?.name || ''
+        } else if (textLower.includes('store') || textLower.includes('penempatan') || textLower.includes('gerai')) {
+          defaultEssayAnswers[q.id] = c?.storeLocation || 'Gerai Re.juve'
+        } else if (textLower.includes('buddy') || textLower.includes('mentor') || textLower.includes('leader')) {
+          defaultEssayAnswers[q.id] = c?.buddyName || 'Store Leader / Mentor'
+        } else {
+          defaultEssayAnswers[q.id] = ''
+        }
       }
     })
 
@@ -231,7 +255,8 @@ const initForm = () => {
       storeLocation: c?.storeLocation || 'Gerai Re.juve',
       buddyName: 'Store Leader / Mentor',
       ratings: defaultRatings,
-      essayAnswer: 'Program onboarding sangat jelas dan mentor mendampingi dengan baik.'
+      essayAnswers: defaultEssayAnswers,
+      essayAnswer: ''
     }
   }
 }
@@ -252,6 +277,8 @@ const handleSubmit = async () => {
     return
   }
 
+  const combinedEssayAnswer = Object.values(form.value.essayAnswers).filter(Boolean).join(' | ') || form.value.essayAnswer
+
   try {
     await feedbackStore.submitSurveyToApi({
       crewId: props.crew?.id || props.crew?.userId || '',
@@ -259,7 +286,8 @@ const handleSubmit = async () => {
       storeLocation: form.value.storeLocation,
       buddyName: form.value.buddyName,
       ratings: form.value.ratings,
-      essayAnswer: form.value.essayAnswer
+      essayAnswers: form.value.essayAnswers,
+      essayAnswer: combinedEssayAnswer
     })
 
     toast.success('Feedback Berhasil Dikirim', 'Terima kasih atas partisipasi Anda dalam survei onboarding Re.juve! 🌟')

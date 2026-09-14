@@ -88,16 +88,16 @@
       </div>
     </div>
 
-    <!-- REST API Server Endpoint Configuration Card -->
+    <!-- REST API Server Endpoint Information Card -->
     <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-8 space-y-4 shadow-sm">
       <div class="flex items-center justify-between">
         <div>
           <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Konfigurasi Endpoint REST API Server</span>
+            <span>Endpoint REST API Server Aktif</span>
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Atur URL target backend API tanpa perlu build ulang. Default dibaca dari file <code class="text-[#831843] dark:text-[#f472b6] font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">.env</code> (<code class="font-mono">NUXT_PUBLIC_API_BASE</code>).
+            URL target backend API aktif dibaca langsung dari konfigurasi environment (<code class="text-[#831843] dark:text-[#f472b6] font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">NUXT_PUBLIC_API_BASE</code>).
           </p>
         </div>
         <span class="text-[10px] px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold font-mono">
@@ -105,66 +105,10 @@
         </span>
       </div>
 
-      <div class="space-y-3 pt-1">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-            URL Basis REST API Aktif:
-          </label>
-          <div class="flex gap-2">
-            <input
-              v-model="customApiUrl"
-              type="url"
-              placeholder="https://cagelike-flukily-niels.ngrok-free.dev/api"
-              class="flex-1 text-xs font-mono rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-            />
-            <button
-              type="button"
-              @click="saveApiUrl"
-              class="px-4 py-2.5 text-xs font-bold rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white shadow-sm transition-all cursor-pointer"
-            >
-              Simpan
-            </button>
-            <button
-              type="button"
-              @click="resetApiUrl"
-              class="px-3 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            >
-              Reset
-            </button>
-          </div>
-        </div>
-
-        <!-- Preset URL Buttons -->
-        <div class="flex flex-wrap items-center gap-2 pt-1">
-          <span class="text-[11px] text-slate-400 font-medium">Preset Cepat:</span>
-          <button
-            type="button"
-            @click="applyPreset('https://cagelike-flukily-niels.ngrok-free.dev/api')"
-            class="text-[11px] px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:border-[#831843] cursor-pointer"
-          >
-            🌐 Ngrok Dev
-          </button>
-          <button
-            type="button"
-            @click="applyPreset('http://103.168.147.133:3005/api')"
-            class="text-[11px] px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:border-[#831843] cursor-pointer"
-          >
-            🖥️ VPS Dev (103.168.147.133:3005)
-          </button>
-          <button
-            type="button"
-            @click="applyPreset('http://localhost:5000/api')"
-            class="text-[11px] px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:border-[#831843] cursor-pointer"
-          >
-            💻 Localhost:5000
-          </button>
-          <button
-            type="button"
-            @click="applyPreset('https://api.gamification.rejuve.co.id/api')"
-            class="text-[11px] px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:border-[#831843] cursor-pointer"
-          >
-            🚀 Production Live
-          </button>
+      <div class="pt-1">
+        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 font-mono text-xs text-slate-800 dark:text-slate-200 flex items-center justify-between">
+          <span class="font-bold text-[#831843] dark:text-[#f472b6]">{{ customApiUrl }}</span>
+          <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950">Active Connected</span>
         </div>
       </div>
     </div>
@@ -266,39 +210,18 @@ onMounted(() => {
   } catch (e) {}
 })
 
-const saveApiUrl = () => {
-  if (!customApiUrl.value || !customApiUrl.value.trim()) {
-    toast.error('Gagal', 'URL API tidak boleh kosong.')
-    return
-  }
-  const clean = customApiUrl.value.trim().replace(/\/$/, '')
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('rejuve_api_base', clean)
-  }
-  toast.success('URL API Diperbarui', `Target server API: ${clean}`)
-}
-
-const resetApiUrl = () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('rejuve_api_base')
-  }
-  customApiUrl.value = getApiBaseUrl()
-  toast.info('URL API Direset', `Kembali ke konfigurasi default .env: ${customApiUrl.value}`)
-}
-
-const applyPreset = (presetUrl) => {
-  customApiUrl.value = presetUrl
-  saveApiUrl()
-}
-
 const handleResetData = async () => {
   const isConfirmed = await confirmDeleteDialog({
-    title: 'Reset Cache Penyimpanan Lokal?',
-    text: 'Apakah Anda yakin ingin membersihkan seluruh cache lokal aplikasi di browser ini? Data sesi akan di-refresh.',
-    confirmButtonText: 'Ya, Bersihkan Cache'
+    title: 'Bersihkan Seluruh Cache Browser?',
+    text: 'Apakah Anda yakin ingin membersihkan seluruh cache lokal aplikasi di browser ini? Halaman akan dimuat ulang secara bersih.',
+    confirmButtonText: 'Ya, Bersihkan Semua'
   })
 
   if (isConfirmed) {
+    if (typeof window !== 'undefined') {
+      localStorage.clear()
+      sessionStorage.clear()
+    }
     clearAllStoredData()
     toast.info('Cache Dibersihkan', 'Memuat ulang aplikasi...')
     setTimeout(() => {

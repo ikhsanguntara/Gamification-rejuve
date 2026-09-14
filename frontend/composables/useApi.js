@@ -8,16 +8,16 @@ import { useLoading } from './useLoading.js'
 let memoryToken = ''
 
 export function getApiBaseUrl() {
-  let url = 'http://localhost:5000/api'
+  let url = 'http://103.168.147.133:3005/api'
   if (typeof window !== 'undefined') {
     try {
+      // Bersihkan sisa legacy cache jika pernah tersimpan
+      localStorage.removeItem('rejuve_api_base')
       const config = useRuntimeConfig?.()
       if (config?.public?.apiBase) url = config.public.apiBase
     } catch {
       // Fallback outside Nuxt reactive context
     }
-    const saved = localStorage.getItem('rejuve_api_base')
-    if (saved) url = saved
   } else {
     url = process.env.NUXT_PUBLIC_API_BASE || url
   }

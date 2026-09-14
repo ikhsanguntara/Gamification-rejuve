@@ -155,12 +155,12 @@
         <!-- Open Essay for ESSAY Questions -->
         <div v-else class="pt-2">
           <textarea
-            v-model="surveyForm.essayAnswer"
+            v-model="surveyForm.essayAnswers[q.id]"
             rows="4"
             :required="!hasSubmitted"
             :disabled="hasSubmitted"
             :readonly="hasSubmitted"
-            placeholder="Tuliskan pengalaman Anda secara detail di sini..."
+            :placeholder="`Tuliskan masukan untuk ${q.text}...`"
             class="w-full text-xs rounded-2xl border p-3 text-slate-900 dark:text-white placeholder-slate-400 resize-none leading-relaxed transition-colors"
             :class="[
               hasSubmitted
@@ -242,6 +242,7 @@ const surveyForm = ref({
   storeLocation: userStore.currentUser?.storeLocation || userStore.currentUser?.department || 'Gerai Re.juve',
   buddyName: userStore.currentUser?.buddyName || 'Store Leader / Mentor',
   ratings: {},
+  essayAnswers: {},
   essayAnswer: ''
 })
 
@@ -254,22 +255,47 @@ onMounted(async () => {
   const existing = submittedData.value
   
   if (existing) {
+    const existingEssayAnswers = { ...(existing.essayAnswers || {}) }
+    if (existing.essayAnswer && Object.keys(existingEssayAnswers).length === 0) {
+      feedbackStore.surveyQuestions.forEach(q => {
+        if (q.type === 'ESSAY') {
+          existingEssayAnswers[q.id] = existing.essayAnswer
+        }
+      })
+    }
+
     surveyForm.value = {
       crewName: existing.crewName || userStore.currentUser?.name || 'Kru',
       storeLocation: existing.storeLocation || userStore.currentUser?.storeLocation || userStore.currentUser?.department || 'Gerai Re.juve',
       buddyName: existing.buddyName || 'Store Leader / Mentor',
       ratings: { ...(existing.ratings || {}) },
+      essayAnswers: existingEssayAnswers,
       essayAnswer: existing.essayAnswer || ''
     }
   } else {
-    // Default all ratings to 10
+    // Default all ratings to 10 and default essays
     const defaultRatings = {}
+    const defaultEssayAnswers = {}
+
     feedbackStore.surveyQuestions.forEach(q => {
       if (q.type === 'SCALE_0_10') {
         defaultRatings[q.id] = 10
+      } else {
+        const textLower = (q.text || '').toLowerCase()
+        if (textLower.includes('nama kru') || textLower === 'nama') {
+          defaultEssayAnswers[q.id] = userStore.currentUser?.name || ''
+        } else if (textLower.includes('store') || textLower.includes('penempatan') || textLower.includes('gerai')) {
+          defaultEssayAnswers[q.id] = userStore.currentUser?.storeLocation || userStore.currentUser?.department || 'Gerai Re.juve'
+        } else if (textLower.includes('buddy') || textLower.includes('mentor') || textLower.includes('leader')) {
+          defaultEssayAnswers[q.id] = userStore.currentUser?.buddyName || 'Store Leader / Mentor'
+        } else {
+          defaultEssayAnswers[q.id] = ''
+        }
       }
     })
+
     surveyForm.value.ratings = defaultRatings
+    surveyForm.value.essayAnswers = defaultEssayAnswers
   }
 })
 
@@ -279,6 +305,8 @@ const submitFeedback = async () => {
     return
   }
 
+  const combinedEssayAnswer = Object.values(surveyForm.value.essayAnswers).filter(Boolean).join(' | ') || surveyForm.value.essayAnswer
+
   try {
     await feedbackStore.submitSurveyToApi({
       crewId: currentCrewId.value,
@@ -286,7 +314,8 @@ const submitFeedback = async () => {
       storeLocation: surveyForm.value.storeLocation,
       buddyName: surveyForm.value.buddyName,
       ratings: surveyForm.value.ratings,
-      essayAnswer: surveyForm.value.essayAnswer
+      essayAnswers: surveyForm.value.essayAnswers,
+      essayAnswer: combinedEssayAnswer
     })
 
     toast.success(
