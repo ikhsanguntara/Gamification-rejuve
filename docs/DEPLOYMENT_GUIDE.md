@@ -86,3 +86,16 @@ npm --prefix frontend run preview:stg
 # Preview hasil generate production
 npm --prefix frontend run preview:prod
 ```
+
+### E. Deploy Cepat dari MacBook M3 ke VPS (Zero Load di Server)
+Untuk rilis langsung ke VPS Dev/Staging tanpa membebani CPU/RAM server dan 100% terisolasi dari service ASCO:
+
+```bash
+# Jalankan skrip deployer khusus Frontend dari root monorepo:
+./deploy-fe-from-mac.sh
+# Atau via npm:
+npm run deploy:vps:fe
+```
+*Proses ini akan menjalankan unit test lokal, build statis di Mac M3 (~5-10 detik), mentransfer aset ke VPS, dan me-reload Nginx container `gamification-frontend` secara instan tanpa mengganggu container lain.*
+
+

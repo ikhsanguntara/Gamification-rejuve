@@ -20,6 +20,7 @@
     "deploy": "npm --prefix frontend run deploy",
     "deploy:stg": "npm --prefix frontend run deploy:stg",
     "deploy:prod": "npm --prefix frontend run deploy:prod",
+    "deploy:vps:fe": "./deploy-fe-from-mac.sh",
     "test": "npm --prefix frontend run test",
     "test:frontend": "npm --prefix frontend run test",
     "audit": "npm --prefix frontend run audit",
