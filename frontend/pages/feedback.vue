@@ -194,10 +194,10 @@
 
         <NuxtLink
           v-if="hasSubmitted"
-          to="/dashboard"
+          :to="userStore.isCrew ? '/journey' : '/dashboard'"
           class="px-6 py-3 rounded-2xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
-          <span>Kembali ke Dashboard</span>
+          <span>{{ userStore.isCrew ? 'Kembali ke Petualangan Misi' : 'Kembali ke Dashboard' }}</span>
         </NuxtLink>
 
         <button
