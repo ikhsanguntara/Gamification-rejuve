@@ -9,6 +9,7 @@ router.use(authenticate);
 
 // ─── Read ─────────────────────────────────────────────────────────────────────
 router.get('/', batchController.getBatches);
+router.get('/next-code', batchController.getNextBatchCode);
 router.get('/:id', batchController.getBatchById);
 
 // ─── Write (HEAD dan SUPERADMIN) ──────────────────────────────────────────────

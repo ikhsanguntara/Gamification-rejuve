@@ -315,7 +315,36 @@ const executeBatchGeneration = async (tx, {
 };
 
 /**
+ * Auto-generate kode Batch berikutnya (Format Opsi 1: BTH-01, BTH-02, dst.).
+ * Resilient terhadap loncatan nomor, custom prefix, maupun concurrency.
+ */
+const generateNextBatchCode = async (prismaClient = prisma) => {
+  const batches = await prismaClient.batch.findMany({
+    select: { code: true }
+  });
+
+  const existingCodes = new Set(batches.map(b => (b.code || '').trim().toUpperCase()));
+
+  const numericSuffixes = batches
+    .map(b => b.code)
+    .filter(c => Boolean(c) && /^BTH-\d+$/i.test(c.trim()))
+    .map(c => parseInt(c.trim().replace(/^BTH-/i, ''), 10))
+    .filter(n => !isNaN(n));
+
+  let candidateNum = numericSuffixes.length > 0 ? Math.max(...numericSuffixes) + 1 : 1;
+
+  let candidateCode = `BTH-${String(candidateNum).padStart(2, '0')}`;
+  while (existingCodes.has(candidateCode.toUpperCase())) {
+    candidateNum++;
+    candidateCode = `BTH-${String(candidateNum).padStart(2, '0')}`;
+  }
+
+  return candidateCode;
+};
+
+/**
  * Buat Batch baru.
+ * Field "code" bersifat opsional. Jika tidak diisi / kosong, backend otomatis men-generate kode (BTH-01, BTH-02, dst).
  */
 const createBatch = async (payload, creatorId = null) => {
   const {
@@ -330,8 +359,13 @@ const createBatch = async (payload, creatorId = null) => {
     crewIds = []
   } = payload;
 
-  if (!code || !name || !startDate || !tplJourneyId) {
-    throw new Error('Field "code", "name", "startDate", dan "tplJourneyId" wajib diisi.');
+  if (!name || !startDate || !tplJourneyId) {
+    throw new Error('Field "name", "startDate", dan "tplJourneyId" wajib diisi.');
+  }
+
+  let finalCode = (typeof code === 'string' && code.trim()) ? code.trim() : null;
+  if (!finalCode) {
+    finalCode = await generateNextBatchCode();
   }
 
   const [tplJourney, tplBuddy, tplFeedback] = await Promise.all([
@@ -356,9 +390,24 @@ const createBatch = async (payload, creatorId = null) => {
   const timeline = calculateTimeline(startDate, tplBuddy, tplJourney, tplFeedback);
 
   const result = await prisma.$transaction(async (tx) => {
+    // Validasi atau regenerate kode secara atomik bila bentrok
+    const existingCode = await tx.batch.findUnique({
+      where: { code: finalCode }
+    });
+
+    if (existingCode) {
+      if (code && typeof code === 'string' && code.trim()) {
+        const err = new Error(`Batch dengan code "${finalCode}" sudah ada.`);
+        err.code = 'P2002';
+        throw err;
+      } else {
+        finalCode = await generateNextBatchCode(tx);
+      }
+    }
+
     const batch = await tx.batch.create({
       data: {
-        code,
+        code: finalCode,
         name,
         status,
         startDate: toDateOnly(startDate),
@@ -1396,6 +1445,7 @@ const toggleBatchDetailLock = async (batchId, batchDetailId, payload = {}, updat
 module.exports = {
   createBatch,
   generateBatch,
+  generateNextBatchCode,
   getBatches,
   getBatchById,
   updateBatch,

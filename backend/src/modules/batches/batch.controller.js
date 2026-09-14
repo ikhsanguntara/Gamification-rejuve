@@ -44,6 +44,19 @@ const getBatchById = async (req, res, next) => {
   }
 };
 
+const getNextBatchCode = async (req, res, next) => {
+  try {
+    const nextCode = await batchService.generateNextBatchCode();
+    return sendSuccess(res, {
+      message: 'Kode batch berikutnya berhasil di-generate.',
+      statusCode: 200,
+      data: { nextCode }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const createBatch = async (req, res, next) => {
   try {
     const creatorId = req.user?.id || req.user?.userId || null;
@@ -148,6 +161,7 @@ const toggleBatchDetailLock = async (req, res, next) => {
 module.exports = {
   getBatches,
   getBatchById,
+  getNextBatchCode,
   createBatch,
   generateBatchMissions,
   updateBatch,
