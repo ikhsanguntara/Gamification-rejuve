@@ -89,7 +89,7 @@ const calculateTimeline = (batchStartDate, tplBuddy, tplJourney, tplFeedback) =>
       template: tplBuddy,
       startDate: buddyStart,
       endDate: buddyEnd,
-      unitDays: Math.max(1, Math.round(totalBuddyDays / (tplBuddy.details?.length || 1))),
+      unitDays: totalBuddyDays,
       totalDays: totalBuddyDays
     };
   }
@@ -155,10 +155,6 @@ const executeBatchGeneration = async (tx, {
     });
 
     for (const detail of buddySchedule.template.details) {
-      const detailStep = (detail.durationNumber || 1) - 1;
-      const mStart = addDays(buddySchedule.startDate, detailStep * buddySchedule.unitDays);
-      const mEnd = addDays(mStart, buddySchedule.unitDays - 1);
-
       const mission = await tx.mission.create({
         data: {
           batchId,
@@ -171,8 +167,8 @@ const executeBatchGeneration = async (tx, {
           inputType: detail.inputType || 'SCALE',
           scaleConfig: detail.scaleConfig || null,
           sopChecklist: detail.sopChecklist || null,
-          startDate: mStart,
-          endDate: mEnd
+          startDate: buddySchedule.startDate,
+          endDate: buddySchedule.endDate
         }
       });
       createdMissions.push({ ...mission, templateType: 'BUDDY' });
