@@ -32,9 +32,12 @@ services:
 
   # ==========================================================
   # MINIO - REJUVE SHARED OBJECT STORAGE
+  # Internal only:
+  # - API     : 9000
+  # - Console : 9001
   # ==========================================================
   rejuve-minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     container_name: rejuve-minio
     restart: unless-stopped
 
@@ -49,18 +52,6 @@ services:
 
     networks:
       - gamification-network
-
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "-f",
-          "http://localhost:9000/minio/health/live"
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
 
 
   # ==========================================================
@@ -117,7 +108,7 @@ services:
         condition: service_healthy
 
       rejuve-minio:
-        condition: service_healthy
+        condition: service_started
 
     volumes:
       - gamification_backend_uploads:/app/uploads
@@ -162,7 +153,7 @@ services:
 
 
 # ==========================================================
-# NETWORKS
+# NETWORK
 # ==========================================================
 networks:
   gamification-network:
@@ -171,7 +162,7 @@ networks:
 
 
 # ==========================================================
-# VOLUMES
+# PERSISTENT VOLUMES
 # ==========================================================
 volumes:
 
