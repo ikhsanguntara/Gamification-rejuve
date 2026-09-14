@@ -29,8 +29,8 @@ export const useStoreStore = defineStore('store', {
       const userStore = useUserStore()
       const batchStore = useBatchStore()
       return state.stores.map(s => {
-        const storeLeader = userStore.userById(s.storeLeaderId) || null
-        const districtManager = userStore.userById(s.districtManagerId) || null
+        const storeLeader = s.storeLeader || userStore.userById(s.storeLeaderId) || null
+        const districtManager = s.districtManager || userStore.userById(s.districtManagerId) || null
         const batch = s.batchId ? batchStore.batchById(s.batchId) || null : null
         return {
           ...s,
@@ -46,8 +46,8 @@ export const useStoreStore = defineStore('store', {
       const batchStore = useBatchStore()
       const s = state.stores.find(item => item.id === id)
       if (!s) return null
-      const storeLeader = userStore.userById(s.storeLeaderId) || null
-      const districtManager = userStore.userById(s.districtManagerId) || null
+      const storeLeader = s.storeLeader || userStore.userById(s.storeLeaderId) || null
+      const districtManager = s.districtManager || userStore.userById(s.districtManagerId) || null
       const batch = s.batchId ? batchStore.batchById(s.batchId) || null : null
       return {
         ...s,
@@ -110,6 +110,8 @@ export const useStoreStore = defineStore('store', {
             phone: '021-29465000',
             storeLeaderId: d.userSlId,
             districtManagerId: d.userDmId,
+            storeLeader: d.storeLeader || d.userSl || null,
+            districtManager: d.districtManager || d.userDm || null,
             batchId: null,
             totalCrews: 4,
             status: d.isActive ? 'ACTIVE' : 'INACTIVE',

@@ -15,6 +15,75 @@ const { pushToLynx } = require('../../utils/lynxSync');
 // DEPARTMENTS
 // =============================================================================
 
+/**
+ * Helper untuk menyematkan data Store Leader (SL) dan District Manager (DM) ke objek departemen.
+ */
+const enrichDepartmentsWithManagers = async (departments) => {
+  if (!Array.isArray(departments) || departments.length === 0) {
+    return departments;
+  }
+
+  const managerIds = [...new Set(
+    departments.flatMap(d => [d.userSlId, d.userDmId]).filter(Boolean)
+  )];
+
+  if (managerIds.length === 0) {
+    for (const d of departments) {
+      d.storeLeader = null;
+      d.districtManager = null;
+      d.userSl = null;
+      d.userDm = null;
+    }
+    return departments;
+  }
+
+  const users = await prisma.user.findMany({
+    where: { userId: { in: managerIds } },
+    select: {
+      userId: true,
+      name: true,
+      email: true,
+      isActive: true,
+      role: {
+        select: {
+          roleId: true,
+          roleCode: true,
+          roleName: true
+        }
+      }
+    }
+  });
+
+  const userMap = new Map();
+  for (const u of users) {
+    userMap.set(u.userId, {
+      userId: u.userId,
+      id: u.userId,
+      name: u.name,
+      email: u.email,
+      username: u.email,
+      defaultPassword: 'password123',
+      position: u.role?.roleName || (u.role?.roleCode === 'STORE_LEADER' ? 'Store Leader' : 'District Manager'),
+      role: u.role?.roleCode || '',
+      roleCode: u.role?.roleCode || '',
+      roleName: u.role?.roleName || '',
+      isActive: u.isActive
+    });
+  }
+
+  for (const d of departments) {
+    const sl = d.userSlId ? userMap.get(d.userSlId) || null : null;
+    const dm = d.userDmId ? userMap.get(d.userDmId) || null : null;
+
+    d.storeLeader = sl;
+    d.districtManager = dm;
+    d.userSl = sl;
+    d.userDm = dm;
+  }
+
+  return departments;
+};
+
 const getDepartments = async (req, res, next) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -28,7 +97,7 @@ const getDepartments = async (req, res, next) => {
     // Searchable: departmentCode, departmentName, regionCode
     const where = parsePrismaQuery(queryClone, ['departmentCode', 'departmentName', 'regionCode']);
 
-    const [data, total] = await Promise.all([
+    const [rawDepartments, total] = await Promise.all([
       prisma.department.findMany({
         where,
         skip,
@@ -37,6 +106,8 @@ const getDepartments = async (req, res, next) => {
       }),
       prisma.department.count({ where })
     ]);
+
+    const data = await enrichDepartmentsWithManagers(rawDepartments);
 
     return sendPaginated(res, {
       message: 'Daftar departemen berhasil diambil.',
@@ -60,6 +131,8 @@ const getDepartmentById = async (req, res, next) => {
     if (!data) {
       return sendError(res, { statusCode: 404, message: 'Departemen tidak ditemukan.' });
     }
+
+    await enrichDepartmentsWithManagers([data]);
 
     return sendSuccess(res, {
       message: 'Detail departemen berhasil diambil.',
@@ -86,6 +159,8 @@ const createDepartment = async (req, res, next) => {
         createdBy: creatorId
       }
     });
+
+    await enrichDepartmentsWithManagers([department]);
 
     return sendSuccess(res, {
       statusCode: 201,
@@ -118,6 +193,8 @@ const updateDepartment = async (req, res, next) => {
         updatedBy: updaterId
       }
     });
+
+    await enrichDepartmentsWithManagers([department]);
 
     return sendSuccess(res, {
       statusCode: 200,
