@@ -608,7 +608,7 @@ const executeSavePackage = async () => {
     }
   })
 
-  const dVal = Number(totalPeriods.value || form.value.durationValue || 1)
+  const dVal = Number(form.value.durationValue || 1)
   const dCode = form.value.durationCode || (form.value.type === 'JOURNEY' ? 'WEEK' : 'DAY')
 
   const createPayload = {

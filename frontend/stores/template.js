@@ -428,8 +428,8 @@ export const useTemplateStore = defineStore('template', {
 
       const inputDetails = Array.isArray(payload.details) ? payload.details : []
       const maxDur = inputDetails.reduce((max, d) => Math.max(max, Number(d.durationNumber || d.week || 1)), 1)
-      const totalTabs = Math.max(Number(payload.durationValue) || Number(payload.totalWeeks) || 1, maxDur, 1)
-      const durationValue = Number(payload.durationValue || totalTabs)
+      const totalTabs = Math.max(Number(payload.totalWeeks) || 1, maxDur, 1)
+      const durationValue = Number(payload.durationValue !== undefined ? payload.durationValue : 1)
 
       const payloadCode = payload.code?.trim() || `PKG-${String(this.packages.length + 1).padStart(2, '0')}`
 
@@ -784,13 +784,13 @@ export const useTemplateStore = defineStore('template', {
       })
 
       const maxDurationNum = sourceDetails.reduce((max, d) => Math.max(max, Number(d.week || d.durationNumber || 1)), 1)
-      const targetCount = Math.max(Number(payload.durationValue) || Number(payload.totalWeeks) || 1, maxDurationNum, 1)
+      const targetCount = Math.max(Number(payload.totalWeeks) || 1, maxDurationNum, 1)
       pkg.weeks = Array.from({ length: targetCount }, (_, i) => ({
         weekNumber: i + 1,
         title: periodTitlesMap[i + 1] || (pkg.type === 'JOURNEY' ? `Minggu ${i + 1}: Tema SOP Operasional` : `Hari ${i + 1}: Agenda Orientasi`)
       }))
       pkg.totalWeeks = pkg.weeks.length
-      pkg.durationValue = Number(payload.durationValue || pkg.weeks.length)
+      pkg.durationValue = Number(payload.durationValue !== undefined ? payload.durationValue : (pkg.durationValue || 1))
 
       // Prepare full JSON payload for backend API
       const validCategories = ['TECHNICAL', 'SOFT_SKILL', 'LEADERSHIP', 'PROJECT']
@@ -836,7 +836,7 @@ export const useTemplateStore = defineStore('template', {
       const apiPayload = {
         name: pkg.name,
         durationCode: pkg.durationCode || (pkg.type === 'JOURNEY' ? 'WEEK' : 'DAY'),
-        durationValue: Number(pkg.durationValue || pkg.totalWeeks || 1),
+        durationValue: Number(pkg.durationValue || 1),
         description: pkg.description || '',
         details: mappedDetails
       }

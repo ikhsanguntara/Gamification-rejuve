@@ -745,7 +745,7 @@ const executeSaveAll = async () => {
   const fullPayload = {
     name: form.value.name.trim(),
     durationCode: form.value.durationCode,
-    durationValue: Number(totalPeriods.value || form.value.durationValue || 1),
+    durationValue: Number(form.value.durationValue || 1),
     description: form.value.description?.trim() || '',
     details: compiledDetails
   }
