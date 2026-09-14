@@ -54,7 +54,8 @@ export const useUserStore = defineStore('user', {
     },
     notifications: [],
     unreadCount: 0,
-    isLoadingNotifications: false
+    isLoadingNotifications: false,
+    pendingWelcomeReward: getStoredData('rejuve_welcome_reward', null)
   }),
 
   getters: {
@@ -221,6 +222,25 @@ export const useUserStore = defineStore('user', {
             this.currentUserId = newUser.id
           }
 
+          // First Login Welcome / Early Bird Reward Handling
+          if (res.data.earlyBirdReward && res.data.earlyBirdReward.claimed) {
+            this.pendingWelcomeReward = res.data.earlyBirdReward
+            setStoredData('rejuve_welcome_reward', res.data.earlyBirdReward)
+          } else if (mappedRole === 'CREW' && apiU.hasClaimedEarlyBird) {
+            const seenKey = `rejuve_welcome_seen_${apiU.userId}`
+            const alreadySeen = typeof localStorage !== 'undefined' ? localStorage.getItem(seenKey) : null
+            if (!alreadySeen) {
+              this.pendingWelcomeReward = {
+                claimed: true,
+                starsEarned: 5.0,
+                pointsEarned: 100,
+                tierLabel: 'Tepat Waktu (H0)',
+                message: 'Selamat datang di Re.juve! Bonus Poin & Bintang First Login telah berhasil dicairkan.'
+              }
+              setStoredData('rejuve_welcome_reward', this.pendingWelcomeReward)
+            }
+          }
+
           setStoredData('rejuve_users_v3', this.userDirectory)
           return { success: true, user: this.currentUser, data: res.data }
         }
@@ -245,10 +265,36 @@ export const useUserStore = defineStore('user', {
               batchStore.selectedBatchId = res.data.activeBatchId
             }
           }
+
+          const mappedRole = extractRoleCode(res.data.role) || extractRoleCode(res.data.roleDetails) || 'CREW'
+          if (mappedRole === 'CREW' && res.data.hasClaimedEarlyBird) {
+            const seenKey = `rejuve_welcome_seen_${res.data.userId}`
+            const alreadySeen = typeof localStorage !== 'undefined' ? localStorage.getItem(seenKey) : null
+            if (!alreadySeen && !this.pendingWelcomeReward) {
+              this.pendingWelcomeReward = {
+                claimed: true,
+                starsEarned: 5.0,
+                pointsEarned: 100,
+                tierLabel: 'Tepat Waktu (H0)',
+                message: 'Selamat datang di Re.juve! Bonus Poin & Bintang First Login telah berhasil dicairkan.'
+              }
+              setStoredData('rejuve_welcome_reward', this.pendingWelcomeReward)
+            }
+          }
+
           return res.data
         }
       } catch (err) {
         console.warn('fetchMe failed:', err.message)
+      }
+    },
+
+    dismissWelcomeReward(userId) {
+      this.pendingWelcomeReward = null
+      setStoredData('rejuve_welcome_reward', null)
+      const targetId = userId || this.currentUser?.id || this.currentUserId
+      if (typeof localStorage !== 'undefined' && targetId) {
+        localStorage.setItem(`rejuve_welcome_seen_${targetId}`, 'true')
       }
     },
 

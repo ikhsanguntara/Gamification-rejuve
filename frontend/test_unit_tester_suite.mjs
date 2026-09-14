@@ -302,11 +302,11 @@ test('Simulasi Navigasi: Menu Penilaian Buddy hanya muncul jika SL memiliki isBu
     if (role === 'STORE_LEADER') {
       paths.push('/dashboard', '/batches')
       if (isBuddy) paths.push('/buddy')
-      paths.push('/evaluations', '/missions', '/leaderboard', '/achievements')
+      paths.push('/evaluations', '/missions', '/leaderboard')
     } else if (role === 'DISTRICT_MANAGER') {
-      paths.push('/dashboard', '/batches', '/approvals', '/missions', '/leaderboard', '/achievements')
+      paths.push('/dashboard', '/batches', '/approvals', '/missions', '/leaderboard')
     } else if (role === 'CREW') {
-      paths.push('/dashboard', '/journey', '/missions', '/feedback', '/leaderboard', '/achievements', '/profile')
+      paths.push('/dashboard', '/journey', '/missions', '/feedback', '/leaderboard', '/profile')
     }
     return paths
   }

@@ -17,6 +17,8 @@
     <!-- Mobile Bottom Navigation Bar (Active for all roles) -->
     <MobileNavigation />
 
+    <!-- 🌟 First Login Festive Welcome Reward Modal (For Crew) -->
+    <WelcomeRewardModal />
   </div>
 </template>
 
@@ -25,6 +27,7 @@ import { useUserStore } from '~/stores/user.js'
 import AppSidebar from '~/components/layout/AppSidebar.vue'
 import AppHeader from '~/components/layout/AppHeader.vue'
 import MobileNavigation from '~/components/layout/MobileNavigation.vue'
+import WelcomeRewardModal from '~/components/gamification/WelcomeRewardModal.vue'
 
 const userStore = useUserStore()
 </script>

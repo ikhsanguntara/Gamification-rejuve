@@ -77,7 +77,6 @@ const navItems = computed(() => {
       { label: 'Petualangan', path: '/journey', icon: Compass },
       { label: 'Survei', path: '/feedback', icon: MessageSquareText },
       { label: 'Peringkat', path: '/leaderboard', icon: Medal },
-      { label: 'Pencapaian', path: '/achievements', icon: Trophy },
       { label: 'Profil', path: '/profile', icon: User }
     ]
   }
@@ -92,8 +91,7 @@ const navItems = computed(() => {
         icon: ClipboardCheck,
         hasBadge: missionStore.revisionCount > 0
       },
-      { label: 'Peringkat', path: '/leaderboard', icon: Medal },
-      { label: 'Lencana', path: '/achievements', icon: Trophy }
+      { label: 'Peringkat', path: '/leaderboard', icon: Medal }
     ]
   }
 
@@ -107,8 +105,7 @@ const navItems = computed(() => {
       icon: ShieldCheck,
       hasBadge: approvalStore.pendingApprovals.length > 0
     },
-    { label: 'Peringkat', path: '/leaderboard', icon: Medal },
-    { label: 'Lencana', path: '/achievements', icon: Trophy }
+    { label: 'Peringkat', path: '/leaderboard', icon: Medal }
   ]
 })
 </script>

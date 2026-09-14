@@ -7,7 +7,7 @@
           Batch Misi Operasional
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Pantau siklus 3 minggu operasional, penugasan kru, dan progres gamifikasi untuk cabang Anda.
+          Pantau siklus operasional batch, penugasan kru, dan progres gamifikasi untuk cabang Anda.
         </p>
       </div>
 

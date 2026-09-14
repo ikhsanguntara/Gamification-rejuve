@@ -32,16 +32,20 @@
           <Search class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
         </div>
 
-        <!-- Week Selector Filter -->
+        <!-- Week Selector Filter (Dynamic) -->
         <div class="relative">
           <select
             v-model="selectedWeekFilter"
             class="w-full appearance-none bg-slate-100 dark:bg-slate-800 border-none text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:ring-2 focus:ring-[#831843] cursor-pointer"
           >
-            <option value="ALL">Semua Minggu (1, 2, 3)</option>
-            <option value="1">Week 1 (Selesai)</option>
-            <option value="2">Week 2 (Siklus Aktif)</option>
-            <option value="3">Week 3 (Terkunci)</option>
+            <option value="ALL">Semua {{ batchStore.currentBatchUnitLabel || 'Minggu' }}</option>
+            <option
+              v-for="w in (batchStore.currentBatchWeeks || [])"
+              :key="w.weekNumber"
+              :value="String(w.weekNumber)"
+            >
+              {{ batchStore.currentBatchUnitCode }} {{ w.weekNumber }} ({{ w.status === 'ACTIVE' ? 'Aktif' : (w.status === 'COMPLETED' ? 'Selesai' : 'Terkunci') }})
+            </option>
           </select>
           <ChevronDown class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>

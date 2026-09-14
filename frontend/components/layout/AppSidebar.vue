@@ -472,8 +472,7 @@ const navItems = computed(() => {
         badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
       },
       { label: 'Feedback Onboarding', path: '/feedback', icon: MessageSquareText },
-      { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
-      { label: 'Achievements', path: '/achievements', icon: Trophy }
+      { label: 'Leaderboard', path: '/leaderboard', icon: Medal }
     ]
   }
 
@@ -483,7 +482,6 @@ const navItems = computed(() => {
       { label: 'Journey Map', path: '/journey', icon: Compass },
       { label: 'Feedback Onboarding', path: '/feedback', icon: MessageSquareText },
       { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
-      { label: 'Achievements', path: '/achievements', icon: Trophy },
       { label: 'Profil Saya', path: '/profile', icon: User }
     ]
   }
@@ -511,8 +509,7 @@ const navItems = computed(() => {
         badge: missionStore.revisionCount > 0 ? `${missionStore.revisionCount} Rev` : null,
         badgeStyle: 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
       },
-      { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
-      { label: 'Achievements', path: '/achievements', icon: Trophy }
+      { label: 'Leaderboard', path: '/leaderboard', icon: Medal }
     )
 
     return items
@@ -529,8 +526,7 @@ const navItems = computed(() => {
       badge: approvalStore.pendingApprovals.length > 0 ? `${approvalStore.pendingApprovals.length}` : null,
       badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
     },
-    { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
-    { label: 'Achievements', path: '/achievements', icon: Trophy }
+    { label: 'Leaderboard', path: '/leaderboard', icon: Medal }
   ]
 })
 </script>
