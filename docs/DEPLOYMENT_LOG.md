@@ -33,6 +33,7 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 
 | ID | Tanggal & Waktu (WIB) | Target Environment | Komponen | Commit Hash & Branch | Hasil Unit Test | Port / URL Akses | Status |
 | :---: | :--- | :--- | :--- | :--- | :---: | :--- | :---: |
+| **DEP-016** | 2026-09-15 17:48 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `1591b27` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-015** | 2026-09-15 17:09 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `d862d92` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-014** | 2026-09-14 22:21 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `06ea963` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-013** | 2026-09-14 17:25 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `7c5bda9` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
@@ -52,6 +53,27 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 ---
 
 ## 📝 Rincian Log Tiap Deployment
+
+### [DEP-016] — 2026-09-15 17:48 WIB
+- **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"push deploy vps local"*)
+- **Target Host**: VPS Linux Ubuntu 24.04 LTS (`103.168.147.133`)
+- **Komponen Di-Deploy**: 
+  - Nuxt 3 Frontend SPA ter-generate ke static distribution via MacBook M3 (`deploy-fe-from-mac.sh`)
+  - Target REST API: `http://103.168.147.133:3005/api` (Dev/Staging Backend VPS)
+  - Rilis pembaruan:
+    1. **Isolasi Leaderboard Batch Petualangan**: Memperbaiki `AdventureLeaderboard.vue` agar secara ketat hanya menampilkan kru dalam 1 batch yang bersangkutan (menghapus celah `!c.batchId` yang meloloskan kru antar-cabang).
+    2. **Multi-Source Crew Sync**: Mengintegrasikan data kru batch dari API Leaderboard, User Directory Master, Batch Assignment, dan Gamification Store sehingga seluruh 3 anggota kru pada batch tampil lengkap di Top 3 podium (#1, #2, #3).
+    3. **Perapian Layout UI**: Merapikan tabel klasemen peringkat #4+, pin rute peta petualangan, padding approval card, tombol tambah gerai, dan responsivitas grid batch.
+- **Branch & Commit**: `1591b27` di branch `main`
+- **Hasil Pengujian Unit Test Sebelum Deploy**:
+  - `test_all_cruds.mjs`: **63/63 PASS (100%)**
+  - `test_unit_tester_suite.mjs`: **40/40 PASS (100%)**
+  - **Total**: **103/103 PASS (100% Lolos)**
+- **Hasil Deployment & Isolasi Service**:
+  - **URL Akses Frontend**: [http://103.168.147.133:3006](http://103.168.147.133:3006) $\rightarrow$ `HTTP/1.1 200 OK`
+  - **Status Backend**: [http://103.168.147.133:3005/health](http://103.168.147.133:3005/health) $\rightarrow$ `HTTP 200 OK` (*Untouched*)
+  - **Status Service ASCO**: Seluruh container ASCO terverifikasi **100% aman, tidak disentuh, dan tetap berjalan normal**.
+- **Status Akhir**: 🟢 **SUCCESS (BERHASIL 100%)**
 
 ### [DEP-015] — 2026-09-15 17:09 WIB
 - **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"deploy ke vpc dari local"*)
