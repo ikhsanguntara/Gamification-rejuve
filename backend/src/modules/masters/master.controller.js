@@ -265,6 +265,7 @@ const getUsers = async (req, res, next) => {
           userId: true,
           name: true,
           email: true,
+          gender: true,
           roleId: true,
           role: true,
           isActive: true,
@@ -320,6 +321,7 @@ const getUserById = async (req, res, next) => {
         userId: true,
         name: true,
         email: true,
+        gender: true,
         roleId: true,
         role: true,
         isActive: true,
@@ -365,8 +367,16 @@ const getUserById = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive, activeBatchId } = req.body;
+    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive, activeBatchId, gender } = req.body;
     const creatorId = req.user?.id || req.user?.userId || null;
+
+    let normalizedGender = null;
+    if (gender) {
+      const g = String(gender).trim().toUpperCase();
+      if (g === 'M' || g === 'L' || g === 'MALE' || g === 'LAKI-LAKI') normalizedGender = 'M';
+      else if (g === 'F' || g === 'P' || g === 'FEMALE' || g === 'PEREMPUAN') normalizedGender = 'F';
+      else normalizedGender = g;
+    }
 
     // Cek apakah role yang dibuat adalah CREW
     let isCrew = false;
@@ -397,6 +407,7 @@ const createUser = async (req, res, next) => {
         name,
         email,
         password: hashedPassword,
+        gender: normalizedGender,
         roleId,
         departmentId: departmentId || null,
         isBuddy: isBuddy || false,
@@ -436,7 +447,7 @@ const createUser = async (req, res, next) => {
 const updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive, activeBatchId } = req.body;
+    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive, activeBatchId, gender } = req.body;
     const updaterId = req.user?.id || req.user?.userId || null;
 
     const data = {
@@ -451,6 +462,16 @@ const updateUser = async (req, res, next) => {
     if (batchId !== undefined) data.batchId = batchId;
     if (activeBatchId !== undefined) data.activeBatchId = activeBatchId;
     if (isActive !== undefined) data.isActive = isActive;
+    if (gender !== undefined) {
+      if (!gender) {
+        data.gender = null;
+      } else {
+        const g = String(gender).trim().toUpperCase();
+        if (g === 'M' || g === 'L' || g === 'MALE' || g === 'LAKI-LAKI') data.gender = 'M';
+        else if (g === 'F' || g === 'P' || g === 'FEMALE' || g === 'PEREMPUAN') data.gender = 'F';
+        else data.gender = g;
+      }
+    }
 
     if (password) {
       data.password = await bcrypt.hash(password, 10);
@@ -655,7 +676,7 @@ const downloadUserTemplate = async (req, res, next) => {
         orderBy: { name: 'asc' }
       })
     ]);
-    const buffer = generateUserImportTemplate(roles, departments, buddies);
+    const buffer = await generateUserImportTemplate(roles, departments, buddies);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="template_import_user.xlsx"');
     return res.send(buffer);
@@ -737,7 +758,20 @@ const bulkPreviewUsers = async (req, res, next) => {
         seenEmailsInFile.add(rowEmail);
       }
 
-      // 3. Validasi Role
+      // 3. Validasi Gender (Opsional jika ada)
+      let normalizedGender = null;
+      if (row.gender) {
+        const g = String(row.gender).trim().toUpperCase();
+        if (g === 'M' || g === 'L' || g === 'MALE' || g === 'LAKI-LAKI') normalizedGender = 'M';
+        else if (g === 'F' || g === 'P' || g === 'FEMALE' || g === 'PEREMPUAN') normalizedGender = 'F';
+        else normalizedGender = g;
+
+        if (!['M', 'F'].includes(normalizedGender)) {
+          errors.push(`Gender "${row.gender}" tidak valid. Pilihan: M (Laki-laki) atau F (Perempuan).`);
+        }
+      }
+
+      // 4. Validasi Role
       let matchedRole = null;
       if (!row.roleCode) {
         errors.push('Role Code wajib diisi.');
@@ -748,7 +782,7 @@ const bulkPreviewUsers = async (req, res, next) => {
         }
       }
 
-      // 4. Validasi Department
+      // 5. Validasi Department
       let matchedDept = null;
       if (row.departmentCode) {
         matchedDept = deptMap.get(row.departmentCode.toUpperCase());
@@ -757,7 +791,7 @@ const bulkPreviewUsers = async (req, res, next) => {
         }
       }
 
-      // 5. Validasi Batch (Opsional)
+      // 6. Validasi Batch (Opsional)
       let matchedBatch = null;
       if (row.batchCode) {
         matchedBatch = batchMap.get(row.batchCode.toUpperCase());
@@ -766,7 +800,7 @@ const bulkPreviewUsers = async (req, res, next) => {
         }
       }
 
-      // 6. Validasi Buddy (Opsional)
+      // 7. Validasi Buddy (Opsional)
       let matchedBuddy = null;
       if (row.buddyEmail) {
         matchedBuddy = buddyMap.get(row.buddyEmail.toLowerCase());
@@ -775,7 +809,7 @@ const bulkPreviewUsers = async (req, res, next) => {
         }
       }
 
-      // 7. Cek apakah email sudah terdaftar di DB
+      // 8. Cek apakah email sudah terdaftar di DB
       const existsInDb = Boolean(existingEmailMap.get(rowEmail));
       const status = errors.length === 0 ? 'VALID' : 'INVALID';
 
@@ -783,6 +817,7 @@ const bulkPreviewUsers = async (req, res, next) => {
         rowNumber: row.rowNumber,
         name: row.name,
         email: rowEmail,
+        gender: normalizedGender,
         roleCode: matchedRole ? matchedRole.roleCode : row.roleCode,
         roleId: matchedRole ? matchedRole.roleId : null,
         roleName: matchedRole ? matchedRole.roleName : null,
@@ -896,21 +931,33 @@ const bulkCommitUsers = async (req, res, next) => {
         const userBuddyId = item.userBuddyId || null;
         const isBuddy = Boolean(item.isBuddy);
 
+        let normalizedGender = null;
+        if (item.gender) {
+          const g = String(item.gender).trim().toUpperCase();
+          if (g === 'M' || g === 'L' || g === 'MALE' || g === 'LAKI-LAKI') normalizedGender = 'M';
+          else if (g === 'F' || g === 'P' || g === 'FEMALE' || g === 'PEREMPUAN') normalizedGender = 'F';
+          else normalizedGender = g;
+        }
+
         const existingUser = existingMap.get(email);
 
         if (existingUser) {
           if (onDuplicate.toUpperCase() === 'UPDATE') {
+            const updateData = {
+              name: item.name,
+              roleId,
+              departmentId,
+              batchId,
+              userBuddyId,
+              isBuddy,
+              updatedBy: currentUserId
+            };
+            if (item.gender !== undefined) {
+              updateData.gender = normalizedGender;
+            }
             await tx.user.update({
               where: { userId: existingUser.userId },
-              data: {
-                name: item.name,
-                roleId,
-                departmentId,
-                batchId,
-                userBuddyId,
-                isBuddy,
-                updatedBy: currentUserId
-              }
+              data: updateData
             });
             updatedCount++;
           } else {
@@ -931,6 +978,7 @@ const bulkCommitUsers = async (req, res, next) => {
               name: item.name,
               email,
               password: userPasswordHash,
+              gender: normalizedGender,
               roleId,
               departmentId,
               batchId,

@@ -2,146 +2,232 @@
 
 /**
  * @file excelParser.js
- * @description Helper utility untuk membaca file Excel/CSV user import dan menghasilkan template Excel.
+ * @description Helper utility untuk membaca file Excel/CSV user import dan menghasilkan template Excel interaktif dengan Native Data Validation.
  */
 
+const ExcelJS = require('exceljs');
 const xlsx = require('xlsx');
 
 /**
- * Menghasilkan buffer file Excel template import user (.xlsx)
+ * Menghasilkan buffer file Excel template import user (.xlsx) dengan Native Data Validation (Dropdown)
  */
-const generateUserImportTemplate = (rolesList = [], deptsList = [], buddiesList = []) => {
-  const headers = [
-    'Nama Lengkap',
-    'Email',
-    'Role Code',
-    'Department Code',
-    'Is Buddy',
-    'Buddy Email',
-    'Batch Code'
-  ];
+const generateUserImportTemplate = async (rolesList = [], deptsList = [], buddiesList = []) => {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Re.juve Gamification Platform';
+  workbook.created = new Date();
 
+  // 1. Sheet Template Import
+  const ws = workbook.addWorksheet('Template Import User', {
+    views: [{ showGridLines: true }]
+  });
+
+  const columns = [
+    { header: 'Nama Lengkap', key: 'name', width: 25 },
+    { header: 'Email', key: 'email', width: 32 },
+    { header: 'Gender', key: 'gender', width: 14 },
+    { header: 'Role Code', key: 'roleCode', width: 22 },
+    { header: 'Department Code', key: 'departmentCode', width: 22 },
+    { header: 'Is Buddy', key: 'isBuddy', width: 14 },
+    { header: 'Buddy Email', key: 'buddyEmail', width: 35 }
+  ];
+  ws.columns = columns;
+
+  // Style Header Row (Baris 1)
+  const headerRow = ws.getRow(1);
+  headerRow.height = 28;
+  headerRow.eachCell((cell) => {
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF831843' } // Re.juve signature color
+    };
+    cell.font = {
+      name: 'Calibri',
+      size: 11,
+      bold: true,
+      color: { argb: 'FFFFFFFF' }
+    };
+    cell.alignment = {
+      vertical: 'middle',
+      horizontal: 'center',
+      wrapText: true
+    };
+    cell.border = {
+      top: { style: 'thin', color: { argb: 'FF6B133A' } },
+      left: { style: 'thin', color: { argb: 'FF6B133A' } },
+      bottom: { style: 'medium', color: { argb: 'FF4A0D28' } },
+      right: { style: 'thin', color: { argb: 'FF6B133A' } }
+    };
+  });
+
+  // Contoh baris data awal
   const sampleRows = [
-    [
-      'Budi Santoso',
-      'budi.santoso@rejuve.co.id',
-      'CREW',
-      'BKI_01',
-      'FALSE',
-      '',
-      ''
-    ],
-    [
-      'Anita Wijaya',
-      'anita.wijaya@rejuve.co.id',
-      'STORE_LEADER',
-      'BKI_01',
-      'TRUE',
-      '',
-      ''
-    ],
-    [
-      'Rudi Hermawan',
-      'rudi.hermawan@rejuve.co.id',
-      'CREW',
-      'BKI_01',
-      'FALSE',
-      'anita.wijaya@rejuve.co.id',
-      ''
-    ]
+    {
+      name: 'Budi Santoso',
+      email: 'budi.santoso@rejuve.co.id',
+      gender: 'M',
+      roleCode: 'CREW',
+      departmentCode: 'BKI_01',
+      isBuddy: 'FALSE',
+      buddyEmail: ''
+    },
+    {
+      name: 'Anita Wijaya',
+      email: 'anita.wijaya@rejuve.co.id',
+      gender: 'F',
+      roleCode: 'STORE_LEADER',
+      departmentCode: 'BKI_01',
+      isBuddy: 'TRUE',
+      buddyEmail: ''
+    },
+    {
+      name: 'Rudi Hermawan',
+      email: 'rudi.hermawan@rejuve.co.id',
+      gender: 'M',
+      roleCode: 'CREW',
+      departmentCode: 'BKI_01',
+      isBuddy: 'FALSE',
+      buddyEmail: 'anita.wijaya@rejuve.co.id'
+    }
   ];
 
-  const data = [headers, ...sampleRows];
-  const ws = xlsx.utils.aoa_to_sheet(data);
+  sampleRows.forEach(r => ws.addRow(r));
 
-  // Atur lebar kolom agar rapi saat dibuka di Microsoft Excel
-  ws['!cols'] = [
-    { wch: 25 }, // Nama Lengkap
-    { wch: 32 }, // Email
-    { wch: 22 }, // Role Code
-    { wch: 25 }, // Department Code
-    { wch: 14 }, // Is Buddy
-    { wch: 32 }, // Buddy Email
-    { wch: 20 }  // Batch Code
+  // 2. Sheet Referensi Master Data (untuk sumber data dropdown)
+  const wsRef = workbook.addWorksheet('Daftar Referensi Dropdown', {
+    views: [{ showGridLines: true }]
+  });
+
+  wsRef.columns = [
+    { header: 'Pilihan Role Code', key: 'roleCode', width: 22 },
+    { header: 'Nama Role', key: 'roleName', width: 32 },
+    { header: 'Pilihan Department Code', key: 'deptCode', width: 25 },
+    { header: 'Nama Gerai / Toko', key: 'deptName', width: 35 },
+    { header: 'Daftar Email Buddy Aktif', key: 'buddyEmail', width: 35 },
+    { header: 'Nama Buddy', key: 'buddyName', width: 25 },
+    { header: 'Gerai Buddy', key: 'buddyDept', width: 35 }
   ];
 
-  const wb = xlsx.utils.book_new();
-  xlsx.utils.book_append_sheet(wb, ws, 'Template Import User');
+  const refHeader = wsRef.getRow(1);
+  refHeader.height = 24;
+  refHeader.eachCell(cell => {
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFF1F5F9' }
+    };
+    cell.font = { bold: true, color: { argb: 'FF1E293B' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
 
-  // Sheet 2: Referensi Master Data (Kode Role, Kode Departemen, & Daftar Buddy Aktif)
   const defaultRoles = [
-    ['CREW', 'Crew Barista / Store Crew'],
-    ['STORE_LEADER', 'Store Leader / Supervisor'],
-    ['DISTRICT_MANAGER', 'District Manager / Area Head'],
-    ['SUPERADMIN', 'Superadmin Gamification']
+    { roleCode: 'CREW', roleName: 'Crew Barista / Store Crew' },
+    { roleCode: 'STORE_LEADER', roleName: 'Store Leader / Supervisor' },
+    { roleCode: 'DISTRICT_MANAGER', roleName: 'District Manager / Area Head' },
+    { roleCode: 'SUPERADMIN', roleName: 'Superadmin Gamification' }
   ];
-  const rolesData = (rolesList.length > 0 ? rolesList.map(r => [r.roleCode, r.roleName]) : defaultRoles);
+  const activeRoles = rolesList.length > 0 ? rolesList : defaultRoles;
 
   const defaultDepts = [
-    ['BKI_01', 'Re.juve Bintaro Xchange'],
-    ['GI_01', 'Re.juve Grand Indonesia'],
-    ['PIM_02', 'Re.juve Pondok Indah Mall 2'],
-    ['CP_01', 'Re.juve Central Park'],
-    ['SEN_01', 'Re.juve Senayan City']
+    { departmentCode: 'BKI_01', departmentName: 'Re.juve Bintaro Xchange' },
+    { departmentCode: 'GI_01', departmentName: 'Re.juve Grand Indonesia' },
+    { departmentCode: 'PIM_02', departmentName: 'Re.juve Pondok Indah Mall 2' },
+    { departmentCode: 'CP_01', departmentName: 'Re.juve Central Park' },
+    { departmentCode: 'SEN_01', departmentName: 'Re.juve Senayan City' }
   ];
-  const deptsData = (deptsList.length > 0 ? deptsList.map(d => [d.departmentCode, d.departmentName]) : defaultDepts);
+  const activeDepts = deptsList.length > 0 ? deptsList : defaultDepts;
 
-  const buddiesData = (buddiesList && buddiesList.length > 0)
-    ? buddiesList.map(b => [b.email, b.name, b.department?.departmentCode ? `${b.department.departmentCode} - ${b.department.departmentName}` : ''])
+  // Saring hanya user yang isBuddy === true
+  const activeBuddies = (buddiesList && buddiesList.length > 0)
+    ? buddiesList.filter(b => b.isBuddy !== false)
     : [];
 
-  const maxRows = Math.max(rolesData.length, deptsData.length, buddiesData.length, 2);
-  const refHeader = [
-    'Pilihan Role Code', 'Nama Role', '',
-    'Pilihan Department Code', 'Nama Gerai / Toko', '',
-    'Pilihan Is Buddy', 'Keterangan', '',
-    'Daftar Email Buddy Aktif', 'Nama Buddy', 'Gerai Buddy'
-  ];
-  const refRows = [refHeader];
-
-  for (let i = 0; i < maxRows; i++) {
-    const roleRow = rolesData[i] || ['', ''];
-    const deptRow = deptsData[i] || ['', ''];
-    const buddyRow = buddiesData[i] || ['', '', ''];
-    let buddyChoice = '';
-    let buddyDesc = '';
-    if (i === 0) { buddyChoice = 'TRUE'; buddyDesc = 'User adalah mentor / pendamping buddy'; }
-    if (i === 1) { buddyChoice = 'FALSE'; buddyDesc = 'User bukan buddy (default untuk Crew)'; }
-
-    refRows.push([
-      roleRow[0],
-      roleRow[1],
-      '',
-      deptRow[0],
-      deptRow[1],
-      '',
-      buddyChoice,
-      buddyDesc,
-      '',
-      buddyRow[0],
-      buddyRow[1],
-      buddyRow[2]
-    ]);
+  const maxRefRows = Math.max(activeRoles.length, activeDepts.length, activeBuddies.length, 1);
+  for (let i = 0; i < maxRefRows; i++) {
+    const r = activeRoles[i] || {};
+    const d = activeDepts[i] || {};
+    const b = activeBuddies[i] || {};
+    wsRef.addRow({
+      roleCode: r.roleCode || '',
+      roleName: r.roleName || '',
+      deptCode: d.departmentCode || '',
+      deptName: d.departmentName || '',
+      buddyEmail: b.email || '',
+      buddyName: b.name || '',
+      buddyDept: b.department?.departmentName || b.department?.departmentCode || ''
+    });
   }
 
-  const wsRef = xlsx.utils.aoa_to_sheet(refRows);
-  wsRef['!cols'] = [
-    { wch: 22 }, // Role Code
-    { wch: 32 }, // Nama Role
-    { wch: 5 },  // spacing
-    { wch: 25 }, // Dept Code
-    { wch: 35 }, // Nama Toko
-    { wch: 5 },  // spacing
-    { wch: 18 }, // Is Buddy
-    { wch: 45 }, // Keterangan Buddy
-    { wch: 5 },  // spacing
-    { wch: 32 }, // Email Buddy Aktif
-    { wch: 25 }, // Nama Buddy
-    { wch: 35 }  // Gerai Buddy
-  ];
-  xlsx.utils.book_append_sheet(wb, wsRef, 'Daftar Referensi Dropdown');
+  // Range rumus Excel untuk dropdown list referencing Sheet Referensi
+  const roleRefFormula = `'Daftar Referensi Dropdown'!$A$2:$A$${activeRoles.length + 1}`;
+  const deptRefFormula = `'Daftar Referensi Dropdown'!$C$2:$C$${activeDepts.length + 1}`;
+  const buddyRefFormula = activeBuddies.length > 0
+    ? `'Daftar Referensi Dropdown'!$E$2:$E$${activeBuddies.length + 1}`
+    : null;
 
-  return xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  // Pasang Data Validation Dropdown pada baris 2 s/d 500 di Sheet Template
+  for (let rowIdx = 2; rowIdx <= 500; rowIdx++) {
+    const row = ws.getRow(rowIdx);
+
+    // Col C: Gender (Dropdown: M, F)
+    const genderCell = row.getCell(3);
+    genderCell.dataValidation = {
+      type: 'list',
+      allowBlank: true,
+      formulae: ['"M,F"'],
+      showErrorMessage: true,
+      errorTitle: 'Pilihan Tidak Valid',
+      error: 'Pilih jenis kelamin dari daftar: M (Laki-laki) atau F (Perempuan).'
+    };
+
+    // Col D: Role Code (Dropdown)
+    const roleCell = row.getCell(4);
+    roleCell.dataValidation = {
+      type: 'list',
+      allowBlank: false,
+      formulae: [roleRefFormula],
+      showErrorMessage: true,
+      errorTitle: 'Role Code Tidak Valid',
+      error: 'Silakan pilih Role Code dari daftar dropdown.'
+    };
+
+    // Col E: Department Code (Dropdown)
+    const deptCell = row.getCell(5);
+    deptCell.dataValidation = {
+      type: 'list',
+      allowBlank: true,
+      formulae: [deptRefFormula],
+      showErrorMessage: true,
+      errorTitle: 'Kode Gerai Tidak Valid',
+      error: 'Silakan pilih Department / Gerai dari daftar dropdown.'
+    };
+
+    // Col F: Is Buddy (Dropdown: TRUE, FALSE)
+    const isBuddyCell = row.getCell(6);
+    isBuddyCell.dataValidation = {
+      type: 'list',
+      allowBlank: true,
+      formulae: ['"TRUE,FALSE"'],
+      showErrorMessage: true,
+      errorTitle: 'Status Buddy Tidak Valid',
+      error: 'Pilih TRUE atau FALSE.'
+    };
+
+    // Col G: Buddy Email (Dropdown hanya user yang isBuddy true)
+    if (buddyRefFormula) {
+      const buddyEmailCell = row.getCell(7);
+      buddyEmailCell.dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: [buddyRefFormula],
+        showErrorMessage: true,
+        errorTitle: 'Email Buddy Tidak Terdaftar',
+        error: 'Pilih mentor buddy dari daftar Store Leader aktif.'
+      };
+    }
+  }
+
+  return await workbook.xlsx.writeBuffer();
 };
 
 /**
@@ -151,6 +237,7 @@ const normalizeKey = (key) => {
   if (!key) return '';
   const clean = String(key).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
   if (clean.includes('nama') || clean === 'name') return 'name';
+  if (clean.includes('gender') || clean.includes('jeniskelamin') || clean === 'jk' || clean === 'sex') return 'gender';
   if (clean.includes('buddyemail') || clean.includes('emailbuddy')) return 'buddyEmail';
   if (clean === 'email') return 'email';
   if (clean.includes('role')) return 'roleCode';
@@ -190,10 +277,15 @@ const parseUserImportFile = (fileBuffer) => {
     const isBuddyRaw = String(mapped.isBuddy || '').toUpperCase();
     const isBuddy = isBuddyRaw === 'TRUE' || isBuddyRaw === '1' || isBuddyRaw === 'YES' || isBuddyRaw === 'YA';
 
+    let gender = (mapped.gender || '').toUpperCase();
+    if (gender === 'L' || gender === 'LAKI_LAKI' || gender === 'LAKI-LAKI' || gender === 'MALE') gender = 'M';
+    if (gender === 'P' || gender === 'PEREMPUAN' || gender === 'FEMALE') gender = 'F';
+
     return {
       rowNumber,
       name: mapped.name || '',
       email: (mapped.email || '').toLowerCase(),
+      gender: gender === 'M' || gender === 'F' ? gender : (gender || null),
       roleCode: (mapped.roleCode || '').toUpperCase(),
       departmentCode: mapped.departmentCode || '',
       isBuddy,
