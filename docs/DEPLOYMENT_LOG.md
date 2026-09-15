@@ -33,6 +33,7 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 
 | ID | Tanggal & Waktu (WIB) | Target Environment | Komponen | Commit Hash & Branch | Hasil Unit Test | Port / URL Akses | Status |
 | :---: | :--- | :--- | :--- | :--- | :---: | :--- | :---: |
+| **DEP-014** | 2026-09-14 22:21 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `06ea963` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-013** | 2026-09-14 17:25 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `7c5bda9` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-012** | 2026-09-12 00:24 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `3299515` (`main`) | **99/99 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
 | **DEP-011** | 2026-09-11 19:19 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `321a492` (`main`) | **93/93 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
@@ -50,6 +51,24 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 ---
 
 ## 📝 Rincian Log Tiap Deployment
+
+### [DEP-014] — 2026-09-14 22:21 WIB
+- **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"coba jalan kan deploy-fe-from-mac.sh"*)
+- **Target Host**: VPS Linux Ubuntu 24.04 LTS (`103.168.147.133`)
+- **Komponen Di-Deploy**: 
+  - Nuxt 3 Frontend SPA ter-generate ke static distribution via MacBook M3 (`deploy-fe-from-mac.sh`)
+  - Target REST API: `http://103.168.147.133:3005/api` (Dev/Staging Backend VPS)
+  - Rilis sinkronisasi fitur dinamis dashboard SL/DM, modal reward sambutan login pertama, animasi aura & trail petualangan, serta konfeti bintang emas
+- **Branch & Commit**: `06ea963` di branch `main`
+- **Hasil Pengujian Unit Test Sebelum Deploy**:
+  - `test_all_cruds.mjs`: **63/63 PASS (100%)**
+  - `test_unit_tester_suite.mjs`: **40/40 PASS (100%)**
+  - **Total**: **103/103 PASS (100% Lolos)**
+- **Hasil Deployment & Isolasi Service**:
+  - **URL Akses Frontend**: [http://103.168.147.133:3006](http://103.168.147.133:3006) $\rightarrow$ `HTTP/1.1 200 OK`
+  - **Status Backend**: [http://103.168.147.133:3005/health](http://103.168.147.133:3005/health) $\rightarrow$ `HTTP 200 OK` (*Untouched*)
+  - **Status Service ASCO**: Seluruh 19 container ASCO (`asco_frontend`, `asco-yarp-gateway`, `asco-postgres`, dll) terverifikasi **100% aman, tidak disentuh, dan tetap berjalan normal**.
+- **Status Akhir**: 🟢 **SUCCESS (BERHASIL 100%)**
 
 ### [DEP-013] — 2026-09-14 17:25 WIB
 - **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"coba deploykan jangan sampe ngerusak yang main"*)
