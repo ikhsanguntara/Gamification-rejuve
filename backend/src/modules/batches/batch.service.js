@@ -33,12 +33,16 @@ const getUnitDays = (durationCode, durationValue = 1) => {
   const val = Number(durationValue) || 1;
   switch (durationCode?.toUpperCase()) {
     case 'DAY':
+    case 'DAYS':
       return val;
     case 'WEEK':
+    case 'WEEKS':
       return val * 7;
     case 'MONTH':
+    case 'MONTHS':
       return val * 30;
     case 'YEAR':
+    case 'YEARS':
       return val * 365;
     default:
       return val * 7;
@@ -53,13 +57,13 @@ const calculateTimeline = (batchStartDate, tplBuddy, tplJourney, tplFeedback) =>
   const journeyStart = toDateOnly(batchStartDate);
 
   // 1. Journey Schedule (Mandatory)
-  // Durasi minggu dihitung dari max durationNumber di details atau durationValue dari template (default 1)
-  const maxJourneyWeek = Math.max(
+  // Durasi unit hari dihitung dinamis dari durationCode & durationValue template Journey (DAY/DAYS -> 1 hari, WEEK -> 7 hari, dst.)
+  const journeyUnitDays = getUnitDays(tplJourney.durationCode, tplJourney.durationValue || 1);
+  const maxJourneyPeriod = Math.max(
     tplJourney.details?.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1) || 1,
-    tplJourney.durationCode?.toUpperCase() === 'WEEK' ? (Number(tplJourney.durationValue) || 1) : 1
+    Number(tplJourney.durationValue) || 1
   );
-  const journeyUnitDays = 7; // Durasi per minggu Journey adalah 7 hari
-  const totalJourneyDays = journeyUnitDays * maxJourneyWeek;
+  const totalJourneyDays = journeyUnitDays * maxJourneyPeriod;
   const journeyEnd = addDays(journeyStart, totalJourneyDays - 1);
 
   const journeySchedule = {
@@ -67,7 +71,7 @@ const calculateTimeline = (batchStartDate, tplBuddy, tplJourney, tplFeedback) =>
     startDate: journeyStart,
     endDate: journeyEnd,
     unitDays: journeyUnitDays,
-    maxWeeks: maxJourneyWeek
+    maxWeeks: maxJourneyPeriod
   };
 
   // 2. Buddy Schedule (Opsi A: Pra-Journey / Orientasi H-N sebelum Journey Dimulai)
@@ -75,7 +79,8 @@ const calculateTimeline = (batchStartDate, tplBuddy, tplJourney, tplFeedback) =>
   if (tplBuddy) {
     const buddyDurationVal = Number(tplBuddy.durationValue) || 1;
     let totalBuddyDays = 3;
-    if (tplBuddy.durationCode?.toUpperCase() === 'DAY') {
+    const isBuddyDay = tplBuddy.durationCode?.toUpperCase() === 'DAY' || tplBuddy.durationCode?.toUpperCase() === 'DAYS';
+    if (isBuddyDay) {
       const maxNumber = tplBuddy.details?.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1) || 1;
       totalBuddyDays = Math.max(buddyDurationVal, maxNumber);
     } else {
@@ -189,10 +194,11 @@ const executeBatchGeneration = async (tx, {
     }
   });
 
+  const journeyUnitDays = journeySchedule.unitDays || 7;
   for (const detail of journeySchedule.template.details) {
-    const weekIndex = (detail.durationNumber || 1) - 1;
-    const mStart = addDays(journeySchedule.startDate, weekIndex * 7);
-    const mEnd = addDays(mStart, 6);
+    const periodIndex = (detail.durationNumber || 1) - 1;
+    const mStart = addDays(journeySchedule.startDate, periodIndex * journeyUnitDays);
+    const mEnd = addDays(mStart, journeyUnitDays - 1);
 
     const missionScaleConfig = detail.scaleConfig && typeof detail.scaleConfig === 'object' && !Array.isArray(detail.scaleConfig)
       ? { ...detail.scaleConfig }
@@ -797,19 +803,22 @@ const enrichBatchesWithTotalWeeks = async (batches, currentUser = null) => {
   for (const b of batches) {
     let maxW = maxWeeksMap[b.batchId];
     const journeyDetail = b.details?.find(d => d.tplMission?.type === 'JOURNEY');
+    const journeyDurCode = journeyDetail?.tplMission?.durationCode || 'WEEK';
+    const journeyDurVal = journeyDetail?.tplMission?.durationValue || 1;
+    const journeyUnitDays = getUnitDays(journeyDurCode, journeyDurVal);
     
     if (!maxW && journeyDetail) {
       if (journeyDetail.tplMission?.details?.length) {
         maxW = journeyDetail.tplMission.details.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1);
       } else if (journeyDetail.startDate && journeyDetail.endDate) {
         const jDiff = Math.round((new Date(journeyDetail.endDate) - new Date(journeyDetail.startDate)) / (1000 * 60 * 60 * 24)) + 1;
-        maxW = Math.max(1, Math.round(jDiff / 7));
+        maxW = Math.max(1, Math.round(jDiff / journeyUnitDays));
       }
     }
     
     if (!maxW && b.startDate && b.endDate) {
-      const diffDays = Math.round((new Date(b.endDate) - new Date(b.startDate)) / (1000 * 60 * 60 * 24));
-      if (diffDays > 0) maxW = Math.max(1, Math.round(diffDays / 7));
+      const diffDays = Math.round((new Date(b.endDate) - new Date(b.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+      if (diffDays > 0) maxW = Math.max(1, Math.round(diffDays / journeyUnitDays));
     }
     
     b.totalWeeks = maxW || 5;
@@ -829,8 +838,8 @@ const enrichBatchesWithTotalWeeks = async (batches, currentUser = null) => {
       const wNum = i + 1;
       const weekMissions = batchMissions.filter(m => (m.weekOrDayNumber || 1) === wNum);
       
-      const wStart = addDays(baseDate, (wNum - 1) * 7);
-      const wEnd = addDays(wStart, 6);
+      const wStart = addDays(baseDate, (wNum - 1) * journeyUnitDays);
+      const wEnd = addDays(wStart, journeyUnitDays - 1);
 
       const wStartTime = new Date(wStart).setHours(0, 0, 0, 0);
       const wEndTime = new Date(wEnd).setHours(23, 59, 59, 999);
@@ -869,10 +878,12 @@ const enrichBatchesWithTotalWeeks = async (batches, currentUser = null) => {
       const myStoreCompletionRate = myStoreTotalUm > 0 ? Math.round((myStoreCompletedUm / myStoreTotalUm) * 100) : 0;
       const effectiveCompletionRate = isStoreLeader ? myStoreCompletionRate : globalCompletionRate;
 
+      const isDayUnit = journeyDurCode.toUpperCase().startsWith('DAY');
+      const periodUnitLabel = isDayUnit ? 'Hari' : (journeyDurCode.toUpperCase().startsWith('MONTH') ? 'Bulan' : 'Minggu');
       const customTitle = weekMissions.find(wm => wm.scaleConfig && wm.scaleConfig.periodTitle)?.scaleConfig?.periodTitle;
       return {
         weekNumber: wNum,
-        title: customTitle || `Minggu ${wNum}: Tema SOP Operasional`,
+        title: customTitle || `${periodUnitLabel} ${wNum}: Tema SOP Operasional`,
         startDate: wStart,
         endDate: wEnd,
         status: weekStatus,
@@ -924,6 +935,9 @@ const enrichSingleBatchWithTotalWeeks = async (batch, currentUser = null) => {
   const journeyMissions = batch.missions?.filter(m => m.type === 'JOURNEY') || [];
   const maxW = journeyMissions.reduce((max, m) => Math.max(max, m.weekOrDayNumber || 1), 0);
   const journeyDetail = batch.details?.find(d => d.tplMission?.type === 'JOURNEY');
+  const journeyDurCode = journeyDetail?.tplMission?.durationCode || 'WEEK';
+  const journeyDurVal = journeyDetail?.tplMission?.durationValue || 1;
+  const journeyUnitDays = getUnitDays(journeyDurCode, journeyDurVal);
   
   if (maxW > 0) {
     batch.totalWeeks = maxW;
@@ -931,10 +945,10 @@ const enrichSingleBatchWithTotalWeeks = async (batch, currentUser = null) => {
     batch.totalWeeks = journeyDetail.tplMission.details.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1);
   } else if (journeyDetail?.startDate && journeyDetail?.endDate) {
     const jDiff = Math.round((new Date(journeyDetail.endDate) - new Date(journeyDetail.startDate)) / (1000 * 60 * 60 * 24)) + 1;
-    batch.totalWeeks = Math.max(1, Math.round(jDiff / 7));
+    batch.totalWeeks = Math.max(1, Math.round(jDiff / journeyUnitDays));
   } else if (batch.startDate && batch.endDate) {
-    const diffDays = Math.round((new Date(batch.endDate) - new Date(batch.startDate)) / (1000 * 60 * 60 * 24));
-    batch.totalWeeks = Math.max(1, Math.round(diffDays / 7));
+    const diffDays = Math.round((new Date(batch.endDate) - new Date(batch.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+    batch.totalWeeks = Math.max(1, Math.round(diffDays / journeyUnitDays));
   } else {
     batch.totalWeeks = 5;
   }
@@ -992,8 +1006,8 @@ const enrichSingleBatchWithTotalWeeks = async (batch, currentUser = null) => {
     const wNum = i + 1;
     const weekMissions = journeyMissions.filter(m => (m.weekOrDayNumber || 1) === wNum);
     
-    const wStart = addDays(baseDate, (wNum - 1) * 7);
-    const wEnd = addDays(wStart, 6);
+    const wStart = addDays(baseDate, (wNum - 1) * journeyUnitDays);
+    const wEnd = addDays(wStart, journeyUnitDays - 1);
 
     const wStartTime = new Date(wStart).setHours(0, 0, 0, 0);
     const wEndTime = new Date(wEnd).setHours(23, 59, 59, 999);
@@ -1032,10 +1046,12 @@ const enrichSingleBatchWithTotalWeeks = async (batch, currentUser = null) => {
     const myStoreCompletionRate = myStoreTotalUm > 0 ? Math.round((myStoreCompletedUm / myStoreTotalUm) * 100) : 0;
     const effectiveCompletionRate = isStoreLeader ? myStoreCompletionRate : globalCompletionRate;
 
+    const isDayUnit = journeyDurCode.toUpperCase().startsWith('DAY');
+    const periodUnitLabel = isDayUnit ? 'Hari' : (journeyDurCode.toUpperCase().startsWith('MONTH') ? 'Bulan' : 'Minggu');
     const customTitle = weekMissions.find(wm => wm.scaleConfig && wm.scaleConfig.periodTitle)?.scaleConfig?.periodTitle;
     return {
       weekNumber: wNum,
-      title: customTitle || `Minggu ${wNum}: Tema SOP Operasional`,
+      title: customTitle || `${periodUnitLabel} ${wNum}: Tema SOP Operasional`,
       startDate: wStart,
       endDate: wEnd,
       status: weekStatus,
@@ -1454,6 +1470,7 @@ module.exports = {
   getScopedBatchWhere,
   toggleBatchDetailLock,
   calculateTimeline,
+  getUnitDays,
   enrichSingleBatchWithTotalWeeks,
   enrichBatchesWithTotalWeeks
 };
