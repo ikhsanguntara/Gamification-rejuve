@@ -89,7 +89,17 @@
             class="w-9 h-9 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
           />
           <div>
-            <h4 class="font-semibold text-slate-900 dark:text-white">{{ row.name }}</h4>
+            <div class="flex items-center gap-1.5">
+              <h4 class="font-semibold text-slate-900 dark:text-white">{{ row.name }}</h4>
+              <span
+                v-if="row.gender"
+                class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-md"
+                :class="row.gender === 'F' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'"
+                :title="row.gender === 'F' ? 'Perempuan (F)' : 'Laki-laki (M)'"
+              >
+                {{ row.gender === 'F' ? '♀ F' : '♂ M' }}
+              </span>
+            </div>
             <p class="text-xs text-slate-400">{{ row.email }}</p>
           </div>
         </div>

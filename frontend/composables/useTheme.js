@@ -1,19 +1,21 @@
 import { ref, onMounted, watch } from 'vue'
 
-const theme = ref('system') // 'light' | 'dark' | 'system'
-const isDark = ref(false)
+const theme = ref('dark') // 'light' | 'dark' | 'system' (Default: dark)
+const isDark = ref(true)
 
 export function useTheme() {
   const applyTheme = () => {
     if (typeof window === 'undefined') return
 
-    let shouldBeDark = false
+    let shouldBeDark = true
     if (theme.value === 'dark') {
       shouldBeDark = true
     } else if (theme.value === 'light') {
       shouldBeDark = false
-    } else {
+    } else if (theme.value === 'system') {
       shouldBeDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    } else {
+      shouldBeDark = true // Default dark
     }
 
     isDark.value = shouldBeDark
@@ -46,6 +48,8 @@ export function useTheme() {
     const saved = localStorage.getItem('app-theme')
     if (saved && ['light', 'dark', 'system'].includes(saved)) {
       theme.value = saved
+    } else {
+      theme.value = 'dark'
     }
     applyTheme()
 

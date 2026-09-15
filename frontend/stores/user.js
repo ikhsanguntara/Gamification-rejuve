@@ -68,6 +68,7 @@ export const useUserStore = defineStore('user', {
         return {
           id: state.apiUser.userId,
           name: state.apiUser.name,
+          gender: state.apiUser.gender || 'M',
           role: roleCode,
           roleTitle: title,
           email: state.apiUser.email,
@@ -87,6 +88,7 @@ export const useUserStore = defineStore('user', {
       return {
         id: '',
         name: '',
+        gender: 'M',
         role: '',
         roleTitle: '',
         avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=User',
@@ -332,6 +334,7 @@ export const useUserStore = defineStore('user', {
             return {
               id: apiU.userId,
               name: apiU.name,
+              gender: apiU.gender || 'M',
               role: roleCode,
               roleTitle: resolveRoleTitle(apiU),
               email: apiU.email,

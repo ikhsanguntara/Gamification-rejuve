@@ -28,15 +28,43 @@
 
       <!-- Create Form -->
       <form @submit.prevent="handleSubmit" class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap *</label>
-          <input
-            v-model="form.name"
-            type="text"
-            required
-            placeholder="Contoh: Rian Hidayat"
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-          />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap *</label>
+            <input
+              v-model="form.name"
+              type="text"
+              required
+              placeholder="Contoh: Rian Hidayat"
+              class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Jenis Kelamin (Gender) *
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <label
+                class="flex items-center justify-center gap-2 p-2 rounded-xl border text-xs font-bold cursor-pointer transition-all select-none"
+                :class="form.gender === 'M'
+                  ? 'border-[#831843] bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] ring-1 ring-[#831843]'
+                  : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'"
+              >
+                <input type="radio" v-model="form.gender" value="M" class="sr-only" />
+                <span>👨 Laki-laki (M)</span>
+              </label>
+              <label
+                class="flex items-center justify-center gap-2 p-2 rounded-xl border text-xs font-bold cursor-pointer transition-all select-none"
+                :class="form.gender === 'F'
+                  ? 'border-[#831843] bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] ring-1 ring-[#831843]'
+                  : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'"
+              >
+                <input type="radio" v-model="form.gender" value="F" class="sr-only" />
+                <span>👩 Perempuan (F)</span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -323,6 +351,7 @@ onMounted(async () => {
 
 const form = ref({
   name: '',
+  gender: 'M',
   role: 'CREW',
   position: '',
   email: '',
@@ -372,6 +401,7 @@ const handleSubmit = async () => {
 
     const payload = {
       name: form.value.name.trim(),
+      gender: form.value.gender || 'M',
       email: form.value.email.trim(),
       avatar: form.value.avatar || getRandomAvatar(form.value.name),
       password: 'password123',

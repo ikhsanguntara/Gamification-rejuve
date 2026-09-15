@@ -11,6 +11,10 @@
 </template>
 
 <script setup>
+import { useTheme } from '~/composables/useTheme.js'
 import ToastContainer from '~/components/ui/ToastContainer.vue'
 import GlobalLoadingOverlay from '~/components/ui/GlobalLoadingOverlay.vue'
+
+// Inisialisasi tema default (Dark Mode) di level root
+useTheme()
 </script>

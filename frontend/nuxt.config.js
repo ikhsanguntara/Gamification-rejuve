@@ -27,6 +27,9 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      htmlAttrs: {
+        class: 'dark'
+      },
       title: 'Gamification Mission Management System',
       meta: [
         { charset: 'utf-8' },
