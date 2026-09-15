@@ -21,5 +21,10 @@
     (Mencakup `test_all_cruds.mjs` dan `test_unit_tester_suite.mjs`).
   - Deploy **HANYA BOLEH DILANJUTKAN** jika hasil test menunjukkan kelulusan **100% (0 error, 0 fail)**. Jika ada test yang gagal, perbaiki terlebih dahulu dan dilarang deploy.
 - **PENCATATAN LOG DEPLOYMENT**:
-  - Setiap kali proses deployment selesai dieksekusi (berhasil atau gagal), **WAJIB** mencatat riwayatnya ke dalam dokumen [`docs/DEPLOYMENT_LOG.md`](file:///d:/Ikhsan/Kerjaan/Gamification-rejuve/docs/DEPLOYMENT_LOG.md).
+  - Setiap kali proses deployment selesai dieksekusi (berhasil atau gagal), **WAJIB** mencatat riwayatnya ke dalam dokumen [`docs/DEPLOYMENT_LOG.md`](file:///Users/ikhsan/Documents/dev/Gamification/docs/DEPLOYMENT_LOG.md).
   - Format log wajib mencakup: Tanggal & Waktu (WIB), Target Environment (VPS/Firebase/Staging/Production), Commit Hash & Branch, Hasil Unit Test (X/X Pass), Port & URL Akses, serta Ringkasan Perubahan.
+
+## 5. Kebijakan Pembatasan Perubahan Kode Backend (BE) (Strict Policy)
+- **DILARANG KERAS** mengubah, mengedit, atau memperbarui kode Backend (BE) secara otomatis/inisiatif sendiri.
+- Fokus pengerjaan hanya pada sisi Frontend, kecuali ada **PERINTAH EKSPLISIT** langsung dari pengguna untuk memodifikasi Backend.
+
