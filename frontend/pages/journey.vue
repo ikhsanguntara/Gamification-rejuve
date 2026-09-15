@@ -40,11 +40,17 @@ const missionStore = useMissionStore()
 const gamificationStore = useGamificationStore()
 
 onMounted(async () => {
+  const targetBatchId = userStore.isCrew
+    ? (userStore.currentUser?.batchId || userStore.currentUser?.activeBatchId || batchStore.selectedBatchId || batchStore.currentBatch?.id)
+    : (batchStore.selectedBatchId || batchStore.currentBatch?.id)
+
   const missionParams = (userStore.isCrew && userStore.currentUser?.id) ? { userId: userStore.currentUser.id } : {}
   await Promise.allSettled([
     batchStore.fetchBatchesFromApi(),
+    targetBatchId ? batchStore.fetchBatchByIdFromApi(targetBatchId) : Promise.resolve(),
+    userStore.fetchUsersFromApi({ limit: 100 }),
     missionStore.fetchMissionsFromApi(false, missionParams),
-    gamificationStore.fetchLeaderboardFromApi()
+    gamificationStore.fetchLeaderboardFromApi(targetBatchId ? { batchId: targetBatchId } : {})
   ])
 })
 </script>

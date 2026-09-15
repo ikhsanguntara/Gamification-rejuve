@@ -23,7 +23,7 @@
 
     <div class="space-y-3.5">
       <!-- 1. Crew Identity Header (POV 1 User) -->
-      <div class="flex items-start justify-between gap-3 pr-6">
+      <div class="flex items-start justify-between gap-3 pr-8">
         <div class="flex items-center gap-3">
           <!-- Crew Avatar -->
           <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#831843]/20 to-[#6b133a]/30 border border-[#831843]/30 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-2xs">

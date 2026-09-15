@@ -61,15 +61,15 @@
 
           <!-- Template Terpasang -->
           <div class="mb-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-xs space-y-1">
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] text-slate-400">🏃 Kurikulum SOP:</span>
-              <span class="text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[170px]">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] text-slate-400 flex-shrink-0">🏃 Kurikulum SOP:</span>
+              <span class="text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[130px] sm:max-w-[190px]">
                 {{ b.journeyTemplate?.name || 'SOP Reguler' }}
               </span>
             </div>
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] text-slate-400">🤝 Program Buddy:</span>
-              <span class="text-[11px] font-semibold text-purple-700 dark:text-purple-300 truncate max-w-[170px]">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] text-slate-400 flex-shrink-0">🤝 Program Buddy:</span>
+              <span class="text-[11px] font-semibold text-purple-700 dark:text-purple-300 truncate max-w-[130px] sm:max-w-[190px]">
                 {{ b.buddyTemplate?.name || 'Tanpa Buddy' }}
               </span>
             </div>

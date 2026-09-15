@@ -457,8 +457,8 @@ const onSwitchWeek = (weekNum) => {
 // 2. Pendakian Tangga Kayu (Menyusuri 4 bordes/undakan kayu bertingkat sesuai kontur)
 // 3. Puncak Gunung: Pos W3 Canopy -> Finish (Trophy) -> FEEDBACK di Puncak Gunung Tertinggi
 const TRAIL_WAYPOINTS_3W = [
-  { x: 3.5,  y: 82.5 }, // Buddy (Pra-Start)
-  { x: 7.5,  y: 74.5 }, // Start area
+  { x: 3.0,  y: 83.0 }, // Buddy (Pra-Start)
+  { x: 9.5,  y: 74.5 }, // Start area
   { x: 18.0, y: 73.0 }, // W1 Base Camp
   { x: 26.0, y: 77.0 }, // Jalur setapak 1
   { x: 36.0, y: 79.5 }, // Jalur setapak 2
@@ -472,9 +472,9 @@ const TRAIL_WAYPOINTS_3W = [
   { x: 85.5, y: 60.0 }, // Anak tangga tengah (Oval 3: Belokan kanan)
   { x: 83.0, y: 53.5 }, // Bordes tangga atas (Oval 4: Undakan atas)
   { x: 80.5, y: 49.0 }, // W3 Rainforest Canopy Platform
-  { x: 83.5, y: 35.0 }, // Finish Trophy Flag
-  { x: 84.2, y: 24.0 }, // Lereng atas gunung
-  { x: 84.5, y: 16.0 }, // FEEDBACK (Puncak Gunung Tertinggi)
+  { x: 84.0, y: 32.5 }, // Finish Trophy Flag
+  { x: 84.2, y: 22.5 }, // Lereng atas gunung
+  { x: 84.5, y: 14.5 }, // FEEDBACK (Puncak Gunung Tertinggi)
 ]
 
 // Helper function untuk kalkulasi kurva SVG
@@ -514,10 +514,10 @@ const completedTrailPath = computed(() => {
   return generateSvgCurve(pts)
 })
 
-const buddyPosition = computed(() => ({ x: '3.5%', y: '82.5%' }))
-const startPosition = computed(() => ({ x: '7.5%', y: '74.5%' }))
-const finishPosition = computed(() => ({ x: '83.5%', y: '35.0%' }))
-const feedbackPosition = computed(() => ({ x: '84.5%', y: '16.0%' }))
+const buddyPosition = computed(() => ({ x: '3.0%', y: '83.0%' }))
+const startPosition = computed(() => ({ x: '9.5%', y: '74.5%' }))
+const finishPosition = computed(() => ({ x: '84.0%', y: '32.5%' }))
+const feedbackPosition = computed(() => ({ x: '84.5%', y: '14.5%' }))
 
 const journeyComplete = computed(() => {
   return props.weeks.length > 0 && props.weeks.every(w => w.status === 'COMPLETED')

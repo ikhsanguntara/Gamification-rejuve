@@ -56,7 +56,12 @@ export const useGamificationStore = defineStore('gamification', {
 
     leaderboardByBatch: (state) => (batchId) => {
       if (state.apiLeaderboard && state.apiLeaderboard.length > 0) {
-        return state.apiLeaderboard
+        if (batchId && batchId !== 'ALL') {
+          const filtered = state.apiLeaderboard.filter(c => c.batchId === batchId)
+          if (filtered.length > 0) return filtered
+        } else {
+          return state.apiLeaderboard
+        }
       }
       const list = state.crews || []
       const filtered = batchId && batchId !== 'ALL' ? list.filter(c => c.batchId === batchId) : list
@@ -132,7 +137,7 @@ export const useGamificationStore = defineStore('gamification', {
             position: c.position || 'Store Specialist',
             department: c.departmentName || c.department || 'Store Operations',
             storeLocation: c.departmentName || c.storeLocation || 'Gerai Re.juve',
-            batchId: c.batchId,
+            batchId: c.batchId || cleanParams.batchId || null,
             batchName: c.batchName || 'Batch Re.juve',
             stars: Number(c.stars) || 0,
             points: Number(c.points) || (Number(c.stars) || 0) * 20,
@@ -155,6 +160,7 @@ export const useGamificationStore = defineStore('gamification', {
                 avatar: c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(c.name || 'Crew')}`,
                 position: c.position || 'Store Specialist',
                 storeLocation: c.departmentName || c.storeLocation || 'Gerai Re.juve',
+                batchId: c.batchId || cleanParams.batchId || null,
                 stars: Number(c.stars) || 0,
                 points: Number(c.points) || (Number(c.stars) || 0) * 20,
                 level: Number(c.level) || 1,

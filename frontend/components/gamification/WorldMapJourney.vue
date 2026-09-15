@@ -207,10 +207,24 @@ const myCrewData = computed(() => {
 const myTotalStars = computed(() => myCrewData.value?.stars || userStore.currentUser?.stars || 0)
 const myProgress = computed(() => getStarProgress(myTotalStars.value))
 
-const storeCrews = computed(() => gamificationStore.crewsByBatch(batchStore.selectedBatchId))
+const effectiveBatchId = computed(() => {
+  if (userStore.isCrew) {
+    return userStore.currentUser?.batchId || userStore.currentUser?.activeBatchId || batchStore.selectedBatchId || batchStore.currentBatch?.id
+  }
+  return batchStore.selectedBatchId || batchStore.currentBatch?.id
+})
+
+const storeCrews = computed(() => {
+  const bId = effectiveBatchId.value
+  const list = gamificationStore.leaderboardByBatch(bId) || []
+  if (list.length > 0) return list
+  return gamificationStore.crewsByBatch(bId) || []
+})
+
 const myRank = computed(() => {
-  const sorted = [...storeCrews.value].sort((a, b) => b.stars - a.stars)
-  const idx = sorted.findIndex(c => (c.crewId || c.id) === userStore.currentUser?.id)
+  const sorted = [...storeCrews.value].sort((a, b) => (Number(b.stars) || 0) - (Number(a.stars) || 0))
+  const myId = userStore.currentUser?.id || userStore.currentUser?.userId
+  const idx = sorted.findIndex(c => (c.crewId || c.id || c.userId) === myId)
   return idx !== -1 ? idx + 1 : 1
 })
 
@@ -387,6 +401,10 @@ const onMissionListClick = (mission) => {
   .journey-hero {
     grid-template-columns: 1fr;
     padding: 14px 16px;
+  }
+  .hero-stats {
+    justify-content: space-around;
+    width: 100%;
   }
 }
 

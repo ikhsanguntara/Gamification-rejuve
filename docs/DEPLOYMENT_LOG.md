@@ -33,6 +33,7 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 
 | ID | Tanggal & Waktu (WIB) | Target Environment | Komponen | Commit Hash & Branch | Hasil Unit Test | Port / URL Akses | Status |
 | :---: | :--- | :--- | :--- | :--- | :---: | :--- | :---: |
+| **DEP-015** | 2026-09-15 17:09 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `d862d92` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-014** | 2026-09-14 22:21 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `06ea963` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-013** | 2026-09-14 17:25 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `7c5bda9` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-012** | 2026-09-12 00:24 | **Firebase Hosting** | Frontend (Nuxt 3 SPA) | `3299515` (`main`) | **99/99 PASS (100%)** | `https://gamification-dde4b.web.app` | 🟢 **SUCCESS** |
@@ -51,6 +52,28 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 ---
 
 ## 📝 Rincian Log Tiap Deployment
+
+### [DEP-015] — 2026-09-15 17:09 WIB
+- **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"deploy ke vpc dari local"*)
+- **Target Host**: VPS Linux Ubuntu 24.04 LTS (`103.168.147.133`)
+- **Komponen Di-Deploy**: 
+  - Nuxt 3 Frontend SPA ter-generate ke static distribution via MacBook M3 (`deploy-fe-from-mac.sh`)
+  - Target REST API: `http://103.168.147.133:3005/api` (Dev/Staging Backend VPS)
+  - Rilis pembaruan:
+    1. **Precision Adventure Map**: Penataan presisi 4 undakan tangga kayu (T1, T2, T3, T4) serta koordinat rute pos petualangan.
+    2. **Mountain Peak Feedback**: Penempatan pin kuesioner `FEEDBACK (ISI)` di Puncak Gunung Tertinggi (`x: 84.5%, y: 16.0%`) dan penyesuaian posisi titik `FINISH` (`x: 83.5%, y: 35.0%`).
+    3. **Default Dark Theme**: Mengaktifkan Dark Mode sebagai tema default aplikasi pada `useTheme.js`, `nuxt.config.js`, dan `app.vue`.
+    4. **Gender Field (M/F)**: Menambahkan input pilihan Jenis Kelamin (`M` / `F`) pada modal Create & Edit User, sinkronisasi payload JSON `gender` ke API backend, state store, dan badge tabel user.
+- **Branch & Commit**: `d862d92` di branch `main`
+- **Hasil Pengujian Unit Test Sebelum Deploy**:
+  - `test_all_cruds.mjs`: **63/63 PASS (100%)**
+  - `test_unit_tester_suite.mjs`: **40/40 PASS (100%)**
+  - **Total**: **103/103 PASS (100% Lolos)**
+- **Hasil Deployment & Isolasi Service**:
+  - **URL Akses Frontend**: [http://103.168.147.133:3006](http://103.168.147.133:3006) $\rightarrow$ `HTTP/1.1 200 OK`
+  - **Status Backend**: [http://103.168.147.133:3005/health](http://103.168.147.133:3005/health) $\rightarrow$ `HTTP 200 OK` (*Untouched*)
+  - **Status Service ASCO**: Seluruh container ASCO terverifikasi **100% aman, tidak disentuh, dan tetap berjalan normal**.
+- **Status Akhir**: 🟢 **SUCCESS (BERHASIL 100%)**
 
 ### [DEP-014] — 2026-09-14 22:21 WIB
 - **Pelaksana**: Antigravity Agent (atas perintah eksplisit user: *"coba jalan kan deploy-fe-from-mac.sh"*)
