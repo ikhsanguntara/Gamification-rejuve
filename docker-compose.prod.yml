@@ -10,7 +10,7 @@ services:
 
     ports:
     - "127.0.0.1:5434:5432"
-    
+
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -103,6 +103,9 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET: ${MINIO_BUCKET}
 
+      LYNX_API_URL: ${LYNX_API_URL}
+      LYNX_API_TOKEN: ${LYNX_API_TOKEN}
+  
     networks:
       - gamification-network
 
@@ -115,6 +118,7 @@ services:
 
     volumes:
       - gamification_backend_uploads:/app/uploads
+
 
 
   # ==========================================================
