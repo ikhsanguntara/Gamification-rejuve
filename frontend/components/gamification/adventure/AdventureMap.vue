@@ -393,14 +393,14 @@ const weekZones = computed(() => {
 const WEEK_NODE_POSITIONS_3W = [
   { x: '18.0%', y: '73.0%' }, // Week 1 (Base Camp)
   { x: '56.5%', y: '78.5%' }, // Week 2 (River Crossing Bridge)
-  { x: '81.0%', y: '51.0%' }, // Week 3 (Canopy Platform)
+  { x: '80.5%', y: '49.0%' }, // Week 3 (Canopy Platform)
 ]
 
 const WEEK_NODE_POSITIONS_4W = [
   { x: '16.0%', y: '73.0%' }, // Week 1
   { x: '38.0%', y: '74.0%' }, // Week 2
   { x: '62.0%', y: '68.5%' }, // Week 3
-  { x: '81.0%', y: '51.0%' }, // Week 4
+  { x: '80.5%', y: '49.0%' }, // Week 4
 ]
 
 const WEEK_NODE_POSITIONS_5W = [
@@ -408,7 +408,7 @@ const WEEK_NODE_POSITIONS_5W = [
   { x: '31.0%', y: '74.5%' }, // Week 2
   { x: '49.0%', y: '72.0%' }, // Week 3
   { x: '67.0%', y: '66.0%' }, // Week 4
-  { x: '81.0%', y: '51.0%' }, // Week 5
+  { x: '80.5%', y: '49.0%' }, // Week 5
 ]
 
 const weekPositions = computed(() => {
@@ -454,8 +454,8 @@ const onSwitchWeek = (weekNum) => {
 
 // ── Scenic Waypoints along the winding adventure road ────────────────────────
 // 1. Jalur Darat: Buddy (0%) -> Start -> W1 Base Camp -> Jembatan Sungai (W2) -> Kaki Tangga Kayu
-// 2. Pendakian Tangga Kayu: Naik bertingkat ke Pos W3 Rainforest Canopy
-// 3. Puncak Gunung: Lurus menanjak ke Finish (Trophy) dan berpuncak pada FEEDBACK di Puncak Gunung Tertinggi
+// 2. Pendakian Tangga Kayu (Menyusuri 4 bordes/undakan kayu bertingkat sesuai kontur)
+// 3. Puncak Gunung: Pos W3 Canopy -> Finish (Trophy) -> FEEDBACK di Puncak Gunung Tertinggi
 const TRAIL_WAYPOINTS_3W = [
   { x: 3.5,  y: 82.5 }, // Buddy (Pra-Start)
   { x: 7.5,  y: 74.5 }, // Start area
@@ -466,10 +466,12 @@ const TRAIL_WAYPOINTS_3W = [
   { x: 56.5, y: 78.5 }, // W2 River Crossing (Jembatan Kayu)
   { x: 63.0, y: 76.5 }, // Ujung jembatan kanan
   { x: 71.0, y: 76.0 }, // Jalur tebing hijau
-  { x: 80.5, y: 74.0 }, // Kaki tangga kayu
-  { x: 84.5, y: 67.0 }, // Bordes tangga kayu
-  { x: 81.0, y: 59.0 }, // Tangga atas
-  { x: 81.0, y: 51.0 }, // W3 Rainforest Canopy
+  { x: 79.0, y: 74.5 }, // Menuju kaki tangga kayu
+  { x: 86.0, y: 71.5 }, // Kaki tangga kayu (Oval 1: Undakan bawah)
+  { x: 83.0, y: 65.0 }, // Bordes tangga bawah (Oval 2: Belokan kiri)
+  { x: 85.5, y: 60.0 }, // Anak tangga tengah (Oval 3: Belokan kanan)
+  { x: 83.0, y: 53.5 }, // Bordes tangga atas (Oval 4: Undakan atas)
+  { x: 80.5, y: 49.0 }, // W3 Rainforest Canopy Platform
   { x: 83.5, y: 35.0 }, // Finish Trophy Flag
   { x: 84.2, y: 24.0 }, // Lereng atas gunung
   { x: 84.5, y: 16.0 }, // FEEDBACK (Puncak Gunung Tertinggi)
@@ -505,7 +507,7 @@ const completedTrailPath = computed(() => {
   // Tentukan sejauh mana trail hijau menyala menyusuri rute
   let targetIndex = 2 // minimal sampai Week 1 jika aktif
   if (completedWeeks === 1) targetIndex = 6 // sampai Week 2 (Jembatan Sungai)
-  else if (completedWeeks === 2) targetIndex = 12 // sampai Week 3 (Canopy Platform)
+  else if (completedWeeks === 2) targetIndex = 14 // sampai Week 3 (Canopy Platform)
   else if (completedWeeks >= 3 || journeyComplete.value) targetIndex = TRAIL_WAYPOINTS_3W.length - 1 // sampai Puncak Gunung Tertinggi (Feedback)
 
   const pts = TRAIL_WAYPOINTS_3W.slice(0, targetIndex + 1)
