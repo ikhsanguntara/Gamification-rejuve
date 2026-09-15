@@ -122,12 +122,7 @@ services:
   # Container Nginx :80
   # ==========================================================
   gamification-frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-
-      args:
-        NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE}
+    image: ${FRONTEND_IMAGE:-rejuve-gamification-frontend:v1.0.1}
 
     container_name: gamification-frontend
     restart: unless-stopped
