@@ -321,7 +321,7 @@ const executeBatchGeneration = async (tx, {
 };
 
 /**
- * Auto-generate kode Batch berikutnya (Format: GNI.BTH-MONTH-YEAR-RUNNING NUMBER 3 DIGIT, contoh: GNI.BTH-09-2026-001).
+ * Auto-generate kode Batch berikutnya (Format: BTH-MONTH-YEAR-RUNNING NUMBER 3 DIGIT, contoh: BTH-09-2026-001).
  * Resilient terhadap format legacy, loncatan nomor, custom prefix, maupun concurrency.
  */
 const generateNextBatchCode = async (dateOrClient = new Date(), maybeClient = null) => {
@@ -342,7 +342,7 @@ const generateNextBatchCode = async (dateOrClient = new Date(), maybeClient = nu
 
   const month = String(refDate.getMonth() + 1).padStart(2, '0');
   const year = String(refDate.getFullYear());
-  const prefix = `GNI.BTH-${month}-${year}-`;
+  const prefix = `BTH-${month}-${year}-`;
 
   const batches = await prismaClient.batch.findMany({
     select: { code: true }
@@ -350,8 +350,8 @@ const generateNextBatchCode = async (dateOrClient = new Date(), maybeClient = nu
 
   const existingCodes = new Set(batches.map(b => (b.code || '').trim().toUpperCase()));
 
-  // Pola regex mencakup GNI.BTH-MM-YYYY-NNN (dan variasi spasi / titik fleksibel)
-  const pattern = new RegExp(`^GNI[\\s.]*BTH-${month}-${year}-(\\d+)$`, 'i');
+  // Pola regex mencakup BTH-MM-YYYY-NNN
+  const pattern = new RegExp(`^BTH-${month}-${year}-(\\d+)$`, 'i');
 
   const numericSuffixes = batches
     .map(b => (b.code || '').trim())
@@ -375,7 +375,7 @@ const generateNextBatchCode = async (dateOrClient = new Date(), maybeClient = nu
 
 /**
  * Buat Batch baru.
- * Field "code" bersifat opsional. Jika tidak diisi / kosong, backend otomatis men-generate kode (GNI.BTH-MM-YYYY-001, dst).
+ * Field "code" bersifat opsional. Jika tidak diisi / kosong, backend otomatis men-generate kode (BTH-MM-YYYY-001, dst).
  */
 const createBatch = async (payload, creatorId = null) => {
   const {
@@ -432,7 +432,7 @@ const createBatch = async (payload, creatorId = null) => {
         err.code = 'P2002';
         throw err;
       } else {
-        finalCode = await generateNextBatchCode(startDate, tx);
+        finalCode = await generateNextBatchCode(tx);
       }
     }
 
