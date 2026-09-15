@@ -386,21 +386,21 @@ const weekZones = computed(() => {
 })
 
 // ── Outpost Coordinates for Week Nodes (POV PER-WEEK) ────────────────────────
-// Diposisikan tepat di area pangkalan per chapter:
-// W1: Area Tenda Base Camp (kiri bawah)
-// W2: Area Jembatan & Sungai (tengah)
-// W3: Area Platform & Kanopi Pohon (kanan atas)
+// Diposisikan tepat di area pangkalan per chapter sesuai peta:
+// W1: Area Tenda Base Camp (kiri bawah: x: 18%, y: 73%)
+// W2: Area Jembatan Kayu Sungai (tengah: x: 56.5%, y: 78.5%)
+// W3: Area Platform Pohon Kanopi (kanan atas: x: 81%, y: 51%)
 const WEEK_NODE_POSITIONS_3W = [
   { x: '18.0%', y: '73.0%' }, // Week 1 (Base Camp)
-  { x: '50.0%', y: '71.5%' }, // Week 2 (River Crossing)
-  { x: '82.0%', y: '50.0%' }, // Week 3 (Canopy Platform)
+  { x: '56.5%', y: '78.5%' }, // Week 2 (River Crossing Bridge)
+  { x: '81.0%', y: '51.0%' }, // Week 3 (Canopy Platform)
 ]
 
 const WEEK_NODE_POSITIONS_4W = [
   { x: '16.0%', y: '73.0%' }, // Week 1
   { x: '38.0%', y: '74.0%' }, // Week 2
   { x: '62.0%', y: '68.5%' }, // Week 3
-  { x: '82.0%', y: '50.0%' }, // Week 4
+  { x: '81.0%', y: '51.0%' }, // Week 4
 ]
 
 const WEEK_NODE_POSITIONS_5W = [
@@ -408,7 +408,7 @@ const WEEK_NODE_POSITIONS_5W = [
   { x: '31.0%', y: '74.5%' }, // Week 2
   { x: '49.0%', y: '72.0%' }, // Week 3
   { x: '67.0%', y: '66.0%' }, // Week 4
-  { x: '82.0%', y: '50.0%' }, // Week 5
+  { x: '81.0%', y: '51.0%' }, // Week 5
 ]
 
 const weekPositions = computed(() => {
@@ -453,75 +453,69 @@ const onSwitchWeek = (weekNum) => {
 }
 
 // ── Scenic Waypoints along the winding adventure road ────────────────────────
+// 1. Jalur Darat: Buddy (0%) -> Start -> W1 Base Camp -> Jembatan Sungai (W2) -> Kaki Tangga Kayu
+// 2. Pendakian Tangga Kayu: Naik bertingkat ke Pos W3 Rainforest Canopy
+// 3. Puncak Gunung: Lurus menanjak ke Finish (Trophy) dan berpuncak pada FEEDBACK di Puncak Gunung Tertinggi
 const TRAIL_WAYPOINTS_3W = [
   { x: 3.5,  y: 82.5 }, // Buddy (Pra-Start)
-  { x: 10.0, y: 82.5 },
-  { x: 18.0, y: 83.0 }, // W1
-  { x: 26.0, y: 84.0 },
-  { x: 35.0, y: 84.5 },
-  { x: 43.0, y: 83.5 },
-  { x: 50.0, y: 81.5 }, // W2 (Jembatan Sungai)
-  { x: 58.0, y: 79.5 },
-  { x: 67.0, y: 76.5 },
-  { x: 75.0, y: 76.5 },
-  { x: 82.0, y: 74.0 }, // Tangga kayu
-  { x: 85.5, y: 65.5 }, // Bordes tangga
-  { x: 82.0, y: 56.0 }, // W3 (Canopy platform)
-  { x: 85.0, y: 44.0 }, // Finish flag
-  { x: 92.0, y: 50.0 }, // Feedback (Pasca-Finish)
+  { x: 7.5,  y: 74.5 }, // Start area
+  { x: 18.0, y: 73.0 }, // W1 Base Camp
+  { x: 26.0, y: 77.0 }, // Jalur setapak 1
+  { x: 36.0, y: 79.5 }, // Jalur setapak 2
+  { x: 46.0, y: 81.0 }, // Mendekati jembatan
+  { x: 56.5, y: 78.5 }, // W2 River Crossing (Jembatan Kayu)
+  { x: 63.0, y: 76.5 }, // Ujung jembatan kanan
+  { x: 71.0, y: 76.0 }, // Jalur tebing hijau
+  { x: 80.5, y: 74.0 }, // Kaki tangga kayu
+  { x: 84.5, y: 67.0 }, // Bordes tangga kayu
+  { x: 81.0, y: 59.0 }, // Tangga atas
+  { x: 81.0, y: 51.0 }, // W3 Rainforest Canopy
+  { x: 83.5, y: 35.0 }, // Finish Trophy Flag
+  { x: 84.2, y: 24.0 }, // Lereng atas gunung
+  { x: 84.5, y: 16.0 }, // FEEDBACK (Puncak Gunung Tertinggi)
 ]
 
-// SVG trail path
-const trailPath = computed(() => {
-  const pts = TRAIL_WAYPOINTS_3W.map(pt => ({
+// Helper function untuk kalkulasi kurva SVG
+const generateSvgCurve = (points) => {
+  if (!points || points.length < 2) return ''
+  const pts = points.map(pt => ({
     x: (pt.x / 100) * SVG_W,
     y: (pt.y / 100) * SVG_H
   }))
 
-  let d = `M ${pts[0].x} ${pts[0].y}`
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`
   for (let i = 0; i < pts.length - 1; i++) {
     const curr = pts[i]
     const next = pts[i + 1]
     const cpX = (curr.x + next.x) / 2
     const cpY = (curr.y + next.y) / 2
-    d += ` Q ${cpX} ${cpY} ${next.x} ${next.y}`
+    d += ` Q ${cpX.toFixed(1)} ${cpY.toFixed(1)} ${next.x.toFixed(1)} ${next.y.toFixed(1)}`
   }
   return d
-})
+}
+
+// SVG trail path
+const trailPath = computed(() => generateSvgCurve(TRAIL_WAYPOINTS_3W))
 
 // Completed trail path
 const completedTrailPath = computed(() => {
   const completedWeeks = props.weeks.filter(w => w.status === 'COMPLETED').length
   if (completedWeeks === 0 && !props.activeWeek) return ''
 
-  // Tentukan seberapa jauh trail hijau menyala
-  let targetIndex = 2 // minimal sampai week 1 jika aktif
-  if (completedWeeks === 1) targetIndex = 6 // W2
-  else if (completedWeeks === 2) targetIndex = 12 // W3
-  else if (completedWeeks >= 3 || journeyComplete.value) targetIndex = TRAIL_WAYPOINTS_3W.length - 1
+  // Tentukan sejauh mana trail hijau menyala menyusuri rute
+  let targetIndex = 2 // minimal sampai Week 1 jika aktif
+  if (completedWeeks === 1) targetIndex = 6 // sampai Week 2 (Jembatan Sungai)
+  else if (completedWeeks === 2) targetIndex = 12 // sampai Week 3 (Canopy Platform)
+  else if (completedWeeks >= 3 || journeyComplete.value) targetIndex = TRAIL_WAYPOINTS_3W.length - 1 // sampai Puncak Gunung Tertinggi (Feedback)
 
-  const pts = TRAIL_WAYPOINTS_3W.slice(0, targetIndex + 1).map(pt => ({
-    x: (pt.x / 100) * SVG_W,
-    y: (pt.y / 100) * SVG_H
-  }))
-
-  if (pts.length < 2) return ''
-
-  let d = `M ${pts[0].x} ${pts[0].y}`
-  for (let i = 0; i < pts.length - 1; i++) {
-    const curr = pts[i]
-    const next = pts[i + 1]
-    const cpX = (curr.x + next.x) / 2
-    const cpY = (curr.y + next.y) / 2
-    d += ` Q ${cpX} ${cpY} ${next.x} ${next.y}`
-  }
-  return d
+  const pts = TRAIL_WAYPOINTS_3W.slice(0, targetIndex + 1)
+  return generateSvgCurve(pts)
 })
 
 const buddyPosition = computed(() => ({ x: '3.5%', y: '82.5%' }))
-const startPosition = computed(() => ({ x: '6.5%', y: '74.5%' }))
-const finishPosition = computed(() => ({ x: '85.0%', y: '36.0%' }))
-const feedbackPosition = computed(() => ({ x: '92.0%', y: '50.0%' }))
+const startPosition = computed(() => ({ x: '7.5%', y: '74.5%' }))
+const finishPosition = computed(() => ({ x: '83.5%', y: '35.0%' }))
+const feedbackPosition = computed(() => ({ x: '84.5%', y: '16.0%' }))
 
 const journeyComplete = computed(() => {
   return props.weeks.length > 0 && props.weeks.every(w => w.status === 'COMPLETED')
