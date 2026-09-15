@@ -321,28 +321,53 @@ const executeBatchGeneration = async (tx, {
 };
 
 /**
- * Auto-generate kode Batch berikutnya (Format Opsi 1: BTH-01, BTH-02, dst.).
- * Resilient terhadap loncatan nomor, custom prefix, maupun concurrency.
+ * Auto-generate kode Batch berikutnya (Format: GNI.BTH-MONTH-YEAR-RUNNING NUMBER 3 DIGIT, contoh: GNI.BTH-09-2026-001).
+ * Resilient terhadap format legacy, loncatan nomor, custom prefix, maupun concurrency.
  */
-const generateNextBatchCode = async (prismaClient = prisma) => {
+const generateNextBatchCode = async (dateOrClient = new Date(), maybeClient = null) => {
+  let refDate = new Date();
+  let prismaClient = prisma;
+
+  if (dateOrClient) {
+    if (dateOrClient instanceof Date || typeof dateOrClient === 'string' || typeof dateOrClient === 'number') {
+      const parsed = new Date(dateOrClient);
+      if (!isNaN(parsed.getTime())) {
+        refDate = parsed;
+      }
+      if (maybeClient) prismaClient = maybeClient;
+    } else if (typeof dateOrClient === 'object' && dateOrClient.batch) {
+      prismaClient = dateOrClient;
+    }
+  }
+
+  const month = String(refDate.getMonth() + 1).padStart(2, '0');
+  const year = String(refDate.getFullYear());
+  const prefix = `GNI.BTH-${month}-${year}-`;
+
   const batches = await prismaClient.batch.findMany({
     select: { code: true }
   });
 
   const existingCodes = new Set(batches.map(b => (b.code || '').trim().toUpperCase()));
 
+  // Pola regex mencakup GNI.BTH-MM-YYYY-NNN (dan variasi spasi / titik fleksibel)
+  const pattern = new RegExp(`^GNI[\\s.]*BTH-${month}-${year}-(\\d+)$`, 'i');
+
   const numericSuffixes = batches
-    .map(b => b.code)
-    .filter(c => Boolean(c) && /^BTH-\d+$/i.test(c.trim()))
-    .map(c => parseInt(c.trim().replace(/^BTH-/i, ''), 10))
-    .filter(n => !isNaN(n));
+    .map(b => (b.code || '').trim())
+    .filter(c => pattern.test(c))
+    .map(c => {
+      const match = c.match(pattern);
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter(n => !isNaN(n) && n > 0);
 
   let candidateNum = numericSuffixes.length > 0 ? Math.max(...numericSuffixes) + 1 : 1;
+  let candidateCode = `${prefix}${String(candidateNum).padStart(3, '0')}`;
 
-  let candidateCode = `BTH-${String(candidateNum).padStart(2, '0')}`;
   while (existingCodes.has(candidateCode.toUpperCase())) {
     candidateNum++;
-    candidateCode = `BTH-${String(candidateNum).padStart(2, '0')}`;
+    candidateCode = `${prefix}${String(candidateNum).padStart(3, '0')}`;
   }
 
   return candidateCode;
@@ -350,7 +375,7 @@ const generateNextBatchCode = async (prismaClient = prisma) => {
 
 /**
  * Buat Batch baru.
- * Field "code" bersifat opsional. Jika tidak diisi / kosong, backend otomatis men-generate kode (BTH-01, BTH-02, dst).
+ * Field "code" bersifat opsional. Jika tidak diisi / kosong, backend otomatis men-generate kode (GNI.BTH-MM-YYYY-001, dst).
  */
 const createBatch = async (payload, creatorId = null) => {
   const {
@@ -371,7 +396,7 @@ const createBatch = async (payload, creatorId = null) => {
 
   let finalCode = (typeof code === 'string' && code.trim()) ? code.trim() : null;
   if (!finalCode) {
-    finalCode = await generateNextBatchCode();
+    finalCode = await generateNextBatchCode(startDate, prisma);
   }
 
   const [tplJourney, tplBuddy, tplFeedback] = await Promise.all([
@@ -407,7 +432,7 @@ const createBatch = async (payload, creatorId = null) => {
         err.code = 'P2002';
         throw err;
       } else {
-        finalCode = await generateNextBatchCode(tx);
+        finalCode = await generateNextBatchCode(startDate, tx);
       }
     }
 

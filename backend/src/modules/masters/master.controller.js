@@ -387,11 +387,16 @@ const createUser = async (req, res, next) => {
       }
     }
 
-    // Password default: CREW menggunakan prefix email sebelum '@', role lain membaca UserPolicy DB atau default 'password123'
+    // Password default: CREW menggunakan prefix email sebelum '@', role lain membaca UserPolicy DB (DEFAULT_PASSWORD)
     let defaultNonCrewPassword = 'password123';
     try {
       const pwPolicy = await prisma.userPolicy.findFirst({
-        where: { userpolicyCode: 'DEFAULT_PASSWORD' }
+        where: {
+          userpolicyCode: {
+            equals: 'DEFAULT_PASSWORD',
+            mode: 'insensitive'
+          }
+        }
       });
       if (pwPolicy?.userpolicyValue) {
         defaultNonCrewPassword = pwPolicy.userpolicyValue;
@@ -399,7 +404,12 @@ const createUser = async (req, res, next) => {
     } catch (e) {}
 
     const emailPrefix = (email && email.includes('@')) ? email.split('@')[0] : (email || 'crew123');
-    const rawPassword = password || (isCrew ? emailPrefix : defaultNonCrewPassword);
+    let rawPassword;
+    if (isCrew) {
+      rawPassword = (password && password !== 'password123') ? password : emailPrefix;
+    } else {
+      rawPassword = (password && password !== 'password123') ? password : defaultNonCrewPassword;
+    }
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
     const user = await prisma.user.create({
@@ -874,7 +884,12 @@ const bulkCommitUsers = async (req, res, next) => {
     let defaultNonCrewPassword = 'password123';
     try {
       const pwPolicy = await prisma.userPolicy.findFirst({
-        where: { userpolicyCode: 'DEFAULT_PASSWORD' }
+        where: {
+          userpolicyCode: {
+            equals: 'DEFAULT_PASSWORD',
+            mode: 'insensitive'
+          }
+        }
       });
       if (pwPolicy?.userpolicyValue) {
         defaultNonCrewPassword = pwPolicy.userpolicyValue;

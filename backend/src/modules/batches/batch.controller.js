@@ -46,7 +46,8 @@ const getBatchById = async (req, res, next) => {
 
 const getNextBatchCode = async (req, res, next) => {
   try {
-    const nextCode = await batchService.generateNextBatchCode();
+    const refDate = req.query.date || req.query.startDate || new Date();
+    const nextCode = await batchService.generateNextBatchCode(refDate);
     return sendSuccess(res, {
       message: 'Kode batch berikutnya berhasil di-generate.',
       statusCode: 200,
