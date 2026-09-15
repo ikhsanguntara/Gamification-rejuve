@@ -34,42 +34,18 @@
             1. Informasi Dasar Siklus Batch
           </h3>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <!-- Nama Batch -->
-            <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Nama Siklus Batch *
-              </label>
-              <input
-                v-model="form.name"
-                type="text"
-                required
-                :placeholder="`Contoh: Batch ${nextBatchNumber || 1} — Program Pelatihan Multi-Gerai`"
-                class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-              />
-            </div>
-
-            <!-- Kode Batch (Manual Input / Auto Option) -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
-                <span>Kode Batch *</span>
-                <button
-                  type="button"
-                  @click="generateNextCode"
-                  class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 px-1.5 py-0.2 rounded transition-colors cursor-pointer"
-                  title="Klik untuk isi kode unik otomatis"
-                >
-                  ⚡ Auto Code
-                </button>
-              </label>
-              <input
-                v-model="form.code"
-                type="text"
-                required
-                :placeholder="`Contoh: ${computedBatchCode || 'BTH-01'}`"
-                class="w-full text-xs font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-              />
-            </div>
+          <!-- Nama Batch -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Nama Siklus Batch *
+            </label>
+            <input
+              v-model="form.name"
+              type="text"
+              required
+              :placeholder="`Contoh: Batch ${nextBatchNumber || 1} — Program Pelatihan Multi-Gerai`"
+              class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+            />
           </div>
 
           <!-- Deskripsi / Catatan Batch -->
@@ -960,12 +936,6 @@ const handleSubmit = async () => {
     return
   }
 
-  const batchCodeToUse = (form.value.code && form.value.code.trim()) || computedBatchCode.value
-  if (!batchCodeToUse) {
-    toast.warning('Kode Batch Wajib Diisi', 'Silakan masukkan kode unik batch.')
-    return
-  }
-
   if (!form.value.templatePackageId) {
     toast.warning('Template Belum Dipilih', 'Silakan pilih paket master template SOP terlebih dahulu sebelum membuat batch.')
     return
@@ -1001,7 +971,6 @@ const handleSubmit = async () => {
     }
 
     const payload = {
-      code: batchCodeToUse,
       name: form.value.name.trim(),
       startDate: form.value.startDate || new Date().toISOString().split('T')[0],
       status: 'OPEN',
@@ -1012,11 +981,15 @@ const handleSubmit = async () => {
       crewIds: (form.value.assignment?.crewIds || []).filter(id => String(id).length > 20)
     }
 
+    if (form.value.code && form.value.code.trim()) {
+      payload.code = form.value.code.trim()
+    }
+
     const res = await batchApi.create(payload)
     if (res && (res.success || res.data)) {
       toast.success(
         'Batch Berhasil Dibuat!',
-        `Batch ${form.value.name} (${payload.code}) telah disimpan ke backend dan misi aktif di-generate.`
+        `Batch ${form.value.name} telah disimpan ke backend dan misi aktif di-generate.`
       )
       await batchStore.fetchBatchesFromApi({ page: 1, limit: 9 })
       router.push('/admin/batches')

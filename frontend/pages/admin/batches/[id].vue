@@ -544,7 +544,7 @@ const assignedCrews = computed(() => {
     return batch.value.users.map(u => ({
       id: u.userId || u.id,
       name: u.name,
-      avatar: u.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+      avatar: u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name || 'Crew')}`,
       department: u.department?.departmentName || 'Store Operations',
       storeId: u.departmentId || u.department?.departmentId || null,
       storeLocation: u.department?.departmentName || 'Re.juve Store',

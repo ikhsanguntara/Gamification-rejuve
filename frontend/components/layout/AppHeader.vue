@@ -201,7 +201,7 @@
           aria-label="User Account Menu"
         >
           <img
-            :src="userStore.currentUser?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80'"
+            :src="userStore.currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userStore.currentUser?.name || 'User')}`"
             :alt="userStore.currentUser?.name || 'User'"
             class="w-8 h-8 rounded-full object-cover ring-2 ring-[#831843]/30"
           />

@@ -96,35 +96,34 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Perusahaan *</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Perusahaan</label>
             <input
               v-model="form.email"
               type="email"
-              required
               placeholder="rian.hidayat@rejuve.co.id"
               class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Password Awal Akun *</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Avatar Image URL</label>
+              <button
+                type="button"
+                @click="form.avatar = pickRandomAvatar()"
+                class="text-[10px] font-bold text-[#831843] dark:text-[#f472b6] hover:underline flex items-center gap-1 cursor-pointer"
+                title="Pilih avatar acak"
+              >
+                🎲 Acak Avatar
+              </button>
+            </div>
             <input
-              v-model="form.password"
-              type="password"
-              placeholder="Masukkan password awal..."
+              v-model="form.avatar"
+              type="url"
+              placeholder="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
               class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Avatar Image URL (Opsional)</label>
-          <input
-            v-model="form.avatar"
-            type="url"
-            placeholder="https://images.unsplash.com/..."
-            class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
-          />
         </div>
 
         <!-- Store Assignment for CREW -->
@@ -233,6 +232,7 @@ import { useUserStore } from '~/stores/user.js'
 import { useStoreStore } from '~/stores/store.js'
 import { useToast } from '~/composables/useToast.js'
 import { userApi, roleApi } from '~/services/api.js'
+import { getRandomAvatar, pickRandomAvatar } from '~/utils/avatar.js'
 import SearchableSelect from '~/components/ui/SearchableSelect.vue'
 import { ArrowLeft, UserPlus, Store, UserCheck } from 'lucide-vue-next'
 
@@ -324,13 +324,12 @@ onMounted(async () => {
 const form = ref({
   name: '',
   role: 'CREW',
-  position: 'Store Specialist',
+  position: '',
   email: '',
-  password: '',
   storeId: '',
   userBuddyId: null,
   isBuddy: false,
-  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80'
+  avatar: getRandomAvatar()
 })
 
 // Reset isBuddy jika admin berganti role selain Store Leader (SL), reset userBuddyId jika bukan CREW
@@ -374,7 +373,8 @@ const handleSubmit = async () => {
     const payload = {
       name: form.value.name.trim(),
       email: form.value.email.trim(),
-      password: form.value.password ? form.value.password.trim() : 'password123',
+      avatar: form.value.avatar || getRandomAvatar(form.value.name),
+      password: 'password123',
       roleId: matchedRole ? matchedRole.roleId : null,
       departmentId: (form.value.storeId && String(form.value.storeId).length > 20) ? form.value.storeId : null,
       isBuddy: form.value.role === 'STORE_LEADER' ? Boolean(form.value.isBuddy) : false,

@@ -183,7 +183,7 @@ export const useGamificationStore = defineStore('gamification', {
         id: payload.id || `crew-${Date.now()}`,
         name: payload.name,
         code: payload.code || `CRW-${String(this.crews.length + 1).padStart(3, '0')}`,
-        avatar: payload.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+        avatar: payload.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(payload.name || 'Crew')}`,
         position: payload.position || 'Store Specialist',
         department: payload.department || 'Store Operations',
         storeLocation: payload.storeLocation || 'Re.juve Store',

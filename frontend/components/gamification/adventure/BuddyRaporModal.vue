@@ -24,7 +24,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
           <div class="flex items-center gap-3">
             <img
-              :src="activeUser?.avatar || crew?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'"
+              :src="activeUser?.avatar || crew?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(activeUser?.name || crew?.name || 'Crew')}`"
               :alt="activeUser?.name || crew?.name"
               class="w-12 h-12 rounded-2xl object-cover ring-2 ring-purple-400/50 shadow-md"
             />

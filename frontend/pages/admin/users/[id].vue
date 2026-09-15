@@ -10,8 +10,14 @@
       <span class="text-slate-800 dark:text-slate-200">Edit Profil User</span>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="isLoadingUser && !user" class="p-12 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+      <div class="inline-block w-8 h-8 border-3 border-[#831843] border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-xs text-slate-400 mt-2 font-medium">Memuat profil user...</p>
+    </div>
+
     <!-- Error State if not found -->
-    <div v-if="!user" class="p-8 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+    <div v-else-if="!user" class="p-8 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
       <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">User tidak ditemukan.</p>
       <NuxtLink to="/admin/users" class="text-xs text-[#831843] dark:text-[#f472b6] font-semibold mt-2 inline-block">Kembali ke Daftar</NuxtLink>
     </div>
@@ -20,7 +26,7 @@
     <div v-else class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
       <div class="flex items-center gap-3 mb-2">
         <img
-          :src="user.avatar"
+          :src="form.avatar || user.avatar || getRandomAvatar(user.name || user.id)"
           :alt="user.name"
           class="w-12 h-12 rounded-2xl object-cover ring-2 ring-[#831843]/20"
         />
@@ -110,10 +116,23 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Avatar Image URL</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Avatar Image URL
+              </label>
+              <button
+                type="button"
+                @click="form.avatar = pickRandomAvatar()"
+                class="text-[10px] font-bold text-[#831843] dark:text-[#f472b6] hover:underline flex items-center gap-1 cursor-pointer"
+                title="Pilih avatar acak"
+              >
+                🎲 Acak Avatar
+              </button>
+            </div>
             <input
               v-model="form.avatar"
               type="url"
+              placeholder="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
               class="w-full text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
             />
           </div>
@@ -219,6 +238,7 @@ import { useUserStore } from '~/stores/user.js'
 import { useStoreStore } from '~/stores/store.js'
 import { useToast } from '~/composables/useToast.js'
 import { userApi, roleApi } from '~/services/api.js'
+import { getRandomAvatar, pickRandomAvatar } from '~/utils/avatar.js'
 import SearchableSelect from '~/components/ui/SearchableSelect.vue'
 import { ArrowLeft, Store, UserCheck } from 'lucide-vue-next'
 
@@ -248,8 +268,11 @@ const roleOptions = computed(() => {
   return defaultRoles
 })
 
+const directUser = ref(null)
+const isLoadingUser = ref(true)
+
 const user = computed(() => {
-  return userStore.allUsers.find(u => u.id === route.params.id)
+  return directUser.value || userStore.allUsers.find(u => u.id === route.params.id) || null
 })
 
 const form = ref({
@@ -320,22 +343,54 @@ const buddyOptions = computed(() => {
   return list
 })
 
-onMounted(async () => {
+const loadUserDetail = async () => {
+  const userId = route.params.id
+  if (!userId) return
+
+  isLoadingUser.value = true
   try {
-    const promises = [roleApi.getAll({ limit: 50 })]
-    if (storeStore.allStores.length === 0) {
-      promises.push(storeStore.fetchStoresFromApi({ page: 1, limit: 100 }))
+    const [rolesRes, userRes] = await Promise.allSettled([
+      roleApi.getAll({ limit: 50 }),
+      userApi.getById(userId),
+      storeStore.fetchStoresFromApi({ page: 1, limit: 100 }),
+      userStore.fetchUsersFromApi({ page: 1, limit: 100 })
+    ])
+
+    if (rolesRes.status === 'fulfilled' && rolesRes.value?.data) {
+      availableRoles.value = rolesRes.value.data
     }
-    if (userStore.allUsers.length === 0) {
-      promises.push(userStore.fetchUsersFromApi({ page: 1, limit: 100 }))
-    }
-    const [rolesRes] = await Promise.all(promises)
-    if (rolesRes && rolesRes.data) {
-      availableRoles.value = rolesRes.data
+
+    if (userRes.status === 'fulfilled' && userRes.value) {
+      const u = userRes.value.data || userRes.value
+      if (u && (u.id || u.userId)) {
+        directUser.value = {
+          id: u.id || u.userId,
+          name: u.name || '',
+          role: u.role?.roleCode || u.roleCode || u.role || 'CREW',
+          position: u.position || '',
+          email: u.email || '',
+          storeId: u.departmentId || u.storeId || null,
+          storeLocation: u.department?.departmentName || u.storeLocation || '',
+          batchId: u.batchId || null,
+          userBuddyId: u.userBuddyId || null,
+          avatar: u.avatar || '',
+          isBuddy: Boolean(u.isBuddy)
+        }
+      }
     }
   } catch (e) {
-    console.warn('Gagal memuat roles/stores/users:', e.message)
+    console.warn('Gagal memuat detail user/roles/stores:', e.message)
+  } finally {
+    isLoadingUser.value = false
   }
+}
+
+onMounted(() => {
+  loadUserDetail()
+})
+
+watch(() => route.params.id, () => {
+  loadUserDetail()
 })
 
 const selectedStore = computed(() => {
@@ -365,7 +420,7 @@ watch(
         storeLocation: u.storeLocation || '',
         batchId: u.batchId || null,
         userBuddyId: u.userBuddyId || null,
-        avatar: u.avatar || '',
+        avatar: u.avatar || getRandomAvatar(u.name || u.id),
         isBuddy: Boolean(u.isBuddy)
       }
     }
@@ -386,6 +441,7 @@ const handleUpdate = async () => {
     const payload = {
       name: form.value.name.trim(),
       roleId: matchedRole ? (matchedRole.roleId || matchedRole.id) : undefined,
+      avatar: form.value.avatar || getRandomAvatar(form.value.name || user.value.id),
       isActive: true,
       isBuddy: form.value.role === 'STORE_LEADER' ? Boolean(form.value.isBuddy) : false,
       userBuddyId: (form.value.role === 'CREW' && form.value.userBuddyId) ? form.value.userBuddyId : null
