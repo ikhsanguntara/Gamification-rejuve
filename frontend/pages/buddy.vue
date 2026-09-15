@@ -22,11 +22,35 @@
         </p>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
         <span class="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-900 dark:text-purple-300 border border-purple-300 dark:border-purple-800 shadow-sm flex items-center gap-1.5">
           <Award class="w-3.5 h-3.5 text-purple-600" />
           <span>Evaluasi SOP Lapangan</span>
         </span>
+
+        <button
+          v-if="selectedCrew"
+          type="button"
+          @click="isBuddyModalOpen = true"
+          class="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white shadow-sm flex items-center gap-1.5 cursor-pointer transition-all"
+          title="Buka Rapor Resmi New Hire"
+        >
+          <FileText class="w-3.5 h-3.5" />
+          <span>Lihat Rapor (HTML)</span>
+        </button>
+
+        <button
+          v-if="selectedCrew"
+          type="button"
+          @click="openPrintHtml"
+          :disabled="isPrinting"
+          class="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all"
+          title="Cetak Dokumen Rapor Print-Ready HTML Langsung"
+        >
+          <Loader2 v-if="isPrinting" class="w-3.5 h-3.5 animate-spin" />
+          <Printer v-else class="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+          <span>Cetak Dokumen HTML</span>
+        </button>
       </div>
     </div>
 
@@ -184,15 +208,34 @@
                 </p>
               </div>
 
-              <div class="sm:col-span-2 p-3 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40 flex items-center justify-between gap-3 flex-wrap">
+              <div class="sm:col-span-2 p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40 flex items-center justify-between gap-3 flex-wrap">
                 <div>
                   <span class="text-[10px] font-bold uppercase text-purple-600 dark:text-purple-400">Periode Pendampingan:</span>
                   <p class="font-semibold text-slate-800 dark:text-slate-200 text-xs">
                     3 Hari Pra-Batch (H-3 s/d H-1 sebelum kompetisi batch)
                   </p>
                 </div>
-                <div class="text-xs text-purple-700 dark:text-purple-300 font-medium">
-                  ⚡ Auto-Unlock Journey Week 1 saat seluruh misi dinilai
+                <div class="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    @click="isBuddyModalOpen = true"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs active:scale-95 cursor-pointer transition-all"
+                    title="Buka Rapor Lengkap New Hire"
+                  >
+                    <FileText class="w-3.5 h-3.5" />
+                    <span>Lihat Rapor Lengkap</span>
+                  </button>
+                  <button
+                    type="button"
+                    @click="openPrintHtml"
+                    :disabled="isPrinting"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/50 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-xs font-bold shadow-2xs active:scale-95 cursor-pointer transition-all disabled:opacity-50"
+                    title="Cetak Dokumen Rapor HTML Langsung"
+                  >
+                    <Loader2 v-if="isPrinting" class="w-3.5 h-3.5 animate-spin" />
+                    <Printer v-else class="w-3.5 h-3.5" />
+                    <span>Cetak Rapor (HTML)</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -587,6 +630,16 @@
       </template>
     </BaseModal>
 
+    <!-- Buddy Rapor New Hire Modal Preview & Print -->
+    <BuddyRaporModal
+      :model-value="isBuddyModalOpen"
+      :crew="selectedCrew"
+      :evaluation="null"
+      :competencies="[]"
+      :summary="{ scorePercent: selectedCrewStats.scorePercent, kompeten: selectedCrewStats.evaluated, total: selectedCrewStats.total }"
+      @close="isBuddyModalOpen = false"
+    />
+
     </div>
   </div>
 </template>
@@ -605,13 +658,17 @@ import {
   Loader2,
   Camera,
   Paperclip,
-  Eye
+  Eye,
+  FileText,
+  Printer
 } from 'lucide-vue-next'
 import { useBuddyStore } from '~/stores/buddy.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useUserStore } from '~/stores/user.js'
 import { useToast } from '~/composables/useToast.js'
 import { useConfetti } from '~/composables/useConfetti.js'
+import { getApiBaseUrl } from '~/composables/useApi.js'
+import BuddyRaporModal from '~/components/gamification/adventure/BuddyRaporModal.vue'
 
 const buddyStore = useBuddyStore()
 const batchStore = useBatchStore()
@@ -621,11 +678,39 @@ const confetti = useConfetti()
 
 const crewSearchQuery = ref('')
 const selectedCrewId = ref('')
+const isBuddyModalOpen = ref(false)
+const isPrinting = ref(false)
 const buddyMissionScores = reactive({})
 const buddyMissionNotes = reactive({})
 const previewModalImage = ref(null)
 const editingMissionIds = reactive({})
 const submittingMissionId = ref(null)
+
+const openPrintHtml = async () => {
+  if (!selectedCrew.value) return
+  const targetUserId = selectedCrew.value.userId || selectedCrew.value.id
+  if (!targetUserId) return
+
+  isPrinting.value = true
+  try {
+    const html = await buddyStore.fetchBuddyReportHtml(targetUserId)
+    if (html && typeof html === 'string') {
+      const printWindow = window.open('', '_blank')
+      if (printWindow) {
+        printWindow.document.write(html)
+        printWindow.document.close()
+      }
+    } else {
+      const baseUrl = getApiBaseUrl().replace(/\/$/, '')
+      const url = `${baseUrl}/evaluations/buddy-report/${targetUserId}/html`
+      window.open(url, '_blank')
+    }
+  } catch (err) {
+    toast.error('Gagal Membuka Rapor HTML', err.message || 'Terjadi kesalahan saat memuat dokumen rapor.')
+  } finally {
+    isPrinting.value = false
+  }
+}
 
 const toggleEditMission = (userMissionId) => {
   const isCurrentlyEditing = !!editingMissionIds[userMissionId]
