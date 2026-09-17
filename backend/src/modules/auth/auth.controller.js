@@ -10,6 +10,8 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../../config/db');
 const batchService = require('../batches/batch.service');
 const gamificationService = require('../gamification/gamification.service');
+const { uploadFileToStorage } = require('../../utils/minioStorage');
+const { pushToLynx } = require('../../utils/lynxSync');
 const { emitToUser } = require('../../utils/socketEmitter');
 const { sendSuccess, sendError } = require('../../utils/responseWrapper');
 
@@ -171,6 +173,9 @@ const login = async (req, res, next) => {
           userId: user.userId,
           name: user.name,
           email: user.email,
+          gender: user.gender || null,
+          phone: user.phone || null,
+          avatarUrl: user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name)}`,
           roleId: user.roleId,
           role: user.role?.roleCode,
           roleDetails: user.role,
@@ -248,6 +253,9 @@ const getMe = async (req, res, next) => {
         userId: user.userId,
         name: user.name,
         email: user.email,
+        gender: user.gender || null,
+        phone: user.phone || null,
+        avatarUrl: user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name)}`,
         roleId: user.roleId,
         role: user.role?.roleCode,
         roleDetails: user.role,
@@ -373,9 +381,111 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+/**
+ * PUT /api/auth/profile & PUT /api/auth/me
+ * Endpoint update profile mandiri oleh pengguna yang sedang login.
+ * Mendukung fleksibilitas avatar (upload file multipart 'avatar' ke MinIO atau string 'avatarUrl'),
+ * serta pembaruan phone, gender, dan name. Field administratif diproteksi.
+ */
+const updateProfile = async (req, res, next) => {
+  try {
+    const userId = req.user?.id || req.user?.userId;
+    if (!userId) {
+      return sendError(res, { statusCode: 401, message: 'Data pengguna tidak ditemukan pada token.' });
+    }
+
+    const { name, phone, gender, avatarUrl } = req.body;
+
+    const data = {
+      updatedBy: userId
+    };
+
+    if (name !== undefined) data.name = String(name).trim();
+    if (phone !== undefined) data.phone = phone ? String(phone).trim() : null;
+
+    if (gender !== undefined) {
+      if (!gender) {
+        data.gender = null;
+      } else {
+        const g = String(gender).trim().toUpperCase();
+        if (g === 'M' || g === 'L' || g === 'MALE' || g === 'LAKI-LAKI') {
+          data.gender = 'M';
+        } else if (g === 'F' || g === 'P' || g === 'FEMALE' || g === 'PEREMPUAN') {
+          data.gender = 'F';
+        } else {
+          return sendError(res, { statusCode: 400, message: 'Format gender tidak valid. Gunakan M (Laki-laki) atau F (Perempuan).' });
+        }
+      }
+    }
+
+    // Resolusi avatar: file upload multipart atau string URL
+    if (req.file) {
+      data.avatarUrl = await uploadFileToStorage(req.file, 'avatars', req, `avatar-${userId}`);
+    } else if (avatarUrl !== undefined) {
+      data.avatarUrl = avatarUrl ? String(avatarUrl).trim() : null;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { userId },
+      data,
+      include: USER_INCLUDE
+    });
+
+    // Sinkronkan ke Lynx jika bukan role CREW
+    const roleCode = updatedUser.role?.roleCode || '';
+    if (roleCode !== 'CREW') {
+      await pushToLynx('/gamification/webhook/users', [updatedUser], 'POST');
+    }
+
+    // Fetch available batches
+    let availableBatches = await batchService.getUserAvailableBatches(updatedUser);
+    let activeBatchId = updatedUser.activeBatchId;
+    let activeBatch = updatedUser.activeBatch;
+
+    return sendSuccess(res, {
+      statusCode: 200,
+      message: 'Profil berhasil diperbarui.',
+      data: {
+        user: {
+          userId: updatedUser.userId,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          gender: updatedUser.gender || null,
+          phone: updatedUser.phone || null,
+          avatarUrl: updatedUser.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(updatedUser.name)}`,
+          roleId: updatedUser.roleId,
+          role: roleCode,
+          roleDetails: updatedUser.role,
+          isActive: updatedUser.isActive,
+          stars: updatedUser.stars,
+          points: updatedUser.points,
+          level: updatedUser.level,
+          departmentId: updatedUser.departmentId,
+          department: updatedUser.department,
+          activeBatchId: activeBatchId || null,
+          activeBatch: activeBatch || null,
+          availableBatches: availableBatches || [],
+          isBuddy: updatedUser.isBuddy,
+          userBuddyId: updatedUser.userBuddyId,
+          userBuddy: updatedUser.userBuddy,
+          batchId: updatedUser.batchId,
+          hasBatch: Boolean(updatedUser.batchId),
+          hasClaimedEarlyBird: updatedUser.hasClaimedEarlyBird || false,
+          firstLoginAt: updatedUser.firstLoginAt || null,
+          createdAt: updatedUser.createdAt,
+          updatedAt: updatedUser.updatedAt
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   login,
   getMe,
   setActiveBatch,
-  changePassword
+  changePassword,
+  updateProfile
 };

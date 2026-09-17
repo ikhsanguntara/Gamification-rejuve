@@ -12,6 +12,8 @@ const uploadExcel = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
+const { uploadMiddleware } = require('../../utils/minioStorage');
+
 router.use(authenticate);
 router.use(authorizeRole(['SUPERADMIN']));
 
@@ -28,8 +30,8 @@ router.post('/users/bulk-preview', uploadExcel.any(), masterController.bulkPrevi
 router.post('/users/bulk-commit', masterController.bulkCommitUsers);
 router.get('/users', masterController.getUsers);
 router.get('/users/:id', masterController.getUserById);
-router.post('/users', masterController.createUser);
-router.put('/users/:id', masterController.updateUser);
+router.post('/users', uploadMiddleware.single('avatar'), masterController.createUser);
+router.put('/users/:id', uploadMiddleware.single('avatar'), masterController.updateUser);
 router.delete('/users/:id', masterController.deleteUser);
 
 // ─── Roles ───────────────────────────────────────────────────────────────────

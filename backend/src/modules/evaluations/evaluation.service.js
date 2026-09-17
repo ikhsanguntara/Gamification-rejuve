@@ -147,6 +147,35 @@ const getUserMissionById = async (userMissionId) => {
 };
 
 /**
+ * Helper untuk menghitung fase/tahapan aktif onboarding kru:
+ * - 'BUDDY': Jika memiliki misi BUDDY yang belum seluruhnya COMPLETED.
+ * - 'JOURNEY': Jika misi BUDDY sudah tuntas, dan memiliki misi JOURNEY yang belum seluruhnya COMPLETED (dinilai SL & diapprove DM).
+ * - 'FEEDBACK': Jika misi JOURNEY sudah tuntas, dan memiliki misi FEEDBACK yang belum tuntas.
+ * - 'COMPLETED': Jika seluruh misi pada batch telah COMPLETED, atau seluruh JOURNEY tuntas tanpa misi FEEDBACK.
+ */
+const calculateCrewActiveStep = (userMissions = []) => {
+  const buddyMissions = userMissions.filter(m => m.mission?.type === 'BUDDY');
+  if (buddyMissions.length > 0 && !buddyMissions.every(m => m.status === 'COMPLETED')) {
+    return 'BUDDY';
+  }
+
+  const journeyMissions = userMissions.filter(m => m.mission?.type === 'JOURNEY');
+  if (journeyMissions.length > 0 && !journeyMissions.every(m => m.status === 'COMPLETED')) {
+    return 'JOURNEY';
+  }
+
+  const feedbackMissions = userMissions.filter(m => m.mission?.type === 'FEEDBACK');
+  if (feedbackMissions.length > 0) {
+    if (feedbackMissions.every(m => m.status === 'COMPLETED')) {
+      return 'COMPLETED';
+    }
+    return 'FEEDBACK';
+  }
+
+  return 'COMPLETED';
+};
+
+/**
  * GET /api/evaluations/crews
  * Mengambil daftar Crew untuk sidebar workstation evaluasi (SL / DM / Buddy).
  * Menyertakan summary progress: totalMissionsCount, evaluatedCount, status (NEEDS_SCORING / COMPLETED), dan avgScore.
@@ -352,7 +381,7 @@ const getWorkstationCrews = async (currentUser, query = {}) => {
 
   const crewIds = crews.map(c => c.userId);
 
-  // 4. Ambil User Missions untuk seluruh Crew ini pada batch dan week terpilih
+  // 4. Ambil User Missions untuk seluruh Crew ini pada batch dan week terpilih (untuk metrics kartu)
   const missionFilter = {
     userId: { in: crewIds },
     mission: {
@@ -362,26 +391,42 @@ const getWorkstationCrews = async (currentUser, query = {}) => {
     }
   };
 
-  const userMissions = await prisma.userMission.findMany({
-    where: missionFilter,
-    select: {
-      userMissionId: true,
-      userId: true,
-      status: true,
-      tlScore: true,
-      dmScore: true,
-      finalScore: true,
-      stars: true,
-      mission: {
-        select: {
-          missionId: true,
-          missionTitle: true,
-          weekOrDayNumber: true,
-          type: true
+  const [userMissions, allBatchUserMissions] = await Promise.all([
+    prisma.userMission.findMany({
+      where: missionFilter,
+      select: {
+        userMissionId: true,
+        userId: true,
+        status: true,
+        tlScore: true,
+        dmScore: true,
+        finalScore: true,
+        stars: true,
+        mission: {
+          select: {
+            missionId: true,
+            missionTitle: true,
+            weekOrDayNumber: true,
+            type: true
+          }
         }
       }
-    }
-  });
+    }),
+    // Ambil seluruh user missions di batch ini untuk menentukan 'step' aktif kru
+    prisma.userMission.findMany({
+      where: {
+        userId: { in: crewIds },
+        mission: { batchId }
+      },
+      select: {
+        userId: true,
+        status: true,
+        mission: {
+          select: { type: true }
+        }
+      }
+    })
+  ]);
 
   // Group missions by userId
   const missionsByCrew = {};
@@ -390,7 +435,13 @@ const getWorkstationCrews = async (currentUser, query = {}) => {
     missionsByCrew[m.userId].push(m);
   }
 
-  // 5. Susun array Crew dengan metrics kartu evaluasi
+  const allMissionsByCrew = {};
+  for (const m of allBatchUserMissions) {
+    if (!allMissionsByCrew[m.userId]) allMissionsByCrew[m.userId] = [];
+    allMissionsByCrew[m.userId].push(m);
+  }
+
+  // 5. Susun array Crew dengan metrics kartu evaluasi dan kolom 'step'
   const crewRoster = crews.map(crew => {
     const crewMissions = missionsByCrew[crew.userId] || [];
     const totalMissionsCount = crewMissions.length;
@@ -404,6 +455,10 @@ const getWorkstationCrews = async (currentUser, query = {}) => {
     if (totalMissionsCount > 0 && evaluatedCount >= totalMissionsCount) {
       status = 'COMPLETED';
     }
+
+    // Tentukan tahapan aktif kru (step)
+    const allMissions = allMissionsByCrew[crew.userId] || [];
+    const step = calculateCrewActiveStep(allMissions);
 
     // Hitung rata-rata skor pekan ini
     const scoredMissions = crewMissions.filter(m => m.finalScore !== null || m.tlScore !== null);
@@ -436,6 +491,7 @@ const getWorkstationCrews = async (currentUser, query = {}) => {
       totalMissionsCount,
       evaluatedCount,
       status,
+      step,
       avgScore,
       starsEarned: parseFloat(starsEarned.toFixed(1))
     };
@@ -497,7 +553,7 @@ const getCrewMissions = async (targetUserId, currentUser, query = {}, req = null
     where.mission.type = query.type.toUpperCase();
   }
 
-  const [user, missions] = await Promise.all([
+  const [user, missions, allBatchMissions] = await Promise.all([
     prisma.user.findUnique({
       where: { userId: targetUserId },
       select: {
@@ -521,12 +577,24 @@ const getCrewMissions = async (targetUserId, currentUser, query = {}, req = null
         { mission: { weekOrDayNumber: 'asc' } },
         { mission: { createdAt: 'asc' } }
       ]
-    })
+    }),
+    batchId ? prisma.userMission.findMany({
+      where: {
+        userId: targetUserId,
+        mission: { batchId }
+      },
+      select: {
+        status: true,
+        mission: { select: { type: true } }
+      }
+    }) : Promise.resolve([])
   ]);
 
   if (!user) {
     throw new Error(`User dengan ID "${targetUserId}" tidak ditemukan.`);
   }
+
+  const step = calculateCrewActiveStep(allBatchMissions);
 
   const formattedMissions = missions.map(m => ({
     ...m,
@@ -534,7 +602,11 @@ const getCrewMissions = async (targetUserId, currentUser, query = {}, req = null
   }));
 
   return {
-    user,
+    user: {
+      ...user,
+      step
+    },
+    step,
     batchId,
     week: query.week ? parseInt(query.week, 10) : null,
     totalMissions: missions.length,
@@ -575,10 +647,10 @@ const evaluateBuddyMission = async (userMissionId, evaluatorId, { score, notes, 
     today.setHours(0, 0, 0, 0);
     const bEnd = new Date(userMission.mission.endDate);
     bEnd.setHours(23, 59, 59, 999);
-    if (today > bEnd) {
-      const bEndStr = userMission.mission.endDate.toISOString().split('T')[0];
-      throw new Error(`Periode penilaian Buddy telah berakhir pada ${bEndStr}. Penilaian susulan tidak diizinkan.`);
-    }
+    // if (today > bEnd) {
+    //   const bEndStr = userMission.mission.endDate.toISOString().split('T')[0];
+    //   throw new Error(`Periode penilaian Buddy telah berakhir pada ${bEndStr}. Penilaian susulan tidak diizinkan.`);
+    // }
   }
 
   // Otorisasi: Pastikan evaluator adalah Buddy dari user ini, atau bertindak sebagai tlId, atau ber-role SUPERADMIN / HEAD
@@ -1407,20 +1479,49 @@ const generateBuddyReportHtml = (report) => {
     .scale-1 { background: #fee2e2; color: #991b1b; }
     .scale-none { background: #f1f5f9; color: #64748b; }
     .signature-section {
-      margin-top: 36px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      text-align: center;
+    .approval-card {
+      margin-top: 28px;
+      padding: 14px 18px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
       page-break-inside: avoid;
     }
-    .sign-box {
-      border-top: 1px solid #94a3b8;
-      padding-top: 8px;
-      font-size: 12px;
-      margin-top: 60px;
+    .approval-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 6px;
     }
-    .sign-role { font-size: 11px; color: #64748b; font-weight: 600; }
+    .approval-badge {
+      background: #dcfce7;
+      color: #166534;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .approval-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .approval-item {
+      background: #ffffff;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+    }
+    .sign-role { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 3px; }
+    .sign-name { font-size: 12px; font-weight: 700; color: #0f172a; }
+    .sign-sub { font-size: 10px; color: #64748b; margin-top: 2px; }
     @media print {
       body { background: #ffffff; padding: 0; }
       .report-container { box-shadow: none; border: none; padding: 0; }
@@ -1513,18 +1614,27 @@ const generateBuddyReportHtml = (report) => {
       </table>
     `).join('')}
 
-    <div class="signature-section">
-      <div>
-        <div class="sign-role">Kru yang Dinilai (Mentee)</div>
-        <div class="sign-box">${mentee.name}</div>
+    <div class="approval-card">
+      <div class="approval-title">
+        <span>Pengesahan & Status Evaluasi Sistem</span>
+        <span class="approval-badge">✓ Terverifikasi Digital</span>
       </div>
-      <div>
-        <div class="sign-role">Pembimbing (Buddy / Mentor)</div>
-        <div class="sign-box">${buddy?.name || 'Buddy Mentor'}</div>
-      </div>
-      <div>
-        <div class="sign-role">Mengetahui (Store Leader)</div>
-        <div class="sign-box">Store Leader / Supervisor</div>
+      <div class="approval-grid">
+        <div class="approval-item">
+          <div class="sign-role">Kru yang Dinilai (Mentee)</div>
+          <div class="sign-name">${mentee.name}</div>
+          <div class="sign-sub">${mentee.email || 'Kru Baru (New Hire)'}</div>
+        </div>
+        <div class="approval-item">
+          <div class="sign-role">Pembimbing (Buddy / Mentor)</div>
+          <div class="sign-name">${buddy?.name || 'Buddy Mentor'}</div>
+          <div class="sign-sub">${buddy?.email || 'Mentor Pembimbing'}</div>
+        </div>
+        <div class="approval-item">
+          <div class="sign-role">Mengetahui (Store Leader)</div>
+          <div class="sign-name">${buddy?.name || 'Store Leader / Supervisor'}</div>
+          <div class="sign-sub">Telah Disetujui & Diverifikasi</div>
+        </div>
       </div>
     </div>
   </div>

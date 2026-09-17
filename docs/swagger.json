@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Re.juve Gamification REST API",
-    "description": "Dokumentasi resmi REST API untuk platform Re.juve Gamification Monorepo (Express.js + Prisma + PostgreSQL).\nDilengkapi otentikasi JWT Bearer, dynamic filtering, upload foto bukti evaluasi via MinIO, dan WebSocket real-time events.",
-    "version": "1.0.0",
+    "description": "Dokumentasi RESTful API Lengkap Re.juve Gamification Platform (Authentication, Masters, Batches, Onboarding Journeys, Workstations, Multi-Role Approvals, Active New Recruit Report Traceability 17 Kolom, Flexible Avatar Handling, dan Integrasi Lynx ERP).",
+    "version": "1.5.0",
     "contact": {
       "name": "Re.juve Development Team"
     }
@@ -179,9 +179,34 @@
     {
       "name": "14. Feedback Kru Onboarding",
       "description": "Survei pengalaman kolaborasi & onboarding 1 bulan Re.juve"
+    },
+    {
+      "name": "15. Reports & Traceability",
+      "description": "Laporan Rekapitulasi Insentif Pembimbingan Buddy & Audit Jejak Penugasan Pengguna (Traceability)"
     }
   ],
   "paths": {
+    "/ws-tester": {
+      "get": {
+        "tags": [
+          "0. System & WebSocket Console"
+        ],
+        "summary": "Konsol Pengujian Interaktif WebSocket (Socket.IO Console)",
+        "description": "Menyajikan halaman UI interaktif untuk menguji koneksi Socket.IO, memantau room yang di-join, dan menyimak event live gamifikasi.",
+        "responses": {
+          "200": {
+            "description": "Halaman HTML WebSocket Tester dimuat.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/login": {
       "post": {
         "tags": [
@@ -237,6 +262,314 @@
           },
           "401": {
             "description": "Token tidak valid atau kedaluwarsa."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "1. Authentication"
+        ],
+        "summary": "Update Profil Pengguna Mandiri (Alias /auth/me)",
+        "description": "Alias dari PUT /auth/profile untuk memperbarui data profil akun pengguna login.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Berkas gambar avatar pengguna (.jpg, .jpeg, .png, .webp, maks 2MB)"
+                  },
+                  "avatarUrl": {
+                    "type": "string",
+                    "description": "Alternatif URL string avatar pengguna"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Nama lengkap pengguna"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Nomor telepon / WhatsApp pengguna"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "M",
+                      "F"
+                    ],
+                    "description": "Jenis kelamin (M = Laki-laki, F = Perempuan)"
+                  }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatarUrl": {
+                    "type": "string",
+                    "example": "https://api.dicebear.com/7.x/avataaars/svg?seed=User123"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Barista Hebat"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "081234567890"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "M",
+                      "F"
+                    ],
+                    "example": "M"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profil berhasil diperbarui",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Profil berhasil diperbarui."
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "userId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "phone": {
+                          "type": "string"
+                        },
+                        "gender": {
+                          "type": "string"
+                        },
+                        "avatarUrl": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input tidak valid (misal gender bukan M/F atau format berkas salah)"
+          },
+          "401": {
+            "description": "Akses ditolak / Token autentikasi tidak valid"
+          }
+        }
+      }
+    },
+    "/auth/profile": {
+      "put": {
+        "tags": [
+          "1. Authentication"
+        ],
+        "summary": "Update Profil Pengguna Mandiri (Self-Service)",
+        "description": "Memperbarui informasi profil pengguna yang sedang login (avatar via multipart upload file atau avatarUrl string, nomor telepon, jenis kelamin, dan nama lengkap) tanpa memerlukan privilege Superadmin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Berkas gambar avatar pengguna (.jpg, .jpeg, .png, .webp, maks 2MB)"
+                  },
+                  "avatarUrl": {
+                    "type": "string",
+                    "description": "Alternatif URL string avatar pengguna"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Nama lengkap pengguna"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Nomor telepon / WhatsApp pengguna"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "M",
+                      "F"
+                    ],
+                    "description": "Jenis kelamin (M = Laki-laki, F = Perempuan)"
+                  }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatarUrl": {
+                    "type": "string",
+                    "example": "https://api.dicebear.com/7.x/avataaars/svg?seed=User123"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Barista Hebat"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "081234567890"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "M",
+                      "F"
+                    ],
+                    "example": "M"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profil berhasil diperbarui",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Profil berhasil diperbarui."
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "userId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "phone": {
+                          "type": "string"
+                        },
+                        "gender": {
+                          "type": "string"
+                        },
+                        "avatarUrl": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input tidak valid (misal gender bukan M/F atau format berkas salah)"
+          },
+          "401": {
+            "description": "Akses ditolak / Token autentikasi tidak valid"
+          }
+        }
+      }
+    },
+    "/auth/active-batch": {
+      "patch": {
+        "tags": [
+          "1. Authentication"
+        ],
+        "summary": "Ganti Active Batch Pengguna (SL / DM / Superadmin)",
+        "description": "Menyimpan preferensi batch aktif di database pengguna (kolom activeBatchId). Seluruh endpoint evaluasi otomatis memfilter berdasarkan batch ini.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "batchId"
+                ],
+                "properties": {
+                  "batchId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "d3b07384-d113-40a2-9721-e380e2270929"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Active batch berhasil diupdate."
+          },
+          "400": {
+            "description": "Field batchId wajib diisi."
+          },
+          "404": {
+            "description": "Batch tidak ditemukan."
           }
         }
       }
@@ -510,6 +843,18 @@
               "type": "integer",
               "default": 10
             }
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "M",
+                "F"
+              ]
+            },
+            "description": "Filter jenis kelamin (M atau F)"
           }
         ],
         "responses": {
@@ -522,7 +867,7 @@
         "tags": [
           "3. Master Users"
         ],
-        "summary": "Buat User Baru (Otomatis Disinkronkan ke Lynx Webhook)",
+        "summary": "Buat User Baru (Mendukung Upload File Avatar / URL Avatar, Auto-Sync Lynx)",
         "requestBody": {
           "required": true,
           "content": {
@@ -532,7 +877,6 @@
                 "required": [
                   "name",
                   "email",
-                  "password",
                   "roleId"
                 ],
                 "properties": {
@@ -559,6 +903,85 @@
                   "isActive": {
                     "type": "boolean",
                     "example": true
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "M",
+                      "F"
+                    ],
+                    "example": "M",
+                    "description": "Jenis kelamin: M (Laki-laki) atau F (Perempuan)"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "081234567890",
+                    "description": "Nomor telepon / WhatsApp pengguna"
+                  },
+                  "avatarUrl": {
+                    "type": "string",
+                    "example": "https://images.unsplash.com/...",
+                    "description": "URL foto avatar alternatif (jika tidak upload file)"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "email",
+                  "roleId"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Ahmad Barista Baru"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "ahmad.barista@rejuve.co.id"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Secret123!"
+                  },
+                  "roleId": {
+                    "type": "string",
+                    "example": "45513f00-ed49-4c6a-a0f8-ec8a3842c4dc"
+                  },
+                  "departmentId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "M",
+                      "F"
+                    ],
+                    "example": "M",
+                    "description": "Jenis kelamin: M (Laki-laki) atau F (Perempuan)"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "081234567890",
+                    "description": "Nomor telepon / WhatsApp pengguna"
+                  },
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File gambar avatar pengguna (PNG/JPEG/WEBP maks 5MB) diunggah ke MinIO Storage"
+                  },
+                  "avatarUrl": {
+                    "type": "string",
+                    "example": "https://images.unsplash.com/...",
+                    "description": "URL avatar jika tidak mengirim file"
                   }
                 }
               }
@@ -569,7 +992,8 @@
           "201": {
             "description": "User berhasil dibuat dan disinkronkan ke Lynx."
           }
-        }
+        },
+        "description": "Membuat akun pengguna baru dengan fleksibilitas foto profil avatar (bisa diupload sebagai file gambar atau dikirim berupa string URL). Dilengkapi field phone/WA dan gender ('M'/'F')."
       }
     },
     "/masters/users/{id}": {
@@ -598,7 +1022,7 @@
         "tags": [
           "3. Master Users"
         ],
-        "summary": "Update User by ID (Otomatis Disinkronkan ke Lynx)",
+        "summary": "Update User by ID (Mendukung Upload File Avatar / URL Avatar, Auto-Sync Lynx)",
         "parameters": [
           {
             "name": "id",
@@ -625,8 +1049,78 @@
                   "roleId": {
                     "type": "string"
                   },
+                  "departmentId": {
+                    "type": "string",
+                    "nullable": true
+                  },
                   "isActive": {
                     "type": "boolean"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "M",
+                      "F"
+                    ],
+                    "example": "M",
+                    "description": "Jenis kelamin: M (Laki-laki) atau F (Perempuan)"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "081234567890",
+                    "description": "Nomor telepon / WhatsApp pengguna"
+                  },
+                  "avatarUrl": {
+                    "type": "string",
+                    "example": "https://images.unsplash.com/...",
+                    "description": "URL foto avatar"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "roleId": {
+                    "type": "string"
+                  },
+                  "departmentId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "M",
+                      "F"
+                    ],
+                    "example": "M",
+                    "description": "Jenis kelamin: M (Laki-laki) atau F (Perempuan)"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "081234567890",
+                    "description": "Nomor telepon / WhatsApp pengguna"
+                  },
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File gambar avatar baru (PNG/JPEG/WEBP maks 5MB) diunggah ke MinIO Storage"
+                  },
+                  "avatarUrl": {
+                    "type": "string",
+                    "example": "https://images.unsplash.com/...",
+                    "description": "URL avatar jika tidak mengirim file"
                   }
                 }
               }
@@ -637,7 +1131,8 @@
           "200": {
             "description": "User berhasil diperbarui."
           }
-        }
+        },
+        "description": "Memperbarui data pengguna dengan fleksibilitas foto avatar (file upload multipart atau string URL)."
       },
       "delete": {
         "tags": [
@@ -799,6 +1294,215 @@
         }
       }
     },
+    "/params": {
+      "get": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Daftar Parameter Items",
+        "parameters": [
+          {
+            "name": "paramgroupId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code[contains]",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar params."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Buat Param Item Baru",
+        "description": "Bisa mengisi paramgroupId (UUID) atau paramgroupCode (Kode Group).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "value"
+                ],
+                "properties": {
+                  "paramgroupCode": {
+                    "type": "string",
+                    "example": "EVALUATION_SCALE"
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "SCALE_20"
+                  },
+                  "value": {
+                    "type": "string",
+                    "example": "Kelipatan 20 (Max 5 Bintang)"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Param berhasil dibuat."
+          }
+        }
+      }
+    },
+    "/params/{id}": {
+      "get": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Ambil Detail Parameter Bisnis by ID",
+        "description": "Mengambil informasi lengkap satu parameter bisnis berdasarkan UUID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "UUID parameter bisnis"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail parameter berhasil diambil."
+          },
+          "404": {
+            "description": "Parameter tidak ditemukan."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Perbarui Parameter Bisnis by ID (Superadmin)",
+        "description": "Memperbarui data parameter bisnis (kode, nilai, grup, urutan, status aktif).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "UUID parameter bisnis"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paramgroupId": {
+                    "type": "string",
+                    "example": "d0e82847-f38b-4b2a-a92c-567e91404111"
+                  },
+                  "paramCode": {
+                    "type": "string",
+                    "example": "SCALE_5"
+                  },
+                  "paramValue": {
+                    "type": "string",
+                    "example": "Sangat Baik"
+                  },
+                  "sortOrder": {
+                    "type": "integer",
+                    "example": 5
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Parameter berhasil diperbarui."
+          },
+          "404": {
+            "description": "Parameter tidak ditemukan."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Hapus Parameter Bisnis by ID (Superadmin)",
+        "description": "Menghapus parameter bisnis dari database.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "UUID parameter bisnis"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Parameter berhasil dihapus."
+          },
+          "404": {
+            "description": "Parameter tidak ditemukan."
+          }
+        }
+      }
+    },
+    "/params/group-code/{groupCode}": {
+      "get": {
+        "tags": [
+          "5. Business Parameters"
+        ],
+        "summary": "Ambil Opsi Dropdown Form Berdasarkan Group Code (Bisa Diakses Semua Role)",
+        "parameters": [
+          {
+            "name": "groupCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "EVALUATION_SCALE"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mengembalikan format dictionary { options: { [code]: value } } untuk dropdown frontend."
+          }
+        }
+      }
+    },
     "/params/groups": {
       "get": {
         "tags": [
@@ -944,103 +1648,6 @@
         }
       }
     },
-    "/params": {
-      "get": {
-        "tags": [
-          "5. Business Parameters"
-        ],
-        "summary": "Daftar Parameter Items",
-        "parameters": [
-          {
-            "name": "paramgroupId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "code[contains]",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Daftar params."
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "5. Business Parameters"
-        ],
-        "summary": "Buat Param Item Baru",
-        "description": "Bisa mengisi paramgroupId (UUID) atau paramgroupCode (Kode Group).",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "code",
-                  "value"
-                ],
-                "properties": {
-                  "paramgroupCode": {
-                    "type": "string",
-                    "example": "EVALUATION_SCALE"
-                  },
-                  "code": {
-                    "type": "string",
-                    "example": "SCALE_20"
-                  },
-                  "value": {
-                    "type": "string",
-                    "example": "Kelipatan 20 (Max 5 Bintang)"
-                  },
-                  "isActive": {
-                    "type": "boolean",
-                    "example": true
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Param berhasil dibuat."
-          }
-        }
-      }
-    },
-    "/params/group-code/{groupCode}": {
-      "get": {
-        "tags": [
-          "5. Business Parameters"
-        ],
-        "summary": "Ambil Opsi Dropdown Form Berdasarkan Group Code (Bisa Diakses Semua Role)",
-        "parameters": [
-          {
-            "name": "groupCode",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "EVALUATION_SCALE"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Mengembalikan format dictionary { options: { [code]: value } } untuk dropdown frontend."
-          }
-        }
-      }
-    },
     "/admin/settings": {
       "get": {
         "tags": [
@@ -1089,6 +1696,88 @@
         "responses": {
           "201": {
             "description": "Setting berhasil dibuat."
+          }
+        }
+      }
+    },
+    "/admin/settings/{id}": {
+      "get": {
+        "tags": [
+          "6. Administration"
+        ],
+        "summary": "Ambil Detail Pengaturan Berdasarkan ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sukses"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "6. Administration"
+        ],
+        "summary": "Perbarui Pengaturan Berdasarkan ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "settingValue": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sukses"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "6. Administration"
+        ],
+        "summary": "Hapus Pengaturan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sukses"
           }
         }
       }
@@ -1163,6 +1852,135 @@
         "responses": {
           "201": {
             "description": "Policy berhasil dibuat."
+          }
+        }
+      }
+    },
+    "/admin/user-policies/{id}": {
+      "get": {
+        "tags": [
+          "6. Administration"
+        ],
+        "summary": "Ambil Detail Kebijakan Pengguna Berdasarkan ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sukses"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "6. Administration"
+        ],
+        "summary": "Perbarui Kebijakan Pengguna",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "policyValue": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sukses"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "6. Administration"
+        ],
+        "summary": "Hapus Kebijakan Pengguna",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sukses"
+          }
+        }
+      }
+    },
+    "/api-logs": {
+      "get": {
+        "tags": [
+          "6. Administration"
+        ],
+        "summary": "Ambil Riwayat Log API",
+        "description": "Melihat riwayat pencatatan log transaksi API sistem.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Pencarian endpoint, IP, atau pesan"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Riwayat log API berhasil diambil.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1609,663 +2427,6 @@
         }
       }
     },
-    "/batches/{id}/generate": {
-      "post": {
-        "tags": [
-          "8. Batch Generator"
-        ],
-        "summary": "Generate Misi Batch dari DRAFT ke OPEN",
-        "description": "Membaca template, menghitung timeline tanggal sekuensial, membuat penugasan misi crew (UserMission), dan mengubah status batch menjadi OPEN.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Misi batch berhasil di-generate."
-          }
-        }
-      }
-    },
-    "/evaluations/user-missions": {
-      "get": {
-        "tags": [
-          "9. Evaluations"
-        ],
-        "summary": "Daftar Penugasan Misi (User Missions) untuk Evaluasi",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Filter ID Crew"
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "LOCKED",
-                "ACTIVE",
-                "SCORED_BY_TL",
-                "REVISED_BY_DM",
-                "APPROVED_BY_DM",
-                "COMPLETED"
-              ]
-            }
-          },
-          {
-            "name": "mission.type",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "BUDDY",
-                "JOURNEY",
-                "FEEDBACK"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Daftar user missions."
-          }
-        }
-      }
-    },
-    "/evaluations/user-missions/{id}": {
-      "get": {
-        "tags": [
-          "9. Evaluations"
-        ],
-        "summary": "Detail Penugasan Misi by ID",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Detail user mission."
-          }
-        }
-      }
-    },
-    "/evaluations/user-missions/{id}/buddy-score": {
-      "post": {
-        "tags": [
-          "9. Evaluations"
-        ],
-        "summary": "Penilaian Misi Buddy (Buddy -> Langsung COMPLETED & Auto-unlock Journey W1)",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "score"
-                ],
-                "properties": {
-                  "score": {
-                    "type": "number",
-                    "example": 85
-                  },
-                  "notes": {
-                    "type": "string",
-                    "example": "Orientasi kebersihan dan bar berjalan sangat baik."
-                  },
-                  "evidenceUrl": {
-                    "type": "string",
-                    "nullable": true
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Misi Buddy selesai dinilai."
-          }
-        }
-      }
-    },
-    "/evaluations/user-missions/{id}/sl-score": {
-      "post": {
-        "tags": [
-          "9. Evaluations"
-        ],
-        "summary": "Penilaian Misi Journey oleh Store Leader (+ Upload Foto MinIO)",
-        "description": "Mendukung multipart/form-data (upload file foto bukti langsung ke MinIO) atau JSON standar.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "score"
-                ],
-                "properties": {
-                  "score": {
-                    "type": "number",
-                    "example": 95
-                  },
-                  "notes": {
-                    "type": "string",
-                    "example": "Sanitasi bar dan mesin cold press sangat bersih."
-                  },
-                  "evidence": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "File gambar bukti foto (JPEG, PNG, WEBP)"
-                  }
-                }
-              }
-            },
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "score"
-                ],
-                "properties": {
-                  "score": {
-                    "type": "number",
-                    "example": 90
-                  },
-                  "notes": {
-                    "type": "string",
-                    "example": "Pembersihan bar sesuai SOP."
-                  },
-                  "evidenceUrl": {
-                    "type": "string",
-                    "example": "http://minio.local/evidence/w1.jpg"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Penilaian Store Leader disimpan (SCORED_BY_TL)."
-          }
-        }
-      }
-    },
-    "/evaluations/user-missions/{id}/dm-review": {
-      "post": {
-        "tags": [
-          "9. Evaluations"
-        ],
-        "summary": "Review Misi Journey oleh District Manager (APPROVE / REVISE / REJECT)",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "action"
-                ],
-                "properties": {
-                  "action": {
-                    "type": "string",
-                    "enum": [
-                      "APPROVE",
-                      "REVISE",
-                      "REJECT"
-                    ],
-                    "example": "APPROVE"
-                  },
-                  "score": {
-                    "type": "number",
-                    "description": "Wajib jika action APPROVE",
-                    "example": 90
-                  },
-                  "notes": {
-                    "type": "string",
-                    "description": "Wajib jika action REVISE",
-                    "example": "Luar biasa, disetujui."
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Review DM berhasil diproses."
-          }
-        }
-      }
-    },
-    "/evaluations/user-missions/{id}/crew-feedback": {
-      "post": {
-        "tags": [
-          "9. Evaluations"
-        ],
-        "summary": "Pengisian Feedback Onboarding oleh Crew",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "submissionNotes"
-                ],
-                "properties": {
-                  "submissionNotes": {
-                    "type": "string",
-                    "example": "Pengalaman onboarding Re.juve sangat menyenangkan dan terstruktur!"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Feedback berhasil dikirim (COMPLETED)."
-          }
-        }
-      }
-    },
-    "/sync/departments/pull-all": {
-      "post": {
-        "tags": [
-          "10. Lynx Sync"
-        ],
-        "summary": "Tarik Seluruh Toko / Departemen dari Lynx (Soft Deactivate Missing)",
-        "responses": {
-          "200": {
-            "description": "Berhasil pull dan sync departemen."
-          }
-        }
-      }
-    },
-    "/sync/users/pull-all": {
-      "post": {
-        "tags": [
-          "10. Lynx Sync"
-        ],
-        "summary": "Tarik Seluruh Pengguna dari Lynx (Auto-map Role UUID & Department)",
-        "responses": {
-          "200": {
-            "description": "Berhasil pull dan sync pengguna."
-          }
-        }
-      }
-    },
-    "/auth/active-batch": {
-      "patch": {
-        "tags": [
-          "1. Authentication"
-        ],
-        "summary": "Ganti Active Batch Pengguna (SL / DM / Superadmin)",
-        "description": "Menyimpan preferensi batch aktif di database pengguna (kolom activeBatchId). Seluruh endpoint evaluasi otomatis memfilter berdasarkan batch ini.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "batchId"
-                ],
-                "properties": {
-                  "batchId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "example": "d3b07384-d113-40a2-9721-e380e2270929"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Active batch berhasil diupdate."
-          },
-          "400": {
-            "description": "Field batchId wajib diisi."
-          },
-          "404": {
-            "description": "Batch tidak ditemukan."
-          }
-        }
-      }
-    },
-    "/evaluations/crews": {
-      "get": {
-        "tags": [
-          "9. Evaluations"
-        ],
-        "summary": "Daftar Crew Gerai untuk Workstation Evaluasi (Sidebar)",
-        "description": "Mengembalikan daftar seluruh kru di gerai Store Leader / District Manager lengkap dengan indikator status (NEEDS_SCORING / COMPLETED), jumlah misi terisi, dan rata-rata skor pekan ini.",
-        "parameters": [
-          {
-            "name": "batchId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "Batch UUID opsional (otomatis fallback ke activeBatchId pengguna)"
-          },
-          {
-            "name": "week",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 1
-            },
-            "description": "Pekan evaluasi (1, 2, 3)"
-          },
-          {
-            "name": "type",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "JOURNEY",
-                "BUDDY",
-                "FEEDBACK"
-              ],
-              "default": "JOURNEY"
-            },
-            "description": "Tipe misi"
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Pencarian bebas nama atau email kru"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Daftar kru workstation berhasil diambil."
-          }
-        }
-      }
-    },
-    "/evaluations/crews/{userId}/missions": {
-      "get": {
-        "tags": [
-          "9. Evaluations"
-        ],
-        "summary": "Daftar Kartu Misi untuk Kru Tertentu (Saat Card Diklik)",
-        "description": "Mengembalikan seluruh kartu misi untuk kru tersebut pada batch & week aktif lengkap dengan status, nilai SL, review DM, evidence foto, dan kalkulasi bintang desimal.",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "UUID Kru yang dipilih"
-          },
-          {
-            "name": "batchId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "Batch UUID opsional"
-          },
-          {
-            "name": "week",
-            "in": "query",
-            "schema": {
-              "type": "integer"
-            },
-            "description": "Pekan misi (1, 2, 3)"
-          },
-          {
-            "name": "type",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "JOURNEY",
-                "BUDDY",
-                "FEEDBACK"
-              ]
-            },
-            "description": "Tipe misi opsional"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Daftar misi kru berhasil diambil."
-          },
-          "404": {
-            "description": "User tidak ditemukan."
-          }
-        }
-      }
-    },
-    "/masters/users/template": {
-      "get": {
-        "tags": [
-          "4. Master Users & Bulking"
-        ],
-        "summary": "Download Template Excel Import User (.xlsx)",
-        "description": "Menghasilkan dan mengunduh file binary spreadsheet Excel template impor akun pengguna beserta contoh data.",
-        "responses": {
-          "200": {
-            "description": "File spreadsheet template berhasil diunduh.",
-            "content": {
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/masters/users/bulk-preview": {
-      "post": {
-        "tags": [
-          "4. Master Users & Bulking"
-        ],
-        "summary": "Preview Validasi Bulk User Import (Dry Run)",
-        "description": "Membaca dan memvalidasi file Excel/CSV user secara dry-run (tanpa mutasi database). Menghasilkan laporan baris valid, duplikat, dan invalid dengan pesan error detail.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "file"
-                ],
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "File spreadsheet (.xlsx / .xls / .csv)"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Preview data import berhasil diproses."
-          }
-        }
-      }
-    },
-    "/masters/users/bulk-commit": {
-      "post": {
-        "tags": [
-          "4. Master Users & Bulking"
-        ],
-        "summary": "Commit Bulk Users ke Database",
-        "description": "Menyimpan daftar akun pengguna yang sudah divalidasi ke database dengan password awal \"password123\". Mendukung opsi onDuplicate: SKIP atau UPDATE.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "users"
-                ],
-                "properties": {
-                  "onDuplicate": {
-                    "type": "string",
-                    "enum": [
-                      "SKIP",
-                      "UPDATE"
-                    ],
-                    "default": "SKIP"
-                  },
-                  "users": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "required": [
-                        "name",
-                        "email"
-                      ],
-                      "properties": {
-                        "name": {
-                          "type": "string",
-                          "example": "Budi Santoso"
-                        },
-                        "email": {
-                          "type": "string",
-                          "example": "budi.santoso@rejuve.co.id"
-                        },
-                        "roleCode": {
-                          "type": "string",
-                          "example": "CREW"
-                        },
-                        "departmentCode": {
-                          "type": "string",
-                          "example": "BKI_01"
-                        },
-                        "isBuddy": {
-                          "type": "boolean",
-                          "example": false
-                        },
-                        "buddyEmail": {
-                          "type": "string",
-                          "example": null
-                        },
-                        "batchCode": {
-                          "type": "string",
-                          "example": null
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "example": {
-                "onDuplicate": "SKIP",
-                "users": [
-                  {
-                    "name": "Budi Santoso",
-                    "email": "budi.santoso@rejuve.co.id",
-                    "roleCode": "CREW",
-                    "departmentCode": "BKI_01",
-                    "isBuddy": false,
-                    "buddyEmail": null,
-                    "batchCode": null
-                  },
-                  {
-                    "name": "Anita Wijaya",
-                    "email": "anita.wijaya@rejuve.co.id",
-                    "roleCode": "STORE_LEADER",
-                    "departmentCode": "BKI_01",
-                    "isBuddy": true,
-                    "buddyEmail": null,
-                    "batchCode": null
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "User massal berhasil diimpor."
-          }
-        }
-      }
-    },
     "/batches/{batchId}/details/{batchDetailId}/toggle-lock": {
       "patch": {
         "tags": [
@@ -2326,114 +2487,171 @@
         }
       }
     },
-    "/dashboard/summary": {
+    "/batches/{id}": {
       "get": {
         "tags": [
-          "11. Dashboard & Analytics"
+          "8. Batch Generator"
         ],
-        "summary": "Ringkasan metrik dashboard multi-role",
-        "description": "Mengembalikan metrik dashboard terkini untuk Crew, Store Leader, District Manager, atau Superadmin.",
+        "summary": "Ambil Detail Batch Berdasarkan ID",
         "parameters": [
           {
-            "name": "batchId",
-            "in": "query",
-            "required": false,
+            "name": "id",
+            "in": "path",
+            "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+              "type": "string"
+            },
+            "description": "UUID Batch"
           }
         ],
         "responses": {
           "200": {
-            "description": "Ringkasan dashboard berhasil diambil.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardResponse"
+            "description": "Detail batch berhasil diambil."
+          },
+          "404": {
+            "description": "Batch tidak ditemukan."
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "8. Batch Generator"
+        ],
+        "summary": "Perbarui Detail Batch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "UUID Batch"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Batch Onboarding September"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "OPEN",
+                      "ONGOING",
+                      "COMPLETED",
+                      "CANCELLED"
+                    ],
+                    "example": "OPEN"
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
                 }
               }
             }
           }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch berhasil diperbarui."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "8. Batch Generator"
+        ],
+        "summary": "Hapus Batch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "UUID Batch"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Batch berhasil dihapus."
+          }
         }
       }
     },
-    "/gamification/leaderboard": {
-      "get": {
+    "/batches/{id}/generate": {
+      "post": {
         "tags": [
-          "12. Gamification & Leaderboard"
+          "8. Batch Generator"
         ],
-        "summary": "Klasemen leaderboard kru batch & toko",
-        "description": "Mengembalikan Top 3 Podium, tabel peringkat kru terpaginasi, dan posisi rank user yang login.",
+        "summary": "Generate Misi Batch dari DRAFT ke OPEN",
+        "description": "Membaca template, menghitung timeline tanggal sekuensial, membuat penugasan misi crew (UserMission), dan mengubah status batch menjadi OPEN.",
         "parameters": [
           {
-            "name": "batchId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "departmentId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "departmentId[equals]",
-            "in": "query",
-            "required": false,
+            "name": "id",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "stars[gte]",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 1
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 10
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Leaderboard berhasil diambil.",
+            "description": "Misi batch berhasil di-generate."
+          }
+        }
+      }
+    },
+    "/batches/next-code": {
+      "get": {
+        "tags": [
+          "8. Batch Generator"
+        ],
+        "summary": "Preview Nomor Kode Batch Berikutnya",
+        "description": "Menghasilkan format penomoran otomatis batch berikutnya dengan format BTH-MM-YYYY-NNN.",
+        "responses": {
+          "200": {
+            "description": "Kode batch berikutnya berhasil di-generate.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Kode batch berikutnya berhasil diambil"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "nextCode": {
+                          "type": "string",
+                          "example": "BTH-09-2026-001"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -2593,20 +2811,651 @@
         }
       }
     },
-    "/ws-tester": {
+    "/evaluations/crews": {
       "get": {
         "tags": [
-          "0. System & WebSocket Console"
+          "9. Evaluations"
         ],
-        "summary": "Konsol Pengujian Interaktif WebSocket (Socket.IO Console)",
-        "description": "Menyajikan halaman UI interaktif untuk menguji koneksi Socket.IO, memantau room yang di-join, dan menyimak event live gamifikasi.",
+        "summary": "Daftar Crew Gerai untuk Workstation Evaluasi (Sidebar)",
+        "description": "Mengembalikan daftar seluruh kru di gerai Store Leader / District Manager lengkap dengan indikator status evaluasi kartu (NEEDS_SCORING / COMPLETED), indikator tahapan aktif onboarding program kru (step: BUDDY / JOURNEY / FEEDBACK / COMPLETED), jumlah misi terisi, dan rata-rata skor pekan ini.",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Batch UUID opsional (otomatis fallback ke activeBatchId pengguna)"
+          },
+          {
+            "name": "week",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Pekan evaluasi (1, 2, 3)"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "JOURNEY",
+                "BUDDY",
+                "FEEDBACK"
+              ],
+              "default": "JOURNEY"
+            },
+            "description": "Tipe misi"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Pencarian bebas nama atau email kru"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Halaman HTML WebSocket Tester dimuat.",
+            "description": "Daftar kru workstation berhasil diambil."
+          }
+        }
+      }
+    },
+    "/evaluations/crews/{userId}/missions": {
+      "get": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Daftar Kartu Misi untuk Kru Tertentu (Saat Card Diklik)",
+        "description": "Mengembalikan seluruh kartu misi untuk kru tersebut pada batch & week aktif lengkap dengan status, tahapan aktif onboarding program kru (step: BUDDY / JOURNEY / FEEDBACK / COMPLETED pada objek user dan root), nilai SL, review DM, evidence foto, dan kalkulasi bintang desimal.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID Kru yang dipilih"
+          },
+          {
+            "name": "batchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Batch UUID opsional"
+          },
+          {
+            "name": "week",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Pekan misi (1, 2, 3)"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "JOURNEY",
+                "BUDDY",
+                "FEEDBACK"
+              ]
+            },
+            "description": "Tipe misi opsional"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar misi kru berhasil diambil."
+          },
+          "404": {
+            "description": "User tidak ditemukan."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions": {
+      "get": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Daftar Penugasan Misi (User Missions) untuk Evaluasi",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter ID Crew"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LOCKED",
+                "ACTIVE",
+                "SCORED_BY_TL",
+                "REVISED_BY_DM",
+                "APPROVED_BY_DM",
+                "COMPLETED"
+              ]
+            }
+          },
+          {
+            "name": "mission.type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BUDDY",
+                "JOURNEY",
+                "FEEDBACK"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar user missions."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions/{id}": {
+      "get": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Detail Penugasan Misi by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail user mission."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions/{id}/buddy-score": {
+      "post": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Penilaian Misi Buddy (Buddy -> Langsung COMPLETED & Auto-unlock Journey W1)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "score"
+                ],
+                "properties": {
+                  "score": {
+                    "type": "number",
+                    "example": 85
+                  },
+                  "notes": {
+                    "type": "string",
+                    "example": "Orientasi kebersihan dan bar berjalan sangat baik."
+                  },
+                  "evidenceUrl": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Misi Buddy selesai dinilai."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions/{id}/crew-feedback": {
+      "post": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Pengisian Feedback Onboarding oleh Crew",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "submissionNotes"
+                ],
+                "properties": {
+                  "submissionNotes": {
+                    "type": "string",
+                    "example": "Pengalaman onboarding Re.juve sangat menyenangkan dan terstruktur!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feedback berhasil dikirim (COMPLETED)."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions/{id}/dm-review": {
+      "post": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Review Misi Journey oleh District Manager (APPROVE / REVISE / REJECT)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "APPROVE",
+                      "REVISE",
+                      "REJECT"
+                    ],
+                    "example": "APPROVE"
+                  },
+                  "score": {
+                    "type": "number",
+                    "description": "Wajib jika action APPROVE",
+                    "example": 90
+                  },
+                  "notes": {
+                    "type": "string",
+                    "description": "Wajib jika action REVISE",
+                    "example": "Luar biasa, disetujui."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Review DM berhasil diproses."
+          }
+        }
+      }
+    },
+    "/evaluations/user-missions/{id}/sl-score": {
+      "post": {
+        "tags": [
+          "9. Evaluations"
+        ],
+        "summary": "Penilaian Misi Journey oleh Store Leader (+ Upload Foto MinIO)",
+        "description": "Mendukung multipart/form-data (upload file foto bukti langsung ke MinIO) atau JSON standar.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "score"
+                ],
+                "properties": {
+                  "score": {
+                    "type": "number",
+                    "example": 95
+                  },
+                  "notes": {
+                    "type": "string",
+                    "example": "Sanitasi bar dan mesin cold press sangat bersih."
+                  },
+                  "evidence": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File gambar bukti foto (JPEG, PNG, WEBP)"
+                  }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "score"
+                ],
+                "properties": {
+                  "score": {
+                    "type": "number",
+                    "example": 90
+                  },
+                  "notes": {
+                    "type": "string",
+                    "example": "Pembersihan bar sesuai SOP."
+                  },
+                  "evidenceUrl": {
+                    "type": "string",
+                    "example": "http://minio.local/evidence/w1.jpg"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Penilaian Store Leader disimpan (SCORED_BY_TL)."
+          }
+        }
+      }
+    },
+    "/sync/departments": {
+      "post": {
+        "tags": [
+          "10. Lynx Sync"
+        ],
+        "summary": "Webhook Masuk: Push Sinkronisasi Departemen dari Lynx ERP",
+        "description": "Endpoint webhook yang menerima array data departemen/toko dari Lynx ERP untuk dibuat atau diperbarui (upsert) ke database Gamifikasi.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "departmentCode": {
+                      "type": "string",
+                      "example": "BKI01"
+                    },
+                    "departmentName": {
+                      "type": "string",
+                      "example": "Rejuve Mall BKI"
+                    },
+                    "regionCode": {
+                      "type": "string",
+                      "example": "JKT"
+                    },
+                    "isActive": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Data departemen berhasil disinkronkan."
+          },
+          "400": {
+            "description": "Format payload tidak valid."
+          }
+        }
+      }
+    },
+    "/sync/departments/pull-all": {
+      "post": {
+        "tags": [
+          "10. Lynx Sync"
+        ],
+        "summary": "Tarik Seluruh Toko / Departemen dari Lynx (Soft Deactivate Missing)",
+        "responses": {
+          "200": {
+            "description": "Berhasil pull dan sync departemen."
+          }
+        }
+      }
+    },
+    "/sync/users": {
+      "post": {
+        "tags": [
+          "10. Lynx Sync"
+        ],
+        "summary": "Webhook Masuk: Push Sinkronisasi Pengguna dari Lynx ERP",
+        "description": "Endpoint webhook yang menerima array data pengguna/karyawan dari Lynx ERP untuk dibuat atau diperbarui (upsert) ke database Gamifikasi.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "Budi Santoso"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "budi.santoso@rejuve.co.id"
+                    },
+                    "roleCode": {
+                      "type": "string",
+                      "example": "CREW"
+                    },
+                    "departmentCode": {
+                      "type": "string",
+                      "example": "BKI01"
+                    },
+                    "isActive": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Data user berhasil disinkronkan."
+          },
+          "400": {
+            "description": "Format payload tidak valid."
+          }
+        }
+      }
+    },
+    "/sync/users/pull-all": {
+      "post": {
+        "tags": [
+          "10. Lynx Sync"
+        ],
+        "summary": "Tarik Seluruh Pengguna dari Lynx (Auto-map Role UUID & Department)",
+        "responses": {
+          "200": {
+            "description": "Berhasil pull dan sync pengguna."
+          }
+        }
+      }
+    },
+    "/dashboard/summary": {
+      "get": {
+        "tags": [
+          "11. Dashboard & Analytics"
+        ],
+        "summary": "Ringkasan metrik dashboard multi-role",
+        "description": "Mengembalikan metrik dashboard terkini untuk Crew, Store Leader, District Manager, atau Superadmin.",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ringkasan dashboard berhasil diambil.",
             "content": {
-              "text/html": {
+              "application/json": {
                 "schema": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/StandardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gamification/leaderboard": {
+      "get": {
+        "tags": [
+          "12. Gamification & Leaderboard"
+        ],
+        "summary": "Klasemen leaderboard kru batch & toko",
+        "description": "Mengembalikan Top 3 Podium, tabel peringkat kru terpaginasi, dan posisi rank user yang login.",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "departmentId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "departmentId[equals]",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stars[gte]",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Leaderboard berhasil diambil.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
                 }
               }
             }
@@ -2655,25 +3504,6 @@
         "responses": {
           "200": {
             "description": "Daftar notifikasi berhasil diambil."
-          }
-        }
-      }
-    },
-    "/notifications/unread-count": {
-      "get": {
-        "tags": [
-          "13. Notifications"
-        ],
-        "summary": "Menghitung total notifikasi yang belum dibaca",
-        "description": "Digunakan oleh icon lonceng pada header frontend untuk menampilkan badge merah counter notifikasi.",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Jumlah unread count berhasil diperoleh."
           }
         }
       }
@@ -2727,13 +3557,13 @@
         }
       }
     },
-    "/feedback/questions": {
+    "/notifications/unread-count": {
       "get": {
         "tags": [
-          "14. Feedback Kru Onboarding"
+          "13. Notifications"
         ],
-        "summary": "Daftar 17 butir pertanyaan survei onboarding kru",
-        "description": "Mengambil 16 butir pertanyaan evaluasi skala rating 0-10 dan 1 pertanyaan esai terbuka.",
+        "summary": "Menghitung total notifikasi yang belum dibaca",
+        "description": "Digunakan oleh icon lonceng pada header frontend untuk menampilkan badge merah counter notifikasi.",
         "security": [
           {
             "bearerAuth": []
@@ -2741,7 +3571,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Daftar pertanyaan survei berhasil diambil."
+            "description": "Jumlah unread count berhasil diperoleh."
           }
         }
       }
@@ -2761,6 +3591,25 @@
         "responses": {
           "200": {
             "description": "Data feedback kru berhasil diambil."
+          }
+        }
+      }
+    },
+    "/feedback/questions": {
+      "get": {
+        "tags": [
+          "14. Feedback Kru Onboarding"
+        ],
+        "summary": "Daftar 17 butir pertanyaan survei onboarding kru",
+        "description": "Mengambil 16 butir pertanyaan evaluasi skala rating 0-10 dan 1 pertanyaan esai terbuka.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar pertanyaan survei berhasil diambil."
           }
         }
       }
@@ -2905,6 +3754,975 @@
         "responses": {
           "200": {
             "description": "Detail feedback berhasil ditemukan."
+          }
+        }
+      }
+    },
+    "/reports/buddy-incentive": {
+      "get": {
+        "tags": [
+          "15. Reports & Traceability"
+        ],
+        "summary": "Laporan Rekapitulasi Insentif Pembimbingan Buddy",
+        "description": "Menghasilkan rekapitulasi data pembimbingan mentor buddy untuk keperluan dasar insentif HR. Kriteria kelayakan insentif didasarkan pada volume/jumlah mentee kru baru yang tuntas dinilai 100% (seluruh indikator pre-batch selesai dinilai).",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Pencarian nama atau email mentor buddy"
+          },
+          {
+            "name": "departmentId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter ID gerai atau departemen mentor buddy"
+          },
+          {
+            "name": "batchId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter ID batch mentee"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Nomor halaman pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "Batas jumlah baris per halaman"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Laporan insentif buddy berhasil diambil.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Laporan insentif buddy berhasil diambil."
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "summary": {
+                          "type": "object",
+                          "properties": {
+                            "totalBuddies": {
+                              "type": "integer",
+                              "example": 5
+                            },
+                            "totalMenteesAssigned": {
+                              "type": "integer",
+                              "example": 12
+                            },
+                            "totalMenteesCompleted": {
+                              "type": "integer",
+                              "example": 8
+                            },
+                            "totalMenteesInProgress": {
+                              "type": "integer",
+                              "example": 4
+                            },
+                            "eligibleBuddiesCount": {
+                              "type": "integer",
+                              "example": 4
+                            }
+                          }
+                        },
+                        "buddies": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "buddyId": {
+                                "type": "string",
+                                "example": "8424f72e-4fcf-4a09-9564-ef485b8a387c"
+                              },
+                              "buddyName": {
+                                "type": "string",
+                                "example": "Store Leader 4 (AGR1) [Buddy]"
+                              },
+                              "buddyEmail": {
+                                "type": "string",
+                                "example": "sl4@magnatech.co.id"
+                              },
+                              "departmentName": {
+                                "type": "string",
+                                "example": "Agora Mall"
+                              },
+                              "departmentCode": {
+                                "type": "string",
+                                "example": "AGR1"
+                              },
+                              "completedCount": {
+                                "type": "integer",
+                                "example": 2
+                              },
+                              "inProgressCount": {
+                                "type": "integer",
+                                "example": 0
+                              },
+                              "totalAssigned": {
+                                "type": "integer",
+                                "example": 2
+                              },
+                              "avgScoreGiven": {
+                                "type": "number",
+                                "example": 88.5
+                              },
+                              "isEligibleForIncentive": {
+                                "type": "boolean",
+                                "example": true
+                              },
+                              "incentiveUnits": {
+                                "type": "integer",
+                                "example": 2
+                              },
+                              "mentees": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "menteeId": {
+                                      "type": "string"
+                                    },
+                                    "menteeName": {
+                                      "type": "string"
+                                    },
+                                    "menteeEmail": {
+                                      "type": "string"
+                                    },
+                                    "batchCode": {
+                                      "type": "string"
+                                    },
+                                    "status": {
+                                      "type": "string"
+                                    },
+                                    "isCompleted": {
+                                      "type": "boolean"
+                                    },
+                                    "totalIndicators": {
+                                      "type": "integer"
+                                    },
+                                    "evaluatedCount": {
+                                      "type": "integer"
+                                    },
+                                    "avgScore": {
+                                      "type": "number"
+                                    },
+                                    "completedAt": {
+                                      "type": "string",
+                                      "nullable": true
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "example": 5
+                            },
+                            "page": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "limit": {
+                              "type": "integer",
+                              "example": 10
+                            },
+                            "totalPages": {
+                              "type": "integer",
+                              "example": 1
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — Token JWT tidak valid."
+          }
+        }
+      }
+    },
+    "/reports/buddy-incentive/{userId}": {
+      "get": {
+        "tags": [
+          "15. Reports & Traceability"
+        ],
+        "summary": "Detail Laporan Insentif Pembimbingan Buddy by User ID",
+        "description": "Mengambil profil Store Leader/Buddy, metrik ringkasan bimbingan (total ditugaskan, selesai, in-progress, rata-rata skor), status kelayakan insentif, dan daftar seluruh mentee yang dibimbing pada fase 3 hari Pre-Batch.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "UUID pengguna Store Leader / Buddy"
+          },
+          {
+            "name": "batchId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter opsional berdasarkan UUID batch penugasan"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail insentif buddy berhasil diambil.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Detail insentif buddy berhasil diambil."
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "buddy": {
+                          "type": "object",
+                          "properties": {
+                            "userId": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "phone": {
+                              "type": "string"
+                            },
+                            "gender": {
+                              "type": "string"
+                            },
+                            "avatarUrl": {
+                              "type": "string"
+                            },
+                            "departmentCode": {
+                              "type": "string"
+                            },
+                            "departmentName": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "metrics": {
+                          "type": "object",
+                          "properties": {
+                            "totalAssigned": {
+                              "type": "integer",
+                              "example": 5
+                            },
+                            "completedCount": {
+                              "type": "integer",
+                              "example": 4
+                            },
+                            "inProgressCount": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "avgScoreGiven": {
+                              "type": "number",
+                              "example": 88.5
+                            },
+                            "isEligibleForIncentive": {
+                              "type": "boolean",
+                              "example": true
+                            },
+                            "incentiveStatus": {
+                              "type": "string",
+                              "example": "ELIGIBLE"
+                            }
+                          }
+                        },
+                        "mentees": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data pengguna/buddy tidak ditemukan."
+          }
+        }
+      }
+    },
+    "/reports/buddy-incentive/export": {
+      "get": {
+        "tags": [
+          "15. Reports & Traceability"
+        ],
+        "summary": "Ekspor Spreadsheet Rekapitulasi Insentif Buddy (.xlsx)",
+        "description": "Mengunduh rekapitulasi data insentif pembimbingan buddy dan rincian mentee ke format Excel (.xlsx) 2 sheet (Rekap Insentif Buddy & Rincian Mentee Kru Baru).",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter pencarian nama atau email buddy"
+          },
+          {
+            "name": "departmentId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter ID gerai opsional"
+          },
+          {
+            "name": "batchId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter ID batch mentee opsional"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File Excel laporan insentif berhasil diunduh.",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — Token JWT tidak valid."
+          }
+        }
+      }
+    },
+    "/reports/buddy-incentive/{userId}/export": {
+      "get": {
+        "tags": [
+          "15. Reports & Traceability"
+        ],
+        "summary": "Ekspor Spreadsheet Excel Riwayat Insentif 1 Buddy Terpilih",
+        "description": "Mengunduh file Excel (.xlsx) yang terdiri dari 2 lembar kerja (Lembar 1: Kartu Profil & Metrik Bimbingan Buddy, Lembar 2: Daftar Rincian Seluruh Mentee) khusus untuk 1 Store Leader/Buddy yang ditentukan oleh userId.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "User ID milik Store Leader / Buddy"
+          },
+          {
+            "name": "batchId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter opsional spesifik batch tertentu"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berkas spreadsheet Excel (.xlsx) berhasil di-generate",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Tidak terautentikasi"
+          },
+          "404": {
+            "description": "Data Buddy dengan ID tersebut tidak ditemukan"
+          }
+        }
+      }
+    },
+    "/reports/user-traceability": {
+      "get": {
+        "tags": [
+          "15. Reports & Traceability"
+        ],
+        "summary": "Daftar Audit Traceability Pengguna (Active New Recruit Report)",
+        "description": "Laporan komprehensif 17 kolom spesifikasi Active new Recruit Report: ID, Batch, Name, Gender, Phone/WA, Email, Buddy SL, Buddy Store Code, Assignment SL, Assignment Store Code, Buddy Status, Week 1-3 Status, Lapsing Approval Days DM, Score Bintang, dan Score Point.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Pencarian nama atau email pengguna"
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter kode role (CREW, STORE_LEADER, DISTRICT_MANAGER, dll)"
+          },
+          {
+            "name": "departmentId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter ID gerai aktif"
+          },
+          {
+            "name": "batchId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter ID batch aktif"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Nomor halaman pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "Batas baris per halaman"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar audit traceability pengguna berhasil diambil.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — Token JWT tidak valid."
+          }
+        }
+      }
+    },
+    "/reports/user-traceability/export": {
+      "get": {
+        "tags": [
+          "15. Reports & Traceability"
+        ],
+        "summary": "Ekspor Spreadsheet Excel Active New Recruit Report (User Traceability)",
+        "description": "Mengunduh file Excel (.xlsx) ber-styling profesional Re.juve dengan susunan lengkap 17 kolom Active New Recruit Report ditambah kolom penjelas nama gerai dan level.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Kata kunci pencarian nama atau email pengguna"
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "CREW"
+            },
+            "description": "Filter kode role pengguna (misal: CREW, STORE_LEADER)"
+          },
+          {
+            "name": "departmentId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter UUID departemen / gerai"
+          },
+          {
+            "name": "batchId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter UUID batch penugasan"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berkas Excel (.xlsx) Active New Recruit Report berhasil di-generate.",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/user-traceability/{userId}": {
+      "get": {
+        "tags": [
+          "15. Reports & Traceability"
+        ],
+        "summary": "Detail Audit Traceability Pengguna Lengkap",
+        "description": "Audit jejak mendalam untuk 1 pengguna tertentu: gerai aktif, batch aktif, mentor buddy, kepemimpinan gerai (Store Leader & District Manager), statistik misi & perolehan bintang, serta riwayat seluruh misi lengkap dengan catatan & skor SL/DM.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "UUID pengguna yang diaudit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail traceability pengguna berhasil diambil.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Detail traceability pengguna berhasil diambil."
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "profile": {
+                          "type": "object",
+                          "properties": {
+                            "userId": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "gender": {
+                              "type": "string"
+                            },
+                            "roleCode": {
+                              "type": "string"
+                            },
+                            "currentDepartment": {
+                              "type": "object"
+                            },
+                            "currentBatch": {
+                              "type": "object"
+                            },
+                            "mentorBuddy": {
+                              "type": "object"
+                            },
+                            "gamification": {
+                              "type": "object"
+                            }
+                          }
+                        },
+                        "leadershipContext": {
+                          "type": "object",
+                          "properties": {
+                            "storeLeader": {
+                              "type": "object",
+                              "nullable": true
+                            },
+                            "districtManager": {
+                              "type": "object",
+                              "nullable": true
+                            }
+                          }
+                        },
+                        "statistics": {
+                          "type": "object",
+                          "properties": {
+                            "totalMissions": {
+                              "type": "integer"
+                            },
+                            "completedMissions": {
+                              "type": "integer"
+                            },
+                            "completionRate": {
+                              "type": "integer"
+                            },
+                            "averageScore": {
+                              "type": "number"
+                            },
+                            "totalStarsFromMissions": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "missionHistory": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "userMissionId": {
+                                "type": "string"
+                              },
+                              "missionTitle": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string"
+                              },
+                              "evidenceUrl": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "tlScore": {
+                                "type": "number",
+                                "nullable": true
+                              },
+                              "tlNotes": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "storeLeader": {
+                                "type": "object",
+                                "nullable": true
+                              },
+                              "dmScore": {
+                                "type": "number",
+                                "nullable": true
+                              },
+                              "dmNotes": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "districtManager": {
+                                "type": "object",
+                                "nullable": true
+                              },
+                              "finalScore": {
+                                "type": "number",
+                                "nullable": true
+                              },
+                              "starsEarned": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pengguna tidak ditemukan."
+          }
+        }
+      }
+    },
+    "/reports/user-traceability/{userId}/export": {
+      "get": {
+        "tags": [
+          "15. Reports & Traceability"
+        ],
+        "summary": "Ekspor Spreadsheet Excel Kartu Audit Traceability 1 Kru Terpilih",
+        "description": "Mengunduh file Excel (.xlsx) yang terdiri dari 2 lembar kerja (Lembar 1: Kartu Profil Kru & Konteks Kepemimpinan SL/DM, Lembar 2: Riwayat Evaluasi Misi & Nilai) khusus untuk 1 pengguna yang ditentukan oleh userId.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "User ID milik pengguna / kru yang diaudit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berkas spreadsheet Excel (.xlsx) berhasil di-generate",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Tidak terautentikasi"
+          },
+          "404": {
+            "description": "Pengguna dengan ID tersebut tidak ditemukan"
+          }
+        }
+      }
+    },
+    "/masters/users/bulk-commit": {
+      "post": {
+        "tags": [
+          "4. Master Users & Bulking"
+        ],
+        "summary": "Commit Bulk Users ke Database",
+        "description": "Menyimpan daftar akun pengguna yang sudah divalidasi ke database dengan password awal \"password123\". Mendukung opsi onDuplicate: SKIP atau UPDATE.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "users"
+                ],
+                "properties": {
+                  "onDuplicate": {
+                    "type": "string",
+                    "enum": [
+                      "SKIP",
+                      "UPDATE"
+                    ],
+                    "default": "SKIP"
+                  },
+                  "users": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "email"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "example": "Budi Santoso"
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "budi.santoso@rejuve.co.id"
+                        },
+                        "roleCode": {
+                          "type": "string",
+                          "example": "CREW"
+                        },
+                        "departmentCode": {
+                          "type": "string",
+                          "example": "BKI_01"
+                        },
+                        "isBuddy": {
+                          "type": "boolean",
+                          "example": false
+                        },
+                        "buddyEmail": {
+                          "type": "string",
+                          "example": null
+                        },
+                        "batchCode": {
+                          "type": "string",
+                          "example": null
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "onDuplicate": "SKIP",
+                "users": [
+                  {
+                    "name": "Budi Santoso",
+                    "email": "budi.santoso@rejuve.co.id",
+                    "roleCode": "CREW",
+                    "departmentCode": "BKI_01",
+                    "isBuddy": false,
+                    "buddyEmail": null,
+                    "batchCode": null
+                  },
+                  {
+                    "name": "Anita Wijaya",
+                    "email": "anita.wijaya@rejuve.co.id",
+                    "roleCode": "STORE_LEADER",
+                    "departmentCode": "BKI_01",
+                    "isBuddy": true,
+                    "buddyEmail": null,
+                    "batchCode": null
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User massal berhasil diimpor."
+          }
+        }
+      }
+    },
+    "/masters/users/bulk-preview": {
+      "post": {
+        "tags": [
+          "4. Master Users & Bulking"
+        ],
+        "summary": "Preview Validasi Bulk User Import (Dry Run)",
+        "description": "Membaca dan memvalidasi file Excel/CSV user secara dry-run (tanpa mutasi database). Menghasilkan laporan baris valid, duplikat, dan invalid dengan pesan error detail.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File spreadsheet (.xlsx / .xls / .csv)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preview data import berhasil diproses."
+          }
+        }
+      }
+    },
+    "/masters/users/template": {
+      "get": {
+        "tags": [
+          "4. Master Users & Bulking"
+        ],
+        "summary": "Download Template Excel Import User (.xlsx)",
+        "description": "Menghasilkan dan mengunduh file binary spreadsheet Excel template impor akun pengguna beserta contoh data.",
+        "responses": {
+          "200": {
+            "description": "File spreadsheet template berhasil diunduh.",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
           }
         }
       }

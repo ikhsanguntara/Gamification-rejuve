@@ -10,6 +10,7 @@ const prisma = require('../../config/db');
 const { sendSuccess, sendError, sendPaginated } = require('../../utils/responseWrapper');
 const { parsePrismaQuery } = require('../../utils/queryParser');
 const { pushToLynx } = require('../../utils/lynxSync');
+const { uploadFileToStorage } = require('../../utils/minioStorage');
 
 // =============================================================================
 // DEPARTMENTS
@@ -266,6 +267,8 @@ const getUsers = async (req, res, next) => {
           name: true,
           email: true,
           gender: true,
+          phone: true,
+          avatarUrl: true,
           roleId: true,
           role: true,
           isActive: true,
@@ -297,7 +300,8 @@ const getUsers = async (req, res, next) => {
 
     const formattedData = data.map(user => ({
       ...user,
-      hasBatch: Boolean(user.batchId)
+      hasBatch: Boolean(user.batchId),
+      avatarUrl: user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name)}`
     }));
 
     return sendPaginated(res, {
@@ -322,6 +326,8 @@ const getUserById = async (req, res, next) => {
         name: true,
         email: true,
         gender: true,
+        phone: true,
+        avatarUrl: true,
         roleId: true,
         role: true,
         isActive: true,
@@ -357,7 +363,8 @@ const getUserById = async (req, res, next) => {
       message: 'Detail user berhasil diambil.',
       data: {
         ...user,
-        hasBatch: Boolean(user.batchId)
+        hasBatch: Boolean(user.batchId),
+        avatarUrl: user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name)}`
       }
     });
   } catch (error) {
@@ -367,7 +374,7 @@ const getUserById = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive, activeBatchId, gender } = req.body;
+    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive, activeBatchId, gender, phone, avatarUrl } = req.body;
     const creatorId = req.user?.id || req.user?.userId || null;
 
     let normalizedGender = null;
@@ -412,12 +419,20 @@ const createUser = async (req, res, next) => {
     }
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
+    // Resolusi fleksibel avatar: bisa dari upload file multipart atau string URL di body
+    let finalAvatarUrl = avatarUrl ? String(avatarUrl).trim() : null;
+    if (req.file) {
+      finalAvatarUrl = await uploadFileToStorage(req.file, 'avatars', req, 'avatar');
+    }
+
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
         gender: normalizedGender,
+        phone: phone ? String(phone).trim() : null,
+        avatarUrl: finalAvatarUrl,
         roleId,
         departmentId: departmentId || null,
         isBuddy: isBuddy || false,
@@ -457,7 +472,7 @@ const createUser = async (req, res, next) => {
 const updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive, activeBatchId, gender } = req.body;
+    const { name, email, password, roleId, departmentId, isBuddy, userBuddyId, batchId, isActive, activeBatchId, gender, phone, avatarUrl } = req.body;
     const updaterId = req.user?.id || req.user?.userId || null;
 
     const data = {
@@ -472,6 +487,14 @@ const updateUser = async (req, res, next) => {
     if (batchId !== undefined) data.batchId = batchId;
     if (activeBatchId !== undefined) data.activeBatchId = activeBatchId;
     if (isActive !== undefined) data.isActive = isActive;
+    if (phone !== undefined) data.phone = phone ? String(phone).trim() : null;
+
+    // Resolusi fleksibel avatar di updateUser: bisa upload file multipart atau kirim string URL
+    if (req.file) {
+      data.avatarUrl = await uploadFileToStorage(req.file, 'avatars', req, `avatar-${id}`);
+    } else if (avatarUrl !== undefined) {
+      data.avatarUrl = avatarUrl ? String(avatarUrl).trim() : null;
+    }
     if (gender !== undefined) {
       if (!gender) {
         data.gender = null;

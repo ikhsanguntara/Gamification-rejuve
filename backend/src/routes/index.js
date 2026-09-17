@@ -23,5 +23,6 @@ router.use('/dashboard', require('../modules/dashboard/dashboard.routes'));
 router.use('/gamification', require('../modules/gamification/gamification.routes'));
 router.use('/notifications', require('../modules/notifications/notification.routes'));
 router.use('/feedback', require('../modules/feedback/feedback.routes'));
+router.use('/reports', require('../modules/reports/report.routes'));
 
 module.exports = router;

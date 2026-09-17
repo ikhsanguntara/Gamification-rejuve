@@ -6,6 +6,7 @@
  */
 
 const axios = require('axios');
+const bcrypt = require('bcryptjs');
 const prisma = require('../../config/db');
 const { sendSuccess, sendError } = require('../../utils/responseWrapper');
 
@@ -141,10 +142,7 @@ const pullAllDepartments = async (req, res) => {
           update: {
             departmentCode: dept.departmentCode,
             departmentName: dept.departmentName,
-            regionCode: dept.regionCode || null,
             isActive: dept.isActive !== undefined ? dept.isActive : true,
-            userSlId: dept.userSlId || null,
-            userDmId: dept.userDmId || null,
           },
           create: {
             departmentId: dept.departmentId,
@@ -152,8 +150,6 @@ const pullAllDepartments = async (req, res) => {
             departmentName: dept.departmentName,
             regionCode: dept.regionCode || null,
             isActive: dept.isActive !== undefined ? dept.isActive : true,
-            userSlId: dept.userSlId || null,
-            userDmId: dept.userDmId || null,
           }
         });
         results.push(result.departmentId);
@@ -276,46 +272,104 @@ const pullAllUsers = async (req, res) => {
     const existingDepts = await prisma.department.findMany({ select: { departmentId: true } });
     const validDeptIds = new Set(existingDepts.map(d => d.departmentId));
 
+    // Ambil daftar seluruh email pengguna yang sudah ada di database (Insert-only by email)
+    const existingUsers = await prisma.user.findMany({ select: { email: true } });
+    const existingEmailSet = new Set(
+      existingUsers.map(u => (u.email ? u.email.toLowerCase().trim() : '')).filter(Boolean)
+    );
+
+    // Ambil default password dari user policy untuk fallback non-CREW jika Lynx tidak mengirim password
+    let defaultNonCrewPassword = 'password123';
+    try {
+      const pwPolicy = await prisma.userPolicy.findFirst({
+        where: {
+          userpolicyCode: {
+            equals: 'DEFAULT_PASSWORD',
+            mode: 'insensitive'
+          }
+        }
+      });
+      if (pwPolicy?.userpolicyValue) {
+        defaultNonCrewPassword = pwPolicy.userpolicyValue;
+      }
+    } catch (e) {}
+
     const results = [];
+    let skippedCount = 0;
+
     await prisma.$transaction(async (tx) => {
       for (const user of users) {
+        if (!user.email) continue;
+        const normalizedEmail = String(user.email).toLowerCase().trim();
+
+        // Jika email sudah terdaftar di Gamifikasi, lewati (insert-only by email, jangan update)
+        if (existingEmailSet.has(normalizedEmail)) {
+          skippedCount++;
+          continue;
+        }
+
         const roleId = await resolveUserRoleId(user, roleMapByCode, roleMapById, defaultCrewRoleId, tx);
         const departmentId = (user.departmentId && validDeptIds.has(user.departmentId)) ? user.departmentId : null;
 
-        const result = await tx.user.upsert({
-          where: { userId: user.userId },
-          update: {
-            name: user.name,
-            email: user.email,
-            password: user.password || '$2y$12$defaultHashedPasswordFallback',
-            roleId,
-            isActive: user.isActive !== undefined ? user.isActive : true,
-            departmentId,
-            isBuddy: user.isBuddy !== undefined ? user.isBuddy : false,
-            userBuddyId: user.userBuddyId || null,
-            batchId: user.batchId || null,
-          },
-          create: {
+        // Resolusi password dari Lynx:
+        // Gunakan password yang di Lynx. Jika sudah berupa hash bcrypt ($2a$, $2b$, $2y$), simpan langsung.
+        // Jika berupa plaintext, hash dengan bcrypt.
+        // Jika kosong/null, fallback: CREW menggunakan emailPrefix, non-CREW menggunakan DEFAULT_PASSWORD policy.
+        const emailPrefix = normalizedEmail.includes('@') ? normalizedEmail.split('@')[0] : (normalizedEmail || 'user123');
+        const isCrewRole = roleId === defaultCrewRoleId || roleMapByCode['CREW'] === roleId;
+
+        let finalHashedPassword;
+        if (user.password && typeof user.password === 'string' && user.password.trim()) {
+          const p = user.password.trim();
+          if (p.startsWith('$2a$') || p.startsWith('$2b$') || p.startsWith('$2y$')) {
+            finalHashedPassword = p;
+          } else {
+            finalHashedPassword = await bcrypt.hash(p, 10);
+          }
+        } else {
+          const fallbackRaw = isCrewRole ? emailPrefix : defaultNonCrewPassword;
+          finalHashedPassword = await bcrypt.hash(fallbackRaw, 10);
+        }
+
+        let normalizedGender = null;
+        if (user.gender) {
+          const g = String(user.gender).trim().toUpperCase();
+          if (g === 'M' || g === 'L' || g === 'MALE' || g === 'LAKI-LAKI') normalizedGender = 'M';
+          else if (g === 'F' || g === 'P' || g === 'FEMALE' || g === 'PEREMPUAN') normalizedGender = 'F';
+          else normalizedGender = g;
+        }
+
+        const createdUser = await tx.user.create({
+          data: {
             userId: user.userId,
             name: user.name,
             email: user.email,
-            password: user.password || '$2y$12$defaultHashedPasswordFallback', 
+            password: finalHashedPassword,
             roleId,
             isActive: user.isActive !== undefined ? user.isActive : true,
             departmentId,
             isBuddy: user.isBuddy !== undefined ? user.isBuddy : false,
             userBuddyId: user.userBuddyId || null,
             batchId: user.batchId || null,
+            gender: normalizedGender,
+            phone: user.phone ? String(user.phone).trim() : null,
+            avatarUrl: user.avatarUrl ? String(user.avatarUrl).trim() : null
           }
         });
-        results.push(result.userId);
+
+        existingEmailSet.add(normalizedEmail);
+        results.push(createdUser.userId);
       }
     });
 
     return sendSuccess(res, {
       statusCode: 200,
-      message: `Successfully pulled and upserted ${results.length} users`,
-      data: results
+      message: `Pull users completed: ${results.length} new users inserted, ${skippedCount} existing users skipped`,
+      data: {
+        insertedCount: results.length,
+        skippedCount,
+        insertedUserIds: results
+      }
     });
   } catch (error) {
     return sendError(res, {
