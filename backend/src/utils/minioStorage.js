@@ -120,8 +120,54 @@ const normalizeStorageUrl = (url, req = null) => {
   return url.replace(/^https?:\/\/[^/]+/, currentOrigin);
 };
 
+/**
+ * Mengunggah data Base64 image (Data URL) ke MinIO / local storage dan mengembalikan public URL.
+ * 
+ * @param {string} base64Str - String data URL base64 (e.g. "data:image/png;base64,iVBORw0...")
+ * @param {string} subFolder - Subfolder penyimpanan (default: 'avatars')
+ * @param {object} req - Express request object
+ * @param {string} filePrefix - Prefix nama file
+ * @returns {Promise<string>} - Public URL dari file yang di-upload
+ */
+const uploadBase64ToStorage = async (base64Str, subFolder = 'avatars', req = null, filePrefix = null) => {
+  if (!base64Str || typeof base64Str !== 'string') {
+    return null;
+  }
+
+  // Cek apakah string merupakan Base64 Data URL (data:[mime];base64,[data])
+  const matches = base64Str.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+  if (!matches || matches.length !== 3) {
+    // Jika bukan base64 Data URL, kembalikan apa adanya (mungkin sudah URL biasa)
+    return base64Str;
+  }
+
+  const mimetype = matches[1];
+  const buffer = Buffer.from(matches[2], 'base64');
+
+  const extMap = {
+    'image/jpeg': '.jpg',
+    'image/jpg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+    'image/gif': '.gif',
+    'application/pdf': '.pdf'
+  };
+  const ext = extMap[mimetype.toLowerCase()] || '.png';
+
+  const mockFile = {
+    originalname: `avatar${ext}`,
+    buffer,
+    mimetype,
+    size: buffer.length
+  };
+
+  return await uploadFileToStorage(mockFile, subFolder, req, filePrefix);
+};
+
 module.exports = {
   uploadMiddleware,
   uploadFileToStorage,
+  uploadBase64ToStorage,
   normalizeStorageUrl
 };
+

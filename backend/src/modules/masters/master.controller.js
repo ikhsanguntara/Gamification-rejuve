@@ -10,7 +10,7 @@ const prisma = require('../../config/db');
 const { sendSuccess, sendError, sendPaginated } = require('../../utils/responseWrapper');
 const { parsePrismaQuery } = require('../../utils/queryParser');
 const { pushToLynx } = require('../../utils/lynxSync');
-const { uploadFileToStorage } = require('../../utils/minioStorage');
+const { uploadFileToStorage, uploadBase64ToStorage } = require('../../utils/minioStorage');
 
 // =============================================================================
 // DEPARTMENTS
@@ -419,10 +419,16 @@ const createUser = async (req, res, next) => {
     }
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
-    // Resolusi fleksibel avatar: bisa dari upload file multipart atau string URL di body
-    let finalAvatarUrl = avatarUrl ? String(avatarUrl).trim() : null;
+    // Resolusi fleksibel avatar: bisa dari upload file multipart, base64 data URL, atau string URL di body
+    let finalAvatarUrl = null;
     if (req.file) {
       finalAvatarUrl = await uploadFileToStorage(req.file, 'avatars', req, 'avatar');
+    } else if (avatarUrl) {
+      if (typeof avatarUrl === 'string' && avatarUrl.startsWith('data:image/')) {
+        finalAvatarUrl = await uploadBase64ToStorage(avatarUrl, 'avatars', req, 'avatar');
+      } else {
+        finalAvatarUrl = String(avatarUrl).trim();
+      }
     }
 
     const user = await prisma.user.create({
@@ -489,11 +495,15 @@ const updateUser = async (req, res, next) => {
     if (isActive !== undefined) data.isActive = isActive;
     if (phone !== undefined) data.phone = phone ? String(phone).trim() : null;
 
-    // Resolusi fleksibel avatar di updateUser: bisa upload file multipart atau kirim string URL
+    // Resolusi fleksibel avatar di updateUser: bisa upload file multipart, base64 data URL, atau kirim string URL
     if (req.file) {
       data.avatarUrl = await uploadFileToStorage(req.file, 'avatars', req, `avatar-${id}`);
     } else if (avatarUrl !== undefined) {
-      data.avatarUrl = avatarUrl ? String(avatarUrl).trim() : null;
+      if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.startsWith('data:image/')) {
+        data.avatarUrl = await uploadBase64ToStorage(avatarUrl, 'avatars', req, `avatar-${id}`);
+      } else {
+        data.avatarUrl = avatarUrl ? String(avatarUrl).trim() : null;
+      }
     }
     if (gender !== undefined) {
       if (!gender) {

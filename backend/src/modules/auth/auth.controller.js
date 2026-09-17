@@ -10,7 +10,7 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../../config/db');
 const batchService = require('../batches/batch.service');
 const gamificationService = require('../gamification/gamification.service');
-const { uploadFileToStorage } = require('../../utils/minioStorage');
+const { uploadFileToStorage, uploadBase64ToStorage } = require('../../utils/minioStorage');
 const { pushToLynx } = require('../../utils/lynxSync');
 const { emitToUser } = require('../../utils/socketEmitter');
 const { sendSuccess, sendError } = require('../../utils/responseWrapper');
@@ -418,11 +418,15 @@ const updateProfile = async (req, res, next) => {
       }
     }
 
-    // Resolusi avatar: file upload multipart atau string URL
+    // Resolusi avatar: file upload multipart, base64 data URL, atau string URL biasa
     if (req.file) {
       data.avatarUrl = await uploadFileToStorage(req.file, 'avatars', req, `avatar-${userId}`);
     } else if (avatarUrl !== undefined) {
-      data.avatarUrl = avatarUrl ? String(avatarUrl).trim() : null;
+      if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.startsWith('data:image/')) {
+        data.avatarUrl = await uploadBase64ToStorage(avatarUrl, 'avatars', req, `avatar-${userId}`);
+      } else {
+        data.avatarUrl = avatarUrl ? String(avatarUrl).trim() : null;
+      }
     }
 
     const updatedUser = await prisma.user.update({
