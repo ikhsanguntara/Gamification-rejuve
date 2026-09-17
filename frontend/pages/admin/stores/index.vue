@@ -11,9 +11,6 @@
             {{ storeStore.totalStoreCount }} Outlet
           </span>
         </div>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-          Kelola direktori cabang operasional Re.juve, alokasi Store Leader (SL), dan penugasan District Manager (DM).
-        </p>
       </div>
 
       <NuxtLink

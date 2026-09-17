@@ -5,16 +5,13 @@
       <div>
         <div class="flex items-center gap-2">
           <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Integrasi Sinkronisasi Lynx ERP
+            Sinkronisasi Lynx ERP
           </h2>
           <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>Lynx API Connected</span>
           </span>
         </div>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Tarik data master outlet, departemen, dan pengguna dari sistem utama Lynx ERP secara real-time.
-        </p>
       </div>
 
       <button

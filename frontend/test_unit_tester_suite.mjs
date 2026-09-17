@@ -646,6 +646,54 @@ test('Report Store: Sinkronisasi Tab & Filter State', () => {
   assertEqual(reportStore.filters.status, '', 'Filter status berhasil direset')
 })
 
+// ============================================================================
+// SUITE 11: PENGUJIAN KOMPRESI GAMBAR & AUTO-CLAMPING SKOR
+// ============================================================================
+console.log('\n📌 11. Menguji Kompresi Foto Bukti & Clamping Skor (0–100):')
+
+test('validateImageFile: Menolak berkas non-gambar (pdf, txt, exe)', async () => {
+  const { validateImageFile } = await import('./utils/imageCompressor.js')
+  const invalidFile = { type: 'application/pdf', size: 1024 }
+  const res = validateImageFile(invalidFile)
+  assertFalse(res.valid, 'File PDF harus ditolak')
+  assertEqual(res.error, 'Format berkas harus berupa JPG, PNG, atau WebP')
+})
+
+test('validateImageFile: Menerima berkas gambar yang valid (jpeg, png, webp)', async () => {
+  const { validateImageFile } = await import('./utils/imageCompressor.js')
+  const validJpg = { type: 'image/jpeg', size: 500 * 1024 }
+  const validPng = { type: 'image/png', size: 1024 * 1024 }
+  const validWebp = { type: 'image/webp', size: 200 * 1024 }
+  
+  assertTrue(validateImageFile(validJpg).valid, 'JPG harus valid')
+  assertTrue(validateImageFile(validPng).valid, 'PNG harus valid')
+  assertTrue(validateImageFile(validWebp).valid, 'WebP harus valid')
+})
+
+test('validateImageFile: Menolak berkas yang melebihi batas ukuran 10MB', async () => {
+  const { validateImageFile } = await import('./utils/imageCompressor.js')
+  const oversizedFile = { type: 'image/jpeg', size: 15 * 1024 * 1024 }
+  const res = validateImageFile(oversizedFile)
+  assertFalse(res.valid, 'File > 10MB harus ditolak')
+})
+
+test('compressImage: Berjalan aman di environment Node.js / Non-Browser', async () => {
+  const { compressImage } = await import('./utils/imageCompressor.js')
+  const mockFile = { type: 'image/jpeg', size: 2048 }
+  const res = await compressImage(mockFile)
+  assertTrue(Boolean(res.dataUrl), 'Kompresi menghasilkan dataUrl yang valid')
+  assertEqual(res.originalSize, 2048, 'Ukuran original tercatat akurat')
+})
+
+test('Score Clamping: Memastikan nilai skor selalu berada di rentang 0-100', () => {
+  const clampScore = (val) => Math.min(100, Math.max(0, Math.round(Number(val) || 0)))
+  assertEqual(clampScore(-50), 0, 'Skor negatif di-clamp ke 0')
+  assertEqual(clampScore(150), 100, 'Skor > 100 di-clamp ke 100')
+  assertEqual(clampScore('85.6'), 86, 'String desimal dibulatkan dengan aman')
+  assertEqual(clampScore(null), 0, 'Null menghasilkan 0')
+  assertEqual(clampScore(100), 100, 'Skor 100 tetap 100')
+})
+
 console.log('')
 console.log('======================================================')
 console.log(`🏁 HASIL AKHIR QA / UNIT TESTER:`)

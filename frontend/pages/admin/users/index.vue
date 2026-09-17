@@ -9,11 +9,8 @@
           <span class="text-[#831843] dark:text-[#f472b6] font-semibold">User Management</span>
         </div>
         <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-          Manajemen User & Penugasan Gerai
+          Manajemen User
         </h2>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          Kelola direktori seluruh user (Crew, Supervisor, Head, Superadmin) dan atur penugasan cabang gerai Crew secara realtime.
-        </p>
       </div>
 
       <div class="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">

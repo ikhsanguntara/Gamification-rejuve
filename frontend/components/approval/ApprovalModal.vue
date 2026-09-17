@@ -98,7 +98,8 @@
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-baseline gap-1.5">
                 <input
-                  v-model.number="dmScore"
+                  :value="dmScore"
+                  @input="onDmScoreInput($event)"
                   type="number"
                   min="0"
                   max="100"
@@ -350,6 +351,29 @@ watch(() => props.item, (newItem) => {
     dmNote.value = newItem.dmNote || ''
   }
 }, { immediate: true, deep: true })
+
+function onDmScoreInput(event) {
+  const raw = event.target.value
+  if (raw === '' || raw === null || raw === undefined) {
+    dmScore.value = 0
+    return
+  }
+  const parsed = Number(raw)
+  if (isNaN(parsed)) {
+    dmScore.value = 0
+  } else {
+    dmScore.value = Math.min(100, Math.max(0, Math.round(parsed)))
+  }
+}
+
+watch(dmScore, (newVal) => {
+  if (newVal === '' || newVal === null || newVal === undefined) return
+  const parsed = Number(newVal)
+  if (!isNaN(parsed)) {
+    if (parsed > 100) dmScore.value = 100
+    else if (parsed < 0) dmScore.value = 0
+  }
+})
 
 // Rumus Resmi: Avg(SL + DM) Score -> (Avg/100)*5 dibulatkan 1 angka di belakang koma
 const averageCalc = computed(() => calculateAverageDmSl(slScore.value, dmScore.value))

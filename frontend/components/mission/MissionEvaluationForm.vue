@@ -185,7 +185,8 @@
               <div class="flex items-center gap-1.5 flex-shrink-0">
                 <div class="relative">
                   <input
-                    v-model.number="crewScoresMap[crew.id]"
+                    :value="crewScoresMap[crew.id]"
+                    @input="onCrewScoreInput(crew.id, $event)"
                     type="number"
                     min="0"
                     max="100"
@@ -357,8 +358,8 @@
         </div>
       </div>
 
-      <!-- Action Buttons Bar -->
-      <div v-if="!isLocked" class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+      <!-- Action Buttons Bar (Sticky on Mobile) -->
+      <div v-if="!isLocked" class="sticky bottom-0 z-10 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 p-4 sm:p-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-end gap-3 rounded-b-3xl">
         <button
           type="button"
           @click="handleSaveDraft"
@@ -389,16 +390,41 @@
       @cancel="showConfirmModal = false"
     />
 
-    <!-- Add Evidence Modal -->
+    <!-- Add Evidence Modal with File Upload & Compression -->
     <BaseModal
       :modelValue="showAddEvidenceModal"
       title="Lampirkan Foto Bukti Inspeksi"
       @update:modelValue="showAddEvidenceModal = $event"
     >
       <div class="space-y-4">
-        <p class="text-xs text-slate-500 dark:text-slate-400">
-          Pilih salah satu contoh foto inspeksi operasional atau masukkan URL foto:
-        </p>
+        <!-- Direct File Upload with Auto-Compressor -->
+        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+          <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+            <Camera class="w-4 h-4 text-[#831843] dark:text-[#f472b6]" />
+            <span>Unggah Foto dari Perangkat (Kamera / Galeri)</span>
+          </label>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">
+            Foto otomatis dikompresi agar hemat kuota dan proses pengiriman instan.
+          </p>
+          <div class="flex items-center gap-2 pt-1">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              @change="handleFileUpload"
+              :disabled="isCompressing"
+              class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#831843] file:text-white hover:file:bg-[#6b133a] cursor-pointer"
+            />
+            <span v-if="isCompressing" class="text-xs text-[#831843] dark:text-[#f472b6] font-semibold animate-pulse flex items-center gap-1">
+              <Loader2 class="w-3.5 h-3.5 animate-spin" /> Mengompres foto...
+            </span>
+          </div>
+        </div>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+          <span class="flex-shrink mx-3 text-[10px] uppercase font-bold text-slate-400">atau pilih contoh preset</span>
+          <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+        </div>
 
         <!-- Preset Evidence Photos -->
         <div class="grid grid-cols-2 gap-2.5">
@@ -443,7 +469,7 @@
           <button
             type="button"
             @click="showAddEvidenceModal = false"
-            class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+            class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
           >
             Batal
           </button>
@@ -451,7 +477,7 @@
             type="button"
             @click="addCustomEvidence"
             :disabled="!newEvidenceUrl || !newEvidenceCaption"
-            class="px-4 py-2 text-xs font-bold rounded-xl bg-[#831843] text-white hover:bg-[#6b133a] disabled:opacity-50"
+            class="px-4 py-2 text-xs font-bold rounded-xl bg-[#831843] text-white hover:bg-[#6b133a] disabled:opacity-50 cursor-pointer"
           >
             Tambahkan
           </button>
@@ -470,6 +496,7 @@ import { useApprovalStore } from '~/stores/approval.js'
 import { useToast } from '~/composables/useToast.js'
 import { calculateStars } from '~/utils/star.js'
 import { isWeekLocked } from '~/utils/status.js'
+import { compressImage, validateImageFile } from '~/utils/imageCompressor.js'
 import MissionStatus from '~/components/mission/MissionStatus.vue'
 import StarReward from '~/components/gamification/StarReward.vue'
 import ConfirmationModal from '~/components/ui/ConfirmationModal.vue'
@@ -484,7 +511,9 @@ import {
   Trash2,
   Image,
   Send,
-  Search
+  Search,
+  Camera,
+  Loader2
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -664,6 +693,59 @@ const presetEvidenceList = [
     caption: 'Pengecekan susunan botol FIFO di chiller'
   }
 ]
+
+const isCompressing = ref(false)
+
+const onCrewScoreInput = (crewId, event) => {
+  const raw = event.target.value
+  if (raw === '' || raw === null || raw === undefined) {
+    crewScoresMap[crewId] = 0
+    return
+  }
+  const parsed = Number(raw)
+  if (isNaN(parsed)) {
+    crewScoresMap[crewId] = 0
+  } else {
+    // Auto-clamp nilai 0 sampai 100 secara realtime
+    crewScoresMap[crewId] = Math.min(100, Math.max(0, Math.round(parsed)))
+  }
+}
+
+const handleFileUpload = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  const validation = validateImageFile(file)
+  if (!validation.valid) {
+    toast.error('Gagal Unggah', validation.error || 'Format berkas tidak didukung')
+    event.target.value = ''
+    return
+  }
+
+  try {
+    isCompressing.value = true
+    const result = await compressImage(file, {
+      maxWidth: 1280,
+      maxHeight: 1280,
+      quality: 0.8
+    })
+
+    formData.evidence.push({
+      id: `ev-${Date.now()}`,
+      url: result.dataUrl,
+      caption: `Foto Bukti (${file.name})`
+    })
+
+    showAddEvidenceModal.value = false
+    toast.success('Foto Berhasil Dikompres & Dilampirkan', `Ukuran dioptimalkan: ${(result.compressedSize / 1024).toFixed(0)} KB`)
+  } catch (err) {
+    console.error('Error compressing image:', err)
+    toast.error('Gagal Memproses Foto', err.message || 'Terjadi kesalahan saat memproses gambar')
+  } finally {
+    isCompressing.value = false
+    event.target.value = ''
+  }
+}
 
 const selectPresetEvidence = (preset) => {
   formData.evidence.push({

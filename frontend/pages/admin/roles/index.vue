@@ -5,15 +5,12 @@
       <div>
         <div class="flex items-center gap-2">
           <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Master Jabatan & Peran (Roles)
+            Master Role & Wewenang
           </h2>
           <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
             {{ totalRoles }} Role
           </span>
         </div>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Kelola hierarki wewenang pengguna (Superadmin, Store Leader, District Manager, Crew, dll).
-        </p>
       </div>
 
       <button
