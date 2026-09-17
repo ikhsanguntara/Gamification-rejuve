@@ -483,6 +483,69 @@ test('Mission Crew Detail: parsing evaluasi multi-kru per misi', () => {
 })
 
 console.log('')
+
+// ============================================================================
+// SUITE 8: PROFILE ROLE ISOLATION & ACCOUNT SECURITY (pages/profile.vue & stores/user.js)
+// ============================================================================
+console.log('📌 8. Menguji Isolasi Profil Manajerial vs Crew & Keamanan Akun:')
+
+test('Profile Gamification Visibility: Crew memiliki kartu bintang & lencana, sedangkan SL/DM tidak', () => {
+  // Logika render profile.vue: gamifikasi hanya v-if="userStore.isCrew"
+  function shouldShowGamificationCards(user) {
+    return user.role === 'CREW'
+  }
+
+  userStore.loginAsUser('crew-001')
+  assertTrue(shouldShowGamificationCards(userStore.currentUser), 'Crew wajib melihat komponen kartu gamifikasi bintang')
+
+  userStore.loginAsUser('sl-001')
+  assertFalse(shouldShowGamificationCards(userStore.currentUser), 'Store Leader TIDAK BOLEH melihat komponen kartu bintang gamifikasi')
+
+  userStore.loginAsUser('dm-001')
+  assertFalse(shouldShowGamificationCards(userStore.currentUser), 'District Manager TIDAK BOLEH melihat komponen kartu bintang gamifikasi')
+})
+
+test('Profile Update: SL / DM berhasil mengubah data diri, nomor telepon, dan avatar', async () => {
+  userStore.loginAsUser('dm-001')
+  await userStore.updateProfile({
+    id: 'dm-001',
+    name: 'Ahmad Dahlan S.E.',
+    phone: '081234567899',
+    gender: 'M',
+    avatarUrl: 'https://images.unsplash.com/photo-profile-dm.jpg'
+  })
+
+  const updated = userStore.currentUser
+  assertEqual(updated.name, 'Ahmad Dahlan S.E.', 'Nama profil DM berhasil diperbarui')
+  assertEqual(updated.phone, '081234567899', 'Nomor telepon DM berhasil diperbarui')
+  assertEqual(updated.avatarUrl, 'https://images.unsplash.com/photo-profile-dm.jpg', 'Avatar DM berhasil diperbarui')
+})
+
+test('Change Password Validation: Validasi password minimal 6 karakter dan kelengkapan input', async () => {
+  // Test password terlalu pendek (< 6)
+  let threwMinLength = false
+  try {
+    await userStore.changePassword({ oldPassword: 'old123', newPassword: '123' })
+  } catch (e) {
+    threwMinLength = true
+  }
+  assertTrue(threwMinLength, 'Change password harus melempar error jika password < 6 karakter')
+
+  // Test input kosong
+  let threwEmpty = false
+  try {
+    await userStore.changePassword({ oldPassword: '', newPassword: '' })
+  } catch (e) {
+    threwEmpty = true
+  }
+  assertTrue(threwEmpty, 'Change password harus melempar error jika input kosong')
+
+  // Test password valid
+  const validRes = await userStore.changePassword({ oldPassword: 'OldPassword123!', newPassword: 'NewSecret123!' })
+  assertTrue(Boolean(validRes), 'Change password dengan input valid berhasil dieksekusi')
+})
+
+console.log('')
 console.log('======================================================')
 console.log(`🏁 HASIL AKHIR QA / UNIT TESTER:`)
 console.log(`   Total Pengujian : ${totalTests}`)
@@ -496,3 +559,4 @@ if (failedTests > 0) {
 } else {
   process.exit(0)
 }
+

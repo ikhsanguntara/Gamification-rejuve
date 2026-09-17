@@ -54,22 +54,30 @@ console.log('📌 1. Menguji CRUD Manajemen User & Crew:')
 // 1.1 CREATE USER
 const newUser = userStore.createUser({
   name: 'Bima Satria',
+  gender: 'M',
+  phone: '081234567890',
+  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb',
   role: 'CREW',
   batchId: 'batch-alpha',
   position: 'Junior Barista',
   email: 'bima.satria@rejuve.co.id'
 })
 assert(newUser && newUser.id && newUser.name === 'Bima Satria', 'Create User: Berhasil mendaftarkan user baru')
+assert(newUser.phone === '081234567890', 'Create User: Berhasil menyimpan nomor telepon/WA user')
+assert(newUser.avatarUrl.includes('unsplash') || newUser.avatar.includes('unsplash'), 'Create User: Berhasil menyimpan avatarUrl profil user')
+assert(newUser.gender === 'M', 'Create User: Berhasil menyimpan jenis kelamin (gender) user')
 assert(gamificationStore.crewById(newUser.id) !== undefined, 'Create User: Otomatis masuk ke roster gamifikasi Crew')
 
 // 1.2 READ USER
 const readUser = userStore.allUsers.find(u => u.id === newUser.id)
 assert(readUser && readUser.email === 'bima.satria@rejuve.co.id', 'Read User: Berhasil membaca data user dari direktori')
+assert(readUser && readUser.phone === '081234567890', 'Read User: Berhasil membaca field phone user')
 
 // 1.3 UPDATE USER
-userStore.updateUser(newUser.id, { position: 'Senior Barista Lead', name: 'Bima Satria Perkasa' })
+userStore.updateUser(newUser.id, { position: 'Senior Barista Lead', name: 'Bima Satria Perkasa', phone: '089876543210' })
 const updatedUser = userStore.allUsers.find(u => u.id === newUser.id)
 assert(updatedUser.position === 'Senior Barista Lead' && updatedUser.name === 'Bima Satria Perkasa', 'Update User: Berhasil memperbarui data user & jabatan')
+assert(updatedUser.phone === '089876543210', 'Update User: Berhasil memperbarui nomor telepon user')
 
 // 1.4 REASSIGN USER TO BATCH
 userStore.assignUserToBatch(newUser.id, 'batch-beta', 'Senayan City')
@@ -78,36 +86,71 @@ assert(updatedUser.batchId === 'batch-beta', 'Reassign User: Berhasil memindahka
 // 1.5 CREATE USER SL DENGAN ISBUDDY
 const slUser = userStore.createUser({
   name: 'Dimas Wicaksono',
+  gender: 'M',
+  phone: '081122334455',
   role: 'STORE_LEADER',
   position: 'Store Leader',
   email: 'dimas.w@rejuve.co.id',
   isBuddy: true
 })
 assert(slUser && slUser.isBuddy === true, 'Create User: Berhasil mendaftarkan SL dengan flag isBuddy aktif')
+assert(slUser.phone === '081122334455', 'Create User: Berhasil menyimpan phone pada Store Leader')
 
 // 1.6 ASSIGN CREW TO SL BUDDY
 const crewWithBuddy = userStore.createUser({
   name: 'Siti Rahma',
+  gender: 'F',
+  phone: '081299887766',
+  avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330',
   role: 'CREW',
   position: 'Barista Apprentice',
   email: 'siti.rahma@rejuve.co.id',
   userBuddyId: slUser.id
 })
 assert(crewWithBuddy && crewWithBuddy.userBuddyId === slUser.id, 'Create User: Berhasil menugaskan Crew ke Store Leader Buddy')
+assert(crewWithBuddy.gender === 'F' && crewWithBuddy.phone === '081299887766', 'Create User: Data gender F & phone Crew tersimpan dengan tepat')
 assert(userStore.buddyStoreLeaders.some(b => b.id === slUser.id), 'Filter SL Buddy: Berhasil menemukan SL Buddy aktif')
 
 userStore.deleteUser(crewWithBuddy.id)
 userStore.deleteUser(slUser.id)
 
-// 1.6 DELETE USER
+// 1.7 DELETE USER
 userStore.deleteUser(newUser.id)
 assert(userStore.allUsers.find(u => u.id === newUser.id) === undefined, 'Delete User: Berhasil menghapus user dari direktori')
 assert(gamificationStore.crewById(newUser.id) === undefined, 'Delete User: Otomatis terhapus dari roster gamifikasi')
 
-// 1.7 BULK USER IMPORT ACTIONS
+// 1.7 BULK USER IMPORT & PROFILE ACTIONS
 assert(typeof userStore.downloadTemplate === 'function', 'Bulk User: Action downloadTemplate tersedia di store')
 assert(typeof userStore.previewBulkUsers === 'function', 'Bulk User: Action previewBulkUsers (Dry Run) tersedia di store')
 assert(typeof userStore.commitBulkUsers === 'function', 'Bulk User: Action commitBulkUsers tersedia di store')
+assert(typeof userStore.updateProfile === 'function', 'Profile: Action updateProfile tersedia di user store')
+assert(typeof userStore.changePassword === 'function', 'Profile: Action changePassword tersedia di user store')
+
+// Test updateProfile & changePassword in store
+const testProfileUser = userStore.createUser({
+  id: 'test-profile-usr-1',
+  name: 'Rian Kurniawan',
+  gender: 'M',
+  phone: '081234567890',
+  role: 'DISTRICT_MANAGER',
+  email: 'rian.k@rejuve.co.id'
+})
+await userStore.updateProfile({
+  id: testProfileUser.id,
+  name: 'Rian Kurniawan M.M.',
+  phone: '081987654321',
+  gender: 'M',
+  avatarUrl: 'https://images.unsplash.com/photo-dm-custom.jpg'
+})
+const verifyProfile = userStore.userById(testProfileUser.id)
+assert(verifyProfile && verifyProfile.name === 'Rian Kurniawan M.M.', 'Update Profile: Berhasil memperbarui nama pengguna')
+assert(verifyProfile && verifyProfile.phone === '081987654321', 'Update Profile: Berhasil memperbarui nomor telepon profil')
+assert(verifyProfile && verifyProfile.avatarUrl === 'https://images.unsplash.com/photo-dm-custom.jpg', 'Update Profile: Berhasil memperbarui foto avatar profil')
+
+const pwResult = await userStore.changePassword({ oldPassword: 'Password123!', newPassword: 'NewSecret123!' })
+assert(pwResult && (pwResult.success || pwResult.message), 'Change Password: Berhasil memvalidasi dan memproses ubah kata sandi')
+
+userStore.deleteUser(testProfileUser.id)
 
 console.log('')
 

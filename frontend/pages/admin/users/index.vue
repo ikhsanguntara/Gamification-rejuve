@@ -100,7 +100,14 @@
                 {{ row.gender === 'F' ? '♀ F' : '♂ M' }}
               </span>
             </div>
-            <p class="text-xs text-slate-400">{{ row.email }}</p>
+            <div class="flex items-center gap-1.5 text-xs text-slate-400 flex-wrap">
+              <span>{{ row.email }}</span>
+              <span v-if="row.phone" class="text-slate-300 dark:text-slate-600">•</span>
+              <span v-if="row.phone" class="inline-flex items-center gap-0.5 text-slate-500 dark:text-slate-400 font-medium">
+                <Phone class="w-2.5 h-2.5 text-slate-400" />
+                <span>{{ row.phone }}</span>
+              </span>
+            </div>
           </div>
         </div>
       </template>
@@ -209,7 +216,7 @@ import { userApi, roleApi } from '~/services/api.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
 import TanStackTable from '~/components/ui/TanStackTable.vue'
 import BulkUserUploadModal from '~/components/user/BulkUserUploadModal.vue'
-import { Plus, Edit3, Trash2, Search, Store, FileSpreadsheet } from 'lucide-vue-next'
+import { Plus, Edit3, Trash2, Search, Store, FileSpreadsheet, Phone } from 'lucide-vue-next'
 
 const userStore = useUserStore()
 const batchStore = useBatchStore()

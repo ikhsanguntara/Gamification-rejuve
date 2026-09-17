@@ -69,10 +69,12 @@ export const useUserStore = defineStore('user', {
           id: state.apiUser.userId,
           name: state.apiUser.name,
           gender: state.apiUser.gender || 'M',
+          phone: state.apiUser.phone || state.apiUser.phoneWA || '',
           role: roleCode,
           roleTitle: title,
           email: state.apiUser.email,
-          avatar: state.apiUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(state.apiUser.name || 'User')}`,
+          avatar: state.apiUser.avatarUrl || state.apiUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(state.apiUser.name || 'User')}`,
+          avatarUrl: state.apiUser.avatarUrl || state.apiUser.avatar || '',
           department: state.apiUser.department?.departmentName || 'Store Operations',
           position: title,
           storeLocation: state.apiUser.department?.departmentName || 'Re.juve Store',
@@ -89,9 +91,11 @@ export const useUserStore = defineStore('user', {
         id: '',
         name: '',
         gender: 'M',
+        phone: '',
         role: '',
         roleTitle: '',
         avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=User',
+        avatarUrl: '',
         email: '',
         department: '',
         position: '',
@@ -335,10 +339,12 @@ export const useUserStore = defineStore('user', {
               id: apiU.userId,
               name: apiU.name,
               gender: apiU.gender || 'M',
+              phone: apiU.phone || apiU.phoneWA || '',
               role: roleCode,
               roleTitle: resolveRoleTitle(apiU),
               email: apiU.email,
-              avatar: apiU.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(apiU.name || 'User')}`,
+              avatar: apiU.avatarUrl || apiU.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(apiU.name || 'User')}`,
+              avatarUrl: apiU.avatarUrl || apiU.avatar || '',
               department: apiU.department?.departmentName || 'Store Operations',
               position: apiU.position || resolveRoleTitle(apiU),
               storeId: apiU.departmentId || null,
@@ -388,11 +394,8 @@ export const useUserStore = defineStore('user', {
     // Backward compatibility login alias
     loginAsRole(role) {
       const user = this.userDirectory.find(u => {
-        if (role === 'CREW') return u.role === 'CREW'
-        if (role === 'STORE_LEADER' || role === 'SUPERVISOR') return u.role === 'STORE_LEADER' || u.role === 'SUPERVISOR'
-        if (role === 'DISTRICT_MANAGER' || role === 'HEAD') return u.role === 'DISTRICT_MANAGER' || u.role === 'HEAD'
-        if (role === 'SUPERADMIN') return u.role === 'SUPERADMIN'
-        return u.role === role
+        const r = typeof u.role === 'string' ? u.role : u.role?.roleCode
+        return r === role
       })
       if (user) {
         this.loginAsUser(user.id)
@@ -435,13 +438,18 @@ export const useUserStore = defineStore('user', {
         }
       }
 
+      const avatar = payload.avatarUrl || payload.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(payload.name || 'User')}`
+
       const newUser = {
         id,
         name: payload.name,
+        gender: payload.gender || 'M',
+        phone: payload.phone || '',
         role,
         roleTitle,
         email: payload.email || `${payload.name.toLowerCase().replace(/\s+/g, '.')}@rejuve.co.id`,
-        avatar: payload.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(payload.name || 'User')}`,
+        avatar,
+        avatarUrl: payload.avatarUrl || avatar,
         department: payload.department || (payload.role === 'CREW' ? 'Store Operations' : 'Management'),
         position: payload.position || roleTitle,
         storeId,
@@ -486,6 +494,74 @@ export const useUserStore = defineStore('user', {
       setStoredData('rejuve_users_v3', this.userDirectory)
       invalidateApiCache('users')
       return user
+    },
+
+    async updateProfile(payload) {
+      const targetId = payload.id || this.currentUser?.id || this.currentUserId
+      let updatedData = null
+
+      if (this.isLiveApi || this.token) {
+        try {
+          const apiPayload = {}
+          if (payload.name !== undefined) apiPayload.name = payload.name
+          if (payload.email !== undefined) apiPayload.email = payload.email
+          if (payload.gender !== undefined) apiPayload.gender = payload.gender
+          if (payload.phone !== undefined) apiPayload.phone = payload.phone
+          if (payload.avatarUrl !== undefined || payload.avatar !== undefined) {
+            apiPayload.avatarUrl = payload.avatarUrl || payload.avatar
+            apiPayload.avatar = payload.avatarUrl || payload.avatar
+          }
+
+          const res = await userApi.update(targetId, apiPayload)
+          if (res && res.data) {
+            updatedData = res.data
+            if (this.apiUser) {
+              if (res.data.name !== undefined) this.apiUser.name = res.data.name
+              if (res.data.email !== undefined) this.apiUser.email = res.data.email
+              if (res.data.gender !== undefined) this.apiUser.gender = res.data.gender
+              if (res.data.phone !== undefined) {
+                this.apiUser.phone = res.data.phone
+                this.apiUser.phoneWA = res.data.phone
+              }
+              if (res.data.avatarUrl || res.data.avatar || payload.avatarUrl || payload.avatar) {
+                this.apiUser.avatarUrl = res.data.avatarUrl || res.data.avatar || payload.avatarUrl || payload.avatar
+                this.apiUser.avatar = this.apiUser.avatarUrl
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('API updateProfile failed:', err.message)
+          throw err
+        }
+      }
+
+      // Update local directory
+      const localUpdated = this.updateUser(targetId, {
+        ...(payload.name !== undefined ? { name: payload.name } : {}),
+        ...(payload.email !== undefined ? { email: payload.email } : {}),
+        ...(payload.gender !== undefined ? { gender: payload.gender } : {}),
+        ...(payload.phone !== undefined ? { phone: payload.phone } : {}),
+        ...(payload.avatarUrl || payload.avatar ? {
+          avatar: payload.avatarUrl || payload.avatar,
+          avatarUrl: payload.avatarUrl || payload.avatar
+        } : {})
+      })
+
+      return updatedData || localUpdated
+    },
+
+    async changePassword({ oldPassword, newPassword }) {
+      if (!oldPassword || !newPassword) {
+        throw new Error('Password lama dan password baru wajib diisi.')
+      }
+      if (newPassword.length < 6) {
+        throw new Error('Password baru minimal 6 karakter.')
+      }
+      if (this.isLiveApi || this.token) {
+        const res = await authApi.changePassword({ oldPassword, newPassword })
+        return res
+      }
+      return { success: true, message: 'Password berhasil diubah.' }
     },
 
     deleteUser(id) {
