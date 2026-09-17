@@ -3830,142 +3830,146 @@
                       "example": "Laporan insentif buddy berhasil diambil."
                     },
                     "data": {
+                      "type": "array",
+                      "description": "Daftar rekapitulasi pembimbingan mentor Buddy.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "buddyId": {
+                            "type": "string",
+                            "example": "8424f72e-4fcf-4a09-9564-ef485b8a387c"
+                          },
+                          "buddyName": {
+                            "type": "string",
+                            "example": "Store Leader 4 (AGR1) [Buddy]"
+                          },
+                          "buddyEmail": {
+                            "type": "string",
+                            "example": "sl4@magnatech.co.id"
+                          },
+                          "departmentName": {
+                            "type": "string",
+                            "example": "Agora Mall"
+                          },
+                          "departmentCode": {
+                            "type": "string",
+                            "example": "AGR1"
+                          },
+                          "completedCount": {
+                            "type": "integer",
+                            "example": 2
+                          },
+                          "inProgressCount": {
+                            "type": "integer",
+                            "example": 0
+                          },
+                          "totalAssigned": {
+                            "type": "integer",
+                            "example": 2
+                          },
+                          "avgScoreGiven": {
+                            "type": "number",
+                            "example": 88.5
+                          },
+                          "isEligibleForIncentive": {
+                            "type": "boolean",
+                            "example": true
+                          },
+                          "incentiveUnits": {
+                            "type": "integer",
+                            "example": 2
+                          },
+                          "mentees": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "menteeId": {
+                                  "type": "string"
+                                },
+                                "menteeName": {
+                                  "type": "string"
+                                },
+                                "menteeEmail": {
+                                  "type": "string"
+                                },
+                                "batchCode": {
+                                  "type": "string"
+                                },
+                                "status": {
+                                  "type": "string"
+                                },
+                                "isCompleted": {
+                                  "type": "boolean"
+                                },
+                                "totalIndicators": {
+                                  "type": "integer"
+                                },
+                                "evaluatedCount": {
+                                  "type": "integer"
+                                },
+                                "avgScore": {
+                                  "type": "number"
+                                },
+                                "completedAt": {
+                                  "type": "string",
+                                  "nullable": true
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "meta": {
                       "type": "object",
                       "properties": {
+                        "total": {
+                          "type": "integer",
+                          "example": 10
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "example": 10
+                        },
+                        "totalPages": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "hasNextPage": {
+                          "type": "boolean",
+                          "example": false
+                        },
+                        "hasPrevPage": {
+                          "type": "boolean",
+                          "example": false
+                        },
                         "summary": {
                           "type": "object",
                           "properties": {
                             "totalBuddies": {
                               "type": "integer",
-                              "example": 5
+                              "example": 10
                             },
                             "totalMenteesAssigned": {
                               "type": "integer",
-                              "example": 12
+                              "example": 26
                             },
                             "totalMenteesCompleted": {
                               "type": "integer",
-                              "example": 8
+                              "example": 18
                             },
                             "totalMenteesInProgress": {
                               "type": "integer",
-                              "example": 4
+                              "example": 8
                             },
                             "eligibleBuddiesCount": {
                               "type": "integer",
-                              "example": 4
-                            }
-                          }
-                        },
-                        "buddies": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "buddyId": {
-                                "type": "string",
-                                "example": "8424f72e-4fcf-4a09-9564-ef485b8a387c"
-                              },
-                              "buddyName": {
-                                "type": "string",
-                                "example": "Store Leader 4 (AGR1) [Buddy]"
-                              },
-                              "buddyEmail": {
-                                "type": "string",
-                                "example": "sl4@magnatech.co.id"
-                              },
-                              "departmentName": {
-                                "type": "string",
-                                "example": "Agora Mall"
-                              },
-                              "departmentCode": {
-                                "type": "string",
-                                "example": "AGR1"
-                              },
-                              "completedCount": {
-                                "type": "integer",
-                                "example": 2
-                              },
-                              "inProgressCount": {
-                                "type": "integer",
-                                "example": 0
-                              },
-                              "totalAssigned": {
-                                "type": "integer",
-                                "example": 2
-                              },
-                              "avgScoreGiven": {
-                                "type": "number",
-                                "example": 88.5
-                              },
-                              "isEligibleForIncentive": {
-                                "type": "boolean",
-                                "example": true
-                              },
-                              "incentiveUnits": {
-                                "type": "integer",
-                                "example": 2
-                              },
-                              "mentees": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "menteeId": {
-                                      "type": "string"
-                                    },
-                                    "menteeName": {
-                                      "type": "string"
-                                    },
-                                    "menteeEmail": {
-                                      "type": "string"
-                                    },
-                                    "batchCode": {
-                                      "type": "string"
-                                    },
-                                    "status": {
-                                      "type": "string"
-                                    },
-                                    "isCompleted": {
-                                      "type": "boolean"
-                                    },
-                                    "totalIndicators": {
-                                      "type": "integer"
-                                    },
-                                    "evaluatedCount": {
-                                      "type": "integer"
-                                    },
-                                    "avgScore": {
-                                      "type": "number"
-                                    },
-                                    "completedAt": {
-                                      "type": "string",
-                                      "nullable": true
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "pagination": {
-                          "type": "object",
-                          "properties": {
-                            "total": {
-                              "type": "integer",
-                              "example": 5
-                            },
-                            "page": {
-                              "type": "integer",
-                              "example": 1
-                            },
-                            "limit": {
-                              "type": "integer",
-                              "example": 10
-                            },
-                            "totalPages": {
-                              "type": "integer",
-                              "example": 1
+                              "example": 7
                             }
                           }
                         }

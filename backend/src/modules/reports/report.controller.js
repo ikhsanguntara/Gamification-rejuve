@@ -15,9 +15,19 @@ const { sendSuccess, sendError, sendPaginated } = require('../../utils/responseW
 const getBuddyIncentive = async (req, res, next) => {
   try {
     const result = await reportService.getBuddyIncentiveReport(req.query, req.user);
+    const { total, page, limit, totalPages } = result.pagination;
     return sendSuccess(res, {
       message: 'Laporan insentif buddy berhasil diambil.',
-      data: result
+      data: result.buddies,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+        summary: result.summary
+      }
     });
   } catch (error) {
     next(error);

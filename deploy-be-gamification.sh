@@ -60,7 +60,7 @@ echo "🧹 [5/5] Membersihkan cache image lama yang tidak terpakai..."
 echo "=================================================================="
 docker image prune -f >/dev/null 2>&1 || true
 
-SERVER_IP=$(curl -s --max-time 3 ifconfig.me || echo "localhost")
+SERVER_IP=$(curl -4 -s --max-time 3 ifconfig.me || curl -4 -s --max-time 3 icanhazip.com || echo "localhost")
 
 echo "=================================================================="
 echo "🎉 DEPLOYMENT GAMIFICATION BACKEND BERHASIL & SEHAT!"
