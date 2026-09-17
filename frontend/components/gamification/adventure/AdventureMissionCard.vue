@@ -58,15 +58,11 @@
         <!-- Star reward section -->
         <div class="star-section">
           <div class="star-row">
-            <div class="star-display">
-              <span
-                v-for="i in 5"
-                :key="i"
-                class="star-item"
-                :class="{ 'star-earned': i <= earnedStars, 'star-max': i <= 5 }"
-              >★</span>
-            </div>
-            <span class="star-label">{{ starLabel }}</span>
+            <StarReward
+              :stars="earnedStars"
+              size="sm"
+              :show-label="true"
+            />
           </div>
           <div v-if="mission.averageScore" class="score-badge">
             Skor: {{ mission.averageScore }}
@@ -120,6 +116,7 @@
 <script setup>
 import { computed } from 'vue'
 import { calculateStars } from '~/utils/star.js'
+import StarReward from '~/components/gamification/StarReward.vue'
 import {
   X, Lock, CheckCircle2, ClipboardList, CalendarDays,
   Tent, Waves, Mountain, ChevronRight, RotateCcw, Clock

@@ -7,6 +7,7 @@ import { useEvaluationStore } from './stores/evaluation.js'
 import { useApprovalStore } from './stores/approval.js'
 import { useGamificationStore } from './stores/gamification.js'
 import { useStoreStore } from './stores/store.js'
+import { calculateAverageDmSl } from './utils/star.js'
 
 console.log('🚀 MEMULAI AUDIT & PENGUJIAN SEMUA FITUR CRUD SISTEM RE.JUVE...\n')
 
@@ -322,12 +323,12 @@ if (pendingApproval) {
   assert(finalStarsCrew1 >= initialStarsCrew1, 'Gamification Minting: Reward bintang otomatis dicairkan ke saldo seluruh kru')
 }
 
-// 5.3 DISTRICT MANAGER (SL + DM) / 2 FORMULA TEST
+// 5.3 DISTRICT MANAGER AVERAGE (SL + DM) / 2 FORMULA TEST
 const itemToAdjust = approvalStore.approvals.find(a => a.status === 'PENDING_REVIEW')
 if (itemToAdjust) {
-  const initialSLScore = itemToAdjust.score || itemToAdjust.averageScore || 90
+  const initialSLScore = Number(itemToAdjust.slScore ?? itemToAdjust.originalScore ?? itemToAdjust.score ?? itemToAdjust.averageScore ?? 90)
   const dmScoreInput = 80
-  const expectedFinal = Math.round((initialSLScore + dmScoreInput) / 2)
+  const expectedFinal = calculateAverageDmSl(initialSLScore, dmScoreInput).avgScore
   const adjustResult = approvalStore.approveMission(itemToAdjust.id, { dmScore: dmScoreInput, dmNote: 'Penyesuaian kecepatan bar' })
   assert(adjustResult.success === true && itemToAdjust.score === expectedFinal && itemToAdjust.slScore === initialSLScore && itemToAdjust.dmScore === dmScoreInput, 'District Manager Average Calculation: Nilai akhir dihitung dari (SL + DM) / 2 secara akurat')
 }

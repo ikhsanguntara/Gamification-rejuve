@@ -68,7 +68,7 @@
           </div>
           <div>
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              {{ item.status === 'APPROVED' && item.dmScore !== undefined ? 'Nilai Akhir Rata-rata' : 'Skor Pengajuan SL' }}
+              {{ item.status === 'APPROVED' ? 'Nilai Gabungan (SL & DM)' : 'Skor Pengajuan SL' }}
             </span>
             <div class="flex items-baseline gap-1.5">
               <span class="text-sm font-black text-slate-900 dark:text-white">

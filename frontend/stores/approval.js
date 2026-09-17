@@ -4,7 +4,7 @@ import { useEvaluationStore } from './evaluation.js'
 import { useGamificationStore } from './gamification.js'
 import { useBatchStore } from './batch.js'
 import { useUserStore } from './user.js'
-import { calculateStars } from '../utils/star.js'
+import { calculateStars, calculateAverageDmSl } from '../utils/star.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { evaluationApi } from '../services/api.js'
 import { buildPrismaQuery } from '../utils/queryBuilder.js'
@@ -84,9 +84,11 @@ export const useApprovalStore = defineStore('approval', {
             const status = isApproved ? 'APPROVED' : 'PENDING_REVIEW'
             const slScore = m.tlScore !== null && m.tlScore !== undefined ? Number(m.tlScore) : 0
             const dmScore = m.dmScore !== null && m.dmScore !== undefined ? Number(m.dmScore) : slScore
+            const avgCalc = calculateAverageDmSl(slScore, dmScore)
             const finalScore = m.finalScore !== null && m.finalScore !== undefined
               ? Number(m.finalScore)
-              : (isApproved ? Math.round((slScore + dmScore) / 2) : slScore)
+              : (isApproved ? avgCalc.avgScore : slScore)
+            const stars = isApproved ? avgCalc.stars : calculateStars(slScore)
 
             return {
               id: m.userMissionId,
@@ -109,7 +111,7 @@ export const useApprovalStore = defineStore('approval', {
               dmScore,
               score: finalScore,
               averageScore: finalScore,
-              calculatedStars: calculateStars(finalScore),
+              calculatedStars: stars,
               status,
               submittedAt: m.tlScoredAt || m.createdAt,
               reviewedAt: m.dmReviewedAt,
@@ -139,7 +141,7 @@ export const useApprovalStore = defineStore('approval', {
 
       const now = new Date().toISOString()
 
-      // Calculate Final Score: (Nilai SL + Nilai DM) / 2
+      // Calculate Final Score: Nilai Gabungan Rata-rata (SL + DM) / 2
       const slScore = Number(item.slScore ?? item.originalScore ?? item.score ?? item.averageScore ?? 90)
       let dmScore = slScore
 
@@ -149,9 +151,10 @@ export const useApprovalStore = defineStore('approval', {
         dmScore = Math.min(100, Math.max(0, Number(overridePayload.score)))
       }
 
-      // Rumus: (SL + DM) / 2
-      const finalScore = Math.round((slScore + dmScore) / 2)
-      const finalStars = calculateStars(finalScore)
+      // Rumus Resmi Average DM + SL:
+      const avgCalc = calculateAverageDmSl(slScore, dmScore)
+      const finalScore = avgCalc.avgScore
+      const finalStars = avgCalc.stars
 
       item.slScore = slScore
       item.dmScore = dmScore
@@ -233,7 +236,7 @@ export const useApprovalStore = defineStore('approval', {
       })
 
       // 5. Prepend to Live Activity Feed
-      const adjustInfo = item.isAdjustedByDm ? ` (Rata-rata SL: ${slScore} + DM: ${dmScore} / 2 = ${finalScore})` : ` (Skor: ${finalScore})`
+      const adjustInfo = item.isAdjustedByDm ? ` (Rata-rata SL: ${slScore} + DM: ${dmScore} = ${finalScore})` : ` (Skor: ${finalScore})`
       this.activities.unshift({
         id: `act-${Date.now()}`,
         actor: 'District Manager',

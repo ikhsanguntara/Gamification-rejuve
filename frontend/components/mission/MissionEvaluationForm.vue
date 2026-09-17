@@ -87,7 +87,7 @@
               </span>
             </label>
             <p class="text-xs text-slate-400 mt-0.5">
-              Geser slider atau masukkan angka nilai kelipatan 10 (0–100). Bintang (⭐ 1–10, 1★/10 poin) dihitung otomatis secara realtime.
+              Geser slider atau masukkan angka nilai kelipatan 1 (0–100). Bintang (⭐ maks 5.0, 1 Bintang = 20 Poin) dihitung otomatis secara realtime.
             </p>
           </div>
 
@@ -99,21 +99,21 @@
               @click="applyBulkScore(100)"
               class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
             >
-              100 (10⭐)
+              100 (5⭐)
             </button>
             <button
               type="button"
               @click="applyBulkScore(90)"
               class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
             >
-              90 (9⭐)
+              90 (4.5⭐)
             </button>
             <button
               type="button"
               @click="applyBulkScore(80)"
               class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 hover:bg-[#831843] hover:text-white dark:hover:bg-[#831843] text-slate-700 dark:text-slate-300 shadow-sm transition-all cursor-pointer"
             >
-              80 (8⭐)
+              80 (4⭐)
             </button>
           </div>
         </div>
@@ -232,11 +232,12 @@
 
               <!-- Score Indicator Markers -->
               <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400 px-1">
-                <span>0</span>
-                <span>30 (3⭐)</span>
-                <span>50 (5⭐)</span>
-                <span class="text-amber-600 dark:text-amber-400">80 (8⭐)</span>
-                <span class="text-emerald-600 dark:text-emerald-400">100 (10⭐)</span>
+                <span>0 (0⭐)</span>
+                <span>20 (1⭐)</span>
+                <span>40 (2⭐)</span>
+                <span>60 (3⭐)</span>
+                <span class="text-amber-600 dark:text-amber-400">80 (4⭐)</span>
+                <span class="text-emerald-600 dark:text-emerald-400">100 (5⭐)</span>
               </div>
             </div>
           </div>

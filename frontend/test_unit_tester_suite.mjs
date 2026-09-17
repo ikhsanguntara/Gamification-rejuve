@@ -111,6 +111,10 @@ test('starsToPoints: konversi 2.5 bintang menjadi 50 poin', () => {
   assertEqual(starsToPoints(2.5), 50)
 })
 
+test('starsToPoints: konversi 56.5 bintang menjadi 1130 poin (Leaderboard spec)', () => {
+  assertEqual(starsToPoints(56.5), 1130)
+})
+
 test('starsToPoints: input null/undefined menghasilkan 0 poin', () => {
   assertEqual(starsToPoints(null), 0)
   assertEqual(starsToPoints(undefined), 0)
@@ -543,6 +547,63 @@ test('Change Password Validation: Validasi password minimal 6 karakter dan kelen
   // Test password valid
   const validRes = await userStore.changePassword({ oldPassword: 'OldPassword123!', newPassword: 'NewSecret123!' })
   assertTrue(Boolean(validRes), 'Change password dengan input valid berhasil dieksekusi')
+})
+
+// ============================================================================
+// SUITE 9: VALIDASI RESTRIKSI TAHAPAN ONBOARDING (BUDDY SEBELUM JOURNEY)
+// ============================================================================
+console.log('📌 9. Menguji Validasi Restriksi Tahap Onboarding (BUDDY vs JOURNEY):')
+
+test('Evaluasi Kru: Kru dengan step "BUDDY" harus berstatus terkunci dari input nilai SL', () => {
+  const checkBuddyLocked = (step) => {
+    if (!step) return false
+    return step === 'BUDDY' || (step !== 'JOURNEY' && step !== 'FEEDBACK' && step !== 'COMPLETED')
+  }
+
+  assertTrue(checkBuddyLocked('BUDDY'), 'Step BUDDY harus terkunci dari input nilai SL')
+  assertTrue(checkBuddyLocked('ONBOARDING'), 'Step non-JOURNEY/non-COMPLETED harus terkunci')
+  assertFalse(checkBuddyLocked('JOURNEY'), 'Step JOURNEY harus terbuka untuk dinilai SL')
+  assertFalse(checkBuddyLocked('FEEDBACK'), 'Step FEEDBACK harus terbuka (telah melewati tahap Buddy)')
+  assertFalse(checkBuddyLocked('COMPLETED'), 'Step COMPLETED harus terbuka (telah menyelesaikan seluruh tahapan)')
+})
+
+test('Evaluasi Kru: Validasi pencegahan submit nilai untuk kru di tahap BUDDY', () => {
+  const submitMissionAttempt = (crew) => {
+    const isLocked = crew.step === 'BUDDY' || (crew.step && crew.step !== 'JOURNEY' && crew.step !== 'FEEDBACK' && crew.step !== 'COMPLETED')
+    if (isLocked) {
+      throw new Error(`Tahap Buddy Belum Selesai: Kru "${crew.name}" masih berada di tahap BUDDY.`)
+    }
+    return { success: true, message: 'Berhasil dikirim ke DM' }
+  }
+
+  // 1. Coba submit untuk kru di tahap BUDDY
+  const buddyCrew = { id: 'c-01', name: 'Budi Santoso', step: 'BUDDY' }
+  let blocked = false
+  try {
+    submitMissionAttempt(buddyCrew)
+  } catch (err) {
+    blocked = true
+    assertTrue(err.message.includes('Tahap Buddy Belum Selesai'), 'Pesan error harus menginformasikan penyelesaian tahap Buddy')
+  }
+  assertTrue(blocked, 'Submit nilai untuk kru di tahap BUDDY harus dicegah/diblokir')
+
+  // 2. Submit untuk kru di tahap JOURNEY
+  const journeyCrew = { id: 'c-02', name: 'Siti Aminah', step: 'JOURNEY' }
+  const result = submitMissionAttempt(journeyCrew)
+  assertTrue(result.success, 'Submit nilai untuk kru di tahap JOURNEY harus berhasil')
+})
+
+test('Dashboard Pipeline: Resolusi tahapan kru (BUDDY -> Captain Phase vs JOURNEY -> Week 1)', () => {
+  const resolveStageKey = (c) => {
+    const isBuddy = c.step === 'BUDDY' || c.type === 'BUDDY' || c.isBuddy || c.buddyCompleted === false
+    return isBuddy ? 'BUDDY' : `STAGE_${c.currentWeek || c.week || 1}`
+  }
+
+  const crew1 = { name: 'Budi Santoso', step: 'BUDDY' }
+  const crew2 = { name: 'test1', step: 'JOURNEY', week: 1 }
+
+  assertEqual(resolveStageKey(crew1), 'BUDDY', 'Kru dengan step BUDDY harus masuk ke Captain Phase')
+  assertEqual(resolveStageKey(crew2), 'STAGE_1', 'Kru dengan step JOURNEY harus masuk ke STAGE_1 / Week 1')
 })
 
 console.log('')

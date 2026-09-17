@@ -85,12 +85,12 @@
             📍 {{ topThreeList[1].storeLocation || 'Gerai Re.juve' }}
           </p>
           <div class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
-            <div class="inline-flex items-center gap-1 font-black text-amber-500 text-xs px-2 py-0.5 rounded-lg bg-slate-900 text-amber-300 shadow-2xs">
+            <div class="inline-flex items-center gap-1 font-black text-amber-300 text-xs px-2.5 py-1 rounded-xl bg-slate-900 dark:bg-slate-950 shadow-2xs border border-amber-400/20">
               <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               <span>{{ (Number(topThreeList[1].stars) || 0).toFixed(1).replace(/\.0$/, '') }}</span>
             </div>
             <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
-              {{ (topThreeList[1].points || starsToPoints(topThreeList[1].stars)).toLocaleString() }} Poin
+              {{ (topThreeList[1].points || starsToPoints(topThreeList[1].stars)).toLocaleString() }} Points
             </span>
           </div>
           <span class="text-[11px] font-medium text-slate-400 mt-2">
@@ -128,14 +128,13 @@
             📍 {{ topThreeList[0].storeLocation || 'Gerai Re.juve' }}
           </p>
 
-          <div class="mt-3.5 inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-slate-900 text-white shadow-md border border-amber-400/40">
-            <div class="inline-flex items-center gap-1 text-amber-400 font-black text-sm">
-              <Star class="w-4 h-4 fill-amber-400" />
+          <div class="mt-3.5 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-amber-400/40 shadow-md">
+            <div class="inline-flex items-center gap-1 text-amber-300 font-black text-sm px-2.5 py-1 rounded-xl bg-slate-900 dark:bg-slate-950 shadow-2xs border border-amber-400/30">
+              <Star class="w-4 h-4 fill-amber-400 text-amber-400" />
               <span>{{ (Number(topThreeList[0].stars) || 0).toFixed(1).replace(/\.0$/, '') }}</span>
             </div>
-            <span class="text-slate-400">|</span>
-            <span class="text-xs font-black text-white">
-              {{ (topThreeList[0].points || starsToPoints(topThreeList[0].stars)).toLocaleString() }} Poin
+            <span class="text-xs font-black text-slate-900 dark:text-white">
+              {{ (topThreeList[0].points || starsToPoints(topThreeList[0].stars)).toLocaleString() }} Points
             </span>
           </div>
 
@@ -172,12 +171,12 @@
           </p>
 
           <div class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
-            <div class="inline-flex items-center gap-1 font-black text-amber-500 text-xs px-2 py-0.5 rounded-lg bg-slate-900 text-amber-300 shadow-2xs">
+            <div class="inline-flex items-center gap-1 font-black text-amber-300 text-xs px-2.5 py-1 rounded-xl bg-slate-900 dark:bg-slate-950 shadow-2xs border border-amber-400/20">
               <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               <span>{{ (Number(topThreeList[2].stars) || 0).toFixed(1).replace(/\.0$/, '') }}</span>
             </div>
             <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
-              {{ (topThreeList[2].points || starsToPoints(topThreeList[2].stars)).toLocaleString() }} Poin
+              {{ (topThreeList[2].points || starsToPoints(topThreeList[2].stars)).toLocaleString() }} Points
             </span>
           </div>
           <span class="text-[11px] font-medium text-slate-400 mt-2">
@@ -296,12 +295,12 @@
                 <!-- Stars & Points -->
                 <td class="py-3.5 px-4 text-right">
                   <div class="inline-flex items-center gap-2 justify-end">
-                    <div class="inline-flex items-center gap-1 font-black text-amber-300 text-xs px-2 py-0.5 rounded-lg bg-slate-900 dark:bg-slate-950 shadow-2xs">
+                    <div class="inline-flex items-center gap-1 font-black text-amber-300 text-xs px-2.5 py-1 rounded-xl bg-slate-900 dark:bg-slate-950 shadow-2xs border border-amber-400/20">
                       <Star class="w-3 h-3 fill-amber-400 text-amber-400" />
                       <span>{{ (Number(crew.stars) || 0).toFixed(1).replace(/\.0$/, '') }}</span>
                     </div>
                     <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      {{ (crew.points || starsToPoints(crew.stars)).toLocaleString() }} Poin
+                      {{ (crew.points || starsToPoints(crew.stars)).toLocaleString() }} Points
                     </span>
                   </div>
                 </td>

@@ -179,6 +179,12 @@
                     <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
                       {{ selectedCrew.code || 'CRW-01' }}
                     </span>
+                    <span
+                      v-if="isCrewBuddyLocked"
+                      class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800"
+                    >
+                      Step: BUDDY
+                    </span>
                   </div>
                   <p class="text-xs text-slate-500 dark:text-slate-400">
                     {{ selectedCrew.position || 'Store Specialist' }} • Cabang {{ batchStore.currentBatch?.name }}
@@ -211,6 +217,39 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Info / Warning Banner if Crew is still in BUDDY Step -->
+          <div
+            v-if="isCrewBuddyLocked"
+            class="p-4 rounded-3xl bg-gradient-to-r from-purple-50 via-amber-50/70 to-rose-50/50 dark:from-purple-950/40 dark:via-amber-950/30 dark:to-rose-950/30 border-2 border-purple-300/80 dark:border-purple-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 text-xs shadow-xs"
+          >
+            <div class="flex items-start sm:items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                <Lock class="w-5 h-5" />
+              </div>
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-slate-900 dark:text-white text-sm">
+                    Tahap Onboarding: Kru Masih Berada di Step BUDDY
+                  </span>
+                  <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-purple-600 text-white shadow-2xs">
+                    STEP: BUDDY
+                  </span>
+                </div>
+                <p class="text-slate-600 dark:text-slate-300 text-xs leading-relaxed">
+                  Input nilai <strong>Misi Operasional (JOURNEY)</strong> untuk <strong>{{ selectedCrew.name }}</strong> terkunci. Store Leader (SL) harus menyelesaikan seluruh evaluasi pada menu <strong>Penilaian Buddy</strong> terlebih dahulu sebelum membuka tahap ini.
+                </p>
+              </div>
+            </div>
+
+            <NuxtLink
+              to="/buddy"
+              class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-bold whitespace-nowrap shadow-xs hover:shadow transition-all flex items-center gap-2 self-start sm:self-auto cursor-pointer"
+            >
+              <Handshake class="w-4 h-4" />
+              <span>Buka Penilaian Buddy →</span>
+            </NuxtLink>
           </div>
 
           <!-- All Missions in Selected Period (Evaluated 1 by 1) -->
@@ -329,9 +368,23 @@
 
               <!-- JIKA MISI BELUM DINILAI: Tampilkan Form Input Slider, Catatan, Upload Foto -->
               <template v-else>
+                <!-- Locked Buddy Step Notice Banner on Card -->
+                <div
+                  v-if="isCrewBuddyLocked"
+                  class="p-2.5 rounded-xl bg-purple-50/90 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800/80 flex items-center justify-between text-xs text-purple-900 dark:text-purple-200"
+                >
+                  <span class="flex items-center gap-1.5 font-semibold text-[11px]">
+                    <Lock class="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                    <span>Kru masih di tahap BUDDY. Selesaikan Penilaian Buddy terlebih dahulu untuk membuka form nilai.</span>
+                  </span>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-200 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
+                    Terkunci
+                  </span>
+                </div>
+
                 <!-- Locked Week Notice Banner on Card if Week is Locked -->
                 <div
-                  v-if="isWeekLocked"
+                  v-else-if="isWeekLocked"
                   class="p-2.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-600 dark:text-slate-300"
                 >
                   <span class="flex items-center gap-1.5 font-semibold text-[11px]">
@@ -347,7 +400,7 @@
                 <div
                   class="p-3 rounded-xl border space-y-2 transition-all"
                   :class="[
-                    isWeekLocked
+                    (isWeekLocked || isCrewBuddyLocked)
                       ? 'bg-slate-100/50 dark:bg-slate-800/20 border-slate-200 dark:border-slate-800'
                       : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/60 dark:border-slate-800'
                   ]"
@@ -375,7 +428,7 @@
                         class="flex items-center rounded-lg border px-2 py-1 transition-all bg-white dark:bg-slate-900 shadow-xs"
                         :class="[
                           getScoreTier(missionScores[mission.id]).borderClass,
-                          isWeekLocked ? 'opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''
+                          (isWeekLocked || isCrewBuddyLocked) ? 'opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''
                         ]"
                       >
                         <input
@@ -384,13 +437,13 @@
                           min="0"
                           max="100"
                           step="1"
-                          :disabled="isWeekLocked"
+                          :disabled="isWeekLocked || isCrewBuddyLocked"
                           @input="onScoreInput(mission.id)"
                           @blur="onScoreBlur(mission.id)"
                           class="w-10 text-center text-xs font-black bg-transparent outline-none p-0 transition-colors"
                           :class="[
                             getScoreTier(missionScores[mission.id]).textClass,
-                            isWeekLocked ? 'cursor-not-allowed' : ''
+                            (isWeekLocked || isCrewBuddyLocked) ? 'cursor-not-allowed' : ''
                           ]"
                         />
                         <span class="text-[10px] text-slate-400 font-bold select-none">/100</span>
@@ -406,20 +459,20 @@
                       min="0"
                       max="100"
                       step="1"
-                      :disabled="isWeekLocked"
+                      :disabled="isWeekLocked || isCrewBuddyLocked"
                       :style="getSliderTrackStyle(missionScores[mission.id])"
                       class="w-full h-2 rounded-full appearance-none transition-all custom-score-slider shadow-inner"
-                      :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
+                      :class="(isWeekLocked || isCrewBuddyLocked) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
                     />
                   </div>
 
                   <!-- Guide Markers Below Slider (Clickable Presets) -->
                   <div class="flex items-center justify-between text-[10px] font-semibold text-slate-400 dark:text-slate-500 px-0.5 select-none">
-                    <button type="button" :disabled="isWeekLocked" :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'hover:text-rose-600 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 0">0 (0⭐)</button>
-                    <button type="button" :disabled="isWeekLocked" :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'hover:text-rose-500 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 25">25 (1.3⭐)</button>
-                    <button type="button" :disabled="isWeekLocked" :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'hover:text-amber-500 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 50">50 (2.5⭐)</button>
-                    <button type="button" :disabled="isWeekLocked" :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'hover:text-sky-500 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 75">75 (3.8⭐)</button>
-                    <button type="button" :disabled="isWeekLocked" :class="isWeekLocked ? 'opacity-50 cursor-not-allowed' : 'hover:text-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer transition-colors'" @click="missionScores[mission.id] = 100">100 (5⭐)</button>
+                    <button type="button" :disabled="isWeekLocked || isCrewBuddyLocked" :class="(isWeekLocked || isCrewBuddyLocked) ? 'opacity-50 cursor-not-allowed' : 'hover:text-rose-600 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 0">0 (0⭐)</button>
+                    <button type="button" :disabled="isWeekLocked || isCrewBuddyLocked" :class="(isWeekLocked || isCrewBuddyLocked) ? 'opacity-50 cursor-not-allowed' : 'hover:text-rose-500 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 25">25 (1.3⭐)</button>
+                    <button type="button" :disabled="isWeekLocked || isCrewBuddyLocked" :class="(isWeekLocked || isCrewBuddyLocked) ? 'opacity-50 cursor-not-allowed' : 'hover:text-amber-500 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 50">50 (2.5⭐)</button>
+                    <button type="button" :disabled="isWeekLocked || isCrewBuddyLocked" :class="(isWeekLocked || isCrewBuddyLocked) ? 'opacity-50 cursor-not-allowed' : 'hover:text-sky-500 cursor-pointer transition-colors'" @click="missionScores[mission.id] = 75">75 (3.8⭐)</button>
+                    <button type="button" :disabled="isWeekLocked || isCrewBuddyLocked" :class="(isWeekLocked || isCrewBuddyLocked) ? 'opacity-50 cursor-not-allowed' : 'hover:text-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer transition-colors'" @click="missionScores[mission.id] = 100">100 (5⭐)</button>
                   </div>
                 </div>
 
@@ -433,11 +486,11 @@
                     <textarea
                       v-model="missionComments[mission.id]"
                       rows="2"
-                      :disabled="isWeekLocked"
-                      :placeholder="isWeekLocked ? 'Minggu ini terkunci. Catatan hanya dapat diedit pada minggu aktif.' : 'Tuliskan catatan kepatuhan SOP atau temuan lapangan...'"
+                      :disabled="isWeekLocked || isCrewBuddyLocked"
+                      :placeholder="isCrewBuddyLocked ? 'Kru masih berada di tahap BUDDY. Catatan terkunci sampai tahap Buddy selesai.' : (isWeekLocked ? 'Minggu ini terkunci. Catatan hanya dapat diedit pada minggu aktif.' : 'Tuliskan catatan kepatuhan SOP atau temuan lapangan...')"
                       class="w-full text-xs rounded-xl border p-2 placeholder-slate-400 resize-none transition-all"
                       :class="[
-                        isWeekLocked
+                        (isWeekLocked || isCrewBuddyLocked)
                           ? 'bg-slate-100/80 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-500 cursor-not-allowed'
                           : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#831843]'
                       ]"
@@ -457,9 +510,9 @@
                     </div>
 
                     <div class="flex items-center gap-1.5 flex-wrap">
-                      <!-- Tombol Upload File (Hanya muncul jika minggu aktif) -->
+                      <!-- Tombol Upload File (Hanya muncul jika minggu aktif & bukan locked buddy) -->
                       <label
-                        v-if="!isWeekLocked"
+                        v-if="!isWeekLocked && !isCrewBuddyLocked"
                         class="h-8 px-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-[#831843] bg-slate-50 dark:bg-slate-800 hover:bg-[#831843]/5 flex items-center gap-1.5 cursor-pointer transition-all text-xs font-semibold text-slate-700 dark:text-slate-300"
                       >
                         <input
@@ -473,9 +526,9 @@
                         <span class="text-[11px]">+ Foto</span>
                       </label>
 
-                      <!-- Info jika minggu terkunci dan tidak ada foto -->
+                      <!-- Info jika minggu terkunci atau tahap buddy belum selesai dan tidak ada foto -->
                       <span v-else-if="(missionEvidences[mission.id] || []).length === 0" class="text-[11px] text-slate-400 italic py-1">
-                        Tidak ada lampiran foto
+                        {{ isCrewBuddyLocked ? 'Upload foto terkunci (Tahap Buddy)' : 'Tidak ada lampiran foto' }}
                       </span>
 
                       <!-- Preview Thumbnail Foto yang Diupload (Klik untuk memperbesar) -->
@@ -493,9 +546,9 @@
                           <Eye class="w-3 h-3 text-white" />
                         </div>
 
-                        <!-- Tombol Hapus Foto (Hanya muncul jika minggu aktif) -->
+                        <!-- Tombol Hapus Foto (Hanya muncul jika minggu aktif & bukan locked buddy) -->
                         <button
-                          v-if="!isWeekLocked"
+                          v-if="!isWeekLocked && !isCrewBuddyLocked"
                           type="button"
                           @click.stop="removeEvidence(mission.id, evIdx)"
                           class="absolute top-0 right-0 w-3.5 h-3.5 bg-rose-600 hover:bg-rose-700 text-white rounded-bl flex items-center justify-center cursor-pointer shadow-xs z-10"
@@ -514,7 +567,15 @@
                 <!-- Status Indikator Misi -->
                 <div class="flex items-center gap-1.5">
                   <span
-                    v-if="isWeekLocked"
+                    v-if="isCrewBuddyLocked"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 text-[11px] font-bold"
+                  >
+                    <Lock class="w-3 h-3 text-purple-600" />
+                    <span>🔒 Terkunci (Selesaikan Tahap Buddy Terlebih Dahulu)</span>
+                  </span>
+
+                  <span
+                    v-else-if="isWeekLocked"
                     class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold"
                   >
                     <Lock class="w-3 h-3 text-slate-400" />
@@ -568,18 +629,19 @@
                   <button
                     v-if="!isMissionSubmitted(mission.id)"
                     type="button"
-                    :disabled="isWeekLocked || getMissionStatus(mission.id) === 'LOCKED'"
+                    :disabled="isWeekLocked || isCrewBuddyLocked || getMissionStatus(mission.id) === 'LOCKED'"
                     @click="submitSingleMission(mission.id)"
                     class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     :class="[
-                      isWeekLocked
+                      (isWeekLocked || isCrewBuddyLocked)
                         ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed'
                         : 'bg-[#831843] hover:bg-[#6b133a]'
                     ]"
                   >
-                    <Lock v-if="isWeekLocked" class="w-3 h-3" />
+                    <Lock v-if="isWeekLocked || isCrewBuddyLocked" class="w-3 h-3" />
                     <Send v-else class="w-3 h-3" />
-                    <span v-if="isWeekLocked">{{ batchStore.currentBatchUnitLabel }} Terkunci</span>
+                    <span v-if="isCrewBuddyLocked">Tahap Buddy Belum Selesai</span>
+                    <span v-else-if="isWeekLocked">{{ batchStore.currentBatchUnitLabel }} Terkunci</span>
                     <span v-else>Kirim Misi Ini ke DM</span>
                   </button>
                   <span
@@ -714,6 +776,7 @@ import {
   ShieldCheck,
   Lock,
   MessageSquare,
+  Handshake,
   Image as ImageIcon
 } from 'lucide-vue-next'
 
@@ -772,13 +835,21 @@ const batchCrews = computed(() => {
       evaluatedCount: c.evaluatedCount || 0,
       status: c.status || 'NEEDS_SCORING',
       avgScore: c.avgScore || 0,
-      starsEarned: c.starsEarned || 0
+      starsEarned: c.starsEarned || 0,
+      step: c.step || 'JOURNEY',
+      type: c.type || 'JOURNEY'
     }))
   }
   return gamificationStore.crewsByBatch(batchStore.currentBatch?.id || '')
 })
 
 const selectedCrewId = ref(null)
+
+const isCrewBuddyLocked = computed(() => {
+  const currentStep = evalStore.selectedCrewUser?.step || selectedCrew.value?.step
+  if (!currentStep) return false
+  return currentStep === 'BUDDY' || (currentStep !== 'JOURNEY' && currentStep !== 'FEEDBACK' && currentStep !== 'COMPLETED')
+})
 
 const filteredCrewList = computed(() => {
   let list = batchCrews.value || []
@@ -1047,6 +1118,10 @@ function getCrewWeekAvgScore(crewId) {
 }
 
 function getCrewWeekProgressLabel(crewId) {
+  const crew = (batchCrews.value || []).find(c => c.id === crewId)
+  if (crew && (crew.step === 'BUDDY' || (crew.step && crew.step !== 'JOURNEY' && crew.step !== 'FEEDBACK' && crew.step !== 'COMPLETED'))) {
+    return '🔒 Step BUDDY'
+  }
   const count = getCrewWeekEvaluatedCount(crewId)
   const total = currentWeekMissions.value.length || 1
   if (count === 0) return 'Belum Dinilai'
@@ -1055,6 +1130,10 @@ function getCrewWeekProgressLabel(crewId) {
 }
 
 function getCrewWeekBadgeClass(crewId) {
+  const crew = (batchCrews.value || []).find(c => c.id === crewId)
+  if (crew && (crew.step === 'BUDDY' || (crew.step && crew.step !== 'JOURNEY' && crew.step !== 'FEEDBACK' && crew.step !== 'COMPLETED'))) {
+    return 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-bold border border-purple-300 dark:border-purple-800'
+  }
   const count = getCrewWeekEvaluatedCount(crewId)
   const total = currentWeekMissions.value.length || 1
   if (count === 0) return 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
@@ -1166,6 +1245,13 @@ function getMissionComment(missionId) {
 }
 
 async function submitSingleMission(missionId) {
+  if (isCrewBuddyLocked.value) {
+    toast.error(
+      'Tahap Buddy Belum Selesai',
+      `Kru "${selectedCrew.value?.name || ''}" masih berada di tahap BUDDY. Anda harus menyelesaikan seluruh penilaian di menu Penilaian Buddy terlebih dahulu sebelum dapat menginput nilai Misi Operasional (JOURNEY).`
+    )
+    return
+  }
   if (isWeekLocked.value) {
     toast.warning(`${batchStore.currentBatchUnitLabel} Terkunci`, `${batchStore.currentBatchUnitLabel} ${batchStore.selectedWeek} berstatus terkunci. Evaluasi hanya dapat diinput saat ${batchStore.currentBatchUnitLabel.toLowerCase()} ini menjadi siklus aktif.`)
     return

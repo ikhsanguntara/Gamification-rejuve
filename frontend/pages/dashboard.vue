@@ -205,26 +205,28 @@
         </p>
       </div>
 
-      <!-- 6. NEEDS REVIEW / ACTION REQUIRED -->
+      <!-- 6. NEEDS REVIEW / MENUNGGU APPROVAL (DM) -->
       <div
         @click="selectedStageFilter = 'PENDING'"
         class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
         :class="selectedStageFilter === 'PENDING'
-          ? 'bg-[#4a1424] text-white border-rose-500/60 ring-2 ring-rose-500/40'
-          : 'bg-[#4a1424]/90 hover:bg-[#4a1424] text-white border-rose-800/40'"
+          ? (userStore.isDistrictManager ? 'bg-[#351a42] text-white border-purple-500/60 ring-2 ring-purple-500/40' : 'bg-[#4a1424] text-white border-rose-500/60 ring-2 ring-rose-500/40')
+          : (userStore.isDistrictManager ? 'bg-[#351a42]/90 hover:bg-[#351a42] text-white border-purple-800/40' : 'bg-[#4a1424]/90 hover:bg-[#4a1424] text-white border-rose-800/40')"
       >
-        <div class="flex items-center justify-between text-rose-300 mb-2">
-          <span class="text-[10px] font-black uppercase tracking-wider">Needs Review</span>
+        <div class="flex items-center justify-between mb-2" :class="userStore.isDistrictManager ? 'text-purple-300' : 'text-rose-300'">
+          <span class="text-[10px] font-black uppercase tracking-wider">
+            {{ userStore.isDistrictManager ? 'Menunggu Approval' : 'Needs Review' }}
+          </span>
           <Hourglass class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform animate-pulse" />
         </div>
         <div class="flex items-baseline justify-between mt-1">
           <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
             {{ pendingReviewCount }}
           </span>
-          <ChevronRight class="w-4 h-4 text-rose-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          <ChevronRight class="w-4 h-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" :class="userStore.isDistrictManager ? 'text-purple-400' : 'text-rose-400'" />
         </div>
-        <p class="text-[10px] text-rose-200/70 mt-1 truncate font-semibold">
-          Your Action Required
+        <p class="text-[10px] mt-1 truncate font-semibold" :class="userStore.isDistrictManager ? 'text-purple-200/70' : 'text-rose-200/70'">
+          {{ userStore.isDistrictManager ? 'Persetujuan DM Diperlukan' : 'Your Action Required' }}
         </p>
       </div>
     </div>
@@ -236,15 +238,19 @@
         <div>
           <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-                <Bell class="w-4 h-4" />
+              <div
+                class="w-8 h-8 rounded-xl flex items-center justify-center"
+                :class="userStore.isDistrictManager ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'"
+              >
+                <ShieldCheck v-if="userStore.isDistrictManager" class="w-4 h-4" />
+                <Bell v-else class="w-4 h-4" />
               </div>
               <div>
                 <h3 class="text-base font-bold text-slate-900 dark:text-white leading-tight">
-                  Action Required
+                  {{ userStore.isDistrictManager ? 'Persetujuan & Approval DM' : 'Action Required' }}
                 </h3>
                 <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                  Beberapa hal yang perlu perhatian kamu hari ini.
+                  {{ userStore.isDistrictManager ? 'Daftar pengajuan evaluasi dari Store Leader yang memerlukan persetujuan kamu.' : 'Beberapa hal yang perlu perhatian kamu hari ini.' }}
                 </p>
               </div>
             </div>
@@ -253,7 +259,7 @@
               :to="userStore.isDistrictManager ? '/approvals' : '/evaluations'"
               class="text-xs font-bold text-[#831843] dark:text-[#f472b6] hover:underline flex items-center gap-1"
             >
-              <span>Lihat Semua</span>
+              <span>{{ userStore.isDistrictManager ? 'Buka Menu Approvals' : 'Lihat Semua' }}</span>
               <ArrowRight class="w-3.5 h-3.5" />
             </NuxtLink>
           </div>
@@ -263,22 +269,32 @@
             <!-- Item 1: Pending Review -->
             <NuxtLink
               :to="userStore.isDistrictManager ? '/approvals' : '/evaluations'"
-              class="flex items-start gap-3.5 p-3 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 hover:bg-rose-100/60 dark:hover:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/40 transition-all cursor-pointer group"
+              class="flex items-start gap-3.5 p-3 rounded-2xl border transition-all cursor-pointer group"
+              :class="userStore.isDistrictManager
+                ? 'bg-purple-50/50 dark:bg-purple-950/20 hover:bg-purple-100/60 dark:hover:bg-purple-950/40 border-purple-200/60 dark:border-purple-900/40'
+                : 'bg-rose-50/50 dark:bg-rose-950/20 hover:bg-rose-100/60 dark:hover:bg-rose-950/40 border-rose-200/60 dark:border-rose-900/40'"
             >
-              <div class="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                <FileText class="w-4 h-4" />
+              <div
+                class="w-9 h-9 rounded-xl text-white flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform"
+                :class="userStore.isDistrictManager ? 'bg-purple-600' : 'bg-rose-500'"
+              >
+                <ShieldCheck v-if="userStore.isDistrictManager" class="w-4 h-4" />
+                <FileText v-else class="w-4 h-4" />
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between gap-2">
                   <h4 class="text-xs font-bold text-slate-900 dark:text-white">
-                    {{ pendingReviewCount }} missions waiting for review
+                    {{ userStore.isDistrictManager ? `${pendingReviewCount} evaluasi menunggu approval DM` : `${pendingReviewCount} missions waiting for review` }}
                   </h4>
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300">
+                  <span
+                    class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    :class="userStore.isDistrictManager ? 'bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300' : 'bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300'"
+                  >
                     Prioritas
                   </span>
                 </div>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Mohon lakukan penilaian agar progress onboarding New Hire tetap berjalan lancar.
+                  {{ userStore.isDistrictManager ? 'Tinjau dan setujui penilaian Store Leader agar progres gamifikasi kru dapat diperbarui.' : 'Mohon lakukan penilaian agar progress onboarding New Hire tetap berjalan lancar.' }}
                 </p>
               </div>
             </NuxtLink>
@@ -484,7 +500,7 @@
             <option value="STAGE_1">Week 1</option>
             <option value="STAGE_2">Week 2</option>
             <option value="STAGE_3">Week 3</option>
-            <option value="PENDING">Needs Review / Pending</option>
+            <option value="PENDING">{{ userStore.isDistrictManager ? 'Menunggu Approval DM' : 'Needs Review / Pending' }}</option>
           </select>
         </div>
       </div>
@@ -593,7 +609,7 @@
                 </NuxtLink>
                 <NuxtLink
                   v-else
-                  to="/evaluations"
+                  :to="crew.stageKey === 'BUDDY' ? '/buddy' : '/evaluations'"
                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#831843]/10 hover:text-[#831843] dark:bg-slate-800 dark:hover:bg-[#831843]/20 dark:hover:text-[#f472b6] text-slate-700 dark:text-slate-300 font-bold text-[11px] transition-colors"
                 >
                   <span>Nilai</span>
@@ -876,6 +892,21 @@ const storeDisplayName = computed(() => {
 const pendingReviewCount = computed(() => {
   const activeBatchId = targetActiveBatchId.value
 
+  // Jika POV adalah District Manager / Head: ambil jumlah evaluasi yang menunggu approval DM (status PENDING_REVIEW / SCORED_BY_TL)
+  if (userStore.isDistrictManager || userStore.isHead) {
+    if (dashboardSummary.value?.metrics?.pendingApprovals !== undefined) {
+      return dashboardSummary.value.metrics.pendingApprovals
+    }
+    if (approvalStore.pendingApprovals?.length > 0) {
+      const filtered = activeBatchId
+        ? approvalStore.pendingApprovals.filter(a => a.batchId === activeBatchId || a.mission?.batchId === activeBatchId)
+        : approvalStore.pendingApprovals
+      return filtered.length
+    }
+    return 0
+  }
+
+  // POV Store Leader:
   // 1. Dari respons summary API jika terfilter batch
   if (dashboardSummary.value?.metrics?.pendingJourneyEvaluations !== undefined) {
     return (dashboardSummary.value.metrics.pendingJourneyEvaluations || 0) + (dashboardSummary.value.metrics.pendingBuddyEvaluations || 0)
@@ -960,7 +991,8 @@ const activeRecruits = computed(() => {
 
     return targetList.map((c, idx) => {
       const userMatch = allUsersList.find(u => (u.id || u.userId) === (c.userId || c.id))
-      const stageKey = (c.isBuddy || c.buddyCompleted === false) ? 'BUDDY' : `STAGE_${c.currentWeek || batchActiveWeek}`
+      const isBuddyStep = c.step === 'BUDDY' || userMatch?.step === 'BUDDY' || (c.type === 'BUDDY') || c.isBuddy || c.buddyCompleted === false
+      const stageKey = isBuddyStep ? 'BUDDY' : `STAGE_${c.currentWeek || c.week || batchActiveWeek || 1}`
       const completed = c.evaluatedCount !== undefined ? c.evaluatedCount : (c.completedCount || 0)
       const total = c.totalMissionsCount || 2
       const pct = total > 0 ? Math.round((completed / total) * 100) : 0
@@ -1034,7 +1066,8 @@ const activeRecruits = computed(() => {
   }
 
   return targetCrews.map((c, idx) => {
-    const stageKey = (c.isBuddy || Boolean(c.userBuddyId)) ? 'BUDDY' : `STAGE_${c.currentWeek || batchActiveWeek}`
+    const isBuddyStep = c.step === 'BUDDY' || (c.type === 'BUDDY') || c.isBuddy || Boolean(c.userBuddyId)
+    const stageKey = isBuddyStep ? 'BUDDY' : `STAGE_${c.currentWeek || c.week || batchActiveWeek || 1}`
     const total = 2
     const completed = 0
     
@@ -1064,7 +1097,7 @@ function formatRecruitItem(item) {
   let stagePillLabel = 'Week 1'
 
   if (item.stage === 'BUDDY') {
-    stagePillClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+    stagePillClass = 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-800 font-bold'
     stagePillLabel = 'Captain Phase'
   } else if (item.stage === 'STAGE_2') {
     stagePillClass = 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300'

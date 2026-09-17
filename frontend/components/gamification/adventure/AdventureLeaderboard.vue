@@ -72,14 +72,13 @@
             📍 {{ topThreeList[1].storeLocation || 'Gerai Re.juve' }}
           </p>
 
-          <div class="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
-            <div class="inline-flex items-center gap-1 font-black text-amber-500 text-xs">
+          <div class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
+            <div class="inline-flex items-center gap-1 font-black text-amber-300 text-xs px-2.5 py-1 rounded-xl bg-slate-900 dark:bg-slate-950 shadow-2xs border border-amber-400/20">
               <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               <span>{{ formatStars(topThreeList[1].stars) }}</span>
             </div>
-            <span class="text-[11px] text-slate-400">|</span>
-            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
-              {{ formatPoints(topThreeList[1].points || topThreeList[1].stars) }} Poin
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+              {{ formatPoints(topThreeList[1].points || topThreeList[1].stars) }} Points
             </span>
           </div>
           <span class="text-[10px] font-bold text-slate-400 mt-2">
@@ -117,14 +116,13 @@
             📍 {{ topThreeList[0].storeLocation || 'Gerai Re.juve' }}
           </p>
 
-          <div class="mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 text-white shadow-md border border-amber-400/40">
-            <div class="inline-flex items-center gap-1 text-amber-400 font-black text-xs sm:text-sm">
+          <div class="mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-amber-400/40 shadow-md">
+            <div class="inline-flex items-center gap-1 text-amber-300 font-black text-xs sm:text-sm px-2.5 py-1 rounded-xl bg-slate-900 dark:bg-slate-950 shadow-2xs border border-amber-400/30">
               <Star class="w-4 h-4 fill-amber-400 text-amber-400" />
               <span>{{ formatStars(topThreeList[0].stars) }}</span>
             </div>
-            <span class="text-slate-500">|</span>
-            <span class="text-xs font-black text-white">
-              {{ formatPoints(topThreeList[0].points || topThreeList[0].stars) }} Poin
+            <span class="text-xs font-black text-slate-900 dark:text-white">
+              {{ formatPoints(topThreeList[0].points || topThreeList[0].stars) }} Points
             </span>
           </div>
 
@@ -160,14 +158,13 @@
             📍 {{ topThreeList[2].storeLocation || 'Gerai Re.juve' }}
           </p>
 
-          <div class="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
-            <div class="inline-flex items-center gap-1 font-black text-amber-500 text-xs">
+          <div class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
+            <div class="inline-flex items-center gap-1 font-black text-amber-300 text-xs px-2.5 py-1 rounded-xl bg-slate-900 dark:bg-slate-950 shadow-2xs border border-amber-400/20">
               <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               <span>{{ formatStars(topThreeList[2].stars) }}</span>
             </div>
-            <span class="text-[11px] text-slate-400">|</span>
-            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
-              {{ formatPoints(topThreeList[2].points || topThreeList[2].stars) }} Poin
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+              {{ formatPoints(topThreeList[2].points || topThreeList[2].stars) }} Points
             </span>
           </div>
           <span class="text-[10px] font-bold text-slate-400 mt-2">
@@ -307,7 +304,7 @@
                       <span>{{ formatStars(crew.stars) }}</span>
                     </div>
                     <span class="text-xs font-bold text-slate-600 dark:text-slate-300">
-                      {{ formatPoints(crew.points || crew.stars) }} Poin
+                      {{ formatPoints(crew.points || crew.stars) }} Points
                     </span>
                   </div>
                 </td>
