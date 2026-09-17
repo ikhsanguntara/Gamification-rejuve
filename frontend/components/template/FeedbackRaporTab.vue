@@ -33,9 +33,6 @@
           <h4 class="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
             {{ fpkg.name }}
           </h4>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-            {{ fpkg.description || 'Kuesioner evaluasi program onboarding oleh Crew' }}
-          </p>
 
           <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
             <span class="text-slate-400 font-medium">📋 Kuesioner Feedback</span>
@@ -88,9 +85,6 @@
                 <Loader2 class="w-3 h-3 animate-spin" /> Memuat detail...
               </span>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400">
-              {{ activeFeedbackPkg.description || 'Kuesioner evaluasi program onboarding oleh Crew' }}
-            </p>
           </div>
 
           <div class="flex items-center gap-2 self-start sm:self-auto">

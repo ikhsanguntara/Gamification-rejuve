@@ -47,9 +47,6 @@
                 🔒 Read-Only
               </span>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400">
-              Rincian siklus batch, kurikulum SOP mingguan, penugasan kru gerai, dan daftar misi yang terdaftar.
-            </p>
           </div>
         </div>
 
@@ -180,9 +177,6 @@
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
               2. Kurikulum Template Misi Buddy (Pra-Batch)
             </h3>
-            <p class="text-[11px] text-slate-400">
-              Program orientasi & pendampingan oleh <strong>Store Leader (SL)</strong> sebelum kru memulai kompetisi batch resmi.
-            </p>
           </div>
           <span v-if="linkedBuddyTemplate" class="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 px-2.5 py-0.5 rounded-full">
             🤝 Durasi: {{ linkedBuddyTemplate.durationValue || 3 }} Hari
@@ -234,9 +228,6 @@
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
               3. Paket Master Kurikulum Template SOP (Journey)
             </h3>
-            <p class="text-[11px] text-slate-400">
-              Kurikulum kompetisi mingguan yang dijalani kru di seluruh gerai.
-            </p>
           </div>
           <NuxtLink to="/admin/templates" class="text-[11px] text-[#831843] dark:text-[#f472b6] font-semibold hover:underline">
             Katalog Master Template →

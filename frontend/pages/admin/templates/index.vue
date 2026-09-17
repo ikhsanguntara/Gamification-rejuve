@@ -9,11 +9,8 @@
           <span class="text-[#831843] dark:text-[#f472b6] font-semibold">Master Templates</span>
         </div>
         <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-          Master Template SOP Misi
+          Master Template Misi
         </h2>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          Katalog paket SOP operasional dengan struktur mingguan dinamis siap diterapkan ke gerai.
-        </p>
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">
@@ -68,7 +65,7 @@
         ]"
       >
         <Layers class="w-4 h-4" />
-        <span>1. Paket Misi Batch ({{ (templateStore.journeyTemplates.length > 0 ? templateStore.journeyTemplates : templateStore.allPackages).length }})</span>
+        <span>Template Misi Mingguan ({{ (templateStore.journeyTemplates.length > 0 ? templateStore.journeyTemplates : templateStore.allPackages).length }})</span>
       </button>
 
       <button
@@ -82,7 +79,7 @@
         ]"
       >
         <Handshake class="w-4 h-4" />
-        <span>2. Paket Misi Buddy ({{ templateStore.buddyTemplates.length }})</span>
+        <span>Template Misi Buddy ({{ templateStore.buddyTemplates.length }})</span>
       </button>
 
       <button

@@ -2,7 +2,6 @@
   <BaseModal
     :modelValue="modelValue"
     title="Edit Master Template & Detail Misi"
-    :subtitle="`Perbarui konfigurasi header dan butir SOP ${form.code}. Seluruh perubahan akan dikirim utuh ke server.`"
     max-width="5xl"
     @update:modelValue="$emit('update:modelValue', $event)"
     @close="$emit('update:modelValue', false)"

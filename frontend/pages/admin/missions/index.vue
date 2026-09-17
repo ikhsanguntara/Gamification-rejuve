@@ -9,11 +9,8 @@
           <span class="text-[#831843] dark:text-[#f472b6] font-semibold">Mission Management</span>
         </div>
         <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-          Manajemen Misi Operasional Gerai
+          Kelola Misi
         </h2>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          Buat dan kelola misi standar SOP operasional per cabang gerai dan minggu evaluasi, otomatis menugaskan seluruh Crew.
-        </p>
       </div>
 
       <NuxtLink

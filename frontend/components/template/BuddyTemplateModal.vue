@@ -3,7 +3,6 @@
     :model-value="modelValue"
     @update:model-value="$emit('update:modelValue', $event)"
     :title="isEditMode ? 'Edit Template Rapor Buddy' : 'Buat Template Rapor Buddy Baru'"
-    :subtitle="isEditMode ? 'Perbarui indikator penilaian dan kategori rapor pendampingan new hire 3 hari.' : 'Definisikan konfigurasi rapor pendampingan 3 hari pra-batch beserta butir indikator penilaiannya.'"
     max-width="5xl"
   >
     <form id="buddy-template-form" @submit.prevent="executeSaveAll" class="space-y-6">
@@ -108,9 +107,6 @@
                 {{ indicators.length }} Butir Indikator
               </span>
             </h4>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">
-              Kelola butir penilaian rapor new hire dengan kategori resmi (Technical / Soft Skill).
-            </p>
           </div>
 
           <button
