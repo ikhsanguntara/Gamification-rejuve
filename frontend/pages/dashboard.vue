@@ -1,292 +1,506 @@
 <template>
-  <div class="space-y-6">
-    <!-- Top Greeting & Context Hero -->
-    <div class="rounded-3xl bg-gradient-to-r from-[#4a0e28] via-[#6b133a] to-[#831843] text-white p-5 sm:p-8 relative overflow-hidden shadow-xl border border-white/10">
-      <!-- Glow decoration -->
-      <div class="absolute -right-10 -top-10 w-60 h-60 bg-[#be185d]/25 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute right-1/4 -bottom-10 w-48 h-48 bg-[#9d174d]/30 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
-        <div>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-amber-300 text-xs font-semibold mb-2.5 sm:mb-3 border border-white/15">
-            <Star class="w-3.5 h-3.5 fill-amber-300" />
-            <span class="truncate max-w-[160px] sm:max-w-none">{{ currentBatchDisplayName }}</span>
-            <span>•</span>
-            <span>{{ batchStore.currentBatchUnitCode || 'Week' }} {{ batchStore.selectedWeek || 1 }}/{{ batchStore.currentBatchWeeks.length || 3 }}</span>
-          </div>
-
-          <h2 class="text-xl sm:text-3xl font-bold tracking-tight">
-            {{ greetingText }}, {{ (userStore.currentUser?.name || 'User').split(' ')[0] }}! 🥤
-          </h2>
-          <p class="text-slate-200 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
-            <span v-if="userStore.isCrew">
-              Re.juve Specialist • Saat ini berada di <strong class="text-amber-300 font-semibold">Level {{ myProgress.currentLevel }} ({{ myProgress.currentLevelTitle }})</strong> dengan <strong class="font-semibold">{{ myStars.toLocaleString() }} ⭐ Stars</strong>. Terus selesaikan seluruh misi di {{ currentBatchDisplayName }}!
-            </span>
-            <span v-else-if="userStore.isSupervisor">
-              Area Supervisor • {{ batchStore.currentBatchUnitCode || 'Week' }} {{ batchStore.selectedWeek || 1 }} aktif dinilai. Terdapat <strong class="text-amber-300 font-semibold">{{ pendingReviewCount }} misi diajukan</strong> dan <strong class="text-rose-300 font-semibold">{{ revisionCount }} revisi</strong>.
-            </span>
-            <span v-else-if="userStore.isHead">
-              Head of Operations & Quality • <strong class="text-amber-300 font-semibold">{{ pendingReviewCount }} evaluasi Batch</strong> menunggu keputusan (Approve / Revise).
-            </span>
-            <span v-else>
-              System Superadmin • Master Control Console aktif untuk seluruh Batch Re.juve.
-            </span>
-          </p>
-        </div>
-
-        <!-- Quick Context CTA -->
-        <div class="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
-          <NuxtLink
-            v-if="userStore.isSupervisor"
-            to="/evaluations"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white font-semibold text-xs sm:text-sm shadow-lg shadow-[#831843]/30 transition-all active:scale-95 border border-white/20"
-          >
-            <ClipboardCheck class="w-4 h-4" />
-            <span>Penilaian Misi Gerai</span>
-          </NuxtLink>
-
-          <NuxtLink
-            v-else-if="userStore.isHead"
-            to="/approvals"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white font-semibold text-xs sm:text-sm shadow-lg shadow-[#9d174d]/30 transition-all active:scale-95 border border-white/20"
-          >
-            <ShieldCheck class="w-4 h-4" />
-            <span>Tinjau Persetujuan ({{ pendingReviewCount }})</span>
-          </NuxtLink>
-
-          <NuxtLink
-            v-else-if="userStore.isSuperadmin"
-            to="/admin/users"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white font-semibold text-xs sm:text-sm shadow-lg shadow-[#9d174d]/30 transition-all active:scale-95 border border-white/20"
-          >
-            <Settings class="w-4 h-4" />
-            <span>Konsol Administrator</span>
-          </NuxtLink>
-
-          <NuxtLink
-            v-else
-            to="/missions"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white font-semibold text-xs sm:text-sm shadow-lg shadow-[#831843]/30 transition-all active:scale-95 border border-white/20"
-          >
-            <Target class="w-4 h-4" />
-            <span>Misi Saya</span>
-          </NuxtLink>
-        </div>
+  <div class="space-y-6 max-w-7xl mx-auto">
+    <!-- ==================== 1. TOP HERO BANNER (RE.JUVE CAPTAIN / LEADER DASHBOARD) ==================== -->
+    <div class="relative rounded-3xl overflow-hidden border border-amber-900/30 shadow-2xl bg-slate-950 text-white min-h-[220px] sm:min-h-[240px] flex flex-col justify-between p-6 sm:p-8">
+      <!-- Adventure Sunset Landscape Background Image with Warm Overlay -->
+      <div class="absolute inset-0 z-0">
+        <img
+          src="/images/adventure_bg_main.jpg"
+          alt="Adventure Landscape"
+          class="w-full h-full object-cover object-center opacity-40 scale-105 transform transition-transform duration-1000 ease-out"
+        />
+        <!-- Multi-layer Gradient for Rich Cinematic Contrast & Text Readability -->
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/85 to-amber-950/60"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+        <!-- Ambient Sun Flare Glow -->
+        <div class="absolute top-0 right-1/4 w-72 h-72 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
       </div>
-    </div>
 
-    <!-- 5 Core Dashboard Metric Cards (Personalized for Crew vs Operational for Supervisor/Head) -->
-    <div v-if="userStore.isCrew" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-      <!-- 1. My Total Stars -->
-      <StatCard
-        title="⭐ Bintang Saya"
-        :value="myStars.toLocaleString()"
-        unit="Stars"
-        :subtext="`Level ${myProgress.currentLevel} ${myProgress.currentLevelTitle}`"
-        :icon="Star"
-        variant="amber"
-      />
-
-      <!-- 2. My Completed Missions -->
-      <StatCard
-        title="Misi Selesai Saya"
-        :value="`${myCompletedCount} / ${myTotalMissions}`"
-        :subtext="`${myCycleProgress}% progres siklus`"
-        :icon="CheckCircle2"
-        variant="emerald"
-        trend="up"
-        trendValue="Aktif"
-      />
-
-      <!-- 3. My Average Quality Score -->
-      <StatCard
-        title="Rata-rata Skor Saya"
-        :value="`${myAverageScore}%`"
-        subtext="Skor evaluasi mutu personal"
-        :icon="Award"
-        variant="brand"
-        trend="up"
-        trendValue="Optimal"
-      />
-
-      <!-- 4. My Rank in Store -->
-      <StatCard
-        title="Peringkat di Gerai"
-        :value="`#${myRank}`"
-        :subtext="`dari ${storeCrewCount} Store Crew`"
-        :icon="Trophy"
-        variant="brand"
-      />
-
-      <!-- 5. Assigned Store Branch -->
-      <StatCard
-        title="Cabang Penempatan"
-        :value="storeDisplayName"
-        :subtext="`${batchStore.currentBatchUnitCode || 'Week'} ${batchStore.selectedWeek || 1}/${batchStore.currentBatchWeeks.length || 3} Aktif`"
-        :icon="MapPin"
-        variant="slate"
-        class="col-span-2 sm:col-span-1"
-      />
-    </div>
-
-    <!-- Dynamic KPI Metric Cards for Operations (Store Leader, District Manager, Head, Superadmin) -->
-    <div
-      v-if="!userStore.isCrew"
-      class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4"
-      :class="[
-        dynamicStageCards.length <= 2 ? 'lg:grid-cols-4' :
-        dynamicStageCards.length === 3 ? 'lg:grid-cols-6' :
-        dynamicStageCards.length === 4 ? 'lg:grid-cols-4 xl:grid-cols-7' :
-        'lg:grid-cols-4 xl:grid-cols-8'
-      ]"
-    >
-      <!-- 1. Number of Active Recruits -->
-      <StatCard
-        :title="userStore.isDistrictManager ? 'Active Recruits (Area)' : (userStore.isSuperadmin ? 'Total Active Recruits' : 'Active Recruits')"
-        :value="activeRecruitsCount"
-        unit="Kru"
-        :subtext="userStore.isDistrictManager ? 'Seluruh gerai binaan' : (userStore.isSuperadmin ? 'Seluruh cabang' : 'Kru baru aktif')"
-        :icon="Users"
-        variant="brand"
-      />
-
-      <!-- 2. Number of Buddy Recruits -->
-      <StatCard
-        title="Buddy Recruits"
-        :value="buddyRecruitsCount"
-        unit="Kru"
-        :subtext="userStore.isDistrictManager ? 'Tahap Pra-Batch Area' : 'Pra-Batch (3 Hari)'"
-        :icon="Handshake"
-        variant="purple"
-      />
-
-      <!-- Dynamic Cards for each Week / Day / Unit in Batch -->
-      <StatCard
-        v-for="card in dynamicStageCards"
-        :key="card.key"
-        :title="card.title"
-        :value="card.value"
-        :unit="card.unit"
-        :subtext="userStore.isDistrictManager ? `Area: ${card.subtext}` : card.subtext"
-        :icon="card.icon"
-        :variant="card.variant"
-      />
-
-      <!-- Last. Jumlah Pending Review / Approval -->
-      <StatCard
-        :title="userStore.isDistrictManager ? 'Pending Approval' : (userStore.isHead ? 'Menunggu Approval' : 'Pending Review')"
-        :value="pendingReviewCount"
-        unit="Misi"
-        :subtext="userStore.isDistrictManager ? 'Persetujuan DM' : (userStore.isHead ? 'Persetujuan Head' : 'Menunggu evaluasi')"
-        :icon="userStore.isDistrictManager ? ShieldCheck : Hourglass"
-        :variant="userStore.isDistrictManager ? 'amber' : 'rose'"
-      />
-    </div>
-
-    <!-- 📋 List of Active New Recruits Workspace (Role-Adapted for Store Leader & District Manager) -->
-    <div
-      v-if="!userStore.isCrew"
-      class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm p-5 sm:p-6 space-y-4"
-    >
-      <!-- Header & Action Summary -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+      <!-- Hero Header Row: Subtitle, Slogan Script, and Batch Selector -->
+      <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div>
           <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-xl bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] flex items-center justify-center font-bold">
-              <Users class="w-4 h-4" />
-            </div>
-            <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
-              {{ userStore.isDistrictManager ? 'List of Active New Recruits (Wilayah Gerai DM)' : (userStore.isSuperadmin ? 'List of Active New Recruits (Seluruh Cabang)' : 'List of Active New Recruits (Kru Baru Aktif)') }}
-            </h3>
-            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
-              {{ filteredRecruits.length }} Kru
+            <span class="text-xs font-black tracking-wider uppercase text-amber-400">
+              Re.juve {{ userStore.isCrew ? 'Specialist' : 'Captain' }}
+            </span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/10 text-slate-300 border border-white/10 uppercase tracking-widest">
+              {{ userStore.isCrew ? 'Crew Journey' : (userStore.isDistrictManager ? 'District Manager Dashboard' : 'Leader Dashboard') }}
             </span>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            <span v-if="userStore.isDistrictManager">
-              Pantau progres seluruh kru baru di gerai binaan Anda dan tinjau persetujuan (approval) evaluasi Store Leader.
-            </span>
-            <span v-else-if="userStore.isSuperadmin">
-              Master audit kru baru aktif di seluruh batch dan cabang operasional Re.juve.
+        </div>
+
+        <!-- Center Script Quote (Desktop) -->
+        <div class="hidden lg:block text-center">
+          <span class="font-serif italic text-amber-200/90 text-sm sm:text-base tracking-wide font-medium">
+            "Different People, Same Purpose."
+          </span>
+        </div>
+
+        <!-- Top Right Batch Indicator & Selector -->
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 backdrop-blur-md text-xs font-semibold text-amber-300 border border-amber-500/30 shadow-inner">
+            <Calendar class="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+            <select
+              v-if="batchStore.accessibleBatches && batchStore.accessibleBatches.length > 1"
+              v-model="batchStore.selectedBatchId"
+              @change="onBatchChange"
+              class="bg-transparent text-amber-300 font-semibold focus:outline-none cursor-pointer text-xs border-0 pr-2 max-w-[180px] sm:max-w-[240px] truncate"
+            >
+              <option
+                v-for="b in batchStore.accessibleBatches"
+                :key="b.id"
+                :value="b.id"
+                class="bg-slate-900 text-white"
+              >
+                {{ b.name || b.code || 'Batch' }}
+              </option>
+            </select>
+            <span v-else class="truncate max-w-[150px] sm:max-w-[200px]">{{ currentBatchDisplayName }}</span>
+            <span class="text-slate-500">•</span>
+            <span class="text-slate-300 font-mono">{{ batchStore.currentBatchUnitCode || 'Week' }} {{ batchStore.selectedWeek || 1 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Greeting Row & Motivational Mantra -->
+      <div class="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
+        <div class="max-w-2xl">
+          <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight flex items-center gap-2.5">
+            <span>👋 {{ greetingText }}, {{ (userStore.currentUser?.name || 'Captain').split(' ')[0] }}!</span>
+          </h2>
+          <p class="text-slate-300 text-xs sm:text-sm mt-1.5 leading-relaxed font-normal">
+            <span v-if="userStore.isCrew">
+              Selamat berpetualang! Selesaikan misi <strong class="text-amber-300 font-bold">{{ batchStore.currentBatchUnitCode || 'Week' }} {{ batchStore.selectedWeek || 1 }}</strong> dan raih bintang prestasi terbaik untuk gerai Anda.
             </span>
             <span v-else>
-              Pantau progres kru baru di gerai dan langsung <strong>isi penilaian misi</strong> atau evaluasi Buddy.
+              Terima kasih sudah mendukung dan membimbing perjalanan New Hires di tim dan wilayah gerai kamu.
             </span>
           </p>
         </div>
 
-        <NuxtLink
-          v-if="userStore.isDistrictManager || userStore.isHead"
-          to="/approvals"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white text-xs font-bold shadow-md shadow-[#9d174d]/20 transition-all active:scale-95 self-start sm:self-auto"
-        >
-          <ShieldCheck class="w-4 h-4" />
-          <span>Buka Menu Approvals ({{ pendingReviewCount }}) →</span>
-        </NuxtLink>
+        <!-- Right Vertical Slogan Badge -->
+        <div class="hidden md:flex flex-col items-end text-right border-l border-white/10 pl-6 text-[11px] font-bold text-slate-300/80 uppercase tracking-widest leading-relaxed">
+          <span class="text-amber-400">Guide</span>
+          <span class="text-emerald-400">Support</span>
+          <span class="text-sky-400">Empower</span>
+          <span class="text-rose-400">Grow Together</span>
+        </div>
+      </div>
+    </div>
 
-        <NuxtLink
-          v-else-if="userStore.isSupervisor"
-          to="/evaluations"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white text-xs font-bold shadow-md shadow-[#831843]/20 transition-all active:scale-95 self-start sm:self-auto"
-        >
-          <ClipboardCheck class="w-4 h-4" />
-          <span>Buka Workstation Penilaian Full →</span>
-        </NuxtLink>
-
-        <NuxtLink
-          v-else-if="userStore.isSuperadmin"
-          to="/admin/users"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white text-xs font-bold shadow-md shadow-[#9d174d]/20 transition-all active:scale-95 self-start sm:self-auto"
-        >
-          <Settings class="w-4 h-4" />
-          <span>Konsol Master Pengguna →</span>
-        </NuxtLink>
+    <!-- ==================== 2. PIPELINE / STAGE METRIC CARDS (6 CARDS ROW) ==================== -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      <!-- 1. ACTIVE NEW HIRES -->
+      <div
+        @click="selectedStageFilter = 'ALL'"
+        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+        :class="selectedStageFilter === 'ALL'
+          ? 'bg-[#153424] text-white border-emerald-500/60 ring-2 ring-emerald-500/40'
+          : 'bg-[#153424]/90 hover:bg-[#153424] text-white border-emerald-800/40'"
+      >
+        <div class="flex items-center justify-between text-emerald-300 mb-2">
+          <span class="text-[10px] font-black uppercase tracking-wider">Active New Hires</span>
+          <Users class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+        </div>
+        <div class="flex items-baseline justify-between mt-1">
+          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            {{ activeRecruitsCount }}
+          </span>
+          <ChevronRight class="w-4 h-4 text-emerald-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+        </div>
+        <p class="text-[10px] text-emerald-200/70 mt-1 truncate">
+          Currently in onboarding
+        </p>
       </div>
 
-      <!-- Filter / Search Controls -->
-      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-1">
-        <!-- Search Input -->
-        <div class="relative flex-1 max-w-md">
-          <input
-            v-model="recruitSearchQuery"
-            type="text"
-            :placeholder="userStore.isDistrictManager ? 'Cari nama kru, nomor WA, gerai, batch, atau Store Leader...' : 'Cari nama kru, nomor WA, gerai, atau batch...'"
-            class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-9 pr-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#831843]"
-          />
-          <Search class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+      <!-- 2. CAPTAIN PHASE / BUDDY PRE-BATCH -->
+      <div
+        @click="selectedStageFilter = 'BUDDY'"
+        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+        :class="selectedStageFilter === 'BUDDY'
+          ? 'bg-[#3b271a] text-white border-amber-500/60 ring-2 ring-amber-500/40'
+          : 'bg-[#3b271a]/90 hover:bg-[#3b271a] text-white border-amber-800/40'"
+      >
+        <div class="flex items-center justify-between text-amber-300 mb-2">
+          <span class="text-[10px] font-black uppercase tracking-wider">Captain Phase</span>
+          <Handshake class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+        </div>
+        <div class="flex items-baseline justify-between mt-1">
+          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            {{ buddyRecruitsCount }}
+          </span>
+          <ChevronRight class="w-4 h-4 text-amber-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+        </div>
+        <p class="text-[10px] text-amber-200/70 mt-1 truncate">
+          First 3 Days (Buddy)
+        </p>
+      </div>
+
+      <!-- 3. WEEK 1 -->
+      <div
+        @click="selectedStageFilter = 'STAGE_1'"
+        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+        :class="selectedStageFilter === 'STAGE_1'
+          ? 'bg-[#183626] text-white border-teal-500/60 ring-2 ring-teal-500/40'
+          : 'bg-[#183626]/90 hover:bg-[#183626] text-white border-teal-800/40'"
+      >
+        <div class="flex items-center justify-between text-teal-300 mb-2">
+          <span class="text-[10px] font-black uppercase tracking-wider">Week 1</span>
+          <Tent class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+        </div>
+        <div class="flex items-baseline justify-between mt-1">
+          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            {{ getRecruitCountByStage('STAGE_1') }}
+          </span>
+          <ChevronRight class="w-4 h-4 text-teal-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+        </div>
+        <p class="text-[10px] text-teal-200/70 mt-1 truncate">
+          Mission in Progress
+        </p>
+      </div>
+
+      <!-- 4. WEEK 2 -->
+      <div
+        @click="selectedStageFilter = 'STAGE_2'"
+        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+        :class="selectedStageFilter === 'STAGE_2'
+          ? 'bg-[#162e42] text-white border-sky-500/60 ring-2 ring-sky-500/40'
+          : 'bg-[#162e42]/90 hover:bg-[#162e42] text-white border-sky-800/40'"
+      >
+        <div class="flex items-center justify-between text-sky-300 mb-2">
+          <span class="text-[10px] font-black uppercase tracking-wider">Week 2</span>
+          <Waves class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+        </div>
+        <div class="flex items-baseline justify-between mt-1">
+          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            {{ getRecruitCountByStage('STAGE_2') }}
+          </span>
+          <ChevronRight class="w-4 h-4 text-sky-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+        </div>
+        <p class="text-[10px] text-sky-200/70 mt-1 truncate">
+          Mission in Progress
+        </p>
+      </div>
+
+      <!-- 5. WEEK 3 -->
+      <div
+        @click="selectedStageFilter = 'STAGE_3'"
+        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+        :class="selectedStageFilter === 'STAGE_3'
+          ? 'bg-[#402117] text-white border-orange-500/60 ring-2 ring-orange-500/40'
+          : 'bg-[#402117]/90 hover:bg-[#402117] text-white border-orange-800/40'"
+      >
+        <div class="flex items-center justify-between text-orange-300 mb-2">
+          <span class="text-[10px] font-black uppercase tracking-wider">Week 3</span>
+          <Mountain class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+        </div>
+        <div class="flex items-baseline justify-between mt-1">
+          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            {{ getRecruitCountByStage('STAGE_3') }}
+          </span>
+          <ChevronRight class="w-4 h-4 text-orange-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+        </div>
+        <p class="text-[10px] text-orange-200/70 mt-1 truncate">
+          Final Week
+        </p>
+      </div>
+
+      <!-- 6. NEEDS REVIEW / ACTION REQUIRED -->
+      <div
+        @click="selectedStageFilter = 'PENDING'"
+        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+        :class="selectedStageFilter === 'PENDING'
+          ? 'bg-[#4a1424] text-white border-rose-500/60 ring-2 ring-rose-500/40'
+          : 'bg-[#4a1424]/90 hover:bg-[#4a1424] text-white border-rose-800/40'"
+      >
+        <div class="flex items-center justify-between text-rose-300 mb-2">
+          <span class="text-[10px] font-black uppercase tracking-wider">Needs Review</span>
+          <Hourglass class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform animate-pulse" />
+        </div>
+        <div class="flex items-baseline justify-between mt-1">
+          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            {{ pendingReviewCount }}
+          </span>
+          <ChevronRight class="w-4 h-4 text-rose-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+        </div>
+        <p class="text-[10px] text-rose-200/70 mt-1 truncate font-semibold">
+          Your Action Required
+        </p>
+      </div>
+    </div>
+
+    <!-- ==================== 3. MIDDLE SECTION: ACTION REQUIRED & TEAM PROGRESS ==================== -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+      <!-- LEFT CARD: ACTION REQUIRED -->
+      <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+                <Bell class="w-4 h-4" />
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white leading-tight">
+                  Action Required
+                </h3>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  Beberapa hal yang perlu perhatian kamu hari ini.
+                </p>
+              </div>
+            </div>
+
+            <NuxtLink
+              :to="userStore.isDistrictManager ? '/approvals' : '/evaluations'"
+              class="text-xs font-bold text-[#831843] dark:text-[#f472b6] hover:underline flex items-center gap-1"
+            >
+              <span>Lihat Semua</span>
+              <ArrowRight class="w-3.5 h-3.5" />
+            </NuxtLink>
+          </div>
+
+          <!-- Action Items List -->
+          <div class="space-y-3 pt-4">
+            <!-- Item 1: Pending Review -->
+            <NuxtLink
+              :to="userStore.isDistrictManager ? '/approvals' : '/evaluations'"
+              class="flex items-start gap-3.5 p-3 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 hover:bg-rose-100/60 dark:hover:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/40 transition-all cursor-pointer group"
+            >
+              <div class="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                <FileText class="w-4 h-4" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">
+                    {{ pendingReviewCount }} missions waiting for review
+                  </h4>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300">
+                    Prioritas
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Mohon lakukan penilaian agar progress onboarding New Hire tetap berjalan lancar.
+                </p>
+              </div>
+            </NuxtLink>
+
+            <!-- Item 2: Needs Update / Inactive -->
+            <div class="flex items-start gap-3.5 p-3 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40">
+              <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                <Users class="w-4 h-4" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">
+                    {{ inactiveNewHiresCount }} New Hire has no mission update
+                  </h4>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">
+                    Perhatian
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Sudah 3 hari belum ada pembaruan aktivitas misi dari anggota tim.
+                </p>
+              </div>
+            </div>
+
+            <!-- Item 3: Week 3 final review -->
+            <div class="flex items-start gap-3.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+              <div class="w-9 h-9 rounded-xl bg-slate-700 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                <Flag class="w-4 h-4" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">
+                    {{ week3AlmostCompletedCount }} Week 3 journey almost completed
+                  </h4>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                    Tahap Akhir
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Segera siapkan review rapor evaluasi akhir dan persetujuan penugasan.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT CARD: TEAM PROGRESS (DONUT PROGRESS + MOTIVATIONAL QUOTE) -->
+      <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <TrendingUp class="w-4 h-4" />
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white leading-tight">
+                  Team Progress
+                </h3>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  Progress New Hire di area dan gerai kamu.
+                </p>
+              </div>
+            </div>
+
+            <NuxtLink
+              to="/batches"
+              class="text-xs font-bold text-[#831843] dark:text-[#f472b6] hover:underline flex items-center gap-1"
+            >
+              <span>View Detail</span>
+              <ArrowRight class="w-3.5 h-3.5" />
+            </NuxtLink>
+          </div>
+
+          <!-- Body: Donut Meter & Quote Box Side-by-side -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 items-center">
+            <!-- Left: Donut Radial Meter & Status Counts -->
+            <div class="flex flex-col items-center sm:items-start">
+              <div class="flex items-center gap-4">
+                <!-- SVG Circular Radial Donut Meter -->
+                <div class="relative w-24 h-24 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <!-- Background Circle -->
+                    <path
+                      class="text-slate-100 dark:text-slate-800"
+                      stroke-width="3.8"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <!-- Progress Arc -->
+                    <path
+                      class="text-[#10b981] transition-all duration-1000 ease-out"
+                      stroke-dasharray="100, 100"
+                      :stroke-dashoffset="100 - teamCompletionRate"
+                      stroke-linecap="round"
+                      stroke-width="3.8"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                  <div class="absolute flex flex-col items-center justify-center text-center">
+                    <span class="text-xl font-black text-slate-900 dark:text-white leading-none">
+                      {{ teamCompletionRate }}%
+                    </span>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase mt-0.5">Rate</span>
+                  </div>
+                </div>
+
+                <!-- Rate Subtext -->
+                <div>
+                  <p class="text-xs font-black text-slate-900 dark:text-white">
+                    {{ teamCompletionRate }}%
+                  </p>
+                  <p class="text-[11px] text-slate-400 leading-tight">
+                    3-Week Completion Rate
+                  </p>
+                </div>
+              </div>
+
+              <!-- Status Legend Breakdown -->
+              <div class="space-y-1.5 mt-4 w-full text-xs">
+                <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>On Track</span>
+                  </span>
+                  <span class="font-bold text-slate-900 dark:text-white">{{ onTrackCount }} New Hires</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span>Needs Attention</span>
+                  </span>
+                  <span class="font-bold text-slate-900 dark:text-white">{{ needsAttentionCount }} New Hires</span>
+                </div>
+                <div v-if="readyForReviewCount > 0" class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                    <span>Ready for Review</span>
+                  </span>
+                  <span class="font-bold text-slate-900 dark:text-white">{{ readyForReviewCount }} New Hires</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Warm Inspirational Motivational Quote Box -->
+            <div class="h-full flex flex-col justify-center items-center text-center p-5 rounded-2xl bg-[#faf6ee] dark:bg-slate-800/60 border border-amber-200/60 dark:border-amber-900/40">
+              <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2 shadow-xs">
+                <Sprout class="w-4 h-4" />
+              </div>
+              <p class="font-serif italic text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                "Small guidance today, bigger confidence tomorrow."
+              </p>
+              <span class="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest mt-2">
+                Re.juve Mentorship
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 4. MAIN TABLE: NEW HIRE JOURNEY ==================== -->
+    <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm p-5 sm:p-6 space-y-4">
+      <!-- Table Header & Filters -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-2xl bg-[#831843]/10 text-[#831843] dark:text-[#f472b6] flex items-center justify-center font-bold shadow-xs">
+            <Users class="w-4 h-4" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+              New Hire Journey
+            </h3>
+            <p class="text-xs text-slate-400 dark:text-slate-500">
+              Pantau progress setiap New Hire di tim kamu.
+            </p>
+          </div>
         </div>
 
-        <!-- Stage Filter Tabs -->
-        <div class="flex items-center gap-1.5 overflow-x-auto p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 text-xs">
-          <button
-            v-for="filter in stageFilters"
-            :key="filter.key"
-            type="button"
-            @click="selectedStageFilter = filter.key"
-            class="px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all cursor-pointer text-xs"
-            :class="[
-              selectedStageFilter === filter.key
-                ? 'bg-white dark:bg-slate-900 text-[#831843] dark:text-[#f472b6] shadow-sm font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            ]"
+        <!-- Controls: Search & Dropdown Stage Filter -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <!-- Search Bar -->
+          <div class="relative w-full sm:w-64">
+            <input
+              v-model="recruitSearchQuery"
+              type="text"
+              placeholder="Cari nama, store, atau captain..."
+              class="w-full text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-8.5 pr-3.5 py-2 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#831843]"
+            />
+            <Search class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          </div>
+
+          <!-- Dropdown Filter -->
+          <select
+            v-model="selectedStageFilter"
+            class="text-xs font-semibold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#831843] cursor-pointer"
           >
-            {{ filter.label }}
-          </button>
+            <option value="ALL">Semua Tahap</option>
+            <option value="BUDDY">Captain Phase (Buddy)</option>
+            <option value="STAGE_1">Week 1</option>
+            <option value="STAGE_2">Week 2</option>
+            <option value="STAGE_3">Week 3</option>
+            <option value="PENDING">Needs Review / Pending</option>
+          </select>
         </div>
       </div>
 
       <!-- Data Table -->
       <div class="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
         <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800 text-[10px]">
+          <thead class="bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800 text-[10px]">
             <tr>
-              <th class="py-3 px-3.5">Batch</th>
-              <th class="py-3 px-3.5">Name</th>
-              <th class="py-3 px-2.5 text-center">Gender</th>
-              <th class="py-3 px-3.5">Phone / WA</th>
-              <th class="py-3 px-3.5">{{ userStore.isDistrictManager ? 'Store Leader (SL)' : 'Buddy SL' }}</th>
-              <th class="py-3 px-3.5">{{ userStore.isDistrictManager ? 'Gerai Cabang' : 'Buddy Store Code' }}</th>
-              <th class="py-3 px-3.5">New Recruit Status</th>
+              <th class="py-3 px-4">Nama New Hire</th>
+              <th class="py-3 px-3.5">Store / Area</th>
+              <th class="py-3 px-3.5">Captain</th>
+              <th class="py-3 px-3.5">Current Stage</th>
+              <th class="py-3 px-3.5">Mission Progress</th>
+              <th class="py-3 px-3.5">Status</th>
+              <th class="py-3 px-3.5">Last Update</th>
               <th class="py-3 px-3.5 text-center">Action</th>
             </tr>
           </thead>
@@ -296,15 +510,8 @@
               :key="crew.id"
               class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
             >
-              <!-- Batch -->
-              <td class="py-3 px-3.5 whitespace-nowrap font-bold text-slate-800 dark:text-slate-200">
-                <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[11px]">
-                  {{ crew.batchName }}
-                </span>
-              </td>
-
-              <!-- Name -->
-              <td class="py-3 px-3.5 whitespace-nowrap">
+              <!-- Nama New Hire -->
+              <td class="py-3.5 px-4 whitespace-nowrap">
                 <div class="flex items-center gap-2.5">
                   <img
                     :src="crew.avatar"
@@ -315,81 +522,82 @@
                     <p class="font-bold text-slate-900 dark:text-white leading-tight">
                       {{ crew.name }}
                     </p>
-                    <p class="text-[10px] text-slate-400 font-medium truncate max-w-[140px]">
-                      {{ crew.email || 'crew@rejuve.co.id' }}
+                    <p class="text-[10px] text-slate-400 font-mono mt-0.5">
+                      {{ crew.phone }}
                     </p>
                   </div>
                 </div>
               </td>
 
-              <!-- Gender -->
-              <td class="py-3 px-2.5 text-center whitespace-nowrap">
-                <span
-                  class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold"
-                  :class="crew.gender === 'P' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'"
-                  :title="crew.gender === 'P' ? 'Perempuan' : 'Laki-laki'"
-                >
-                  {{ crew.gender }}
-                </span>
+              <!-- Store / Area -->
+              <td class="py-3.5 px-3.5 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">
+                {{ crew.storeCode }}
               </td>
 
-              <!-- Phone / WA -->
-              <td class="py-3 px-3.5 whitespace-nowrap">
-                <a
-                  :href="crew.waLink"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold hover:bg-emerald-100 transition-colors"
-                  title="Hubungi via WhatsApp"
-                >
-                  <MessageCircle class="w-3 h-3 text-emerald-600" />
-                  <span class="font-mono text-[11px]">{{ crew.phone }}</span>
-                </a>
-              </td>
-
-              <!-- Buddy / Store Leader -->
-              <td class="py-3 px-3.5 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">
+              <!-- Captain / Store Leader -->
+              <td class="py-3.5 px-3.5 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">
                 {{ crew.buddyName }}
               </td>
 
-              <!-- Buddy Store Code / Gerai -->
-              <td class="py-3 px-3.5 whitespace-nowrap">
-                <span class="text-slate-700 dark:text-slate-300 font-medium flex items-center gap-1">
-                  <MapPin class="w-3 h-3 text-slate-400" />
-                  {{ crew.storeCode }}
-                </span>
-              </td>
-
-              <!-- New recruit Status -->
-              <td class="py-3 px-3.5 whitespace-nowrap">
+              <!-- Current Stage Pill -->
+              <td class="py-3.5 px-3.5 whitespace-nowrap">
                 <span
-                  class="text-[10px] font-bold px-2.5 py-0.8 rounded-full inline-block"
-                  :class="crew.stageClass"
+                  class="text-[11px] font-bold px-2.5 py-1 rounded-lg inline-block"
+                  :class="crew.stagePillClass"
                 >
-                  {{ crew.stageLabel }}
+                  {{ crew.stagePillLabel }}
                 </span>
               </td>
 
-              <!-- Action Button (DM POV vs SL POV) -->
-              <td class="py-3 px-3.5 text-center whitespace-nowrap">
-                <!-- DM: Tinjau Persetujuan (Approvals) -->
+              <!-- Mission Progress Bar -->
+              <td class="py-3.5 px-3.5 whitespace-nowrap min-w-[140px]">
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all duration-500"
+                      :class="crew.progressColorClass"
+                      :style="{ width: `${crew.progressPercent}%` }"
+                    ></div>
+                  </div>
+                  <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 font-mono">
+                    {{ crew.completedMissions }}/{{ crew.totalMissions }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Status Badge -->
+              <td class="py-3.5 px-3.5 whitespace-nowrap">
+                <span
+                  class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold"
+                  :class="crew.statusBadgeClass"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full" :class="crew.statusDotClass"></span>
+                  <span>{{ crew.statusLabel }}</span>
+                </span>
+              </td>
+
+              <!-- Last Update -->
+              <td class="py-3.5 px-3.5 whitespace-nowrap text-[11px] text-slate-400 font-medium">
+                {{ crew.lastUpdate || '15 Sep 2026' }}
+              </td>
+
+              <!-- Action Button -->
+              <td class="py-3.5 px-3.5 text-center whitespace-nowrap">
                 <NuxtLink
                   v-if="userStore.isDistrictManager || userStore.isHead"
                   to="/approvals"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#9d174d] to-[#831843] hover:from-[#831843] hover:to-[#6b133a] text-white font-bold text-[11px] shadow-xs active:scale-95 transition-all"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#831843]/10 hover:text-[#831843] dark:bg-slate-800 dark:hover:bg-[#831843]/20 dark:hover:text-[#f472b6] text-slate-700 dark:text-slate-300 font-bold text-[11px] transition-colors"
                 >
-                  <ShieldCheck class="w-3.5 h-3.5" />
-                  <span>Tinjau Approval</span>
+                  <span>Review</span>
+                  <ChevronRight class="w-3 h-3" />
                 </NuxtLink>
-
-                <!-- SL: Isi Penilaian (Evaluations) -->
                 <NuxtLink
                   v-else
                   to="/evaluations"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#831843] to-[#6b133a] hover:from-[#6b133a] hover:to-[#4a0e28] text-white font-bold text-[11px] shadow-xs active:scale-95 transition-all"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#831843]/10 hover:text-[#831843] dark:bg-slate-800 dark:hover:bg-[#831843]/20 dark:hover:text-[#f472b6] text-slate-700 dark:text-slate-300 font-bold text-[11px] transition-colors"
                 >
-                  <ClipboardCheck class="w-3.5 h-3.5" />
-                  <span>Isi Penilaian</span>
+                  <span>Nilai</span>
+                  <ChevronRight class="w-3 h-3" />
                 </NuxtLink>
               </td>
             </tr>
@@ -397,7 +605,7 @@
             <!-- Empty State -->
             <tr v-if="filteredRecruits.length === 0">
               <td colspan="8" class="text-center py-8 text-slate-400">
-                Tidak ada kru baru yang sesuai dengan pencarian atau filter.
+                Tidak ada data kru baru yang sesuai dengan filter atau pencarian.
               </td>
             </tr>
           </tbody>
@@ -405,113 +613,194 @@
       </div>
     </div>
 
-    <!-- 🗺️ Interactive Journey Odyssey Banner Widget (Strictly for Crew) -->
-    <div
-      v-if="userStore.isCrew"
-      class="rounded-3xl bg-gradient-to-r from-[#4a0e28] via-[#6b133a] to-[#831843] text-white p-5 sm:p-6 border border-white/10 shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4"
-    >
-      <div class="flex items-center gap-4 relative z-10">
-        <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-amber-300 flex-shrink-0 shadow-md animate-bounce-gentle">
-          <Compass class="w-6 h-6" />
-        </div>
+    <!-- ==================== 5. BOTTOM 3 WIDGET CARDS ROW ==================== -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+      <!-- CARD 1: MISSION SUBMISSION STATS -->
+      <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6 shadow-sm flex flex-col justify-between">
         <div>
-          <div class="flex items-center gap-2">
-            <h3 class="text-sm sm:text-base font-semibold tracking-tight">
-              Peta Ekspedisi Gamifikasi {{ batchStore.currentBatchWeeks.length || 3 }} {{ batchStore.currentBatchUnitLabel || 'Minggu' }} (Star Odyssey)
-            </h3>
-            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">
-              INTERAKTIF
-            </span>
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                <Target class="w-4 h-4" />
+              </div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                Mission Submission
+              </h4>
+            </div>
+            <NuxtLink to="/missions" class="text-[11px] font-bold text-[#831843] dark:text-[#f472b6] hover:underline flex items-center gap-0.5">
+              <span>Lihat Detail</span>
+              <ArrowRight class="w-3 h-3" />
+            </NuxtLink>
           </div>
-          <p class="text-xs text-slate-200 mt-0.5 max-w-xl">
-            Jelajahi alur pipa fluida pos misi {{ batchStore.currentBatchUnitCode || 'Week' }} 1 sampai {{ batchStore.currentBatchUnitCode || 'Week' }} {{ batchStore.currentBatchWeeks.length || 3 }}. Pantau posisi pin Anda dan kumpulkan seluruh bintang!
-          </p>
+
+          <div class="grid grid-cols-3 gap-2 pt-4 text-center">
+            <!-- 1. Target Misi -->
+            <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+              <span class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                {{ submissionStats.submitted }}
+              </span>
+              <p class="text-[10px] font-semibold text-slate-400 mt-0.5">Target Misi</p>
+              <span class="text-[9px] font-bold text-sky-600 dark:text-sky-400 mt-1 inline-block">
+                Batch Aktif
+              </span>
+            </div>
+
+            <!-- 2. Misi Dinilai -->
+            <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+              <span class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                {{ submissionStats.evaluated }}
+              </span>
+              <p class="text-[10px] font-semibold text-slate-400 mt-0.5">Misi Dinilai</p>
+              <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 inline-block">
+                Selesai
+              </span>
+            </div>
+
+            <!-- 3. Menunggu Nilai -->
+            <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+              <span class="text-xl sm:text-2xl font-black text-amber-500">
+                {{ submissionStats.pending }}
+              </span>
+              <p class="text-[10px] font-semibold text-slate-400 mt-0.5">Menunggu Nilai</p>
+              <span class="text-[9px] font-bold text-amber-600 dark:text-amber-400 mt-1 inline-block">
+                Perlu Review
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <NuxtLink
-        to="/journey"
-        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-slate-900 font-semibold text-xs hover:bg-slate-100 transition-all active:scale-95 shadow-md flex-shrink-0 cursor-pointer"
-      >
-        <span>Buka Peta Ekspedisi</span>
-        <ChevronRight class="w-4 h-4 text-[#831843]" />
-      </NuxtLink>
-    </div>
-
-    <!-- Interactive Weekly Progression Stepper -->
-    <WeekSelector />
-
-    <!-- Top 3 Leaderboard Preview Widget -->
-    <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6 shadow-sm flex flex-col justify-between">
-      <div>
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h3 class="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-              Top Star Performers — {{ currentBatchDisplayName }}
-            </h3>
-            <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-              Peringkat Crew Batch
-            </p>
+      <!-- CARD 2: TOP CAPTAINS THIS WEEK -->
+      <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <Trophy class="w-4 h-4" />
+              </div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                Top Captains This Week
+              </h4>
+            </div>
+            <NuxtLink to="/leaderboard" class="text-[11px] font-bold text-[#831843] dark:text-[#f472b6] hover:underline flex items-center gap-0.5">
+              <span>Lihat Semua</span>
+              <ArrowRight class="w-3 h-3" />
+            </NuxtLink>
           </div>
-          <NuxtLink
-            to="/leaderboard"
-            class="text-xs font-bold text-[#831843] dark:text-[#f472b6] hover:underline flex items-center gap-1"
-          >
-            <span>Lihat Leaderboard</span>
-            <ChevronRight class="w-3.5 h-3.5" />
-          </NuxtLink>
-        </div>
 
-        <!-- Top 3 Mini Podium List -->
-        <div v-if="branchTopThree.length > 0" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div
-            v-for="(crew, index) in branchTopThree"
-            :key="crew.crewId || crew.id"
-            class="p-3.5 sm:p-4 rounded-2xl border flex flex-col items-center text-center relative overflow-hidden transition-all"
-            :class="[
-              (crew.crewId || crew.id) === userStore.currentUser?.id
-                ? 'border-[#831843] dark:border-[#f472b6] bg-[#831843]/10 ring-2 ring-[#831843]/30'
-                : index === 0
-                ? 'border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20'
-                : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20'
-            ]"
-          >
-            <div class="relative mb-2">
-              <img
-                :src="crew.avatar"
-                :alt="crew.name"
-                class="w-12 h-12 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700"
-              />
-              <span
-                class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white"
-                :class="index === 0 ? 'bg-amber-500' : index === 1 ? 'bg-slate-400' : 'bg-amber-700'"
-              >
-                {{ index + 1 }}
+          <div class="space-y-2.5 pt-3">
+            <div
+              v-for="(cap, idx) in topCaptainsList"
+              :key="cap.name"
+              class="flex items-center justify-between p-2 rounded-xl bg-slate-50/60 dark:bg-slate-800/40"
+            >
+              <div class="flex items-center gap-2.5">
+                <span
+                  class="w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0"
+                  :class="idx === 0 ? 'bg-amber-500 text-white' : (idx === 1 ? 'bg-slate-400 text-white' : 'bg-amber-700 text-white')"
+                >
+                  {{ idx + 1 }}
+                </span>
+                <img :src="cap.avatar" :alt="cap.name" class="w-7 h-7 rounded-full object-cover" />
+                <div>
+                  <p class="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                    {{ cap.name }}
+                  </p>
+                  <p class="text-[10px] text-slate-400">
+                    {{ cap.store }}
+                  </p>
+                </div>
+              </div>
+
+              <span class="text-xs font-black text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <span v-if="idx === 0">👑</span>
+                <span>{{ cap.score }}%</span>
               </span>
             </div>
-            <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[120px]">
-              {{ crew.name }}
-            </h4>
-            <p class="text-[10px] text-slate-400 font-medium truncate max-w-[120px]">
-              {{ crew.position || 'Store Crew' }}
-            </p>
-            <span class="text-xs font-black text-amber-500 mt-1 flex items-center gap-0.5">
-              <Star class="w-3 h-3 fill-amber-400" />
-              {{ crew.stars?.toLocaleString() || 0 }}
-            </span>
           </div>
         </div>
+      </div>
 
-        <div v-else class="text-center py-6 text-xs text-slate-400">
-          Belum ada data peringkat untuk batch ini.
+      <!-- CARD 3: UPCOMING MILESTONES -->
+      <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <Calendar class="w-4 h-4" />
+              </div>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                Upcoming Milestones
+              </h4>
+            </div>
+          </div>
+
+          <div class="space-y-3 pt-3">
+            <div
+              v-for="(event, idx) in upcomingMilestones"
+              :key="event.title"
+              class="flex items-start gap-3"
+            >
+              <div
+                class="w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0 font-mono border"
+                :class="idx === 0
+                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                  : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800'"
+              >
+                <span class="text-xs font-bold leading-none">{{ event.day }}</span>
+                <span class="text-[9px] uppercase font-bold opacity-75">{{ event.month }}</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h5 class="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                  {{ event.title }}
+                </h5>
+                <p class="text-[11px] text-slate-400 mt-0.5">
+                  {{ event.subtext }}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ==================== 6. BOTTOM PANORAMIC ADVENTURE BANNER ==================== -->
+    <div class="relative rounded-3xl overflow-hidden border border-amber-900/30 shadow-xl bg-slate-950 text-white p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <!-- Background Image -->
+      <div class="absolute inset-0 z-0">
+        <img
+          src="/images/adventure_bg_wide.jpg"
+          alt="Adventure Team"
+          class="w-full h-full object-cover object-center opacity-30 scale-100"
+        />
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/90 to-amber-950/70"></div>
+      </div>
+
+      <!-- Slogan & Logo on Left -->
+      <div class="relative z-10 space-y-1 text-center md:text-left">
+        <p class="font-serif italic text-amber-200 text-lg sm:text-xl font-medium tracking-wide">
+          "Same Journey, Brighter People."
+        </p>
+        <p class="text-xs text-slate-400">
+          Membangun standar keunggulan operasional Re.juve melalui pembinaan terarah.
+        </p>
+      </div>
+
+      <!-- Quote Card on Right -->
+      <div class="relative z-10 max-w-md p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-center md:text-right shadow-lg">
+        <p class="text-xs font-serif italic text-slate-200 leading-relaxed">
+          "People grow when someone believes in them."
+        </p>
+        <span class="text-[10px] font-bold text-amber-300 uppercase tracking-widest mt-1 block">
+          — Re.juve Captain
+        </span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
@@ -520,9 +809,6 @@ import { useApprovalStore } from '~/stores/approval.js'
 import { useEvaluationStore } from '~/stores/evaluation.js'
 import { useGamificationStore } from '~/stores/gamification.js'
 import { dashboardApi } from '~/services/api.js'
-import { getStarProgress } from '~/utils/star.js'
-import StatCard from '~/components/dashboard/StatCard.vue'
-import WeekSelector from '~/components/batch/WeekSelector.vue'
 import {
   Users,
   CheckCircle2,
@@ -542,7 +828,14 @@ import {
   Waves,
   Mountain,
   Search,
-  MessageCircle
+  Bell,
+  FileText,
+  Flag,
+  TrendingUp,
+  TrendingDown,
+  Sprout,
+  Calendar,
+  ArrowRight
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -557,55 +850,64 @@ const dashboardSummary = ref(null)
 const recruitSearchQuery = ref('')
 const selectedStageFilter = ref('ALL')
 
-const currentBatchDisplayName = computed(() => {
-  return dashboardSummary.value?.batch?.name || batchStore.currentBatch?.name || 'Memuat Batch...'
+// ID Batch Aktif yang menjadi acuan utama (Point of View Per Batch)
+const targetActiveBatchId = computed(() => {
+  return batchStore.selectedBatchId ||
+    dashboardSummary.value?.batch?.batchId ||
+    dashboardSummary.value?.batch?.id ||
+    batchStore.currentBatchId ||
+    batchStore.currentBatch?.id ||
+    ''
 })
 
-const stageFilters = computed(() => {
-  const base = [
-    { key: 'ALL', label: 'Semua Kru' },
-    { key: 'BUDDY', label: 'Buddy Pre-Batch' }
-  ]
-  const weeks = batchStore.currentBatchWeeks || []
-  const unitCode = batchStore.currentBatchUnitCode || 'Week'
-  const unitInitial = unitCode.charAt(0).toUpperCase()
-
-  weeks.forEach(w => {
-    const cleanTitle = w.title?.includes(':') ? w.title.split(':')[0].trim() : `${unitCode} ${w.weekNumber}`
-    base.push({
-      key: `STAGE_${w.weekNumber}`,
-      label: `${cleanTitle} (${unitInitial}${w.weekNumber})`
-    })
-  })
-
-  base.push({
-    key: 'PENDING',
-    label: (userStore.isDistrictManager || userStore.isHead) ? 'Menunggu Approval DM' : 'Butuh Penilaian'
-  })
-  return base
+const currentBatchDisplayName = computed(() => {
+  return dashboardSummary.value?.batch?.name || batchStore.currentBatch?.name || 'Batch 1 — Program Pembukaan'
 })
 
 const storeDisplayName = computed(() => {
-  return dashboardSummary.value?.store?.departmentName || (batchStore.currentBatch?.name || '').split('—')[1]?.trim() || batchStore.currentBatch?.name || 'Re.juve'
-})
-
-const revisionCount = computed(() => {
-  return dashboardSummary.value?.metrics?.revisionRequired ?? dashboardSummary.value?.metrics?.revisionCount ?? missionStore.revisionCount ?? 0
+  return dashboardSummary.value?.store?.departmentName ||
+    dashboardSummary.value?.user?.departmentName ||
+    (batchStore.currentBatch?.name || '').split('—')[1]?.trim() ||
+    userStore.currentUser?.department ||
+    userStore.currentUser?.storeLocation ||
+    'Re.juve Store'
 })
 
 const pendingReviewCount = computed(() => {
+  const activeBatchId = targetActiveBatchId.value
+
+  // 1. Dari respons summary API jika terfilter batch
   if (dashboardSummary.value?.metrics?.pendingJourneyEvaluations !== undefined) {
     return (dashboardSummary.value.metrics.pendingJourneyEvaluations || 0) + (dashboardSummary.value.metrics.pendingBuddyEvaluations || 0)
   }
-  if (dashboardSummary.value?.metrics?.pendingApprovalsCount !== undefined) {
-    return dashboardSummary.value.metrics.pendingApprovalsCount
+
+  // 2. Dari store approval yang difilter per batch aktif
+  if (approvalStore.pendingApprovals?.length > 0) {
+    const filteredApprovals = activeBatchId
+      ? approvalStore.pendingApprovals.filter(a => a.batchId === activeBatchId || a.mission?.batchId === activeBatchId)
+      : approvalStore.pendingApprovals
+    return filteredApprovals.length
   }
-  return approvalStore.pendingApprovals.length
+
+  // 3. Dari daftar kru aktif yang siap dinilai
+  const pendingInActiveRecruits = activeRecruits.value.filter(c => c.status === 'READY_FOR_REVIEW' || (c.completedMissions || 0) >= (c.totalMissions || 1)).length
+  if (pendingInActiveRecruits > 0) return pendingInActiveRecruits
+
+  return (evalStore.workstationCrews.filter(c => c.pendingEvaluationsCount > 0).length) || 0
 })
 
-onMounted(async () => {
+async function loadDashboardData() {
+  // 1. Muat batch dan data pengguna terlebih dahulu agar batch aktif live ter-resolve
+  await Promise.allSettled([
+    batchStore.fetchBatchesFromApi(),
+    userStore.fetchUsersFromApi()
+  ])
+
+  const activeBatchId = targetActiveBatchId.value || batchStore.currentBatchId || batchStore.currentBatch?.id
+  const batchParam = (activeBatchId && !activeBatchId.startsWith('batch-')) ? { batchId: activeBatchId } : {}
+
   try {
-    const sumRes = await dashboardApi.getSummary()
+    const sumRes = await dashboardApi.getSummary(batchParam)
     if (sumRes?.success && sumRes.data) {
       dashboardSummary.value = sumRes.data
     }
@@ -613,132 +915,199 @@ onMounted(async () => {
     console.warn('Dashboard summary api fallback:', err.message)
   }
 
+  // 2. Muat data workstation kru, misi, approval, dan leaderboard
   await Promise.allSettled([
-    batchStore.fetchBatchesFromApi(),
-    missionStore.fetchMissionsFromApi(),
-    approvalStore.fetchApprovalsFromApi(),
-    userStore.fetchUsersFromApi(),
-    evalStore.fetchWorkstationCrews(),
-    gamificationStore.fetchLeaderboardFromApi()
+    missionStore.fetchMissionsFromApi(batchParam),
+    approvalStore.fetchApprovalsFromApi(batchParam),
+    evalStore.fetchWorkstationCrews({
+      ...(activeBatchId ? { batchId: activeBatchId } : {}),
+      week: batchStore.selectedWeek || 1,
+      type: 'JOURNEY'
+    }),
+    gamificationStore.fetchLeaderboardFromApi(batchParam)
   ])
+}
+
+function onBatchChange() {
+  loadDashboardData()
+}
+
+watch(() => batchStore.selectedBatchId, (newVal, oldVal) => {
+  if (newVal !== oldVal) {
+    loadDashboardData()
+  }
 })
 
-// Store Leader Active Recruits Data & Stage Mappings (Dynamic 2, 3, 5 Days/Weeks/Months)
+onMounted(async () => {
+  await loadDashboardData()
+})
+
+// Active Recruits disaring murni hanya untuk kru pada Batch Aktif (Point of View Per Batch)
 const activeRecruits = computed(() => {
+  const activeBatchId = targetActiveBatchId.value
   const crewsFromEval = evalStore.workstationCrews || []
   const allUsersList = userStore.allUsers || []
-  const currentBatchName = currentBatchDisplayName.value
-  const weeks = batchStore.currentBatchWeeks || []
-  const totalUnits = weeks.length || 3
-  const unitCode = batchStore.currentBatchUnitCode || 'Week'
-  const unitLabel = batchStore.currentBatchUnitLabel || 'Minggu'
-  const unitInitial = unitCode.charAt(0).toUpperCase()
+  const batchActiveWeek = batchStore.selectedWeek || batchStore.currentBatch?.currentWeek || 1
 
+  // 1. Jika ada data kru dari workstation evaluasi (API /evaluations/crews yang sudah memfilter kru di bawah SL ini)
   if (crewsFromEval.length > 0) {
-    return crewsFromEval.map((c, idx) => {
+    // Saring jika kru memiliki batchId eksplisit yang berbeda dari batch aktif
+    const matchingCrews = activeBatchId
+      ? crewsFromEval.filter(c => !c.batchId || c.batchId === activeBatchId || c.batchId === batchStore.currentBatch?.code || Number(c.totalMissionsCount) > 0)
+      : crewsFromEval
+
+    const targetList = matchingCrews.length > 0 ? matchingCrews : crewsFromEval
+
+    return targetList.map((c, idx) => {
       const userMatch = allUsersList.find(u => (u.id || u.userId) === (c.userId || c.id))
-      const rawGender = c.gender || userMatch?.gender || (idx % 2 === 0 ? 'L' : 'P')
-      const gender = (rawGender === 'P' || rawGender === 'FEMALE' || rawGender === 'Perempuan') ? 'P' : 'L'
-      const phone = c.phone || userMatch?.phone || userMatch?.phoneNumber || `0812-3456-${String(1000 + idx).slice(1)}`
-      const cleanPhone = phone.replace(/\D/g, '')
-      const waNumber = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : (cleanPhone.startsWith('62') ? cleanPhone : '62' + cleanPhone)
-      const waLink = `https://wa.me/${waNumber}`
+      const stageKey = (c.isBuddy || c.buddyCompleted === false) ? 'BUDDY' : `STAGE_${c.currentWeek || batchActiveWeek}`
+      const completed = c.evaluatedCount !== undefined ? c.evaluatedCount : (c.completedCount || 0)
+      const total = c.totalMissionsCount || 2
+      const pct = total > 0 ? Math.round((completed / total) * 100) : 0
       
-      const unitNum = c.currentWeek || (idx % totalUnits) + 1
-      const matchingWeek = weeks.find(w => w.weekNumber === unitNum)
-      const cleanTitle = matchingWeek?.title?.includes(':') ? matchingWeek.title.split(':')[0].trim() : `${unitCode} ${unitNum}`
-      
-      let stageKey = `STAGE_${unitNum}`
-      let stageLabel = `${cleanTitle} (${unitInitial}${unitNum})`
-      let stageClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+      let status = 'ON_TRACK'
+      if (completed >= total && total > 0) status = 'READY_FOR_REVIEW'
+      else if (completed === 0 || pct < 40) status = 'NEEDS_ATTENTION'
 
-      if (c.isBuddy || c.buddyCompleted === false || (idx === 0 && !c.currentWeek)) {
-        stageKey = 'BUDDY'
-        stageLabel = 'Buddy Pre-Batch'
-        stageClass = 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
-      } else if (unitNum === 2) {
-        stageClass = 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
-      } else if (unitNum >= 3) {
-        stageClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-      }
+      const rawPhone = c.phone || userMatch?.phone || userMatch?.phoneNumber || ''
 
-      const pendingCount = c.pendingEvaluationsCount || (c.evaluatedCount < c.totalMissionsCount ? (c.totalMissionsCount - c.evaluatedCount) : 0)
-
-      return {
+      return formatRecruitItem({
         id: c.userId || c.id || `crew-${idx}`,
-        userId: c.userId || c.id,
-        name: c.name || c.userName || 'Kru Re.juve',
-        email: c.email || userMatch?.email || 'crew@rejuve.co.id',
-        avatar: c.avatar || userMatch?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(c.name || 'Crew')}`,
-        gender,
-        phone,
-        waLink,
-        batchName: c.batchName || currentBatchName,
-        buddyName: c.buddyName || userMatch?.buddyName || c.supervisor?.name || (userStore.isSupervisor ? userStore.currentUser?.name : (userStore.storeLeaders[0]?.name || 'Store Leader')),
-        storeCode: c.storeCode || userMatch?.department?.departmentCode || userMatch?.department?.departmentName || storeDisplayName.value,
-        stageKey,
-        stageLabel,
-        stageClass,
-        hasPending: pendingCount > 0,
-        pendingCount
-      }
+        name: c.name || c.userName || userMatch?.name || `Kru ${idx + 1}`,
+        phone: rawPhone || '0812-3456-7890',
+        avatar: c.avatar || userMatch?.avatarUrl || userMatch?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(c.name || c.userName || userMatch?.name || 'Crew')}`,
+        store: c.storeCode || c.departmentName || userMatch?.department?.departmentName || storeDisplayName.value,
+        captain: c.buddyName || userMatch?.buddyName || c.supervisor?.name || (userStore.isStoreLeader ? userStore.currentUser?.name : (userStore.storeLeaders[0]?.name || 'Store Leader')),
+        stage: stageKey,
+        completed,
+        total,
+        status,
+        lastUpdate: c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Hari ini'
+      })
     })
   }
 
-  // Fallback from userStore or gamificationStore
-  const crewUsers = allUsersList.filter(u => {
-    const role = (u.role || u.roleCode || '').toUpperCase()
-    return role === 'CREW' || role === 'CREW (BUDDY)' || role === 'SPECIALIST' || !['STORE_LEADER', 'SUPERVISOR', 'DISTRICT_MANAGER', 'HEAD', 'SUPERADMIN', 'OPS_DM'].includes(role)
-  })
+  // 2. Fallback: Khusus Store Leader, cari kru di gerai atau mentee SL ini
+  let targetCrews = []
+  if (userStore.isStoreLeader) {
+    const myDeptId = userStore.currentUser?.departmentId || userStore.currentUser?.department?.departmentId
+    const myUserId = userStore.currentUserId
 
-  const targetList = crewUsers.length > 0 ? crewUsers : gamificationStore.allCrews
+    const slCrews = allUsersList.filter(u => {
+      const role = (u.role || u.roleCode || '').toUpperCase()
+      const isCrewRole = role === 'CREW' || role === 'CREW (BUDDY)' || role === 'SPECIALIST' || !['STORE_LEADER', 'SUPERVISOR', 'DISTRICT_MANAGER', 'HEAD', 'SUPERADMIN', 'OPS_DM'].includes(role)
+      if (!isCrewRole) return false
 
-  return targetList.map((c, idx) => {
-    const rawGender = c.gender || (idx % 2 === 0 ? 'L' : 'P')
-    const gender = (rawGender === 'P' || rawGender === 'FEMALE' || rawGender === 'Perempuan') ? 'P' : 'L'
-    const phone = c.phone || c.phoneNumber || `0812-3456-${String(1000 + idx).slice(1)}`
-    const cleanPhone = phone.replace(/\D/g, '')
-    const waNumber = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : (cleanPhone.startsWith('62') ? cleanPhone : '62' + cleanPhone)
-    const waLink = `https://wa.me/${waNumber}`
+      const inMyDept = myDeptId && (u.departmentId === myDeptId || u.department?.departmentId === myDeptId)
+      const isMyMentee = u.userBuddyId === myUserId || u.supervisorId === myUserId
 
-    const unitNum = (idx % totalUnits) + 1
-    const matchingWeek = weeks.find(w => w.weekNumber === unitNum)
-    const cleanTitle = matchingWeek?.title?.includes(':') ? matchingWeek.title.split(':')[0].trim() : `${unitCode} ${unitNum}`
+      if (inMyDept || isMyMentee) {
+        if (activeBatchId) {
+          return !u.batchId || u.batchId === activeBatchId || u.activeBatchId === activeBatchId || batchStore.currentBatch?.assignment?.crewIds?.includes(u.id || u.userId)
+        }
+        return true
+      }
+      return false
+    })
 
-    let stageKey = `STAGE_${unitNum}`
-    let stageLabel = `${cleanTitle} (${unitInitial}${unitNum})`
-    let stageClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-
-    if (c.isBuddy || idx === 0) {
-      stageKey = 'BUDDY'
-      stageLabel = 'Buddy Pre-Batch'
-      stageClass = 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
-    } else if (unitNum === 2) {
-      stageClass = 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
-    } else if (unitNum >= 3) {
-      stageClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+    if (slCrews.length > 0) {
+      targetCrews = slCrews
     }
+  }
 
-    return {
+  // 3. Fallback Umum Batch Kru
+  if (targetCrews.length === 0) {
+    const batchCrews = allUsersList.filter(u => {
+      const role = (u.role || u.roleCode || '').toUpperCase()
+      const isCrewRole = role === 'CREW' || role === 'CREW (BUDDY)' || role === 'SPECIALIST' || !['STORE_LEADER', 'SUPERVISOR', 'DISTRICT_MANAGER', 'HEAD', 'SUPERADMIN', 'OPS_DM'].includes(role)
+      if (!isCrewRole) return false
+
+      if (activeBatchId) {
+        return u.batchId === activeBatchId ||
+          u.activeBatchId === activeBatchId ||
+          batchStore.currentBatch?.assignment?.crewIds?.includes(u.id || u.userId)
+      }
+      return true
+    })
+
+    targetCrews = batchCrews.length > 0 ? batchCrews : (gamificationStore.allCrews || [])
+  }
+
+  return targetCrews.map((c, idx) => {
+    const stageKey = (c.isBuddy || Boolean(c.userBuddyId)) ? 'BUDDY' : `STAGE_${c.currentWeek || batchActiveWeek}`
+    const total = 2
+    const completed = 0
+    
+    let status = 'NEEDS_ATTENTION'
+    if (completed >= total) status = 'READY_FOR_REVIEW'
+    else if (completed > 0) status = 'ON_TRACK'
+
+    return formatRecruitItem({
       id: c.id || c.userId || `crew-${idx}`,
-      userId: c.id || c.userId,
       name: c.name || 'Kru Re.juve',
-      email: c.email || 'crew@rejuve.co.id',
-      avatar: c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(c.name || 'Crew')}`,
-      gender,
-      phone,
-      waLink,
-      batchName: c.batchName || currentBatchName,
-      buddyName: c.buddyName || c.supervisor?.name || (userStore.isSupervisor ? userStore.currentUser?.name : (userStore.storeLeaders[0]?.name || 'Store Leader')),
-      storeCode: c.storeCode || c.department?.departmentCode || c.department?.departmentName || storeDisplayName.value,
-      stageKey,
-      stageLabel,
-      stageClass,
-      hasPending: idx % 2 === 0,
-      pendingCount: idx % 2 === 0 ? 2 : 0
-    }
+      phone: c.phone || c.phoneNumber || '0812-3456-7890',
+      avatar: c.avatarUrl || c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(c.name || 'Crew')}`,
+      store: c.storeLocation || c.department?.departmentName || storeDisplayName.value,
+      captain: c.buddyName || (userStore.isStoreLeader ? userStore.currentUser?.name : (userStore.storeLeaders[0]?.name || 'Store Leader')),
+      stage: stageKey,
+      completed,
+      total,
+      status,
+      lastUpdate: 'Hari ini'
+    })
   })
 })
+
+function formatRecruitItem(item) {
+  const pct = Math.round((item.completed / item.total) * 100) || 0
+  let stagePillClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+  let stagePillLabel = 'Week 1'
+
+  if (item.stage === 'BUDDY') {
+    stagePillClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+    stagePillLabel = 'Captain Phase'
+  } else if (item.stage === 'STAGE_2') {
+    stagePillClass = 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300'
+    stagePillLabel = 'Week 2'
+  } else if (item.stage === 'STAGE_3') {
+    stagePillClass = 'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300'
+    stagePillLabel = 'Week 3'
+  }
+
+  let statusBadgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+  let statusDotClass = 'bg-emerald-500'
+  let statusLabel = 'On Track'
+
+  if (item.status === 'NEEDS_ATTENTION') {
+    statusBadgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+    statusDotClass = 'bg-amber-500'
+    statusLabel = 'Needs Attention'
+  } else if (item.status === 'READY_FOR_REVIEW') {
+    statusBadgeClass = 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
+    statusDotClass = 'bg-purple-500'
+    statusLabel = 'Ready for Review'
+  }
+
+  let progressColorClass = 'bg-emerald-500'
+  if (item.status === 'NEEDS_ATTENTION') progressColorClass = 'bg-amber-500'
+  else if (item.status === 'READY_FOR_REVIEW') progressColorClass = 'bg-purple-500'
+
+  return {
+    ...item,
+    storeCode: item.store,
+    buddyName: item.captain,
+    stageKey: item.stage,
+    stagePillClass,
+    stagePillLabel,
+    statusBadgeClass,
+    statusDotClass,
+    statusLabel,
+    progressPercent: pct,
+    progressColorClass,
+    completedMissions: item.completed,
+    totalMissions: item.total
+  }
+}
 
 const filteredRecruits = computed(() => {
   let list = activeRecruits.value || []
@@ -748,7 +1117,6 @@ const filteredRecruits = computed(() => {
     list = list.filter(c =>
       c.name?.toLowerCase().includes(q) ||
       c.phone?.includes(q) ||
-      c.batchName?.toLowerCase().includes(q) ||
       c.storeCode?.toLowerCase().includes(q) ||
       c.buddyName?.toLowerCase().includes(q)
     )
@@ -756,7 +1124,7 @@ const filteredRecruits = computed(() => {
 
   if (selectedStageFilter.value !== 'ALL') {
     if (selectedStageFilter.value === 'PENDING') {
-      list = list.filter(c => c.hasPending)
+      list = list.filter(c => c.statusLabel === 'Ready for Review' || c.statusLabel === 'Needs Attention')
     } else {
       list = list.filter(c => c.stageKey === selectedStageFilter.value)
     }
@@ -765,190 +1133,116 @@ const filteredRecruits = computed(() => {
   return list
 })
 
-const activeRecruitsCount = computed(() => activeRecruits.value.length)
-const buddyRecruitsCount = computed(() => activeRecruits.value.filter(c => c.stageKey === 'BUDDY').length)
-
-// Dynamic Stage Cards based on current batch configuration (2, 3, 5 Days/Weeks/Months)
-const dynamicStageCards = computed(() => {
-  const weeks = batchStore.currentBatchWeeks || []
-  const unitCode = batchStore.currentBatchUnitCode || 'Week'
-  const unitLabel = batchStore.currentBatchUnitLabel || 'Minggu'
-  const unitInitial = unitCode.charAt(0).toUpperCase()
-  const variants = ['amber', 'blue', 'emerald', 'teal', 'indigo', 'purple', 'slate']
-  const icons = [Tent, Waves, Mountain, Target, Award, Star, CheckCircle2]
-
-  return weeks.map((w, idx) => {
-    const stageKey = `STAGE_${w.weekNumber}`
-    const count = activeRecruits.value.filter(c => c.stageKey === stageKey).length
-    const cleanTitle = w.title?.includes(':') ? w.title.split(':')[0].trim() : `${unitCode} ${w.weekNumber}`
-    const title = `${cleanTitle} (${unitInitial}${w.weekNumber})`
-    const subtext = `Tahap ${w.title?.includes(':') ? w.title.split(':')[1].trim() : `${unitLabel} ${w.weekNumber}`}`
-
-    return {
-      key: stageKey,
-      title,
-      value: count,
-      unit: 'Kru',
-      subtext,
-      icon: icons[idx % icons.length] || Star,
-      variant: variants[idx % variants.length] || 'brand'
-    }
-  })
+// Menghitung jumlah aktif New Hires secara spesifik pada batch aktif
+const activeRecruitsCount = computed(() => {
+  return activeRecruits.value.length
 })
 
-// Personal Crew stats
-const myCrewData = computed(() => {
-  if (userStore.isCrew) {
-    const found = gamificationStore.crewById(userStore.currentUser?.id)
-    return found || userStore.currentUser
+const buddyRecruitsCount = computed(() => {
+  return activeRecruits.value.filter(c => c.stageKey === 'BUDDY').length
+})
+
+function getRecruitCountByStage(stageKey) {
+  return activeRecruits.value.filter(c => c.stageKey === stageKey).length
+}
+
+const onTrackCount = computed(() => activeRecruits.value.filter(c => c.statusLabel === 'On Track').length)
+const needsAttentionCount = computed(() => activeRecruits.value.filter(c => c.statusLabel === 'Needs Attention').length)
+const readyForReviewCount = computed(() => activeRecruits.value.filter(c => c.statusLabel === 'Ready for Review').length)
+
+const teamCompletionRate = computed(() => {
+  if (dashboardSummary.value?.metrics?.progressPercent !== undefined) {
+    return dashboardSummary.value.metrics.progressPercent
   }
-  return gamificationStore.allCrews[0]
+  if (activeRecruits.value.length === 0) return 0
+  const totalCompleted = activeRecruits.value.reduce((acc, c) => acc + (c.completedMissions || 0), 0)
+  const totalMissions = activeRecruits.value.reduce((acc, c) => acc + (c.totalMissions || 1), 0) || 1
+  return Math.round((totalCompleted / totalMissions) * 100)
 })
 
-const myStars = computed(() => {
-  if (dashboardSummary.value?.metrics?.myStars !== undefined) {
-    return dashboardSummary.value.metrics.myStars
+const inactiveNewHiresCount = computed(() => activeRecruits.value.filter(c => (c.completedMissions || 0) === 0).length)
+const week3AlmostCompletedCount = computed(() => activeRecruits.value.filter(c => c.stageKey === 'STAGE_3' || c.completedMissions >= c.totalMissions - 1).length)
+
+// Mission submission numbers mapped from active batch
+const submissionStats = computed(() => {
+  const totalMissions = dashboardSummary.value?.metrics?.totalMissions ??
+    activeRecruits.value.reduce((sum, c) => sum + (c.totalMissions || 6), 0)
+  const completedMissions = dashboardSummary.value?.metrics?.completedEvaluations ??
+    dashboardSummary.value?.metrics?.approvedEvaluations ??
+    activeRecruits.value.reduce((sum, c) => sum + (c.completedMissions || 0), 0)
+
+  return {
+    submitted: totalMissions,
+    evaluated: completedMissions,
+    pending: pendingReviewCount.value
   }
-  if (dashboardSummary.value?.metrics?.myPoints !== undefined) {
-    return dashboardSummary.value.metrics.myPoints
-  }
-  return myCrewData.value?.stars || userStore.currentUser?.stars || 0
 })
 
-const myProgress = computed(() => {
-  return getStarProgress(myStars.value)
-})
-
-const storeCrews = computed(() => {
-  return gamificationStore.crewsByBatch(batchStore.selectedBatchId)
-})
-
-const storeCrewCount = computed(() => {
-  return dashboardSummary.value?.metrics?.totalStoreCrews ??
-    dashboardSummary.value?.metrics?.managedStoresCount ??
-    dashboardSummary.value?.metrics?.totalCrewsCount ??
-    storeCrews.value.length ??
-    0
-})
-
-const branchTopThree = computed(() => {
+// Top Captains List dynamically sourced
+const topCaptainsList = computed(() => {
   if (dashboardSummary.value?.topThree && Array.isArray(dashboardSummary.value.topThree) && dashboardSummary.value.topThree.length > 0) {
-    return dashboardSummary.value.topThree.map(item => ({
-      crewId: item.crewId || item.id,
-      id: item.crewId || item.id,
-      name: item.name || 'Crew Member',
-      position: item.position || 'Store Crew',
-      stars: item.stars || 0,
-      avatar: item.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(item.name || 'Crew')}`
+    return dashboardSummary.value.topThree.map((item, idx) => ({
+      name: item.name || `Captain ${idx + 1}`,
+      store: item.departmentName || item.store || storeDisplayName.value,
+      score: item.averageScore || (item.stars ? Math.min(100, Math.round(item.stars * 20)) : 100 - (idx * 4)),
+      avatar: item.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(item.name || 'Captain')}`
     }))
   }
-  const sorted = [...storeCrews.value].sort((a, b) => (b.stars || 0) - (a.stars || 0))
-  return sorted.slice(0, 3)
-})
 
-const myRank = computed(() => {
-  if (dashboardSummary.value?.metrics?.rank !== undefined) {
-    return dashboardSummary.value.metrics.rank
+  const leaders = userStore.storeLeaders || []
+  if (leaders.length > 0) {
+    return leaders.slice(0, 3).map((l, idx) => ({
+      name: l.name,
+      store: l.department || l.storeLocation || storeDisplayName.value,
+      score: Math.max(85, 100 - (idx * 4)),
+      avatar: l.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(l.name)}`
+    }))
   }
-  const sorted = [...storeCrews.value].sort((a, b) => (b.stars || 0) - (a.stars || 0))
-  const idx = sorted.findIndex(c => (c.crewId || c.id) === userStore.currentUser?.id)
-  return idx !== -1 ? idx + 1 : 1
-})
 
-const myMissions = computed(() => {
-  const batchId = userStore.isCrew ? userStore.currentUser?.batchId : batchStore.selectedBatchId
-  const list = missionStore.missionsByBatch(batchId) || []
-  if (userStore.isCrew && userStore.currentUser?.id) {
-    const currentCrewId = userStore.currentUser.id
-    return list.filter(m => {
-      const isAssigned = (m.assignedCrewIds && m.assignedCrewIds.includes(currentCrewId)) ||
-        (m.crewEvaluations && m.crewEvaluations.some(ce => ce.crewId === currentCrewId))
-      return isAssigned
-    })
+  const topCrews = gamificationStore.leaderboard ? gamificationStore.leaderboard.slice(0, 3) : []
+  if (topCrews.length > 0) {
+    return topCrews.map((c, idx) => ({
+      name: c.name,
+      store: c.department || c.storeLocation || storeDisplayName.value,
+      score: Math.max(85, 100 - (idx * 4)),
+      avatar: c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(c.name)}`
+    }))
   }
-  return list
+
+  return []
 })
 
-const myTotalMissions = computed(() => {
-  return dashboardSummary.value?.metrics?.totalMissions ?? (myMissions.value || []).length ?? 14
-})
+// Dynamic Upcoming Milestones from Batch Timeline
+const upcomingMilestones = computed(() => {
+  const unitCode = batchStore.currentBatchUnitCode || 'Week'
+  const curWeek = batchStore.selectedWeek || 1
+  
+  const now = new Date()
+  const milestone1Date = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const milestone2Date = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
 
-const myCompletedCount = computed(() => {
-  if (dashboardSummary.value?.metrics?.completedMissions !== undefined) {
-    return dashboardSummary.value.metrics.completedMissions
-  }
-  const crewId = userStore.currentUser?.id
-  return (myMissions.value || []).filter(m => {
-    if (m.crewEvaluations && m.crewEvaluations.length > 0) {
-      const e = m.crewEvaluations.find(ce => ce.crewId === crewId)
-      return e && (e.status === 'COMPLETED' || m.status === 'COMPLETED')
+  return [
+    {
+      day: String(milestone1Date.getDate()).padStart(2, '0'),
+      month: milestone1Date.toLocaleDateString('id-ID', { month: 'short' }),
+      title: `Batas akhir review ${unitCode} ${curWeek}`,
+      subtext: 'Pastikan seluruh misi kru telah dinilai Store Leader.'
+    },
+    {
+      day: String(milestone2Date.getDate()).padStart(2, '0'),
+      month: milestone2Date.toLocaleDateString('id-ID', { month: 'short' }),
+      title: `Batch Berikutnya Dimulai`,
+      subtext: 'Siapkan Captain & alokasi mentor di wilayah gerai.'
     }
-    return m.status === 'COMPLETED'
-  }).length
-})
-
-const myCycleProgress = computed(() => {
-  if (dashboardSummary.value?.metrics?.cycleProgress !== undefined) {
-    return dashboardSummary.value.metrics.cycleProgress
-  }
-  const total = myTotalMissions.value || 1
-  return Math.round((myCompletedCount.value / total) * 100) || 0
-})
-
-const myAverageScore = computed(() => {
-  if (dashboardSummary.value?.metrics?.averageScore !== undefined) {
-    return Number(dashboardSummary.value.metrics.averageScore).toFixed(1)
-  }
-  const crewId = userStore.currentUser?.id
-  let totalScore = 0
-  let evaluatedCount = 0
-
-  myMissions.value.forEach(m => {
-    if (m.crewEvaluations && m.crewEvaluations.length > 0) {
-      const e = m.crewEvaluations.find(ce => ce.crewId === crewId)
-      if (e && e.score > 0) {
-        totalScore += e.score
-        evaluatedCount++
-      }
-    } else if (m.averageScore > 0) {
-      totalScore += m.averageScore
-      evaluatedCount++
-    }
-  })
-
-  return evaluatedCount > 0 ? (totalScore / evaluatedCount).toFixed(1) : '0.0'
-})
-
-// Operational stats for Supervisor / Store Leader / Head / Admin
-const operationalCompletedMissions = computed(() => {
-  return dashboardSummary.value?.metrics?.completedMissions ?? batchStore.currentBatch?.completedMissions ?? 0
-})
-
-const operationalTotalMissions = computed(() => {
-  return dashboardSummary.value?.metrics?.totalMissions ?? batchStore.currentBatch?.totalMissions ?? 0
-})
-
-const operationalMissionProgress = computed(() => {
-  const total = operationalTotalMissions.value || 1
-  return Math.round((operationalCompletedMissions.value / total) * 100) || 0
-})
-
-const operationalAverageScore = computed(() => {
-  const avg = dashboardSummary.value?.metrics?.averageScore ??
-    dashboardSummary.value?.metrics?.overallAverageScore ??
-    batchStore.currentBatch?.averageScore ??
-    0
-  return typeof avg === 'number' ? avg.toFixed(1) : avg
-})
-
-const operationalTotalStars = computed(() => {
-  return dashboardSummary.value?.metrics?.totalStars ?? batchStore.currentBatch?.totalStars ?? 0
+  ]
 })
 
 const greetingText = computed(() => {
   const hour = new Date().getHours()
-  if (hour < 12) return 'Selamat Pagi'
-  if (hour < 17) return 'Selamat Siang'
+  if (hour >= 4 && hour < 11) return 'Selamat Pagi'
+  if (hour >= 11 && hour < 15) return 'Selamat Siang'
+  if (hour >= 15 && hour < 18) return 'Selamat Sore'
   return 'Selamat Malam'
 })
 </script>
+
