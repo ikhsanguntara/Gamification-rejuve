@@ -171,3 +171,18 @@ export const notificationApi = {
   markAllAsRead: () => apiFetch('/notifications/mark-all-read', { method: 'PATCH' })
 }
 
+// ─── 15. Reports & Traceability Service ────────────────────────────────────
+export const reportApi = {
+  // 1. Rekapitulasi Insentif Buddy
+  getBuddyIncentives: (params) => apiFetch('/reports/buddy-incentive', { method: 'GET', params }),
+  getBuddyIncentiveDetail: (userId, params) => apiFetch(`/reports/buddy-incentive/${userId}`, { method: 'GET', params }),
+  exportBuddyIncentives: (params) => apiFetch('/reports/buddy-incentive/export', { method: 'GET', params, responseType: 'blob' }),
+  exportBuddyIncentiveDetail: (userId, params) => apiFetch(`/reports/buddy-incentive/${userId}/export`, { method: 'GET', params, responseType: 'blob' }),
+
+  // 2. Audit Traceability Kru / Active New Recruit
+  getUserTraceability: (params) => apiFetch('/reports/user-traceability', { method: 'GET', params }),
+  getUserTraceabilityDetail: (userId, params) => apiFetch(`/reports/user-traceability/${userId}`, { method: 'GET', params }),
+  exportUserTraceability: (params) => apiFetch('/reports/user-traceability/export', { method: 'GET', params, responseType: 'blob' }),
+  exportUserTraceabilityDetail: (userId, params) => apiFetch(`/reports/user-traceability/${userId}/export`, { method: 'GET', params, responseType: 'blob' })
+}
+

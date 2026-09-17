@@ -16,6 +16,8 @@ import { useUserStore } from './stores/user.js'
 import { useApprovalStore } from './stores/approval.js'
 import { useGamificationStore } from './stores/gamification.js'
 import { useMissionStore } from './stores/mission.js'
+import { useReportStore, downloadFileBlob } from './stores/report.js'
+import { reportApi } from './services/api.js'
 
 console.log('🧪 MEMULAI PENGUJIAN KOMPREHENSIF UNIT TESTER (QA SUITE)...\n')
 
@@ -550,9 +552,10 @@ test('Change Password Validation: Validasi password minimal 6 karakter dan kelen
 })
 
 // ============================================================================
+// ============================================================================
 // SUITE 9: VALIDASI RESTRIKSI TAHAPAN ONBOARDING (BUDDY SEBELUM JOURNEY)
 // ============================================================================
-console.log('📌 9. Menguji Validasi Restriksi Tahap Onboarding (BUDDY vs JOURNEY):')
+console.log('\n📌 9. Menguji Validasi Restriksi Tahap Onboarding (BUDDY vs JOURNEY):')
 
 test('Evaluasi Kru: Kru dengan step "BUDDY" harus berstatus terkunci dari input nilai SL', () => {
   const checkBuddyLocked = (step) => {
@@ -604,6 +607,43 @@ test('Dashboard Pipeline: Resolusi tahapan kru (BUDDY -> Captain Phase vs JOURNE
 
   assertEqual(resolveStageKey(crew1), 'BUDDY', 'Kru dengan step BUDDY harus masuk ke Captain Phase')
   assertEqual(resolveStageKey(crew2), 'STAGE_1', 'Kru dengan step JOURNEY harus masuk ke STAGE_1 / Week 1')
+})
+
+// ============================================================================
+// SUITE 10: PENGUJIAN MODUL LAPORAN & TRACEABILITY (QA SUITE)
+// ============================================================================
+console.log('\n📌 10. Menguji Modul Laporan & Ekspor Spreadsheet (.xlsx):')
+
+const reportStore = useReportStore()
+
+test('Report API Interface: Memastikan 8 endpoint laporan tersedia', () => {
+  assertTrue(typeof reportApi.getBuddyIncentives === 'function', 'reportApi.getBuddyIncentives tersedia')
+  assertTrue(typeof reportApi.getBuddyIncentiveDetail === 'function', 'reportApi.getBuddyIncentiveDetail tersedia')
+  assertTrue(typeof reportApi.exportBuddyIncentives === 'function', 'reportApi.exportBuddyIncentives tersedia')
+  assertTrue(typeof reportApi.exportBuddyIncentiveDetail === 'function', 'reportApi.exportBuddyIncentiveDetail tersedia')
+  assertTrue(typeof reportApi.getUserTraceability === 'function', 'reportApi.getUserTraceability tersedia')
+  assertTrue(typeof reportApi.getUserTraceabilityDetail === 'function', 'reportApi.getUserTraceabilityDetail tersedia')
+  assertTrue(typeof reportApi.exportUserTraceability === 'function', 'reportApi.exportUserTraceability tersedia')
+  assertTrue(typeof reportApi.exportUserTraceabilityDetail === 'function', 'reportApi.exportUserTraceabilityDetail tersedia')
+})
+
+test('Blob Downloader Helper: Menangani eksekusi di environment Node.js & Browser secara aman', () => {
+  const res = downloadFileBlob('test-content', 'Test_Laporan.xlsx')
+  assertTrue(res === true, 'downloadFileBlob berjalan tanpa error di runtime non-browser')
+})
+
+test('Report Store: Sinkronisasi Tab & Filter State', () => {
+  reportStore.activeTab = 'buddy-incentive'
+  assertEqual(reportStore.activeTab, 'buddy-incentive', 'Tab aktif awal adalah buddy-incentive')
+
+  reportStore.activeTab = 'user-traceability'
+  assertEqual(reportStore.activeTab, 'user-traceability', 'Tab aktif berhasil dialihkan ke user-traceability')
+
+  reportStore.setFilter('status', 'COMPLETED')
+  assertEqual(reportStore.filters.status, 'COMPLETED', 'Filter status berhasil diperbarui')
+
+  reportStore.resetFilters()
+  assertEqual(reportStore.filters.status, '', 'Filter status berhasil direset')
 })
 
 console.log('')

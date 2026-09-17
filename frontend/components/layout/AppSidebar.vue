@@ -356,6 +356,7 @@ import {
   Compass,
   Handshake,
   MessageSquareText,
+  FileSpreadsheet,
   X
 } from 'lucide-vue-next'
 
@@ -455,7 +456,8 @@ const navItems = computed(() => {
         badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
       },
       { label: 'Feedback Onboarding', path: '/feedback', icon: MessageSquareText },
-      { label: 'Leaderboard', path: '/leaderboard', icon: Medal }
+      { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
+      { label: 'Laporan & Traceability', path: '/reports', icon: FileSpreadsheet }
     ]
   }
 
@@ -492,7 +494,8 @@ const navItems = computed(() => {
         badge: missionStore.revisionCount > 0 ? `${missionStore.revisionCount} Rev` : null,
         badgeStyle: 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
       },
-      { label: 'Leaderboard', path: '/leaderboard', icon: Medal }
+      { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
+      { label: 'Laporan & Traceability', path: '/reports', icon: FileSpreadsheet }
     )
 
     return items
@@ -509,7 +512,8 @@ const navItems = computed(() => {
       badge: approvalStore.pendingApprovals.length > 0 ? `${approvalStore.pendingApprovals.length}` : null,
       badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
     },
-    { label: 'Leaderboard', path: '/leaderboard', icon: Medal }
+    { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
+    { label: 'Laporan & Traceability', path: '/reports', icon: FileSpreadsheet }
   ]
 })
 </script>

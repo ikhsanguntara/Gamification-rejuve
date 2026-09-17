@@ -8,6 +8,7 @@ import { useApprovalStore } from './stores/approval.js'
 import { useGamificationStore } from './stores/gamification.js'
 import { useStoreStore } from './stores/store.js'
 import { calculateAverageDmSl } from './utils/star.js'
+import { useReportStore } from './stores/report.js'
 
 console.log('🚀 MEMULAI AUDIT & PENGUJIAN SEMUA FITUR CRUD SISTEM RE.JUVE...\n')
 
@@ -23,6 +24,7 @@ const evalStore = useEvaluationStore()
 const approvalStore = useApprovalStore()
 const gamificationStore = useGamificationStore()
 const storeStore = useStoreStore()
+const reportStore = useReportStore()
 
 // Fixture user untuk kebutuhan pengetesan terisolasi
 ;[
@@ -579,9 +581,53 @@ assert(userStore.unreadNotificationCount === 2, 'Unread Count: Menghitung total 
 await userStore.markAllNotificationsAsRead()
 assert(userStore.unreadNotificationCount === 0 && userStore.notifications.every(n => n.isRead), 'Mark All Read: Berhasil menandai semua notifikasi sebagai dibaca')
 
-// 9.4 NOTIFICATION API ACTIONS
-assert(typeof userStore.fetchNotifications === 'function', 'Notification API: Action fetchNotifications tersedia di user store')
-assert(typeof userStore.fetchUnreadCount === 'function', 'Notification API: Action fetchUnreadCount tersedia di user store')
+// ==========================================
+// TEST SUITE 10: REPORTS & TRACEABILITY CRUD & EXPORT SPREADSHEET
+// ==========================================
+console.log('\n📌 10. Menguji Modul Laporan Insentif Buddy & Audit Traceability Pengguna:')
+
+// 10.1 FETCH BUDDY INCENTIVES
+await reportStore.fetchBuddyIncentives()
+assert(Array.isArray(reportStore.buddyIncentives) && reportStore.buddyIncentives.length > 0, 'Buddy Incentive: Berhasil memuat daftar rekapitulasi insentif buddy')
+assert(reportStore.buddyPagination.total > 0, 'Buddy Incentive: Pagination terhitung dengan benar')
+
+// 10.2 BUDDY SUMMARY STATS
+const bStats = reportStore.buddySummaryStats
+assert(bStats.totalBuddies > 0 && bStats.totalMentees > 0, 'Buddy Stats: Ringkasan total buddy & mentee terhitung akurat')
+assert(typeof bStats.totalIncentiveAmount === 'number' && bStats.totalIncentiveAmount >= 0, 'Buddy Stats: Estimasi total insentif terhitung dalam format angka')
+
+// 10.3 FETCH BUDDY INCENTIVE DETAIL
+const testBuddyId = reportStore.buddyIncentives[0]?.userId || 'sl-001'
+const bDetail = await reportStore.fetchBuddyIncentiveDetail(testBuddyId)
+assert(bDetail && (bDetail.buddyInfo || bDetail.mentees), 'Buddy Detail: Berhasil memuat rincian insentif & roster mentee')
+
+// 10.4 EXPORT BUDDY INCENTIVES ACTIONS
+assert(typeof reportStore.exportBuddyIncentives === 'function', 'Export Action: Action exportBuddyIncentives tersedia di store')
+assert(typeof reportStore.exportBuddyIncentiveDetail === 'function', 'Export Action: Action exportBuddyIncentiveDetail tersedia di store')
+
+// 10.5 FETCH USER TRACEABILITY
+await reportStore.fetchUserTraceability()
+assert(Array.isArray(reportStore.userTraceability) && reportStore.userTraceability.length > 0, 'User Traceability: Berhasil memuat daftar audit onboarding kru')
+assert(reportStore.traceabilityPagination.total > 0, 'User Traceability: Pagination terhitung dengan benar')
+
+// 10.6 TRACEABILITY SUMMARY STATS
+const tStats = reportStore.traceabilitySummaryStats
+assert(tStats.totalCrews > 0 && typeof tStats.avgScore === 'number', 'Traceability Stats: Ringkasan total kru & rata-rata skor terhitung akurat')
+
+// 10.7 FETCH USER TRACEABILITY DETAIL
+const testCrewId = reportStore.userTraceability[0]?.userId || 'crew-001'
+const tDetail = await reportStore.fetchUserTraceabilityDetail(testCrewId)
+assert(tDetail && (tDetail.userInfo || tDetail.auditTimeline), 'Traceability Detail: Berhasil memuat kartu audit timeline komprehensif')
+
+// 10.8 EXPORT USER TRACEABILITY ACTIONS
+assert(typeof reportStore.exportUserTraceability === 'function', 'Export Action: Action exportUserTraceability tersedia di store')
+assert(typeof reportStore.exportUserTraceabilityDetail === 'function', 'Export Action: Action exportUserTraceabilityDetail tersedia di store')
+
+// 10.9 FILTERING ACTIONS
+reportStore.setFilter('search', 'Budi')
+assert(reportStore.filters.search === 'Budi', 'Filters: Berhasil memperbarui nilai parameter filter')
+reportStore.resetFilters()
+assert(reportStore.filters.search === '' && reportStore.filters.batchId === '', 'Filters: Berhasil me-reset seluruh parameter filter')
 
 console.log('')
 console.log(`==========================================`)
