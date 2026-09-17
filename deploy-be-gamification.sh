@@ -60,10 +60,10 @@ echo "🧹 [5/5] Membersihkan cache image lama yang tidak terpakai..."
 echo "=================================================================="
 docker image prune -f >/dev/null 2>&1 || true
 
-SERVER_IP=$(curl -s --max-time 3 ifconfig.me || echo "103.168.147.133")
+SERVER_IP=$(curl -s --max-time 3 ifconfig.me || echo "localhost")
 
 echo "=================================================================="
 echo "🎉 DEPLOYMENT GAMIFICATION BACKEND BERHASIL & SEHAT!"
-echo "📡 Base URL Backend : http://${SERVER_IP}:3005"
+echo "📡 Base URL Backend : http://${SERVER_IP}:3005/api"
 echo "📑 Swagger API Docs : http://${SERVER_IP}:3005/swagger"
 echo "=================================================================="

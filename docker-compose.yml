@@ -3,6 +3,7 @@ version: '3.8'
 services:
   # ============================================================================
   # BACKEND SERVICE (Express.js API) — Port Host 3005
+  # Terhubung ke container PostgreSQL existing (asco-postgres) & asco-minio
   # ============================================================================
   gamification-backend:
     build:
@@ -29,11 +30,11 @@ services:
       TZ: Asia/Jakarta
       PORT: ${PORT:-3005}
       NODE_ENV: ${NODE_ENV:-production}
-      DATABASE_URL: ${DATABASE_URL}
-      JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://Lynx_Rjv:P%40ssw0rd.Rjv@asco-postgres:5432/db_gamification?schema=public}
+      JWT_SECRET: ${JWT_SECRET:-rejuve_super_secret_jwt_key_2026_gamification_api}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-localhost}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-asco-minio}
       MINIO_PORT: ${MINIO_PORT:-9000}
       MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
@@ -50,7 +51,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://103.168.147.133:3005/api}
+        NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:3005/api}
     container_name: gamification-frontend
     restart: unless-stopped
     ports:
@@ -71,7 +72,7 @@ services:
 networks:
   default:
   asco_network:
-    name: backend_default
+    name: ${ASCO_NETWORK:-backend_default}
     external: true
 
 volumes:
