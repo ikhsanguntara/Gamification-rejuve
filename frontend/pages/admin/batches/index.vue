@@ -37,18 +37,32 @@
             <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
               {{ b.code }}
             </span>
-            <span
-              class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-              :class="[
-                b.status === 'DRAFT'
-                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/60'
-                  : b.status === 'COMPLETED'
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300'
-                  : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'
-              ]"
-            >
-              {{ b.status }}
-            </span>
+            <div class="flex items-center gap-1.5">
+              <span
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                :class="[
+                  b.isDraft || b.status === 'DRAFT'
+                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/60'
+                    : b.status === 'COMPLETED'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300'
+                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'
+                ]"
+              >
+                {{ b.isDraft || b.status === 'DRAFT' ? 'DRAFT' : b.status }}
+              </span>
+              <span
+                v-if="b.isDraft || b.status === 'DRAFT'"
+                class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+              >
+                Belum Digenerate
+              </span>
+              <span
+                v-else-if="b.isGenerated || b.totalMissions > 0"
+                class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400"
+              >
+                Misi Aktif
+              </span>
+            </div>
           </div>
 
           <h3 class="font-bold text-base text-slate-900 dark:text-white mb-1 line-clamp-1">
@@ -98,6 +112,15 @@
         <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2">
           <div class="flex items-center gap-2">
             <NuxtLink
+              v-if="b.isDraft || b.status === 'DRAFT'"
+              :to="`/admin/batches/${b.id}`"
+              class="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 cursor-pointer transition-all border border-amber-500/30"
+            >
+              <Edit3 class="w-3.5 h-3.5" />
+              <span>Edit Draft</span>
+            </NuxtLink>
+            <NuxtLink
+              v-else
               :to="`/admin/batches/${b.id}`"
               class="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#831843] dark:hover:text-[#f472b6] flex items-center gap-1 cursor-pointer"
             >
@@ -106,12 +129,12 @@
             </NuxtLink>
 
             <button
-              v-if="b.status === 'DRAFT'"
+              v-if="b.isDraft || b.status === 'DRAFT' || !b.isGenerated"
               type="button"
               @click="handleGenerateMissions(b)"
-              class="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-lg flex items-center gap-1 hover:bg-amber-200 cursor-pointer transition-all"
+              class="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-2.5 py-1 rounded-lg flex items-center gap-1 hover:bg-amber-200 cursor-pointer transition-all border border-amber-300/60"
             >
-              <Zap class="w-3.5 h-3.5" />
+              <Zap class="w-3.5 h-3.5 text-amber-600" />
               <span>Generate Misi</span>
             </button>
           </div>
@@ -144,7 +167,7 @@ import { useBatchStore } from '~/stores/batch.js'
 import { useToast } from '~/composables/useToast.js'
 import AppPagination from '~/components/ui/AppPagination.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
-import { Plus, Eye, MapPin, Zap } from 'lucide-vue-next'
+import { Plus, Eye, MapPin, Zap, Edit3 } from 'lucide-vue-next'
 import { batchApi } from '~/services/api.js'
 import { confirmDeleteDialog } from '~/utils/dialog.js'
 

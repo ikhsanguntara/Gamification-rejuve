@@ -158,6 +158,9 @@ export const useUserStore = defineStore('user', {
       return u?.batchId || null
     },
 
+    availableBatches: (state) => state.apiUser?.availableBatches || [],
+    activeBatch: (state) => state.apiUser?.activeBatch || null,
+
     unreadNotificationCount: (state) => (state.notifications || []).filter(n => !n.isRead).length
   },
 
@@ -272,11 +275,14 @@ export const useUserStore = defineStore('user', {
           this.apiUser = res.data
           this.isLiveApi = true
           this.isAuthenticated = true
-          if (res.data.activeBatchId) {
-            const batchStore = useBatchStore()
-            if (!batchStore.selectedBatchId) {
-              batchStore.selectedBatchId = res.data.activeBatchId
-            }
+          const batchStore = useBatchStore()
+          const activeBatchId = res.data.activeBatchId || res.data.activeBatch?.batchId || res.data.activeBatch?.id
+          const available = res.data.availableBatches || []
+          
+          if (activeBatchId) {
+            batchStore.selectedBatchId = activeBatchId
+          } else if (available.length > 0 && !batchStore.selectedBatchId) {
+            batchStore.selectedBatchId = available[0].batchId || available[0].id
           }
 
           const mappedRole = extractRoleCode(res.data.role) || extractRoleCode(res.data.roleDetails) || 'CREW'

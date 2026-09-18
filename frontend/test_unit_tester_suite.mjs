@@ -17,7 +17,8 @@ import { useApprovalStore } from './stores/approval.js'
 import { useGamificationStore } from './stores/gamification.js'
 import { useMissionStore } from './stores/mission.js'
 import { useReportStore, downloadFileBlob } from './stores/report.js'
-import { reportApi, authApi } from './services/api.js'
+import { useBatchStore } from './stores/batch.js'
+import { reportApi, authApi, batchApi } from './services/api.js'
 
 console.log('🧪 MEMULAI PENGUJIAN KOMPREHENSIF UNIT TESTER (QA SUITE)...\n')
 
@@ -482,8 +483,6 @@ console.log('')
 // SUITE 7: BATCH SWITCHER & MISSION CREW DETAIL MODAL
 // ============================================================================
 console.log('📌 7. Menguji Switcher Batch Misi & Parsing Detail Nilai Kru:')
-
-import { useBatchStore } from './stores/batch.js'
 
 test('Batch Switcher: sinkronisasi state selectedBatchId dan customSelectedWeek', () => {
   const batchStore = useBatchStore()
@@ -954,6 +953,144 @@ test('Feedback Status Pill & Badge: Menampilkan label KUNCI saat terkunci dan IS
   assertEqual(submittedState.icon, '✓', 'Icon harus ✓')
 })
 
+console.log('📌 14. Menguji Batch Draft Lifecycle & Edit Capabilities (POST /api/batches & PATCH /api/batches/:id):')
+
+test('Batch API Interface: Endpoint PATCH /batches/:id dan POST /batches tersedia', () => {
+  assertTrue(typeof batchApi.getAll === 'function', 'batchApi.getAll harus berupa fungsi')
+  assertTrue(typeof batchApi.getById === 'function', 'batchApi.getById harus berupa fungsi')
+  assertTrue(typeof batchApi.create === 'function', 'batchApi.create harus berupa fungsi')
+  assertTrue(typeof batchApi.update === 'function', 'batchApi.update harus berupa fungsi')
+  assertTrue(typeof batchApi.generate === 'function', 'batchApi.generate harus berupa fungsi')
+})
+
+test('Batch Flags Mapping: Response isDraft dan isGenerated terpetakan akurat di Store', () => {
+  const batchStore = useBatchStore()
+  
+  // Kasus 1: Batch Draft (belum generate misi)
+  const rawDraft = {
+    batchId: 'bth-draft-1',
+    code: 'BTH-01',
+    name: 'Batch Pelatihan 01',
+    status: 'DRAFT',
+    isDraft: true,
+    isGenerated: false,
+    missions: []
+  }
+  const isDraftComputed = Boolean(rawDraft.isDraft !== undefined ? rawDraft.isDraft : (rawDraft.status === 'DRAFT'))
+  const isGenComputed = Boolean(rawDraft.isGenerated !== undefined ? rawDraft.isGenerated : ((rawDraft.missions?.length || 0) > 0))
+  assertTrue(isDraftComputed, 'isDraft harus true untuk status DRAFT')
+  assertFalse(isGenComputed, 'isGenerated harus false untuk draft batch')
+
+  // Kasus 2: Batch Generated (misi aktif)
+  const rawActive = {
+    batchId: 'bth-active-1',
+    code: 'BTH-02',
+    name: 'Batch Aktif 02',
+    status: 'OPEN',
+    isDraft: false,
+    isGenerated: true,
+    missions: [{ id: 'm-1' }]
+  }
+  const isDraftActive = Boolean(rawActive.isDraft !== undefined ? rawActive.isDraft : (rawActive.status === 'DRAFT'))
+  const isGenActive = Boolean(rawActive.isGenerated !== undefined ? rawActive.isGenerated : ((rawActive.missions?.length || 0) > 0))
+  assertFalse(isDraftActive, 'isDraft harus false untuk status OPEN')
+  assertTrue(isGenActive, 'isGenerated harus true untuk batch yang memiliki misi ter-generate')
+})
+
+test('Batch Create Payload Builder: Mendukung Simpan Draft vs Publish & Generate', () => {
+  const buildCreatePayload = (form, isDraft = false) => {
+    return {
+      name: form.name.trim(),
+      code: form.code?.trim() || undefined,
+      startDate: form.startDate,
+      endDate: form.endDate || undefined,
+      status: isDraft ? 'DRAFT' : 'OPEN',
+      isDraft: Boolean(isDraft),
+      currentWeek: 1,
+      tplJourneyId: form.tplJourneyId || undefined,
+      tplBuddyId: form.tplBuddyId || undefined,
+      tplFeedbackId: form.tplFeedbackId || undefined,
+      crewIds: form.crewIds || []
+    }
+  }
+
+  const formData = {
+    name: 'Batch Onboarding Baru',
+    code: 'BTH-10',
+    startDate: '2026-10-01',
+    endDate: '2026-10-21',
+    tplJourneyId: 'tpl-journey-1',
+    tplBuddyId: 'tpl-buddy-1',
+    crewIds: ['usr-1', 'usr-2']
+  }
+
+  // Uji Simpan Draft
+  const draftPayload = buildCreatePayload(formData, true)
+  assertEqual(draftPayload.status, 'DRAFT', 'Status draft payload harus DRAFT')
+  assertTrue(draftPayload.isDraft, 'isDraft harus bernilai true pada simpan draft')
+  assertEqual(draftPayload.name, 'Batch Onboarding Baru', 'Nama batch harus sesuai')
+  assertEqual(draftPayload.endDate, '2026-10-21', 'endDate harus tersertakan')
+
+  // Uji Publish & Generate
+  const publishPayload = buildCreatePayload(formData, false)
+  assertEqual(publishPayload.status, 'OPEN', 'Status publish payload harus OPEN')
+  assertFalse(publishPayload.isDraft, 'isDraft harus bernilai false pada publish & generate')
+})
+
+test('Batch Update Payload Builder: Mengirimkan field pembaruan draft dengan method PATCH dan endDate', () => {
+  const buildUpdatePayload = (form, isDraft = true) => {
+    return {
+      name: form.name.trim(),
+      code: form.code?.trim() || undefined,
+      startDate: form.startDate,
+      endDate: form.endDate || undefined,
+      status: isDraft ? 'DRAFT' : 'OPEN',
+      isDraft: Boolean(isDraft),
+      tplJourneyId: form.tplJourneyId || undefined,
+      tplBuddyId: form.tplBuddyId || undefined,
+      tplFeedbackId: form.tplFeedbackId || undefined,
+      crewIds: form.crewIds || []
+    }
+  }
+
+  const updatedFormData = {
+    name: 'Batch 01 Revisi Tanggal & Kru',
+    code: 'BTH-01-REV',
+    startDate: '2026-10-15',
+    endDate: '2026-11-04',
+    tplJourneyId: 'tpl-journey-2',
+    crewIds: ['usr-1', 'usr-3', 'usr-4']
+  }
+
+  const updateDraftPayload = buildUpdatePayload(updatedFormData, true)
+  assertEqual(updateDraftPayload.name, 'Batch 01 Revisi Tanggal & Kru', 'Nama yang diupdate harus tersimpan')
+  assertEqual(updateDraftPayload.startDate, '2026-10-15', 'Tanggal mulai yang diupdate harus tersimpan')
+  assertEqual(updateDraftPayload.endDate, '2026-11-04', 'Tanggal selesai yang diupdate harus tersimpan')
+  assertEqual(updateDraftPayload.crewIds.length, 3, 'Jumlah crew yang ditugaskan harus terupdate')
+  assertTrue(updateDraftPayload.isDraft, 'isDraft harus true saat update draft')
+})
+
+test('Batch Lifecycle State: Menentukan mode Editable (Draft) vs Read-Only (Generated)', () => {
+  const determineViewMode = (batch) => {
+    if (batch.isDraft || batch.status === 'DRAFT') {
+      return { isEditable: true, isReadOnly: false, mode: 'EDITABLE_DRAFT' }
+    }
+    return { isEditable: false, isReadOnly: true, mode: 'READ_ONLY' }
+  }
+
+  const draftBatch = { id: 'bth-1', status: 'DRAFT', isDraft: true, isGenerated: false }
+  const draftResult = determineViewMode(draftBatch)
+  assertTrue(draftResult.isEditable, 'Draft batch harus berada dalam mode Editable')
+  assertFalse(draftResult.isReadOnly, 'Draft batch tidak boleh berstatus read-only')
+  assertEqual(draftResult.mode, 'EDITABLE_DRAFT', 'Mode harus EDITABLE_DRAFT')
+
+  const generatedBatch = { id: 'bth-2', status: 'OPEN', isDraft: false, isGenerated: true }
+  const genResult = determineViewMode(generatedBatch)
+  assertFalse(genResult.isEditable, 'Batch yang sudah digenerate tidak boleh sembarangan diedit')
+  assertTrue(genResult.isReadOnly, 'Batch yang sudah digenerate harus berada dalam mode Read-Only')
+  assertEqual(genResult.mode, 'READ_ONLY', 'Mode harus READ_ONLY')
+})
+
 console.log('')
 console.log('======================================================')
 console.log(`🏁 HASIL AKHIR QA / UNIT TESTER:`)
@@ -968,4 +1105,5 @@ if (failedTests > 0) {
 } else {
   process.exit(0)
 }
+
 

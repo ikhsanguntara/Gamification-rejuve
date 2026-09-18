@@ -220,6 +220,65 @@ export const useBatchStore = defineStore('batch', {
     allBatches: (state) => state.batches || [],
     accessibleBatches: (state) => {
       const userStore = useUserStore()
+      
+      // 1. Prioritas Utama: Ambil dari API /auth/me (availableBatches)
+      const meBatches = userStore.availableBatches || userStore.apiUser?.availableBatches
+      if (Array.isArray(meBatches) && meBatches.length > 0) {
+        return meBatches.map(b => {
+          const id = b.batchId || b.id
+          const existing = (state.batches || []).find(item => item.id === id || item.batchId === id)
+          if (existing) {
+            return existing
+          }
+
+          const startDate = b.startDate ? b.startDate.split('T')[0] : new Date().toISOString().split('T')[0]
+          const endDate = b.endDate ? b.endDate.split('T')[0] : new Date().toISOString().split('T')[0]
+          const totalWeeks = Number(b.totalWeeks) || (Array.isArray(b.weeks) ? b.weeks.length : 3)
+          const durationCode = (b.durationCode || 'WEEK').toUpperCase()
+          const durationValue = Number(b.durationValue) || 1
+
+          const isDraft = b.isDraft !== undefined ? Boolean(b.isDraft) : (b.status === 'DRAFT')
+          const isGenerated = b.isGenerated !== undefined ? Boolean(b.isGenerated) : (Boolean(b._count?.missions > 0) || (Array.isArray(b.missions) && b.missions.length > 0))
+
+          return {
+            id,
+            batchId: id,
+            code: b.code || '',
+            name: b.name || '',
+            storeLocation: b.storeLocation || b.name || 'Re.juve Store',
+            description: b.description || b.name || `Siklus gamifikasi ${b.name}`,
+            currentWeek: b.currentWeek || 1,
+            totalWeeks,
+            durationCode,
+            durationValue,
+            startDate,
+            endDate,
+            status: b.status || (isDraft ? 'DRAFT' : 'OPEN'),
+            isDraft,
+            isGenerated,
+            totalCrew: b._count?.users ?? (b.members?.length || 0),
+            totalMissions: b._count?.missions ?? 0,
+            completedMissions: b._count?.completedMissions || 0,
+            averageScore: Number(b.averageScore) || 0,
+            totalStars: Number(b.totalStars) || 0,
+            details: b.details || [],
+            assignment: {
+              storeLeaderId: b.storeLeaderId || '',
+              storeLeaderName: b.storeLeader?.name || b.storeLeaderName || '-',
+              districtManagerId: b.districtManagerId || '',
+              districtManagerName: b.districtManager?.name || b.districtManagerName || '-',
+              supervisorId: b.storeLeaderId || '',
+              supervisorName: b.storeLeader?.name || b.storeLeaderName || '-',
+              headId: b.districtManagerId || '',
+              headName: b.districtManager?.name || b.districtManagerName || '-',
+              crewIds: Array.isArray(b.crewIds) ? b.crewIds : []
+            },
+            weeks: computeWeeksLifecycle(startDate, b.weeks || [], totalWeeks, durationCode)
+          }
+        })
+      }
+
+      // 2. Fallback jika availableBatches belum ada (offline/mock/lokal)
       const batches = state.batches || []
       if (userStore.isSuperadmin) return batches
       if (userStore.isStoreLeader) {
@@ -246,19 +305,38 @@ export const useBatchStore = defineStore('batch', {
       return batches
     },
     currentBatch: (state) => {
-      const batches = state.batches || []
-      const found = batches.find(b => b.id === state.selectedBatchId)
-      if (found) return found
       const userStore = useUserStore()
-      if (userStore.isStoreLeader || userStore.isDistrictManager || userStore.isCrew) {
-        const acc = state.accessibleBatches
-        if (acc && acc.length > 0) return acc[0]
+      const acc = state.accessibleBatches || []
+      const batches = state.batches || []
+
+      // 1. Cari berdasarkan selectedBatchId di accessibleBatches atau batches
+      if (state.selectedBatchId) {
+        const foundInAcc = acc.find(b => b.id === state.selectedBatchId || b.batchId === state.selectedBatchId || b.code === state.selectedBatchId)
+        if (foundInAcc) return foundInAcc
+        const foundInState = batches.find(b => b.id === state.selectedBatchId || b.batchId === state.selectedBatchId || b.code === state.selectedBatchId)
+        if (foundInState) return foundInState
       }
+
+      // 2. Ambil dari activeBatch user / me jika ada
+      if (userStore.apiUser?.activeBatchId) {
+        const abId = userStore.apiUser.activeBatchId
+        const found = acc.find(b => b.id === abId || b.batchId === abId) || batches.find(b => b.id === abId || b.batchId === abId)
+        if (found) return found
+      }
+
+      // 3. Ambil batch pertama dari accessibleBatches
+      if (acc.length > 0) return acc[0]
+
       return batches[0] || EMPTY_BATCH_FALLBACK
     },
-    batchById: (state) => (id) => (state.batches || []).find(b => b.id === id),
+    batchById: (state) => (id) => {
+      if (!id) return null
+      const foundInAcc = (state.accessibleBatches || []).find(b => b.id === id || b.batchId === id || b.code === id)
+      if (foundInAcc) return foundInAcc
+      return (state.batches || []).find(b => b.id === id || b.batchId === id || b.code === id) || null
+    },
     activeWeekNumber: (state) => {
-      const batches = state.batches || []
+      const batches = state.accessibleBatches.length > 0 ? state.accessibleBatches : (state.batches || [])
       const batch = batches.find(b => b.id === state.selectedBatchId) || batches[0] || EMPTY_BATCH_FALLBACK
       return calculateActiveWeek(batch)
     },
@@ -266,47 +344,56 @@ export const useBatchStore = defineStore('batch', {
       if (state.customSelectedWeek !== null) {
         return state.customSelectedWeek
       }
-      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      const batches = state.accessibleBatches.length > 0 ? state.accessibleBatches : (state.batches || [])
+      const batch = batches.find(b => b.id === state.selectedBatchId) || batches[0] || EMPTY_BATCH_FALLBACK
       return calculateActiveWeek(batch)
     },
     currentBatchDurationCode: (state) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      const batches = state.accessibleBatches.length > 0 ? state.accessibleBatches : (state.batches || [])
+      const batch = batches.find(b => b.id === state.selectedBatchId) || batches[0] || EMPTY_BATCH_FALLBACK
       return (batch.durationCode || batch.journeyTemplate?.durationCode || batch.details?.find(d => d.tplMission?.type === 'JOURNEY')?.tplMission?.durationCode || 'WEEK').toUpperCase()
     },
     currentBatchUnitLabel: (state) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      const batches = state.accessibleBatches.length > 0 ? state.accessibleBatches : (state.batches || [])
+      const batch = batches.find(b => b.id === state.selectedBatchId) || batches[0] || EMPTY_BATCH_FALLBACK
       const dCode = (batch.durationCode || batch.journeyTemplate?.durationCode || batch.details?.find(d => d.tplMission?.type === 'JOURNEY')?.tplMission?.durationCode || 'WEEK').toUpperCase()
       return getDurationUnitLabel(dCode)
     },
     currentBatchUnitCode: (state) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      const batches = state.accessibleBatches.length > 0 ? state.accessibleBatches : (state.batches || [])
+      const batch = batches.find(b => b.id === state.selectedBatchId) || batches[0] || EMPTY_BATCH_FALLBACK
       const dCode = (batch.durationCode || batch.journeyTemplate?.durationCode || batch.details?.find(d => d.tplMission?.type === 'JOURNEY')?.tplMission?.durationCode || 'WEEK').toUpperCase()
       return getDurationUnitCode(dCode)
     },
     currentBatchWeeks: (state) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      const batches = state.accessibleBatches.length > 0 ? state.accessibleBatches : (state.batches || [])
+      const batch = batches.find(b => b.id === state.selectedBatchId) || batches[0] || EMPTY_BATCH_FALLBACK
       const totalWeeks = batch.totalWeeks || (Array.isArray(batch.weeks) ? batch.weeks.length : 3)
       const durationCode = batch.durationCode || batch.journeyTemplate?.durationCode || batch.details?.find(d => d.tplMission?.type === 'JOURNEY')?.tplMission?.durationCode || 'WEEK'
       return computeWeeksLifecycle(batch.startDate, batch.weeks || [], totalWeeks, durationCode)
     },
     isWeekSelectedLocked: (state) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      const batches = state.accessibleBatches.length > 0 ? state.accessibleBatches : (state.batches || [])
+      const batch = batches.find(b => b.id === state.selectedBatchId) || batches[0] || EMPTY_BATCH_FALLBACK
       const activeW = calculateActiveWeek(batch)
       const selW = state.customSelectedWeek !== null ? state.customSelectedWeek : activeW
       return selW !== activeW
     },
     isWeekLocked: (state) => (weekNumber) => {
-      const batch = state.batches.find(b => b.id === state.selectedBatchId) || state.batches[0] || EMPTY_BATCH_FALLBACK
+      const batches = state.accessibleBatches.length > 0 ? state.accessibleBatches : (state.batches || [])
+      const batch = batches.find(b => b.id === state.selectedBatchId) || batches[0] || EMPTY_BATCH_FALLBACK
       return Number(weekNumber) !== calculateActiveWeek(batch)
     }
   },
 
   actions: {
     async selectBatch(batchId) {
-      const batch = this.batches.find(b => b.id === batchId || b.code === batchId)
-      const targetId = batch ? batch.id : batchId
+      const acc = this.accessibleBatches || []
+      const batch = acc.find(b => b.id === batchId || b.code === batchId || b.batchId === batchId) ||
+                    this.batches.find(b => b.id === batchId || b.code === batchId || b.batchId === batchId)
+      const targetId = batch ? (batch.id || batch.batchId) : batchId
       if (batch) {
-        this.selectedBatchId = batch.id
+        this.selectedBatchId = batch.id || batch.batchId
         this.customSelectedWeek = calculateActiveWeek(batch)
       } else if (targetId) {
         this.selectedBatchId = targetId
@@ -434,6 +521,9 @@ export const useBatchStore = defineStore('batch', {
               durationCode
             )
 
+            const isDraft = b.isDraft !== undefined ? Boolean(b.isDraft) : (b.status === 'DRAFT')
+            const isGenerated = b.isGenerated !== undefined ? Boolean(b.isGenerated) : (Boolean(b._count?.missions > 0) || (Array.isArray(b.missions) && b.missions.length > 0))
+
             return {
               id: b.batchId,
               code: b.code,
@@ -446,7 +536,9 @@ export const useBatchStore = defineStore('batch', {
               durationValue,
               startDate,
               endDate,
-              status: b.status || 'OPEN',
+              status: b.status || (isDraft ? 'DRAFT' : 'OPEN'),
+              isDraft,
+              isGenerated,
               totalCrew: b._count?.users ?? (b.members?.length || 0),
               totalMissions: b._count?.missions ?? 0,
               completedMissions: b._count?.completedMissions || 0,
@@ -558,6 +650,9 @@ export const useBatchStore = defineStore('batch', {
             durationCode
           )
 
+          const isDraft = b.isDraft !== undefined ? Boolean(b.isDraft) : (b.status === 'DRAFT')
+          const isGenerated = b.isGenerated !== undefined ? Boolean(b.isGenerated) : (Boolean(b._count?.missions > 0) || (missions.length > 0))
+
           const formattedBatch = {
             id,
             batchId: id,
@@ -571,7 +666,9 @@ export const useBatchStore = defineStore('batch', {
             durationValue,
             startDate,
             endDate,
-            status: b.status || 'OPEN',
+            status: b.status || (isDraft ? 'DRAFT' : 'OPEN'),
+            isDraft,
+            isGenerated,
             totalCrew: b._count?.users ?? users.length,
             totalMissions: b._count?.missions ?? missions.length,
             completedMissions: b._count?.completedMissions || 0,
@@ -621,6 +718,35 @@ export const useBatchStore = defineStore('batch', {
         console.warn(`fetchBatchByIdFromApi(${batchId}) error:`, err.message)
       }
       return null
+    },
+
+    async createBatchToApi(payload) {
+      try {
+        const res = await batchApi.create(payload)
+        if (res && (res.success || res.data)) {
+          invalidateApiCache('batches')
+          await this.fetchBatchesFromApi({ limit: 100, page: 1 }, true)
+        }
+        return res
+      } catch (err) {
+        console.error('createBatchToApi error:', err)
+        throw err
+      }
+    },
+
+    async updateBatchToApi(id, payload) {
+      try {
+        const res = await batchApi.update(id, payload)
+        if (res && (res.success || res.data)) {
+          invalidateApiCache('batches')
+          await this.fetchBatchByIdFromApi(id)
+          await this.fetchBatchesFromApi({ limit: 100, page: 1 }, true)
+        }
+        return res
+      } catch (err) {
+        console.error(`updateBatchToApi(${id}) error:`, err)
+        throw err
+      }
     },
 
     // ==================== SUPERADMIN ACTIONS ====================
