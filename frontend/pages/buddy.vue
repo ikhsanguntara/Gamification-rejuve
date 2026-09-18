@@ -899,17 +899,24 @@ const loadBuddyData = async () => {
   const batchId = batchStore.selectedBatchId || batchStore.currentBatch?.batchId || batchStore.currentBatch?.id
   await buddyStore.fetchBuddyCrews({ batchId })
 
+  let targetCrewId = selectedCrewId.value
   if (currentBatchCrews.value.length > 0) {
-    if (!selectedCrewId.value || !currentBatchCrews.value.find(c => c.id === selectedCrewId.value)) {
-      selectedCrewId.value = currentBatchCrews.value[0].id
+    if (!targetCrewId || !currentBatchCrews.value.find(c => c.id === targetCrewId)) {
+      targetCrewId = currentBatchCrews.value[0].id
+    }
+  } else {
+    targetCrewId = null
+  }
+
+  if (targetCrewId) {
+    if (selectedCrewId.value !== targetCrewId) {
+      selectedCrewId.value = targetCrewId // Watcher will trigger fetchBuddyMissions
+    } else {
+      await buddyStore.fetchBuddyMissions(targetCrewId, { batchId })
+      loadBuddyScores()
     }
   } else {
     selectedCrewId.value = null
-  }
-
-  if (selectedCrewId.value) {
-    await buddyStore.fetchBuddyMissions(selectedCrewId.value, { batchId })
-    loadBuddyScores()
   }
 }
 

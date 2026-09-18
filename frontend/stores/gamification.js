@@ -57,11 +57,9 @@ export const useGamificationStore = defineStore('gamification', {
     leaderboardByBatch: (state) => (batchId) => {
       if (state.apiLeaderboard && state.apiLeaderboard.length > 0) {
         if (batchId && batchId !== 'ALL') {
-          const filtered = state.apiLeaderboard.filter(c => c.batchId === batchId)
-          if (filtered.length > 0) return filtered
-        } else {
-          return state.apiLeaderboard
+          return state.apiLeaderboard.filter(c => c.batchId === batchId || !c.batchId)
         }
+        return state.apiLeaderboard
       }
       const list = state.crews || []
       const filtered = batchId && batchId !== 'ALL' ? list.filter(c => c.batchId === batchId) : list

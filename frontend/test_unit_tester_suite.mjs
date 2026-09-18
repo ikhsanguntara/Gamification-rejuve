@@ -831,6 +831,76 @@ test('Score Clamping: Memastikan nilai skor selalu berada di rentang 0-100', () 
   assertEqual(clampScore(100), 100, 'Skor 100 tetap 100')
 })
 
+// ============================================================================
+// SUITE 12: PENGUJIAN KEANDALAN PINDAH BATCH & PINDAH API (DATA INTEGRITY)
+// ============================================================================
+console.log('\n📌 12. Menguji Keandalan Pindah Batch & Pindah API (Zero Blank & Zero Stale Data):')
+
+const testMissionStore = useMissionStore()
+const testGamificationStore = useGamificationStore()
+const testUserStore = useUserStore()
+
+test('Mission Store: Dukungan parameter polimorfik pada fetchMissionsFromApi', async () => {
+  // Format 1: fetchMissionsFromApi(params, forceRefresh)
+  await testMissionStore.fetchMissionsFromApi({ batchId: 'batch-test-01' }, true)
+  assertTrue(Array.isArray(testMissionStore.missions), 'missions harus berupa array')
+
+  // Format 2: fetchMissionsFromApi(forceRefresh, params) - backward compatible
+  await testMissionStore.fetchMissionsFromApi(true, { batchId: 'batch-test-02' })
+  assertTrue(Array.isArray(testMissionStore.missions), 'missions harus berupa array pada format backward compatible')
+})
+
+test('Mission Store: missionsByBatch menangani filter batch aktif dan fallback aman', () => {
+  testMissionStore.missions = [
+    { id: 'm-1', batchId: 'batch-alpha', week: 1, title: 'Misi Alpha' },
+    { id: 'm-2', batchId: 'batch-beta', week: 1, title: 'Misi Beta' },
+    { id: 'm-3', batchId: '', week: 1, title: 'Misi General' }
+  ]
+
+  const alphaMissions = testMissionStore.missionsByBatch('batch-alpha')
+  assertTrue(alphaMissions.some(m => m.id === 'm-1'), 'Misi Alpha harus terfilter untuk batch-alpha')
+  assertFalse(alphaMissions.some(m => m.id === 'm-2'), 'Misi Beta tidak boleh masuk ke batch-alpha')
+
+  const betaMissions = testMissionStore.missionsByBatch('batch-beta')
+  assertTrue(betaMissions.some(m => m.id === 'm-2'), 'Misi Beta harus terfilter untuk batch-beta')
+  assertFalse(betaMissions.some(m => m.id === 'm-1'), 'Misi Alpha tidak boleh masuk ke batch-beta')
+
+  const allMissions = testMissionStore.missionsByBatch('ALL')
+  assertEqual(allMissions.length, 3, 'Filter ALL harus mengembalikan seluruh misi')
+})
+
+test('Gamification Store: leaderboardByBatch mengisolasi peringkat per batch tanpa data bocor', () => {
+  testGamificationStore.apiLeaderboard = [
+    { id: 'u-1', batchId: 'batch-alpha', name: 'Kru Alpha 1', stars: 50 },
+    { id: 'u-2', batchId: 'batch-alpha', name: 'Kru Alpha 2', stars: 40 },
+    { id: 'u-3', batchId: 'batch-beta', name: 'Kru Beta 1', stars: 60 }
+  ]
+
+  const alphaBoard = testGamificationStore.leaderboardByBatch('batch-alpha')
+  assertEqual(alphaBoard.length, 2, 'Leaderboard Alpha harus berisi 2 kru')
+  assertTrue(alphaBoard.every(c => c.batchId === 'batch-alpha'), 'Seluruh kru di board Alpha harus dari batch-alpha')
+
+  const betaBoard = testGamificationStore.leaderboardByBatch('batch-beta')
+  assertEqual(betaBoard.length, 1, 'Leaderboard Beta harus berisi 1 kru')
+  assertEqual(betaBoard[0].name, 'Kru Beta 1', 'Kru Beta 1 tampil di board Beta')
+})
+
+test('User Store Auth Resilience: initAuth me-reset token saat fetchMe gagal', async () => {
+  // Simulasikan token tersimpan yang tidak valid di server
+  const { setAuthToken } = await import('./composables/useApi.js')
+  setAuthToken('invalid_expired_token_123')
+  testUserStore.token = 'invalid_expired_token_123'
+  testUserStore.apiUser = null
+  testUserStore.userDirectory = []
+
+  // Jalankan initAuth
+  const isAuth = await testUserStore.initAuth()
+  assertFalse(isAuth, 'initAuth harus mengembalikan false jika token gagal divalidasi')
+  assertEqual(testUserStore.token, null, 'userStore.token harus di-reset menjadi null')
+  assertEqual(testUserStore.apiUser, null, 'userStore.apiUser harus bernilai null')
+  assertFalse(testUserStore.isAuthenticated, 'userStore.isAuthenticated harus bernilai false')
+})
+
 console.log('')
 console.log('======================================================')
 console.log(`🏁 HASIL AKHIR QA / UNIT TESTER:`)

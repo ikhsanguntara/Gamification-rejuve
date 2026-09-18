@@ -1017,21 +1017,30 @@ const loadWorkstationData = async () => {
     type: 'JOURNEY'
   })
 
+  let targetCrewId = selectedCrewId.value
   if (batchCrews.value.length > 0) {
-    if (!selectedCrewId.value || !batchCrews.value.find(c => c.id === selectedCrewId.value)) {
-      selectedCrewId.value = batchCrews.value[0].id
+    if (!targetCrewId || !batchCrews.value.find(c => c.id === targetCrewId)) {
+      targetCrewId = batchCrews.value[0].id
+    }
+  } else {
+    targetCrewId = null
+  }
+
+  if (targetCrewId) {
+    if (selectedCrewId.value !== targetCrewId) {
+      selectedCrewId.value = targetCrewId // Watcher will trigger fetchCrewMissions
+    } else {
+      await evalStore.fetchCrewMissions(targetCrewId, {
+        batchId: currentBatchId,
+        week,
+        type: 'JOURNEY'
+      })
+      loadCrewScores()
     }
   } else {
     selectedCrewId.value = null
-  }
-
-  if (selectedCrewId.value) {
-    await evalStore.fetchCrewMissions(selectedCrewId.value, {
-      batchId: currentBatchId,
-      week,
-      type: 'JOURNEY'
-    })
-    loadCrewScores()
+    evalStore.selectedCrewMissions = []
+    evalStore.selectedCrewUser = null
   }
 }
 

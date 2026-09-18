@@ -413,10 +413,12 @@ const handleBatchChange = async (batchId) => {
     } else if (currentPath.startsWith('/admin/batches/') && currentPath !== '/admin/batches' && currentPath !== '/admin/batches/create') {
       await router.push(`/admin/batches/${batchId}`)
     } else {
+      const gamificationStore = useGamificationStore()
       await Promise.allSettled([
         batchStore.fetchBatchByIdFromApi(batchId),
-        missionStore.fetchMissionsFromApi(true, { batchId }),
-        userStore.fetchUsersFromApi({ exact: { batchId } }, true)
+        missionStore.fetchMissionsFromApi({ batchId }, true),
+        userStore.fetchUsersFromApi({ batchId }, true),
+        gamificationStore.fetchLeaderboardFromApi({ batchId }, true)
       ])
     }
   } catch (err) {

@@ -4,6 +4,7 @@ import { useMissionStore } from './mission.js'
 import { useApprovalStore } from './approval.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { evaluationApi } from '../services/api.js'
+import { cachedApiCall, invalidateApiCache } from '../utils/apiCache.js'
 
 /**
  * Evaluation Store: Manages Supervisor Evaluations, Drafts, Multi-Crew Scores, Evidence & Comments
@@ -28,10 +29,11 @@ export const useEvaluationStore = defineStore('evaluation', {
   },
 
   actions: {
-    async fetchWorkstationCrews(params = {}) {
+    async fetchWorkstationCrews(params = {}, forceRefresh = false) {
       this.isLoadingCrews = true
       try {
-        const res = await evaluationApi.getCrews(params)
+        const cacheKey = `eval_crews:${JSON.stringify(params || {})}`
+        const res = await cachedApiCall(cacheKey, () => evaluationApi.getCrews(params), 5000, forceRefresh)
         if (res && res.data) {
           this.workstationBatch = res.data.batch || null
           this.workstationCrews = Array.isArray(res.data.crews) ? res.data.crews : []
@@ -45,11 +47,12 @@ export const useEvaluationStore = defineStore('evaluation', {
       return { batch: this.workstationBatch, crews: this.workstationCrews }
     },
 
-    async fetchCrewMissions(userId, params = {}) {
+    async fetchCrewMissions(userId, params = {}, forceRefresh = false) {
       if (!userId) return null
       this.isLoadingMissions = true
       try {
-        const res = await evaluationApi.getCrewMissions(userId, params)
+        const cacheKey = `eval_crew_missions:${userId}:${JSON.stringify(params || {})}`
+        const res = await cachedApiCall(cacheKey, () => evaluationApi.getCrewMissions(userId, params), 5000, forceRefresh)
         if (res && res.data) {
           this.selectedCrewUser = res.data.user || null
           this.selectedCrewMissions = Array.isArray(res.data.missions) ? res.data.missions : []
@@ -80,6 +83,8 @@ export const useEvaluationStore = defineStore('evaluation', {
               crew.status = 'COMPLETED'
             }
           }
+          invalidateApiCache('eval_')
+          invalidateApiCache('approvals:')
           return res
         }
       } catch (err) {
@@ -100,6 +105,8 @@ export const useEvaluationStore = defineStore('evaluation', {
           if (idx !== -1) {
             this.selectedCrewMissions[idx] = { ...this.selectedCrewMissions[idx], ...updated }
           }
+          invalidateApiCache('eval_')
+          invalidateApiCache('approvals:')
           return res
         }
       } catch (err) {

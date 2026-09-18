@@ -8,7 +8,7 @@ import { useLoading } from './useLoading.js'
 let memoryToken = ''
 
 export function getApiBaseUrl() {
-  let url = 'http://103.168.147.133:3005/api'
+  let url = 'http://145.79.11.188:3005/api'
   if (typeof window !== 'undefined') {
     try {
       // Bersihkan sisa legacy cache jika pernah tersimpan
@@ -134,6 +134,12 @@ export async function apiFetch(path, options = {}) {
         const customError = new Error(errorMessage)
         customError.statusCode = statusCode
         customError.data = errData
+
+        // Jika token tidak valid / kadaluarsa pada endpoint terproteksi, bersihkan token lokal
+        if (statusCode === 401 && !cleanPath.includes('/auth/login') && !cleanPath.includes('/auth/register')) {
+          setAuthToken('')
+        }
+
         throw customError
       }
     } else {

@@ -229,15 +229,16 @@ const myRank = computed(() => {
 })
 
 const activeBatchMissions = computed(() => {
-  const batchId = userStore.isCrew ? userStore.currentUser?.batchId : batchStore.selectedBatchId
-  const list = missionStore.missionsByBatch(batchId) || []
+  const bId = effectiveBatchId.value
+  const list = missionStore.missionsByBatch(bId) || []
   if (userStore.isCrew && userStore.currentUser?.id) {
     const currentCrewId = userStore.currentUser.id
-    return list.filter(m => {
+    const crewMissions = list.filter(m => {
       const isAssigned = (m.assignedCrewIds && m.assignedCrewIds.includes(currentCrewId)) ||
         (m.crewEvaluations && m.crewEvaluations.some(ce => ce.crewId === currentCrewId))
       return isAssigned
     })
+    return crewMissions.length > 0 ? crewMissions : list
   }
   return list
 })

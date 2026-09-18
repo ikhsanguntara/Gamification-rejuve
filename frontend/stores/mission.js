@@ -19,9 +19,17 @@ export const useMissionStore = defineStore('mission', {
 
   getters: {
     allMissions: (state) => state.missions || [],
-    missionsByBatch: (state) => (batchId) => (state.missions || []).filter(m => m.batchId === batchId),
+    missionsByBatch: (state) => (batchId) => {
+      const all = state.missions || []
+      if (!batchId || batchId === 'ALL') return all
+      const filtered = all.filter(m => m.batchId === batchId)
+      if (filtered.length > 0) return filtered
+      // Fallback: jika misi tidak memiliki batchId spesifik, sertakan misi umum
+      return all.filter(m => !m.batchId || m.batchId === batchId)
+    },
     missionsByWeek: (state) => (batchId, weekNumber) => {
-      return (state.missions || []).filter(m => m.batchId === batchId && m.week === Number(weekNumber))
+      const bMissions = (state.missions || []).filter(m => !batchId || batchId === 'ALL' || m.batchId === batchId || !m.batchId)
+      return bMissions.filter(m => m.week === Number(weekNumber))
     },
     missionById: (state) => (id) => (state.missions || []).find(m => m.id === id || m.missionId === id || m.userMissionId === id),
     completedCount: (state) => (state.missions || []).filter(m => m.status === 'COMPLETED' || m.status === 'APPROVED').length,
@@ -39,13 +47,22 @@ export const useMissionStore = defineStore('mission', {
   },
 
   actions: {
-    async fetchMissionsFromApi(forceRefresh = false, queryParams = {}) {
+    async fetchMissionsFromApi(params = {}, forceRefresh = false) {
+      let actualParams = params
+      let actualForce = forceRefresh
+
+      // Polymorphic compatibility: mendukung pemanggilan (forceRefresh, queryParams) maupun (queryParams, forceRefresh)
+      if (typeof params === 'boolean') {
+        actualForce = params
+        actualParams = forceRefresh && typeof forceRefresh === 'object' ? forceRefresh : {}
+      }
+
       try {
-        const cacheKey = `missions:${JSON.stringify(queryParams)}`
+        const cacheKey = `missions:${JSON.stringify(actualParams || {})}`
         const resData = await cachedApiCall(cacheKey, async () => {
           const [batchRes, missionRes] = await Promise.allSettled([
             batchApi.getAll({ limit: 50 }),
-            evaluationApi.getUserMissions({ limit: 100, type: 'JOURNEY', ...queryParams })
+            evaluationApi.getUserMissions({ limit: 100, type: 'JOURNEY', ...(actualParams || {}) })
           ])
 
           const userMissions = (missionRes.status === 'fulfilled' && missionRes.value?.data && Array.isArray(missionRes.value.data))
@@ -56,7 +73,7 @@ export const useMissionStore = defineStore('mission', {
             : []
 
           return { userMissions, batches }
-        }, 15000, forceRefresh)
+        }, 15000, actualForce)
 
         const userMissions = resData?.userMissions || []
         const batches = resData?.batches || []
@@ -101,12 +118,16 @@ export const useMissionStore = defineStore('mission', {
               status
             }
 
+            const rawBatchId = um.batchId || m.batchId || um.user?.batchId || um.user?.activeBatchId || actualParams?.batchId || ''
+            const matchedBatch = batches.find(b => b.batchId === rawBatchId || b.id === rawBatchId || b.code === rawBatchId)
+            const resolvedBatchId = rawBatchId || matchedBatch?.batchId || matchedBatch?.id || ''
+
             if (!missionMap.has(missionKey)) {
               missionMap.set(missionKey, {
                 id: missionKey,
                 missionId: m.missionId || missionKey,
                 userMissionId: um.userMissionId,
-                batchId: m.batchId || (batches[0]?.batchId) || (batches[0]?.id) || '',
+                batchId: resolvedBatchId,
                 week: Number(m.weekOrDayNumber || m.week || 1),
                 code: m.code || `MSN-0${missionMap.size + 1}`,
                 title: m.missionTitle || 'Misi Standar Operasional',

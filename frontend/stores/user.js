@@ -166,9 +166,15 @@ export const useUserStore = defineStore('user', {
       const savedToken = getAuthToken()
       if (savedToken) {
         this.token = savedToken
-        this.isAuthenticated = true
-        if (!this.apiUser) {
-          await this.fetchMe()
+        const me = await this.fetchMe(true)
+        if (me) {
+          this.isAuthenticated = true
+          this.isLiveApi = true
+        } else {
+          this.token = null
+          this.apiUser = null
+          this.isAuthenticated = false
+          setAuthToken('')
         }
       } else {
         if (this.currentUserId && this.userDirectory && this.userDirectory.find(u => u.id === this.currentUserId)) {
@@ -265,6 +271,7 @@ export const useUserStore = defineStore('user', {
         if (res && res.data) {
           this.apiUser = res.data
           this.isLiveApi = true
+          this.isAuthenticated = true
           if (res.data.activeBatchId) {
             const batchStore = useBatchStore()
             if (!batchStore.selectedBatchId) {
@@ -290,8 +297,16 @@ export const useUserStore = defineStore('user', {
 
           return res.data
         }
+        return null
       } catch (err) {
         console.warn('fetchMe failed:', err.message)
+        if (err.statusCode === 401) {
+          this.token = null
+          this.apiUser = null
+          this.isAuthenticated = false
+          setAuthToken('')
+        }
+        return null
       }
     },
 

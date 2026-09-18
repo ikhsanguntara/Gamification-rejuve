@@ -1101,16 +1101,16 @@ async function loadDashboardData() {
     console.warn('Dashboard summary api fallback:', err.message)
   }
 
-  // 2. Muat data workstation kru, misi, approval, dan leaderboard
+  // 2. Muat data workstation kru, misi, approval, dan leaderboard (deduplicated via micro-cache)
   await Promise.allSettled([
-    missionStore.fetchMissionsFromApi(batchParam),
-    approvalStore.fetchApprovalsFromApi(batchParam),
+    missionStore.fetchMissionsFromApi(batchParam, false),
+    approvalStore.fetchApprovalsFromApi(batchParam, false),
     evalStore.fetchWorkstationCrews({
       ...(activeBatchId ? { batchId: activeBatchId } : {}),
       week: batchStore.selectedWeek || 1,
       type: 'JOURNEY'
-    }),
-    gamificationStore.fetchLeaderboardFromApi(batchParam)
+    }, false),
+    gamificationStore.fetchLeaderboardFromApi(batchParam, false)
   ])
 }
 

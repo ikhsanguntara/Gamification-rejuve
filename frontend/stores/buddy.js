@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { evaluationApi } from '../services/api.js'
+import { cachedApiCall, invalidateApiCache } from '../utils/apiCache.js'
 
 export const useBuddyStore = defineStore('buddy', {
   state: () => ({
@@ -110,10 +111,11 @@ export const useBuddyStore = defineStore('buddy', {
       }
     },
 
-    async fetchBuddyCrews(params = {}) {
+    async fetchBuddyCrews(params = {}, forceRefresh = false) {
       this.isLoadingCrews = true
       try {
-        const res = await evaluationApi.getCrews({ ...params, type: 'BUDDY' })
+        const cacheKey = `buddy_crews:${JSON.stringify(params || {})}`
+        const res = await cachedApiCall(cacheKey, () => evaluationApi.getCrews({ ...params, type: 'BUDDY' }), 5000, forceRefresh)
         if (res && res.data) {
           this.workstationBatch = res.data.batch || null
           this.workstationCrews = Array.isArray(res.data.crews) ? res.data.crews : []
@@ -127,11 +129,12 @@ export const useBuddyStore = defineStore('buddy', {
       return { batch: this.workstationBatch, crews: this.workstationCrews }
     },
 
-    async fetchBuddyMissions(userId, params = {}) {
+    async fetchBuddyMissions(userId, params = {}, forceRefresh = false) {
       if (!userId) return null
       this.isLoadingMissions = true
       try {
-        const res = await evaluationApi.getCrewMissions(userId, { ...params, type: 'BUDDY' })
+        const cacheKey = `buddy_crew_missions:${userId}:${JSON.stringify(params || {})}`
+        const res = await cachedApiCall(cacheKey, () => evaluationApi.getCrewMissions(userId, { ...params, type: 'BUDDY' }), 5000, forceRefresh)
         if (res && res.data) {
           this.selectedCrewUser = res.data.user || null
           this.selectedCrewMissions = Array.isArray(res.data.missions) ? res.data.missions : []
@@ -162,6 +165,7 @@ export const useBuddyStore = defineStore('buddy', {
               crew.status = 'COMPLETED'
             }
           }
+          invalidateApiCache('buddy_')
           return res
         }
       } catch (err) {
