@@ -901,6 +901,59 @@ test('User Store Auth Resilience: initAuth me-reset token saat fetchMe gagal', a
   assertFalse(testUserStore.isAuthenticated, 'userStore.isAuthenticated harus bernilai false')
 })
 
+// ============================================================================
+// SUITE 13: PENGUJIAN RESTRIKSI FEEDBACK PASCA-JOURNEY
+// ============================================================================
+console.log('📌 13. Menguji Validasi Restriksi Kuesioner Feedback Pasca-Journey Selesai:')
+
+test('Feedback Access: Kru dengan misi belum selesai harus berstatus Feedback Terkunci', () => {
+  const missions = [
+    { id: 'm-1', status: 'COMPLETED' },
+    { id: 'm-2', status: 'IN_PROGRESS' },
+    { id: 'm-3', status: 'LOCKED' }
+  ]
+
+  const isJourneyComplete = missions.every(m => m.status === 'COMPLETED' || m.status === 'APPROVED')
+  assertFalse(isJourneyComplete, 'Journey harus dianggap belum selesai jika masih ada misi yang belum COMPLETED/APPROVED')
+})
+
+test('Feedback Access: Kru yang telah menyelesaikan seluruh misi membuka akses Feedback', () => {
+  const missions = [
+    { id: 'm-1', status: 'COMPLETED' },
+    { id: 'm-2', status: 'APPROVED' },
+    { id: 'm-3', status: 'COMPLETED' }
+  ]
+
+  const isJourneyComplete = missions.every(m => m.status === 'COMPLETED' || m.status === 'APPROVED')
+  assertTrue(isJourneyComplete, 'Journey harus dianggap selesai dan membuka feedback jika seluruh misi berstatus COMPLETED/APPROVED')
+})
+
+test('Feedback Status Pill & Badge: Menampilkan label KUNCI saat terkunci dan ISI saat terbuka', () => {
+  const getFeedbackPillStatus = (isComplete, hasSubmitted, avgScore = 0) => {
+    if (!isComplete) {
+      return { label: 'KUNCI', icon: '🔒', isLocked: true }
+    }
+    if (hasSubmitted) {
+      return { label: `${avgScore}/10`, icon: '✓', isLocked: false }
+    }
+    return { label: 'ISI', icon: '💬', isLocked: false }
+  }
+
+  const lockedState = getFeedbackPillStatus(false, false)
+  assertEqual(lockedState.label, 'KUNCI', 'Label harus KUNCI saat journey belum selesai')
+  assertEqual(lockedState.icon, '🔒', 'Icon harus 🔒 saat journey belum selesai')
+  assertTrue(lockedState.isLocked, 'isLocked harus true saat journey belum selesai')
+
+  const readyState = getFeedbackPillStatus(true, false)
+  assertEqual(readyState.label, 'ISI', 'Label harus ISI saat journey selesai dan belum isi feedback')
+  assertEqual(readyState.icon, '💬', 'Icon harus 💬 saat journey selesai')
+  assertFalse(readyState.isLocked, 'isLocked harus false')
+
+  const submittedState = getFeedbackPillStatus(true, true, 9.5)
+  assertEqual(submittedState.label, '9.5/10', 'Label harus skor feedback saat sudah submit')
+  assertEqual(submittedState.icon, '✓', 'Icon harus ✓')
+})
+
 console.log('')
 console.log('======================================================')
 console.log(`🏁 HASIL AKHIR QA / UNIT TESTER:`)

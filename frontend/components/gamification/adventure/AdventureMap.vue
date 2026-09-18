@@ -169,22 +169,28 @@
           <!-- 💬 TITIK PASCA-FINISH: FEEDBACK ONBOARDING KRU (1 BULAN) -->
           <div
             class="node-position feedback-node-wrap"
+            :class="{
+              'feedback-locked': !journeyComplete,
+              'feedback-completed': hasSubmittedFeedback,
+              'feedback-ready': journeyComplete && !hasSubmittedFeedback
+            }"
             :style="{ left: feedbackPosition.x, top: feedbackPosition.y }"
-            @click="isFeedbackModalOpen = true"
-            title="Survei Feedback Onboarding (1 Bulan) • Klik untuk mengisi kuesioner evaluasi"
+            @click="handleFeedbackClick"
+            :title="journeyComplete ? (hasSubmittedFeedback ? 'Feedback Onboarding Selesai' : 'Survei Feedback Onboarding (1 Bulan) • Klik untuk mengisi kuesioner evaluasi') : 'Kuesioner Feedback Terkunci • Selesaikan seluruh misi perjalanan (Week 1–3) terlebih dahulu'"
           >
             <div class="feedback-node-body">
-              <div v-if="!hasSubmittedFeedback" class="feedback-pulse-ring"></div>
-              <MessageSquareText class="w-5 h-5 text-white" />
-              <div class="feedback-badge" :class="{ 'badge-done': hasSubmittedFeedback }">
-                <span>{{ hasSubmittedFeedback ? '✓' : '💬' }}</span>
+              <div v-if="journeyComplete && !hasSubmittedFeedback" class="feedback-pulse-ring"></div>
+              <Lock v-if="!journeyComplete" class="w-4 h-4 text-slate-400" />
+              <MessageSquareText v-else class="w-5 h-5 text-white" />
+              <div class="feedback-badge" :class="{ 'badge-done': hasSubmittedFeedback, 'badge-locked': !journeyComplete }">
+                <span>{{ !journeyComplete ? '🔒' : (hasSubmittedFeedback ? '✓' : '💬') }}</span>
               </div>
             </div>
 
             <!-- Feedback Label Pill -->
-            <div class="feedback-label-pill">
+            <div class="feedback-label-pill" :class="{ 'pill-locked': !journeyComplete }">
               <span class="feedback-title">FEEDBACK</span>
-              <span class="feedback-score">{{ hasSubmittedFeedback ? (crewFeedbackData?.avgScore + '/10') : 'ISI' }}</span>
+              <span class="feedback-score">{{ !journeyComplete ? 'KUNCI' : (hasSubmittedFeedback ? (crewFeedbackData?.avgScore + '/10') : 'ISI') }}</span>
             </div>
           </div>
 
@@ -244,6 +250,7 @@ import { useBuddyStore } from '~/stores/buddy.js'
 import { useFeedbackStore } from '~/stores/feedback.js'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
+import { useToast } from '~/composables/useToast.js'
 import AdventureBackground from './AdventureBackground.vue'
 import AdventureWeekNode from './AdventureWeekNode.vue'
 import AdventureWeekModal from './AdventureWeekModal.vue'
@@ -266,6 +273,7 @@ const buddyStore = useBuddyStore()
 const feedbackStore = useFeedbackStore()
 const userStore = useUserStore()
 const batchStore = useBatchStore()
+const toast = useToast()
 
 const mapWrapper = ref(null)
 const selectedMission = ref(null)
@@ -520,8 +528,22 @@ const finishPosition = computed(() => ({ x: '84.0%', y: '32.5%' }))
 const feedbackPosition = computed(() => ({ x: '84.5%', y: '14.5%' }))
 
 const journeyComplete = computed(() => {
+  if (props.missions && props.missions.length > 0) {
+    return props.missions.every(m => m.status === 'COMPLETED' || m.status === 'APPROVED')
+  }
   return props.weeks.length > 0 && props.weeks.every(w => w.status === 'COMPLETED')
 })
+
+const handleFeedbackClick = () => {
+  if (!journeyComplete.value) {
+    toast.warning(
+      'Kuesioner Feedback Terkunci',
+      'Kuesioner feedback baru dapat diisi setelah Anda menyelesaikan seluruh misi perjalanan (Week 1–3) dan disetujui.'
+    )
+    return
+  }
+  isFeedbackModalOpen.value = true
+}
 
 // Scroll hint detection
 const checkScrollHint = () => {
@@ -830,10 +852,18 @@ onUnmounted(() => {
   align-items: center;
   cursor: pointer;
   z-index: 20;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
 .feedback-node-wrap:hover {
   transform: translate(-50%, -50%) scale(1.1);
+}
+
+.feedback-node-wrap.feedback-locked {
+  cursor: not-allowed;
+  filter: grayscale(0.5) opacity(0.8);
+}
+.feedback-node-wrap.feedback-locked:hover {
+  transform: translate(-50%, -50%) scale(1.04);
 }
 
 .feedback-node-body {
@@ -847,6 +877,13 @@ onUnmounted(() => {
   justify-content: center;
   box-shadow: 0 0 16px rgba(192, 38, 211, 0.6), 0 4px 10px rgba(0,0,0,0.3);
   position: relative;
+  transition: all 0.3s ease;
+}
+
+.feedback-locked .feedback-node-body {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border: 2px solid #64748b;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
 
 .feedback-pulse-ring {
@@ -883,6 +920,11 @@ onUnmounted(() => {
   font-weight: 900;
   font-size: 9px;
 }
+.feedback-badge.badge-locked {
+  background: #334155;
+  border-color: #64748b;
+  font-size: 8px;
+}
 
 .feedback-label-pill {
   margin-top: 4px;
@@ -895,6 +937,12 @@ onUnmounted(() => {
   border-radius: 10px;
   padding: 2px 7px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+
+.feedback-label-pill.pill-locked {
+  border-color: rgba(100, 116, 139, 0.5);
+  background: rgba(15, 23, 42, 0.85);
 }
 
 .feedback-title {
@@ -903,10 +951,17 @@ onUnmounted(() => {
   color: #f0abfc;
   letter-spacing: 0.08em;
 }
+.pill-locked .feedback-title {
+  color: #94a3b8;
+}
+
 .feedback-score {
   font-size: 9px;
   font-weight: 800;
   color: #e879f9;
+}
+.pill-locked .feedback-score {
+  color: #cbd5e1;
 }
 
 /* ── Scroll Hint for Mobile ──────────────────────────────── */

@@ -36,6 +36,22 @@
       </div>
     </div>
 
+    <!-- Banner Status Jika Perjalanan Belum Selesai -->
+    <div
+      v-else-if="!isJourneyComplete"
+      class="p-5 rounded-3xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-start sm:items-center gap-3 text-amber-900 dark:text-amber-200 shadow-sm"
+    >
+      <div class="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+        <Lock class="w-5 h-5" />
+      </div>
+      <div class="space-y-0.5">
+        <h3 class="text-sm font-bold">Kuesioner Feedback Masih Terkunci</h3>
+        <p class="text-xs text-amber-700 dark:text-amber-300/90 leading-relaxed">
+          Kuesioner feedback onboarding baru dapat diisi dan dikirimkan setelah Anda menyelesaikan seluruh misi operasional (Minggu 1–3) dan disetujui oleh Store Leader / DM.
+        </p>
+      </div>
+    </div>
+
     <!-- Info Banner Kru & Gerai -->
     <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-4">
       <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -203,10 +219,17 @@
         <button
           v-else
           type="submit"
-          class="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-lg shadow-blue-600/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          :disabled="!isJourneyComplete"
+          class="px-6 py-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+          :class="[
+            !isJourneyComplete
+              ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed shadow-none'
+              : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-blue-600/20 active:scale-95'
+          ]"
         >
-          <Send class="w-4 h-4" />
-          <span>Kirimkan Feedback Onboarding</span>
+          <Lock v-if="!isJourneyComplete" class="w-4 h-4" />
+          <Send v-else class="w-4 h-4" />
+          <span>{{ !isJourneyComplete ? 'Kuesioner Terkunci (Selesaikan Misi)' : 'Kirimkan Feedback Onboarding' }}</span>
         </button>
       </div>
 
@@ -219,19 +242,36 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
+import { useMissionStore } from '~/stores/mission.js'
 import { useFeedbackStore } from '~/stores/feedback.js'
 import { useToast } from '~/composables/useToast.js'
 import { useConfetti } from '~/composables/useConfetti.js'
-import { Send, CheckCircle2 } from 'lucide-vue-next'
+import { Send, CheckCircle2, Lock } from 'lucide-vue-next'
 
 const router = useRouter()
 const userStore = useUserStore()
 const batchStore = useBatchStore()
+const missionStore = useMissionStore()
 const feedbackStore = useFeedbackStore()
 const toast = useToast()
 const confetti = useConfetti()
 
 const currentCrewId = computed(() => userStore.currentUserId || userStore.currentUser?.id || userStore.currentUser?.userId || '')
+
+const isJourneyComplete = computed(() => {
+  if (!userStore.isCrew) return true
+  const list = missionStore.allMissions || []
+  const myId = currentCrewId.value
+  const myMissions = list.filter(m => {
+    const isAssigned = (m.assignedCrewIds && m.assignedCrewIds.includes(myId)) ||
+      (m.crewEvaluations && m.crewEvaluations.some(ce => ce.crewId === myId))
+    return isAssigned
+  })
+  if (myMissions.length > 0) {
+    return myMissions.every(m => m.status === 'COMPLETED' || m.status === 'APPROVED')
+  }
+  return true
+})
 
 const submittedData = computed(() => {
   return feedbackStore.feedbackByCrewId(currentCrewId.value)
@@ -251,7 +291,8 @@ const surveyForm = ref({
 onMounted(async () => {
   await Promise.allSettled([
     feedbackStore.fetchQuestionsFromApi(),
-    feedbackStore.fetchMyFeedbackFromApi()
+    feedbackStore.fetchMyFeedbackFromApi(),
+    missionStore.fetchMissionsFromApi()
   ])
 
   const existing = submittedData.value
@@ -304,6 +345,11 @@ onMounted(async () => {
 const submitFeedback = async () => {
   if (hasSubmitted.value) {
     toast.info('Sudah Mengisi Feedback', 'Anda sudah pernah mengisi survei onboarding ini.')
+    return
+  }
+
+  if (!isJourneyComplete.value) {
+    toast.warning('Kuesioner Feedback Terkunci', 'Selesaikan seluruh misi perjalanan onboarding Anda terlebih dahulu sebelum mengirim feedback.')
     return
   }
 
