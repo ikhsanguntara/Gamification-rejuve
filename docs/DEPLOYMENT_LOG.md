@@ -33,7 +33,7 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
 
 | ID | Tanggal & Waktu (WIB) | Target Environment | Komponen | Commit Hash & Branch | Hasil Unit Test | Port / URL Akses | Status |
 | :---: | :--- | :--- | :--- | :--- | :---: | :--- | :---: |
-| **DEP-017** | 2026-09-18 16:04 | **VPS 1 Host Server** (`145.79.11.188`) | Frontend (Nuxt 3 SPA via Nginx) | `4f65b10` (`main`) | **149/149 PASS (100%)** | `http://145.79.11.188:3006` | 🟢 **SUCCESS** |
+| **DEP-017** | 2026-09-18 16:04 | **VPS 1 Host Server** (`145.79.11.188`) | Frontend (Nuxt 3 SPA via Nginx) | `6b211d1` (`main`) | **149/149 PASS (100%)** | `http://145.79.11.188:3006` | 🟢 **SUCCESS** |
 | **DEP-016** | 2026-09-15 17:48 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `1591b27` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-015** | 2026-09-15 17:09 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `d862d92` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
 | **DEP-014** | 2026-09-14 22:21 | **VPS Dev Server** (`103.168.147.133`) | Frontend (Nuxt 3 SPA via Nginx) | `06ea963` (`main`) | **103/103 PASS (100%)** | `http://103.168.147.133:3006` | 🟢 **SUCCESS** |
@@ -63,7 +63,7 @@ Setiap proses deployment **WAJIB** mengikuti tahapan berurutan berikut:
   - Target REST API: `http://145.79.11.188:3005/api` (Dev/Staging Backend VPS 1)
   - Inisialisasi awal container `gamification-frontend` dengan image Nginx Alpine (`nginx:alpine`) pada VPS baru (`145.79.11.188`)
   - Konfigurasi limit RAM ketat (`mem_limit: 128MB`, `mem_reservation: 32MB`) dengan pemakaian riil hanya **3.4 MiB (2.66%)**
-- **Branch & Commit**: `4f65b10` di branch `main`
+- **Branch & Commit**: `6b211d1` di branch `main`
 - **Hasil Pengujian Unit Test Sebelum Deploy**:
   - `test_all_cruds.mjs`: **90/90 PASS (100%)**
   - `test_unit_tester_suite.mjs`: **59/59 PASS (100%)**
