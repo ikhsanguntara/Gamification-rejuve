@@ -497,53 +497,71 @@ export const useUserStore = defineStore('user', {
     },
 
     async updateProfile(payload) {
-      const targetId = payload.id || this.currentUser?.id || this.currentUserId
+      const targetId = (payload && !(payload instanceof FormData) && payload.id) || this.currentUser?.id || this.currentUserId
       let updatedData = null
 
       if (this.isLiveApi || this.token) {
         try {
-          const apiPayload = {}
-          if (payload.name !== undefined) apiPayload.name = payload.name
-          if (payload.email !== undefined) apiPayload.email = payload.email
-          if (payload.gender !== undefined) apiPayload.gender = payload.gender
-          if (payload.phone !== undefined) apiPayload.phone = payload.phone
-          if (payload.avatarUrl !== undefined || payload.avatar !== undefined) {
-            apiPayload.avatarUrl = payload.avatarUrl || payload.avatar
-            apiPayload.avatar = payload.avatarUrl || payload.avatar
+          let apiPayload
+          if (typeof FormData !== 'undefined' && payload instanceof FormData) {
+            apiPayload = payload
+          } else {
+            apiPayload = {}
+            if (payload.name !== undefined) apiPayload.name = payload.name
+            if (payload.gender !== undefined) apiPayload.gender = payload.gender
+            if (payload.phone !== undefined) apiPayload.phone = payload.phone
+            if (payload.avatarUrl !== undefined || payload.avatar !== undefined) {
+              apiPayload.avatarUrl = payload.avatarUrl || payload.avatar
+            }
+            if (payload.file || payload.avatarFile || (typeof File !== 'undefined' && payload.avatar instanceof File)) {
+              const fd = new FormData()
+              if (apiPayload.name) fd.append('name', apiPayload.name)
+              if (apiPayload.gender) fd.append('gender', apiPayload.gender)
+              if (apiPayload.phone) fd.append('phone', apiPayload.phone)
+              if (apiPayload.avatarUrl && typeof apiPayload.avatarUrl === 'string') fd.append('avatarUrl', apiPayload.avatarUrl)
+              fd.append('avatar', payload.file || payload.avatarFile || payload.avatar)
+              apiPayload = fd
+            }
           }
 
-          const res = await userApi.update(targetId, apiPayload)
-          if (res && res.data) {
-            updatedData = res.data
+          const res = await authApi.updateProfile(apiPayload)
+          if (res && (res.data || res.user)) {
+            const data = res.data || res.user || res
+            updatedData = data
             if (this.apiUser) {
-              if (res.data.name !== undefined) this.apiUser.name = res.data.name
-              if (res.data.email !== undefined) this.apiUser.email = res.data.email
-              if (res.data.gender !== undefined) this.apiUser.gender = res.data.gender
-              if (res.data.phone !== undefined) {
-                this.apiUser.phone = res.data.phone
-                this.apiUser.phoneWA = res.data.phone
+              if (data.name !== undefined) this.apiUser.name = data.name
+              if (data.email !== undefined) this.apiUser.email = data.email
+              if (data.gender !== undefined) this.apiUser.gender = data.gender
+              if (data.phone !== undefined || data.phoneWA !== undefined) {
+                this.apiUser.phone = data.phone || data.phoneWA
+                this.apiUser.phoneWA = data.phone || data.phoneWA
               }
-              if (res.data.avatarUrl || res.data.avatar || payload.avatarUrl || payload.avatar) {
-                this.apiUser.avatarUrl = res.data.avatarUrl || res.data.avatar || payload.avatarUrl || payload.avatar
+              if (data.avatarUrl || data.avatar) {
+                this.apiUser.avatarUrl = data.avatarUrl || data.avatar
                 this.apiUser.avatar = this.apiUser.avatarUrl
               }
             }
           }
         } catch (err) {
-          console.warn('API updateProfile failed:', err.message)
+          console.warn('API updateProfile (PUT /auth/profile) failed:', err.message)
           throw err
         }
       }
 
       // Update local directory
+      const isFd = typeof FormData !== 'undefined' && payload instanceof FormData
+      const localName = isFd ? payload.get('name') : payload?.name
+      const localGender = isFd ? payload.get('gender') : payload?.gender
+      const localPhone = isFd ? payload.get('phone') : payload?.phone
+      const localAvatarUrl = isFd ? (payload.get('avatarUrl') || updatedData?.avatarUrl || updatedData?.avatar) : (payload?.avatarUrl || payload?.avatar)
+
       const localUpdated = this.updateUser(targetId, {
-        ...(payload.name !== undefined ? { name: payload.name } : {}),
-        ...(payload.email !== undefined ? { email: payload.email } : {}),
-        ...(payload.gender !== undefined ? { gender: payload.gender } : {}),
-        ...(payload.phone !== undefined ? { phone: payload.phone } : {}),
-        ...(payload.avatarUrl || payload.avatar ? {
-          avatar: payload.avatarUrl || payload.avatar,
-          avatarUrl: payload.avatarUrl || payload.avatar
+        ...(localName !== undefined && localName !== null ? { name: localName } : {}),
+        ...(localGender !== undefined && localGender !== null ? { gender: localGender } : {}),
+        ...(localPhone !== undefined && localPhone !== null ? { phone: localPhone } : {}),
+        ...(localAvatarUrl || updatedData?.avatarUrl || updatedData?.avatar ? {
+          avatar: localAvatarUrl || updatedData?.avatarUrl || updatedData?.avatar,
+          avatarUrl: localAvatarUrl || updatedData?.avatarUrl || updatedData?.avatar
         } : {})
       })
 

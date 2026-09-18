@@ -9,6 +9,7 @@ import { useGamificationStore } from './stores/gamification.js'
 import { useStoreStore } from './stores/store.js'
 import { calculateAverageDmSl } from './utils/star.js'
 import { useReportStore } from './stores/report.js'
+import { authApi } from './services/api.js'
 
 console.log('🚀 MEMULAI AUDIT & PENGUJIAN SEMUA FITUR CRUD SISTEM RE.JUVE...\n')
 
@@ -126,6 +127,7 @@ assert(gamificationStore.crewById(newUser.id) === undefined, 'Delete User: Otoma
 assert(typeof userStore.downloadTemplate === 'function', 'Bulk User: Action downloadTemplate tersedia di store')
 assert(typeof userStore.previewBulkUsers === 'function', 'Bulk User: Action previewBulkUsers (Dry Run) tersedia di store')
 assert(typeof userStore.commitBulkUsers === 'function', 'Bulk User: Action commitBulkUsers tersedia di store')
+assert(typeof authApi.updateProfile === 'function', 'Auth API: Endpoint updateProfile (PUT /auth/profile) tersedia di authApi service')
 assert(typeof userStore.updateProfile === 'function', 'Profile: Action updateProfile tersedia di user store')
 assert(typeof userStore.changePassword === 'function', 'Profile: Action changePassword tersedia di user store')
 

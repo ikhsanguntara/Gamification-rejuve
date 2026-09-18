@@ -624,6 +624,7 @@ const profileForm = reactive({
 
 const avatarMode = ref('upload') // 'upload' | 'url'
 const avatarFileName = ref('')
+const selectedAvatarFile = ref(null)
 const fileInputRef = ref(null)
 const uploadedDataUrl = ref('')
 const isSavingProfile = ref(false)
@@ -689,6 +690,7 @@ function handleFileUpload(event) {
     return
   }
 
+  selectedAvatarFile.value = file
   avatarFileName.value = file.name
   const reader = new FileReader()
   reader.onload = (e) => {
@@ -700,6 +702,7 @@ function handleFileUpload(event) {
 }
 
 function resetUploadedFile() {
+  selectedAvatarFile.value = null
   avatarFileName.value = ''
   uploadedDataUrl.value = ''
   if (fileInputRef.value) fileInputRef.value.value = ''
@@ -722,18 +725,32 @@ async function handleSaveProfile() {
   profileMessage.text = ''
 
   try {
-    const finalAvatar = avatarMode.value === 'upload'
-      ? (uploadedDataUrl.value || profileForm.avatarUrl)
-      : profileForm.avatarUrl
+    let payload
 
-    await userStore.updateProfile({
-      name: profileForm.name.trim(),
-      phone: profileForm.phone ? profileForm.phone.trim() : '',
-      gender: profileForm.gender,
-      avatarUrl: finalAvatar,
-      avatar: finalAvatar
-    })
+    if (avatarMode.value === 'upload' && selectedAvatarFile.value) {
+      const formData = new FormData()
+      formData.append('name', profileForm.name.trim())
+      formData.append('phone', profileForm.phone ? profileForm.phone.trim() : '')
+      formData.append('gender', profileForm.gender)
+      formData.append('avatar', selectedAvatarFile.value)
+      payload = formData
+    } else {
+      const finalAvatar = avatarMode.value === 'upload'
+        ? (uploadedDataUrl.value || profileForm.avatarUrl)
+        : profileForm.avatarUrl
 
+      payload = {
+        name: profileForm.name.trim(),
+        phone: profileForm.phone ? profileForm.phone.trim() : '',
+        gender: profileForm.gender,
+        avatarUrl: finalAvatar,
+        avatar: finalAvatar
+      }
+    }
+
+    await userStore.updateProfile(payload)
+
+    selectedAvatarFile.value = null
     profileMessage.text = 'Profil Anda berhasil diperbarui!'
     profileMessage.type = 'success'
   } catch (err) {

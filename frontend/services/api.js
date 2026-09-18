@@ -17,7 +17,8 @@ export const authApi = {
       setAuthToken(res.data.token)
     }
     return res
-  }
+  },
+  updateProfile: (data) => apiFetch('/auth/profile', { method: 'PUT', body: data })
 }
 
 // ─── 2. Master Departments (Stores) Service ─────────────────────────────────

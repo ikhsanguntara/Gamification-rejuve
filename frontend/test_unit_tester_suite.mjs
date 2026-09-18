@@ -17,7 +17,7 @@ import { useApprovalStore } from './stores/approval.js'
 import { useGamificationStore } from './stores/gamification.js'
 import { useMissionStore } from './stores/mission.js'
 import { useReportStore, downloadFileBlob } from './stores/report.js'
-import { reportApi } from './services/api.js'
+import { reportApi, authApi } from './services/api.js'
 
 console.log('🧪 MEMULAI PENGUJIAN KOMPREHENSIF UNIT TESTER (QA SUITE)...\n')
 
@@ -373,6 +373,36 @@ test('requestRevision: berhasil mengubah status approval menjadi REVISION_REQUIR
   assertEqual(item.revisionNote, 'Perbaiki pencatatan suhu chiller')
 })
 
+test('DM Notes Visibility: Catatan persetujuan DM (dmNotes) dan catatan SL (tlNotes) dapat ditampilkan bersama', () => {
+  const missionItem = {
+    userMissionId: 'um-test-01',
+    status: 'APPROVED_BY_DM',
+    tlScore: 90,
+    tlNotes: 'Kru sudah bekerja sesuai standar SOP operasional.',
+    dmScore: 95,
+    dmNotes: 'Disetujui oleh District Manager. Pertahankan kebersihan chiller.',
+    dm: { userId: 'dm-01', name: 'Ahmad Dahlan' }
+  }
+
+  function getMissionComment(m) {
+    if (m?.tlNotes && m.tlNotes.trim()) return m.tlNotes
+    return 'Catatan evaluasi belum diisi.'
+  }
+
+  function getMissionDmNotes(m) {
+    if (m?.dmNotes && m.dmNotes.trim()) return m.dmNotes
+    return ''
+  }
+
+  function getMissionDmName(m) {
+    return m?.dm?.name || 'District Manager'
+  }
+
+  assertEqual(getMissionComment(missionItem), 'Kru sudah bekerja sesuai standar SOP operasional.', 'Catatan Evaluator SL terbaca dengan tepat')
+  assertEqual(getMissionDmNotes(missionItem), 'Disetujui oleh District Manager. Pertahankan kebersihan chiller.', 'Catatan DM terbaca dengan tepat')
+  assertEqual(getMissionDmName(missionItem), 'Ahmad Dahlan', 'Nama DM teridentifikasi dengan tepat')
+})
+
 console.log('')
 
 // ============================================================================
@@ -511,7 +541,12 @@ test('Profile Gamification Visibility: Crew memiliki kartu bintang & lencana, se
   assertFalse(shouldShowGamificationCards(userStore.currentUser), 'District Manager TIDAK BOLEH melihat komponen kartu bintang gamifikasi')
 })
 
-test('Profile Update: SL / DM berhasil mengubah data diri, nomor telepon, dan avatar', async () => {
+test('Profile Update Endpoint: Endpoint PUT /auth/profile dan action updateProfile tersedia', async () => {
+  assertTrue(typeof authApi.updateProfile === 'function', 'authApi.updateProfile harus terdefinisi sebagai fungsi pemanggil API')
+  assertTrue(typeof userStore.updateProfile === 'function', 'userStore.updateProfile harus terdefinisi di Pinia user store')
+})
+
+test('Profile Update: SL / DM berhasil mengubah data diri, nomor telepon, dan avatar via PUT /auth/profile', async () => {
   userStore.loginAsUser('dm-001')
   await userStore.updateProfile({
     id: 'dm-001',

@@ -327,17 +327,49 @@
 
               <!-- JIKA MISI SUDAH DINILAI (SCORED_BY_TL / PENDING_REVIEW / COMPLETED / APPROVED / APPROVED_BY_DM): Tampilkan Ringkasan Read-Only (Tanpa Slider & Tombol Update) -->
               <template v-if="isMissionSubmitted(mission.id)">
-                <!-- Catatan Evaluator & Foto Bukti (Read-Only) -->
-                <div class="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-2.5 text-xs">
-                  <!-- Catatan Evaluator -->
-                  <div class="flex items-start gap-2">
+                <!-- Catatan Evaluator, Catatan DM & Foto Bukti (Read-Only) -->
+                <div class="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-3 text-xs">
+                  <!-- Catatan Evaluator (Store Leader) -->
+                  <div class="flex items-start gap-2.5">
                     <MessageSquare class="w-4 h-4 text-[#831843] dark:text-[#f472b6] mt-0.5 flex-shrink-0" />
-                    <div class="space-y-0.5">
+                    <div class="space-y-0.5 min-w-0 flex-1">
                       <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">
                         Catatan Evaluator:
                       </span>
                       <p class="text-slate-700 dark:text-slate-300 italic leading-relaxed">
                         "{{ getMissionComment(mission.id) }}"
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Catatan District Manager (DM Review / Approval Notes) -->
+                  <div
+                    v-if="getMissionDmNotes(mission.id)"
+                    class="p-3 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 flex items-start gap-2.5 shadow-2xs"
+                  >
+                    <ShieldCheck class="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
+                    <div class="space-y-1 min-w-0 flex-1">
+                      <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <span class="text-[11px] font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+                          <span>Catatan District Manager</span>
+                          <span v-if="getMissionDmName(mission.id)" class="text-[10px] font-normal text-emerald-700 dark:text-emerald-300">
+                            ({{ getMissionDmName(mission.id) }})
+                          </span>
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                          <span
+                            v-if="getMissionDmScore(mission.id) !== null && getMissionDmScore(mission.id) !== undefined"
+                            class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-200/80 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100"
+                          >
+                            Skor DM: {{ getMissionDmScore(mission.id) }}/100
+                          </span>
+                          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                            Disetujui
+                          </span>
+                        </div>
+                      </div>
+                      <p class="text-emerald-900 dark:text-emerald-200 font-medium italic leading-relaxed">
+                        "{{ getMissionDmNotes(mission.id) }}"
                       </p>
                     </div>
                   </div>
@@ -368,6 +400,22 @@
 
               <!-- JIKA MISI BELUM DINILAI: Tampilkan Form Input Slider, Catatan, Upload Foto -->
               <template v-else>
+                <!-- Catatan / Feedback dari District Manager (Jika Ada) -->
+                <div
+                  v-if="getMissionDmNotes(mission.id)"
+                  class="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-200 shadow-2xs"
+                >
+                  <AlertCircle class="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div class="space-y-0.5 min-w-0 flex-1">
+                    <span class="text-[11px] font-bold text-amber-800 dark:text-amber-300 block">
+                      Catatan / Feedback District Manager:
+                    </span>
+                    <p class="italic leading-relaxed font-medium">
+                      "{{ getMissionDmNotes(mission.id) }}"
+                    </p>
+                  </div>
+                </div>
+
                 <!-- Locked Buddy Step Notice Banner on Card -->
                 <div
                   v-if="isCrewBuddyLocked"
@@ -932,19 +980,19 @@ const loadCrewScores = () => {
       }
     }
 
-    // 2. Comments
+    // 2. Comments (Catatan Evaluator / Store Leader)
     if (m.tlNotes) {
       missionComments[m.id] = m.tlNotes
-    } else if (m.dmNotes) {
-      missionComments[m.id] = m.dmNotes
     } else {
-      const existingApproval = approvalStore.approvals.find(a => a.missionId === m.id && (a.crewId === selectedCrew.value.id || !a.crewId))
-      const existingEval = evalStore.evaluations.find(e => e.missionId === m.id && (e.crewId === selectedCrew.value.id || (e.crewScores && e.crewScores.some(cs => cs.crewId === selectedCrew.value.id))))
+      const existingEval = evalStore.evaluations.find(e => (e.missionId === m.id || e.id === m.id) && (e.crewId === selectedCrew.value.id || (e.crewScores && e.crewScores.some(cs => cs.crewId === selectedCrew.value.id))))
+      const existingApproval = approvalStore.approvals.find(a => (a.missionId === m.id || a.id === m.id) && (a.crewId === selectedCrew.value.id || !a.crewId))
 
-      if (existingApproval?.comment) {
-        missionComments[m.id] = existingApproval.comment
-      } else if (existingEval?.comment) {
+      if (existingEval?.comment) {
         missionComments[m.id] = existingEval.comment
+      } else if (existingApproval?.tlNotes) {
+        missionComments[m.id] = existingApproval.tlNotes
+      } else if (existingApproval?.comment && !m.dmNotes) {
+        missionComments[m.id] = existingApproval.comment
       } else if (missionComments[m.id] === undefined) {
         missionComments[m.id] = ''
       }
@@ -1228,13 +1276,19 @@ function isMissionSubmitted(missionId) {
 }
 
 function getMissionComment(missionId) {
+  const m = currentWeekMissions.value.find(x => x.id === missionId || x.userMissionId === missionId || x.missionId === missionId)
+  if (m?.tlNotes && m.tlNotes.trim()) return m.tlNotes
+
   if (missionComments[missionId] && missionComments[missionId].trim()) {
     return missionComments[missionId]
   }
 
-  const m = currentWeekMissions.value.find(x => x.id === missionId || x.userMissionId === missionId)
-  if (m?.tlNotes) return m.tlNotes
-  if (m?.dmNotes) return m.dmNotes
+  const existingEval = evalStore.evaluations.find(e => (e.missionId === missionId || e.id === missionId) && (e.crewId === selectedCrew.value?.id || (e.crewScores && e.crewScores.some(cs => cs.crewId === selectedCrew.value?.id))))
+  if (existingEval?.comment) return existingEval.comment
+
+  const existingApproval = approvalStore.approvals.find(a => (a.missionId === missionId || a.id === missionId) && (a.crewId === selectedCrew.value?.id || !a.crewId))
+  if (existingApproval?.tlNotes) return existingApproval.tlNotes
+  if (existingApproval?.comment && !m?.dmNotes) return existingApproval.comment
 
   const status = getMissionStatus(missionId)
   if (status === 'COMPLETED' || status === 'APPROVED' || status === 'APPROVED_BY_DM') {
@@ -1242,6 +1296,35 @@ function getMissionComment(missionId) {
   }
 
   return 'Catatan evaluasi belum diisi.'
+}
+
+function getMissionDmNotes(missionId) {
+  const m = currentWeekMissions.value.find(x => x.id === missionId || x.userMissionId === missionId || x.missionId === missionId)
+  if (m?.dmNotes && m.dmNotes.trim()) {
+    return m.dmNotes
+  }
+  const approval = approvalStore.approvals.find(a => (a.missionId === missionId || a.id === missionId) && (a.crewId === selectedCrew.value?.id || !a.crewId))
+  if (approval?.dmNotes && approval.dmNotes.trim()) return approval.dmNotes
+  if (approval?.reviewNote && approval.reviewNote.trim()) return approval.reviewNote
+  if (approval?.note && approval.note.trim()) return approval.note
+  return ''
+}
+
+function getMissionDmName(missionId) {
+  const m = currentWeekMissions.value.find(x => x.id === missionId || x.userMissionId === missionId || x.missionId === missionId)
+  if (m?.dm?.name) return m.dm.name
+  if (typeof m?.dm === 'string' && m.dm.trim()) return m.dm
+  const approval = approvalStore.approvals.find(a => (a.missionId === missionId || a.id === missionId) && (a.crewId === selectedCrew.value?.id || !a.crewId))
+  if (approval?.dmName) return approval.dmName
+  return 'District Manager'
+}
+
+function getMissionDmScore(missionId) {
+  const m = currentWeekMissions.value.find(x => x.id === missionId || x.userMissionId === missionId || x.missionId === missionId)
+  if (m?.dmScore !== undefined && m.dmScore !== null) return m.dmScore
+  const approval = approvalStore.approvals.find(a => (a.missionId === missionId || a.id === missionId) && (a.crewId === selectedCrew.value?.id || !a.crewId))
+  if (approval?.dmScore !== undefined && approval.dmScore !== null) return approval.dmScore
+  return null
 }
 
 async function submitSingleMission(missionId) {
