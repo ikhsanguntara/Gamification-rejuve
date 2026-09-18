@@ -90,145 +90,297 @@
 
     <!-- ==================== 2. PIPELINE / STAGE METRIC CARDS (6 CARDS ROW) ==================== -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-      <!-- 1. ACTIVE NEW HIRES -->
-      <div
-        @click="selectedStageFilter = 'ALL'"
-        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
-        :class="selectedStageFilter === 'ALL'
-          ? 'bg-[#153424] text-white border-emerald-500/60 ring-2 ring-emerald-500/40'
-          : 'bg-[#153424]/90 hover:bg-[#153424] text-white border-emerald-800/40'"
-      >
-        <div class="flex items-center justify-between text-emerald-300 mb-2">
-          <span class="text-[10px] font-black uppercase tracking-wider">Active New Hires</span>
-          <Users class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+      
+      <!-- ==================== A. DISTRICT MANAGER / HEAD VERSION ==================== -->
+      <template v-if="userStore.isDistrictManager || userStore.isHead">
+        <!-- 1. NEW HIRE AKTIF -->
+        <div
+          @click="selectedStageFilter = 'ALL'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border flex items-center gap-3.5"
+          :class="selectedStageFilter === 'ALL'
+            ? 'bg-[#2a1325] text-white border-pink-500/70 ring-2 ring-pink-500/40'
+            : 'bg-[#1e101c]/90 hover:bg-[#2a1325] text-white border-pink-900/40'"
+        >
+          <div class="w-10 h-10 rounded-full bg-pink-500/20 text-pink-400 border border-pink-500/30 flex items-center justify-center flex-shrink-0">
+            <Users class="w-5 h-5" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-2xl font-black text-white leading-none">
+              {{ activeRecruitsCount }}
+            </div>
+            <div class="text-xs font-bold text-slate-100 mt-1 truncate">
+              New Hire Aktif
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 truncate">
+              Total di area kamu
+            </div>
+          </div>
         </div>
-        <div class="flex items-baseline justify-between mt-1">
-          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            {{ activeRecruitsCount }}
-          </span>
-          <ChevronRight class="w-4 h-4 text-emerald-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-        </div>
-        <p class="text-[10px] text-emerald-200/70 mt-1 truncate">
-          Currently in onboarding
-        </p>
-      </div>
 
-      <!-- 2. CAPTAIN PHASE / BUDDY PRE-BATCH -->
-      <div
-        @click="selectedStageFilter = 'BUDDY'"
-        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
-        :class="selectedStageFilter === 'BUDDY'
-          ? 'bg-[#3b271a] text-white border-amber-500/60 ring-2 ring-amber-500/40'
-          : 'bg-[#3b271a]/90 hover:bg-[#3b271a] text-white border-amber-800/40'"
-      >
-        <div class="flex items-center justify-between text-amber-300 mb-2">
-          <span class="text-[10px] font-black uppercase tracking-wider">Captain Phase</span>
-          <Handshake class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+        <!-- 2. BELUM MULAI -->
+        <div
+          @click="selectedStageFilter = 'BUDDY'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border flex items-center gap-3.5"
+          :class="selectedStageFilter === 'BUDDY'
+            ? 'bg-[#2e2313] text-white border-amber-500/70 ring-2 ring-amber-500/40'
+            : 'bg-[#20180d]/90 hover:bg-[#2e2313] text-white border-amber-900/40'"
+        >
+          <div class="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+            <UserPlus class="w-5 h-5" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-2xl font-black text-white leading-none">
+              {{ buddyRecruitsCount }}
+            </div>
+            <div class="text-xs font-bold text-slate-100 mt-1 truncate">
+              Belum Mulai
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 truncate">
+              Menunggu Minggu 1
+            </div>
+          </div>
         </div>
-        <div class="flex items-baseline justify-between mt-1">
-          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            {{ buddyRecruitsCount }}
-          </span>
-          <ChevronRight class="w-4 h-4 text-amber-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-        </div>
-        <p class="text-[10px] text-amber-200/70 mt-1 truncate">
-          First 3 Days (Buddy)
-        </p>
-      </div>
 
-      <!-- 3. WEEK 1 -->
-      <div
-        @click="selectedStageFilter = 'STAGE_1'"
-        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
-        :class="selectedStageFilter === 'STAGE_1'
-          ? 'bg-[#183626] text-white border-teal-500/60 ring-2 ring-teal-500/40'
-          : 'bg-[#183626]/90 hover:bg-[#183626] text-white border-teal-800/40'"
-      >
-        <div class="flex items-center justify-between text-teal-300 mb-2">
-          <span class="text-[10px] font-black uppercase tracking-wider">Week 1</span>
-          <Tent class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+        <!-- 3. MINGGU 1 -->
+        <div
+          @click="selectedStageFilter = 'STAGE_1'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border flex items-center gap-3.5"
+          :class="selectedStageFilter === 'STAGE_1'
+            ? 'bg-[#132535] text-white border-cyan-500/70 ring-2 ring-cyan-500/40'
+            : 'bg-[#0d1a26]/90 hover:bg-[#132535] text-white border-cyan-900/40'"
+        >
+          <div class="w-10 h-10 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
+            <BookOpen class="w-5 h-5" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-2xl font-black text-white leading-none">
+              {{ getRecruitCountByStage('STAGE_1') }}
+            </div>
+            <div class="text-xs font-bold text-slate-100 mt-1 truncate">
+              Minggu 1
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 truncate">
+              Dalam proses
+            </div>
+          </div>
         </div>
-        <div class="flex items-baseline justify-between mt-1">
-          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            {{ getRecruitCountByStage('STAGE_1') }}
-          </span>
-          <ChevronRight class="w-4 h-4 text-teal-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-        </div>
-        <p class="text-[10px] text-teal-200/70 mt-1 truncate">
-          Mission in Progress
-        </p>
-      </div>
 
-      <!-- 4. WEEK 2 -->
-      <div
-        @click="selectedStageFilter = 'STAGE_2'"
-        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
-        :class="selectedStageFilter === 'STAGE_2'
-          ? 'bg-[#162e42] text-white border-sky-500/60 ring-2 ring-sky-500/40'
-          : 'bg-[#162e42]/90 hover:bg-[#162e42] text-white border-sky-800/40'"
-      >
-        <div class="flex items-center justify-between text-sky-300 mb-2">
-          <span class="text-[10px] font-black uppercase tracking-wider">Week 2</span>
-          <Waves class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+        <!-- 4. MINGGU 2 -->
+        <div
+          @click="selectedStageFilter = 'STAGE_2'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border flex items-center gap-3.5"
+          :class="selectedStageFilter === 'STAGE_2'
+            ? 'bg-[#12283a] text-white border-blue-500/70 ring-2 ring-blue-500/40'
+            : 'bg-[#0b1c2b]/90 hover:bg-[#12283a] text-white border-blue-900/40'"
+        >
+          <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+            <ListTodo class="w-5 h-5" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-2xl font-black text-white leading-none">
+              {{ getRecruitCountByStage('STAGE_2') }}
+            </div>
+            <div class="text-xs font-bold text-slate-100 mt-1 truncate">
+              Minggu 2
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 truncate">
+              Dalam proses
+            </div>
+          </div>
         </div>
-        <div class="flex items-baseline justify-between mt-1">
-          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            {{ getRecruitCountByStage('STAGE_2') }}
-          </span>
-          <ChevronRight class="w-4 h-4 text-sky-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-        </div>
-        <p class="text-[10px] text-sky-200/70 mt-1 truncate">
-          Mission in Progress
-        </p>
-      </div>
 
-      <!-- 5. WEEK 3 -->
-      <div
-        @click="selectedStageFilter = 'STAGE_3'"
-        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
-        :class="selectedStageFilter === 'STAGE_3'
-          ? 'bg-[#402117] text-white border-orange-500/60 ring-2 ring-orange-500/40'
-          : 'bg-[#402117]/90 hover:bg-[#402117] text-white border-orange-800/40'"
-      >
-        <div class="flex items-center justify-between text-orange-300 mb-2">
-          <span class="text-[10px] font-black uppercase tracking-wider">Week 3</span>
-          <Mountain class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+        <!-- 5. MINGGU 3 -->
+        <div
+          @click="selectedStageFilter = 'STAGE_3'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border flex items-center gap-3.5"
+          :class="selectedStageFilter === 'STAGE_3'
+            ? 'bg-[#112a20] text-white border-emerald-500/70 ring-2 ring-emerald-500/40'
+            : 'bg-[#0b1e16]/90 hover:bg-[#112a20] text-white border-emerald-900/40'"
+        >
+          <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+            <CheckCircle2 class="w-5 h-5" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-2xl font-black text-white leading-none">
+              {{ getRecruitCountByStage('STAGE_3') }}
+            </div>
+            <div class="text-xs font-bold text-slate-100 mt-1 truncate">
+              Minggu 3
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 truncate">
+              Dalam proses
+            </div>
+          </div>
         </div>
-        <div class="flex items-baseline justify-between mt-1">
-          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            {{ getRecruitCountByStage('STAGE_3') }}
-          </span>
-          <ChevronRight class="w-4 h-4 text-orange-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-        </div>
-        <p class="text-[10px] text-orange-200/70 mt-1 truncate">
-          Final Week
-        </p>
-      </div>
 
-      <!-- 6. NEEDS REVIEW / MENUNGGU APPROVAL (DM) -->
-      <div
-        @click="selectedStageFilter = 'PENDING'"
-        class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
-        :class="selectedStageFilter === 'PENDING'
-          ? (userStore.isDistrictManager ? 'bg-[#351a42] text-white border-purple-500/60 ring-2 ring-purple-500/40' : 'bg-[#4a1424] text-white border-rose-500/60 ring-2 ring-rose-500/40')
-          : (userStore.isDistrictManager ? 'bg-[#351a42]/90 hover:bg-[#351a42] text-white border-purple-800/40' : 'bg-[#4a1424]/90 hover:bg-[#4a1424] text-white border-rose-800/40')"
-      >
-        <div class="flex items-center justify-between mb-2" :class="userStore.isDistrictManager ? 'text-purple-300' : 'text-rose-300'">
-          <span class="text-[10px] font-black uppercase tracking-wider">
-            {{ userStore.isDistrictManager ? 'Menunggu Approval' : 'Needs Review' }}
-          </span>
-          <Hourglass class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform animate-pulse" />
+        <!-- 6. MENUNGGU APPROVAL -->
+        <div
+          @click="selectedStageFilter = 'PENDING'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border flex items-center gap-3.5"
+          :class="selectedStageFilter === 'PENDING'
+            ? 'bg-[#2f2214] text-white border-amber-500/70 ring-2 ring-amber-500/40'
+            : 'bg-[#21170d]/90 hover:bg-[#2f2214] text-white border-amber-900/40'"
+        >
+          <div class="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+            <Hourglass class="w-5 h-5 animate-pulse" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-2xl font-black text-white leading-none">
+              {{ pendingReviewCount }}
+            </div>
+            <div class="text-xs font-bold text-slate-100 mt-1 truncate">
+              Menunggu Approval
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 truncate">
+              Perlu review kamu
+            </div>
+          </div>
         </div>
-        <div class="flex items-baseline justify-between mt-1">
-          <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            {{ pendingReviewCount }}
-          </span>
-          <ChevronRight class="w-4 h-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" :class="userStore.isDistrictManager ? 'text-purple-400' : 'text-rose-400'" />
+      </template>
+
+      <!-- ==================== B. STORE LEADER (SL) VERSION (TIDAK DIRUBAH) ==================== -->
+      <template v-else>
+        <!-- 1. ACTIVE NEW HIRES -->
+        <div
+          @click="selectedStageFilter = 'ALL'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+          :class="selectedStageFilter === 'ALL'
+            ? 'bg-[#153424] text-white border-emerald-500/60 ring-2 ring-emerald-500/40'
+            : 'bg-[#153424]/90 hover:bg-[#153424] text-white border-emerald-800/40'"
+        >
+          <div class="flex items-center justify-between text-emerald-300 mb-2">
+            <span class="text-[10px] font-black uppercase tracking-wider">Active New Hires</span>
+            <Users class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+          </div>
+          <div class="flex items-baseline justify-between mt-1">
+            <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {{ activeRecruitsCount }}
+            </span>
+            <ChevronRight class="w-4 h-4 text-emerald-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          </div>
+          <p class="text-[10px] text-emerald-200/70 mt-1 truncate">
+            Currently in onboarding
+          </p>
         </div>
-        <p class="text-[10px] mt-1 truncate font-semibold" :class="userStore.isDistrictManager ? 'text-purple-200/70' : 'text-rose-200/70'">
-          {{ userStore.isDistrictManager ? 'Persetujuan DM Diperlukan' : 'Your Action Required' }}
-        </p>
-      </div>
+
+        <!-- 2. CAPTAIN PHASE / BUDDY PRE-BATCH -->
+        <div
+          @click="selectedStageFilter = 'BUDDY'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+          :class="selectedStageFilter === 'BUDDY'
+            ? 'bg-[#3b271a] text-white border-amber-500/60 ring-2 ring-amber-500/40'
+            : 'bg-[#3b271a]/90 hover:bg-[#3b271a] text-white border-amber-800/40'"
+        >
+          <div class="flex items-center justify-between text-amber-300 mb-2">
+            <span class="text-[10px] font-black uppercase tracking-wider">Captain Phase</span>
+            <Handshake class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+          </div>
+          <div class="flex items-baseline justify-between mt-1">
+            <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {{ buddyRecruitsCount }}
+            </span>
+            <ChevronRight class="w-4 h-4 text-amber-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          </div>
+          <p class="text-[10px] text-amber-200/70 mt-1 truncate">
+            First 3 Days (Buddy)
+          </p>
+        </div>
+
+        <!-- 3. WEEK 1 -->
+        <div
+          @click="selectedStageFilter = 'STAGE_1'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+          :class="selectedStageFilter === 'STAGE_1'
+            ? 'bg-[#183626] text-white border-teal-500/60 ring-2 ring-teal-500/40'
+            : 'bg-[#183626]/90 hover:bg-[#183626] text-white border-teal-800/40'"
+        >
+          <div class="flex items-center justify-between text-teal-300 mb-2">
+            <span class="text-[10px] font-black uppercase tracking-wider">Week 1</span>
+            <Tent class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+          </div>
+          <div class="flex items-baseline justify-between mt-1">
+            <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {{ getRecruitCountByStage('STAGE_1') }}
+            </span>
+            <ChevronRight class="w-4 h-4 text-teal-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          </div>
+          <p class="text-[10px] text-teal-200/70 mt-1 truncate">
+            Mission in Progress
+          </p>
+        </div>
+
+        <!-- 4. WEEK 2 -->
+        <div
+          @click="selectedStageFilter = 'STAGE_2'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+          :class="selectedStageFilter === 'STAGE_2'
+            ? 'bg-[#162e42] text-white border-sky-500/60 ring-2 ring-sky-500/40'
+            : 'bg-[#162e42]/90 hover:bg-[#162e42] text-white border-sky-800/40'"
+        >
+          <div class="flex items-center justify-between text-sky-300 mb-2">
+            <span class="text-[10px] font-black uppercase tracking-wider">Week 2</span>
+            <Waves class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+          </div>
+          <div class="flex items-baseline justify-between mt-1">
+            <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {{ getRecruitCountByStage('STAGE_2') }}
+            </span>
+            <ChevronRight class="w-4 h-4 text-sky-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          </div>
+          <p class="text-[10px] text-sky-200/70 mt-1 truncate">
+            Mission in Progress
+          </p>
+        </div>
+
+        <!-- 5. WEEK 3 -->
+        <div
+          @click="selectedStageFilter = 'STAGE_3'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+          :class="selectedStageFilter === 'STAGE_3'
+            ? 'bg-[#402117] text-white border-orange-500/60 ring-2 ring-orange-500/40'
+            : 'bg-[#402117]/90 hover:bg-[#402117] text-white border-orange-800/40'"
+        >
+          <div class="flex items-center justify-between text-orange-300 mb-2">
+            <span class="text-[10px] font-black uppercase tracking-wider">Week 3</span>
+            <Mountain class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" />
+          </div>
+          <div class="flex items-baseline justify-between mt-1">
+            <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {{ getRecruitCountByStage('STAGE_3') }}
+            </span>
+            <ChevronRight class="w-4 h-4 text-orange-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          </div>
+          <p class="text-[10px] text-orange-200/70 mt-1 truncate">
+            Final Week
+          </p>
+        </div>
+
+        <!-- 6. NEEDS REVIEW -->
+        <div
+          @click="selectedStageFilter = 'PENDING'"
+          class="rounded-2xl p-4 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden group border"
+          :class="selectedStageFilter === 'PENDING'
+            ? 'bg-[#4a1424] text-white border-rose-500/60 ring-2 ring-rose-500/40'
+            : 'bg-[#4a1424]/90 hover:bg-[#4a1424] text-white border-rose-800/40'"
+        >
+          <div class="flex items-center justify-between mb-2 text-rose-300">
+            <span class="text-[10px] font-black uppercase tracking-wider">
+              Needs Review
+            </span>
+            <Hourglass class="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform animate-pulse" />
+          </div>
+          <div class="flex items-baseline justify-between mt-1">
+            <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {{ pendingReviewCount }}
+            </span>
+            <ChevronRight class="w-4 h-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-rose-400" />
+          </div>
+          <p class="text-[10px] mt-1 truncate font-semibold text-rose-200/70">
+            Your Action Required
+          </p>
+        </div>
+      </template>
+
     </div>
 
     <!-- ==================== 3. MIDDLE SECTION: ACTION REQUIRED & TEAM PROGRESS ==================== -->
@@ -469,10 +621,10 @@
           </div>
           <div>
             <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
-              New Hire Journey
+              {{ (userStore.isDistrictManager || userStore.isHead) ? 'New Hire di Area Kamu' : 'New Hire Journey' }}
             </h3>
             <p class="text-xs text-slate-400 dark:text-slate-500">
-              Pantau progress setiap New Hire di tim kamu.
+              {{ (userStore.isDistrictManager || userStore.isHead) ? 'Pantau progress setiap New Hire di seluruh gerai area kamu.' : 'Pantau progress setiap New Hire di tim kamu.' }}
             </p>
           </div>
         </div>
@@ -495,12 +647,12 @@
             v-model="selectedStageFilter"
             class="text-xs font-semibold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#831843] cursor-pointer"
           >
-            <option value="ALL">Semua Tahap</option>
-            <option value="BUDDY">Captain Phase (Buddy)</option>
-            <option value="STAGE_1">Week 1</option>
-            <option value="STAGE_2">Week 2</option>
-            <option value="STAGE_3">Week 3</option>
-            <option value="PENDING">{{ userStore.isDistrictManager ? 'Menunggu Approval DM' : 'Needs Review / Pending' }}</option>
+            <option value="ALL">{{ (userStore.isDistrictManager || userStore.isHead) ? 'Semua Status' : 'Semua Tahap' }}</option>
+            <option value="BUDDY">{{ (userStore.isDistrictManager || userStore.isHead) ? 'Belum Mulai (Buddy)' : 'Captain Phase (Buddy)' }}</option>
+            <option value="STAGE_1">{{ (userStore.isDistrictManager || userStore.isHead) ? 'Minggu 1' : 'Week 1' }}</option>
+            <option value="STAGE_2">{{ (userStore.isDistrictManager || userStore.isHead) ? 'Minggu 2' : 'Week 2' }}</option>
+            <option value="STAGE_3">{{ (userStore.isDistrictManager || userStore.isHead) ? 'Minggu 3' : 'Week 3' }}</option>
+            <option value="PENDING">{{ (userStore.isDistrictManager || userStore.isHead) ? 'Menunggu Approval' : 'Needs Review / Pending' }}</option>
           </select>
         </div>
       </div>
@@ -827,6 +979,9 @@ import { useGamificationStore } from '~/stores/gamification.js'
 import { dashboardApi } from '~/services/api.js'
 import {
   Users,
+  UserPlus,
+  BookOpen,
+  ListTodo,
   CheckCircle2,
   Award,
   Hourglass,
@@ -1092,19 +1247,20 @@ const activeRecruits = computed(() => {
 })
 
 function formatRecruitItem(item) {
+  const isDm = Boolean(userStore.isDistrictManager || userStore.isHead)
   const pct = Math.round((item.completed / item.total) * 100) || 0
   let stagePillClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-  let stagePillLabel = 'Week 1'
+  let stagePillLabel = isDm ? 'Minggu 1' : 'Week 1'
 
   if (item.stage === 'BUDDY') {
     stagePillClass = 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-800 font-bold'
-    stagePillLabel = 'Captain Phase'
+    stagePillLabel = isDm ? 'Belum Mulai' : 'Captain Phase'
   } else if (item.stage === 'STAGE_2') {
     stagePillClass = 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300'
-    stagePillLabel = 'Week 2'
+    stagePillLabel = isDm ? 'Minggu 2' : 'Week 2'
   } else if (item.stage === 'STAGE_3') {
     stagePillClass = 'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300'
-    stagePillLabel = 'Week 3'
+    stagePillLabel = isDm ? 'Minggu 3' : 'Week 3'
   }
 
   let statusBadgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'

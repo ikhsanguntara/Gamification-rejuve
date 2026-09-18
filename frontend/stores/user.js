@@ -513,30 +513,35 @@ export const useUserStore = defineStore('user', {
     },
 
     async updateProfile(payload) {
-      const targetId = (payload && !(payload instanceof FormData) && payload.id) || this.currentUser?.id || this.currentUserId
+      const isFd = typeof FormData !== 'undefined' && payload instanceof FormData
+      const targetId = (!isFd && payload?.id) || this.currentUser?.id || this.currentUserId
       let updatedData = null
 
       if (this.isLiveApi || this.token) {
         try {
           let apiPayload
-          if (typeof FormData !== 'undefined' && payload instanceof FormData) {
+          if (isFd) {
             apiPayload = payload
           } else {
-            apiPayload = {}
-            if (payload.name !== undefined) apiPayload.name = payload.name
-            if (payload.gender !== undefined) apiPayload.gender = payload.gender
-            if (payload.phone !== undefined) apiPayload.phone = payload.phone
-            if (payload.avatarUrl !== undefined || payload.avatar !== undefined) {
-              apiPayload.avatarUrl = payload.avatarUrl || payload.avatar
-            }
-            if (payload.file || payload.avatarFile || (typeof File !== 'undefined' && payload.avatar instanceof File)) {
+            // Selalu gunakan FormData (multipart/form-data) sesuai spesifikasi Swagger PUT /auth/profile
+            if (typeof FormData !== 'undefined') {
               const fd = new FormData()
-              if (apiPayload.name) fd.append('name', apiPayload.name)
-              if (apiPayload.gender) fd.append('gender', apiPayload.gender)
-              if (apiPayload.phone) fd.append('phone', apiPayload.phone)
-              if (apiPayload.avatarUrl && typeof apiPayload.avatarUrl === 'string') fd.append('avatarUrl', apiPayload.avatarUrl)
-              fd.append('avatar', payload.file || payload.avatarFile || payload.avatar)
+              if (payload?.name !== undefined && payload?.name !== null) fd.append('name', payload.name)
+              if (payload?.gender !== undefined && payload?.gender !== null) fd.append('gender', payload.gender)
+              if (payload?.phone !== undefined && payload?.phone !== null) fd.append('phone', payload.phone)
+
+              // Cek file binary avatar vs avatarUrl string
+              const fileObj = payload?.file || payload?.avatarFile || ((typeof File !== 'undefined' && payload?.avatar instanceof File) ? payload.avatar : null)
+              if (fileObj) {
+                fd.append('avatar', fileObj)
+              } else if (payload?.avatarUrl && typeof payload.avatarUrl === 'string') {
+                fd.append('avatarUrl', payload.avatarUrl)
+              } else if (payload?.avatar && typeof payload.avatar === 'string') {
+                fd.append('avatarUrl', payload.avatar)
+              }
               apiPayload = fd
+            } else {
+              apiPayload = { ...payload }
             }
           }
 
@@ -559,13 +564,12 @@ export const useUserStore = defineStore('user', {
             }
           }
         } catch (err) {
-          console.warn('API updateProfile (PUT /auth/profile) failed:', err.message)
+          console.warn('API updateProfile (PUT /auth/profile multipart) failed:', err.message)
           throw err
         }
       }
 
       // Update local directory
-      const isFd = typeof FormData !== 'undefined' && payload instanceof FormData
       const localName = isFd ? payload.get('name') : payload?.name
       const localGender = isFd ? payload.get('gender') : payload?.gender
       const localPhone = isFd ? payload.get('phone') : payload?.phone

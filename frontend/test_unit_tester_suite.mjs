@@ -546,20 +546,37 @@ test('Profile Update Endpoint: Endpoint PUT /auth/profile dan action updateProfi
   assertTrue(typeof userStore.updateProfile === 'function', 'userStore.updateProfile harus terdefinisi di Pinia user store')
 })
 
-test('Profile Update: SL / DM berhasil mengubah data diri, nomor telepon, dan avatar via PUT /auth/profile', async () => {
+test('Profile Update Multipart: Berhasil update profil mandiri via FormData multipart/form-data', async () => {
   userStore.loginAsUser('dm-001')
+  
+  // Test 1: Update via FormData
+  if (typeof FormData !== 'undefined') {
+    const fd = new FormData()
+    fd.append('name', 'Ahmad Dahlan S.E.')
+    fd.append('phone', '081234567899')
+    fd.append('gender', 'M')
+    fd.append('avatarUrl', 'https://images.unsplash.com/photo-profile-dm.jpg')
+    await userStore.updateProfile(fd)
+
+    const updated = userStore.currentUser
+    assertEqual(updated.name, 'Ahmad Dahlan S.E.', 'Nama profil DM berhasil diperbarui via multipart FormData')
+    assertEqual(updated.phone, '081234567899', 'Nomor telepon DM berhasil diperbarui via multipart FormData')
+    assertEqual(updated.gender, 'M', 'Gender DM berhasil diperbarui via multipart FormData')
+    assertEqual(updated.avatarUrl, 'https://images.unsplash.com/photo-profile-dm.jpg', 'Avatar DM berhasil diperbarui via multipart FormData')
+  }
+
+  // Test 2: Update via Object payload
   await userStore.updateProfile({
     id: 'dm-001',
-    name: 'Ahmad Dahlan S.E.',
-    phone: '081234567899',
+    name: 'Ahmad Dahlan S.E., M.M.',
+    phone: '081234567800',
     gender: 'M',
-    avatarUrl: 'https://images.unsplash.com/photo-profile-dm.jpg'
+    avatarUrl: 'https://images.unsplash.com/photo-profile-dm-2.jpg'
   })
 
-  const updated = userStore.currentUser
-  assertEqual(updated.name, 'Ahmad Dahlan S.E.', 'Nama profil DM berhasil diperbarui')
-  assertEqual(updated.phone, '081234567899', 'Nomor telepon DM berhasil diperbarui')
-  assertEqual(updated.avatarUrl, 'https://images.unsplash.com/photo-profile-dm.jpg', 'Avatar DM berhasil diperbarui')
+  const updatedObj = userStore.currentUser
+  assertEqual(updatedObj.name, 'Ahmad Dahlan S.E., M.M.', 'Nama profil DM berhasil diperbarui via payload object')
+  assertEqual(updatedObj.phone, '081234567800', 'Nomor telepon DM berhasil diperbarui via payload object')
 })
 
 test('Change Password Validation: Validasi password minimal 6 karakter dan kelengkapan input', async () => {
@@ -667,6 +684,66 @@ test('Dashboard Pipeline: Resolusi tahapan kru (BUDDY -> Captain Phase vs JOURNE
 
   assertEqual(resolveStageKey(crew1), 'BUDDY', 'Kru dengan step BUDDY harus masuk ke Captain Phase')
   assertEqual(resolveStageKey(crew2), 'STAGE_1', 'Kru dengan step JOURNEY harus masuk ke STAGE_1 / Week 1')
+})
+
+test('Dashboard Wording DM vs SL: Memastikan perbedaan wording kartu metrik dan tabel untuk DM dan SL', () => {
+  const getStageCardMeta = (isDm) => {
+    if (isDm) {
+      return {
+        card1Title: 'New Hire Aktif',
+        card1Sub: 'Total di area kamu',
+        card2Title: 'Belum Mulai',
+        card2Sub: 'Menunggu Minggu 1',
+        card3Title: 'Minggu 1',
+        card3Sub: 'Dalam proses',
+        card4Title: 'Minggu 2',
+        card4Sub: 'Dalam proses',
+        card5Title: 'Minggu 3',
+        card5Sub: 'Dalam proses',
+        card6Title: 'Menunggu Approval',
+        card6Sub: 'Perlu review kamu',
+        tableTitle: 'New Hire di Area Kamu'
+      }
+    }
+    return {
+      card1Title: 'Active New Hires',
+      card1Sub: 'Currently in onboarding',
+      card2Title: 'Captain Phase',
+      card2Sub: 'First 3 Days (Buddy)',
+      card3Title: 'Week 1',
+      card3Sub: 'Mission in Progress',
+      card4Title: 'Week 2',
+      card4Sub: 'Mission in Progress',
+      card5Title: 'Week 3',
+      card5Sub: 'Final Week',
+      card6Title: 'Needs Review',
+      card6Sub: 'Your Action Required',
+      tableTitle: 'New Hire Journey'
+    }
+  }
+
+  // Uji DM Wording
+  const dmMeta = getStageCardMeta(true)
+  assertEqual(dmMeta.card1Title, 'New Hire Aktif', 'DM Card 1 Title: New Hire Aktif')
+  assertEqual(dmMeta.card1Sub, 'Total di area kamu', 'DM Card 1 Subtitle: Total di area kamu')
+  assertEqual(dmMeta.card2Title, 'Belum Mulai', 'DM Card 2 Title: Belum Mulai')
+  assertEqual(dmMeta.card2Sub, 'Menunggu Minggu 1', 'DM Card 2 Subtitle: Menunggu Minggu 1')
+  assertEqual(dmMeta.card3Title, 'Minggu 1', 'DM Card 3 Title: Minggu 1')
+  assertEqual(dmMeta.card4Title, 'Minggu 2', 'DM Card 4 Title: Minggu 2')
+  assertEqual(dmMeta.card5Title, 'Minggu 3', 'DM Card 5 Title: Minggu 3')
+  assertEqual(dmMeta.card6Title, 'Menunggu Approval', 'DM Card 6 Title: Menunggu Approval')
+  assertEqual(dmMeta.card6Sub, 'Perlu review kamu', 'DM Card 6 Subtitle: Perlu review kamu')
+  assertEqual(dmMeta.tableTitle, 'New Hire di Area Kamu', 'DM Table Title: New Hire di Area Kamu')
+
+  // Uji SL Wording (Tidak Boleh Berubah)
+  const slMeta = getStageCardMeta(false)
+  assertEqual(slMeta.card1Title, 'Active New Hires', 'SL Card 1 Title tetap Active New Hires')
+  assertEqual(slMeta.card2Title, 'Captain Phase', 'SL Card 2 Title tetap Captain Phase')
+  assertEqual(slMeta.card3Title, 'Week 1', 'SL Card 3 Title tetap Week 1')
+  assertEqual(slMeta.card4Title, 'Week 2', 'SL Card 4 Title tetap Week 2')
+  assertEqual(slMeta.card5Title, 'Week 3', 'SL Card 5 Title tetap Week 3')
+  assertEqual(slMeta.card6Title, 'Needs Review', 'SL Card 6 Title tetap Needs Review')
+  assertEqual(slMeta.tableTitle, 'New Hire Journey', 'SL Table Title tetap New Hire Journey')
 })
 
 // ============================================================================

@@ -15,12 +15,12 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-VPS_HOST="103.168.147.133"
+VPS_HOST="145.79.11.188"
 VPS_USER="root"
 VPS_PORT="22"
-VPS_PASS="${VPS_SSH_PASS:-M@Gn4#!__D3V@@2026}"
+VPS_PASS="${VPS_SSH_PASS:-M@Gn4#D3V@2026}"
 VPS_REMOTE_DIR="/opt/rejuve-gamification"
-API_BASE_URL="${NUXT_PUBLIC_API_BASE:-http://103.168.147.133:3005/api}"
+API_BASE_URL="${NUXT_PUBLIC_API_BASE:-http://145.79.11.188:3005/api}"
 
 # Pastikan script berada di root direktori project
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -82,10 +82,26 @@ expect {
 }
 EOF
 
-  # Stream tarball aset langsung ke VPS dan reload Nginx
+  # Stream tarball aset langsung ke VPS dan jalankan/reload container Nginx
   expect <<EOF
 set timeout 180
-spawn bash -c "tar -czf - -C frontend/.output/public . | ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${VPS_PORT} ${VPS_USER}@${VPS_HOST} 'tar -xzf - -C ${VPS_REMOTE_DIR}/frontend/.output/public && docker cp ${VPS_REMOTE_DIR}/frontend/.output/public/. gamification-frontend:/usr/share/nginx/html/ 2>/dev/null || true && docker exec gamification-frontend nginx -s reload 2>/dev/null || (cd ${VPS_REMOTE_DIR} && docker compose up -d --no-build gamification-frontend)'"
+spawn bash -c "tar -czf - -C frontend/.output/public . | ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${VPS_PORT} ${VPS_USER}@${VPS_HOST} '
+  mkdir -p ${VPS_REMOTE_DIR}/frontend/.output/public
+  tar -xzf - -C ${VPS_REMOTE_DIR}/frontend/.output/public
+  
+  if ! docker ps -a --format \"{{.Names}}\" | grep -q \"^gamification-frontend$\"; then
+    echo \"Container gamification-frontend belum ada, membuat container baru dengan Nginx...\"
+    docker run -d --name gamification-frontend --restart unless-stopped \
+      -p 3006:80 \
+      -m 128m --memory-reservation 32m \
+      -v ${VPS_REMOTE_DIR}/frontend/.output/public:/usr/share/nginx/html:ro \
+      -v ${VPS_REMOTE_DIR}/frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
+      nginx:alpine
+  else
+    docker cp ${VPS_REMOTE_DIR}/frontend/.output/public/. gamification-frontend:/usr/share/nginx/html/ 2>/dev/null || true
+    docker exec gamification-frontend nginx -s reload 2>/dev/null || docker restart gamification-frontend
+  fi
+'"
 expect {
   "password:" {
     send "${VPS_PASS}\r"

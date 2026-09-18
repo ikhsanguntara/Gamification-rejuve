@@ -289,7 +289,7 @@
                     </div>
                     <p class="text-[11px] text-slate-400">
                       <span v-if="avatarFileName" class="text-emerald-600 dark:text-emerald-400 font-semibold">📁 {{ avatarFileName }}</span>
-                      <span v-else>Mendukung format PNG, JPG, atau WEBP maks 5MB. Foto profil baru akan langsung diterapkan.</span>
+                      <span v-else>Mendukung format PNG, JPG, JPEG, atau WEBP maks 2MB. Foto profil baru akan langsung diterapkan.</span>
                     </p>
                   </div>
 
@@ -684,8 +684,9 @@ function handleFileUpload(event) {
   const file = event.target.files?.[0]
   if (!file) return
 
-  if (file.size > 5 * 1024 * 1024) {
-    profileMessage.text = 'Ukuran file terlalu besar! Maksimal 5MB.'
+  // Batas ukuran berkas sesuai spesifikasi Swagger PUT /auth/profile: maks 2MB
+  if (file.size > 2 * 1024 * 1024) {
+    profileMessage.text = 'Ukuran file terlalu besar! Maksimal 2MB.'
     profileMessage.type = 'error'
     return
   }
@@ -725,30 +726,26 @@ async function handleSaveProfile() {
   profileMessage.text = ''
 
   try {
-    let payload
+    // Susun request body multipart/form-data sesuai Swagger PUT /auth/profile
+    const formData = new FormData()
+    formData.append('name', profileForm.name.trim())
+    formData.append('phone', profileForm.phone ? profileForm.phone.trim() : '')
+    formData.append('gender', profileForm.gender || 'M')
 
     if (avatarMode.value === 'upload' && selectedAvatarFile.value) {
-      const formData = new FormData()
-      formData.append('name', profileForm.name.trim())
-      formData.append('phone', profileForm.phone ? profileForm.phone.trim() : '')
-      formData.append('gender', profileForm.gender)
+      // 1. Berkas gambar binary (avatar)
       formData.append('avatar', selectedAvatarFile.value)
-      payload = formData
     } else {
+      // 2. Alternatif URL string (avatarUrl)
       const finalAvatar = avatarMode.value === 'upload'
         ? (uploadedDataUrl.value || profileForm.avatarUrl)
         : profileForm.avatarUrl
-
-      payload = {
-        name: profileForm.name.trim(),
-        phone: profileForm.phone ? profileForm.phone.trim() : '',
-        gender: profileForm.gender,
-        avatarUrl: finalAvatar,
-        avatar: finalAvatar
+      if (finalAvatar) {
+        formData.append('avatarUrl', finalAvatar)
       }
     }
 
-    await userStore.updateProfile(payload)
+    await userStore.updateProfile(formData)
 
     selectedAvatarFile.value = null
     profileMessage.text = 'Profil Anda berhasil diperbarui!'
