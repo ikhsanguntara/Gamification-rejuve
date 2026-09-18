@@ -586,6 +586,31 @@ test('Change Password Validation: Validasi password minimal 6 karakter dan kelen
   assertTrue(Boolean(validRes), 'Change password dengan input valid berhasil dieksekusi')
 })
 
+test('First Login Bonus Modal: Crew pertama kali login menerima 5 bintang dan 100 poin sambutan', () => {
+  // Reset previous state
+  userStore.dismissWelcomeReward('test-crew-first-login')
+  
+  // Login sebagai Crew baru
+  userStore.createUser({
+    id: 'test-crew-first-login',
+    name: 'Intan Permata',
+    role: 'CREW',
+    email: 'intan.p@rejuve.co.id'
+  })
+  userStore.loginAsUser('test-crew-first-login')
+
+  assertTrue(Boolean(userStore.pendingWelcomeReward), 'Kru baru harus memiliki pendingWelcomeReward aktif')
+  assertEqual(userStore.pendingWelcomeReward?.starsEarned, 5, 'Bonus Bintang login pertama adalah +5 Bintang')
+  assertEqual(userStore.pendingWelcomeReward?.pointsEarned, 100, 'Bonus Poin login pertama adalah +100 Pts')
+
+  // Dismiss reward
+  userStore.dismissWelcomeReward('test-crew-first-login')
+  assertEqual(userStore.pendingWelcomeReward, null, 'Setelah dismiss, pendingWelcomeReward bernilai null')
+  
+  // Bersihkan data
+  userStore.deleteUser('test-crew-first-login')
+})
+
 // ============================================================================
 // ============================================================================
 // SUITE 9: VALIDASI RESTRIKSI TAHAPAN ONBOARDING (BUDDY SEBELUM JOURNEY)

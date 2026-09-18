@@ -379,6 +379,22 @@ export const useUserStore = defineStore('user', {
         this.currentUserId = user.id
         this.isAuthenticated = true
 
+        const r = typeof user.role === 'string' ? user.role : user.role?.roleCode
+        if (r === 'CREW') {
+          const seenKey = `rejuve_welcome_seen_${user.id}`
+          const alreadySeen = typeof localStorage !== 'undefined' ? localStorage.getItem(seenKey) : null
+          if (!alreadySeen && !this.pendingWelcomeReward) {
+            this.pendingWelcomeReward = {
+              claimed: true,
+              starsEarned: 5,
+              pointsEarned: 100,
+              tierLabel: 'Tepat Waktu (H0)',
+              message: 'Selamat datang di Re.juve! Bonus Poin & Bintang First Login telah berhasil dicairkan.'
+            }
+            setStoredData('rejuve_welcome_reward', this.pendingWelcomeReward)
+          }
+        }
+
         const batchStore = useBatchStore()
         if (user.batchId) {
           batchStore.selectBatch(user.batchId)

@@ -113,7 +113,7 @@
             </span>
             <span class="text-[9px] font-mono text-slate-400">pwd: password123</span>
           </div>
-          <div class="grid grid-cols-3 gap-1.5">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             <button
               v-for="acc in devAccounts"
               :key="acc.email"
@@ -164,9 +164,10 @@ const isLocalDev = ref(false)
 
 // Akun pintasan cepat untuk dev lokal Mac / Localhost
 const devAccounts = [
-  { label: 'Super Admin', role: 'SUPERADMIN', email: 'superadmin@example.com' },
+  { label: 'Crew (Intan)', role: 'CREW', email: 'crew@example.com' },
   { label: 'Store Leader', role: 'STORE_LEADER', email: 'sl@example.com' },
-  { label: 'District Mgr', role: 'DISTRICT_MGR', email: 'dm@example.com' }
+  { label: 'District Mgr', role: 'DISTRICT_MGR', email: 'dm@example.com' },
+  { label: 'Super Admin', role: 'SUPERADMIN', email: 'superadmin@example.com' }
 ]
 
 const quickFill = (acc) => {
