@@ -20,6 +20,67 @@ const { normalizeStorageUrl } = require('../../utils/minioStorage');
 const notificationService = require('../notifications/notification.service');
 
 /**
+ * Helper untuk menyematkan metadata status penilaian (SL vs DM) dan toleransi week lampau:
+ * - isSlScored: true jika SL telah memberikan penilaian (tlScore !== null).
+ * - isDmScored: true jika DM telah memberikan penilaian (dmScore !== null).
+ * - isDirectDmScore: true jika DM memberikan nilai langsung tanpa nilai SL (murni skor DM).
+ * - isPastPeriod: true jika minggu / periode misi telah berakhir bagi SL (closed for SL).
+ * - isSlMissed: true jika periode misi sudah lewat tapi SL belum menilai (tlScore === null).
+ * - canDmDirectScore: true jika DM diperbolehkan menilai langsung misi ini tanpa menunggu SL.
+ */
+const enrichEvaluationFlags = (userMission) => {
+  if (!userMission) return userMission;
+
+  const mission = userMission.mission;
+  const isJourney = mission?.type === 'JOURNEY';
+
+  const isSlScored = userMission.tlScore !== null && userMission.tlScore !== undefined;
+  const isDmScored = userMission.dmScore !== null && userMission.dmScore !== undefined;
+  const isDirectDmScore = Boolean(isJourney && isDmScored && !isSlScored);
+
+  // Cek apakah periode penilaian misi sudah lewat bagi SL (past week / closed for SL)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const isPastWeekNumber = Boolean(
+    mission?.weekOrDayNumber &&
+    mission?.batch?.currentWeek &&
+    mission.weekOrDayNumber < mission.batch.currentWeek
+  );
+
+  const isPastEndDate = Boolean(
+    mission?.endDate &&
+    today > new Date(mission.endDate)
+  );
+
+  const isPastBatchDetailEnd = Boolean(
+    mission?.batchDetail?.endDate &&
+    today > new Date(mission.batchDetail.endDate)
+  );
+
+  const isPastPeriod = Boolean(isPastWeekNumber || isPastEndDate || isPastBatchDetailEnd);
+  const isSlMissed = Boolean(isJourney && isPastPeriod && !isSlScored);
+
+  // DM bisa langsung menilai jika misi bertipe JOURNEY, belum approved/completed, belum dinilai SL, dan periodenya sudah lewat
+  const canDmDirectScore = Boolean(
+    isJourney &&
+    isSlMissed &&
+    userMission.status !== 'APPROVED_BY_DM' &&
+    userMission.status !== 'COMPLETED'
+  );
+
+  return {
+    ...userMission,
+    isSlScored,
+    isDmScored,
+    isDirectDmScore,
+    isPastPeriod,
+    isSlMissed,
+    canDmDirectScore
+  };
+};
+
+/**
  * Ambil daftar user missions dengan dynamic query filter.
  */
 const getUserMissions = async (query = {}, currentUser = null) => {
@@ -87,7 +148,9 @@ const getUserMissions = async (query = {}, currentUser = null) => {
       skip,
       take: limit,
       include: {
-        mission: true,
+        mission: {
+          include: { batch: true, batchDetail: true }
+        },
         user: {
           select: {
             userId: true,
@@ -110,7 +173,8 @@ const getUserMissions = async (query = {}, currentUser = null) => {
     })
   ]);
 
-  return { userMissions, total, page, limit };
+  const enrichedMissions = userMissions.map(m => enrichEvaluationFlags(m));
+  return { userMissions: enrichedMissions, total, page, limit };
 };
 
 /**
@@ -143,7 +207,8 @@ const getUserMissionById = async (userMissionId) => {
     }
   });
 
-  return data;
+  if (!data) return null;
+  return enrichEvaluationFlags(data);
 };
 
 /**
@@ -446,8 +511,14 @@ const getWorkstationCrews = async (currentUser, query = {}) => {
     const crewMissions = missionsByCrew[crew.userId] || [];
     const totalMissionsCount = crewMissions.length;
 
-    // Hitung berapa misi yang sudah dinilai
-    const evaluatedMissions = crewMissions.filter(m => m.status !== 'LOCKED' && m.status !== 'ACTIVE');
+    // Hitung berapa misi yang sudah dinilai (disesuaikan dengan role evaluator)
+    const isDmRole = userRole === 'DISTRICT_MANAGER';
+    const evaluatedMissions = crewMissions.filter(m => {
+      if (isDmRole) {
+        return m.status === 'APPROVED_BY_DM' || m.status === 'COMPLETED';
+      }
+      return m.status !== 'LOCKED' && m.status !== 'ACTIVE';
+    });
     const evaluatedCount = evaluatedMissions.length;
 
     // Tentukan status badge kartu
@@ -569,7 +640,9 @@ const getCrewMissions = async (targetUserId, currentUser, query = {}, req = null
     prisma.userMission.findMany({
       where,
       include: {
-        mission: true,
+        mission: {
+          include: { batch: true, batchDetail: true }
+        },
         tl: { select: { userId: true, name: true, email: true } },
         dm: { select: { userId: true, name: true, email: true } }
       },
@@ -596,7 +669,7 @@ const getCrewMissions = async (targetUserId, currentUser, query = {}, req = null
 
   const step = calculateCrewActiveStep(allBatchMissions);
 
-  const formattedMissions = missions.map(m => ({
+  const formattedMissions = missions.map(m => enrichEvaluationFlags({
     ...m,
     evidenceUrl: normalizeStorageUrl(m.evidenceUrl, req)
   }));
@@ -854,6 +927,7 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
     include: {
       mission: {
         include: {
+          batch: true,
           batchDetail: true
         }
       },
@@ -869,14 +943,36 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
     throw new Error('Hanya misi bertipe JOURNEY yang memerlukan approval DM.');
   }
 
+  const isSlScored = userMission.tlScore !== null && userMission.tlScore !== undefined;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const isPastWeekNumber = Boolean(
+    userMission.mission?.weekOrDayNumber &&
+    userMission.mission?.batch?.currentWeek &&
+    userMission.mission.weekOrDayNumber < userMission.mission.batch.currentWeek
+  );
+
+  const isPastEndDate = Boolean(
+    userMission.mission?.endDate &&
+    today > new Date(userMission.mission.endDate)
+  );
+
+  const isPastBatchDetailEnd = Boolean(
+    userMission.mission?.batchDetail?.endDate &&
+    today > new Date(userMission.mission.batchDetail.endDate)
+  );
+
+  const isPastPeriod = Boolean(isPastWeekNumber || isPastEndDate || isPastBatchDetailEnd);
+  const isSlMissed = Boolean(!isSlScored && isPastPeriod);
+
   // WAKTU REVIEW & KEBIJAKAN isLock UNTUK DM:
   // isLock HANYA berlaku bagi District Manager (DM).
   // Jika periode template Journey telah berakhir dan template dikunci (isLock === true), DM ditolak.
   // Jika isLock === false (dispensasi aktif), DM tetap diizinkan mereview pasca-deadline.
   const batchDetail = userMission.mission?.batchDetail;
   if (batchDetail && batchDetail.endDate) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     const periodEnd = new Date(batchDetail.endDate);
     periodEnd.setHours(23, 59, 59, 999);
 
@@ -886,8 +982,21 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
     }
   }
 
-  if (userMission.status !== 'SCORED_BY_TL' && userMission.status !== 'REVISED_BY_DM') {
-    throw new Error(`Misi tidak dapat di-review pada status saat ini: ${userMission.status}.`);
+  // VALIDASI KELAYAKAN STATUS REVIEW DM:
+  // 1. Normal: Misi sudah dinilai SL (status SCORED_BY_TL atau REVISED_BY_DM).
+  // 2. SL Missed: Periode week telah lewat bagi SL, SL belum menilai (isSlMissed === true).
+  //    DM diizinkan langsung menilai misi (status bukan APPROVED_BY_DM atau COMPLETED).
+  if (!isSlScored) {
+    if (!isSlMissed) {
+      throw new Error('Store Leader belum melakukan penilaian untuk misi minggu ini. District Manager hanya dapat mereview setelah dinilai Store Leader atau setelah periode minggu berakhir.');
+    }
+    if (userMission.status === 'APPROVED_BY_DM' || userMission.status === 'COMPLETED') {
+      throw new Error(`Misi sudah selesai dan berstatus: ${userMission.status}.`);
+    }
+  } else {
+    if (userMission.status !== 'SCORED_BY_TL' && userMission.status !== 'REVISED_BY_DM') {
+      throw new Error(`Misi tidak dapat di-review pada status saat ini: ${userMission.status}.`);
+    }
   }
 
   const normalizedAction = action?.toUpperCase();
@@ -903,6 +1012,10 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
         dmNotes: notes,
         dmReviewedAt: new Date(),
         status: 'REVISED_BY_DM'
+      },
+      include: {
+        mission: { include: { batch: true, batchDetail: true } },
+        user: true
       }
     });
 
@@ -926,9 +1039,10 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
       emitToRole('STORE_LEADER', 'evaluation:revised', revisePayload);
     }
 
+    const enriched = enrichEvaluationFlags(updated);
     return {
-      ...updated,
-      userMission: updated
+      ...enriched,
+      userMission: enriched
     };
   }
 
@@ -940,12 +1054,17 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
         dmNotes: notes || null,
         dmReviewedAt: new Date(),
         status: 'REJECTED'
+      },
+      include: {
+        mission: { include: { batch: true, batchDetail: true } },
+        user: true
       }
     });
 
+    const enriched = enrichEvaluationFlags(updated);
     return {
-      ...updated,
-      userMission: updated
+      ...enriched,
+      userMission: enriched
     };
   }
 
@@ -955,10 +1074,16 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
     }
 
     const dmScoreNum = parseFloat(Math.max(0, Math.min(100, Number(score))).toFixed(1));
-    const tlScoreNum = userMission.tlScore !== null && userMission.tlScore !== undefined ? userMission.tlScore : dmScoreNum;
 
-    // Average DM + SL Score
-    const finalScore = parseFloat(((tlScoreNum + dmScoreNum) / 2).toFixed(1));
+    // FORMULA SKOR FINAL:
+    // 1. Jika SL sudah menilai (isSlScored): rata-rata (tlScore + dmScore) / 2
+    // 2. Jika SL terlewat / tidak mengisi (isSlMissed): murni 100% skor DM
+    let finalScore;
+    if (isSlScored) {
+      finalScore = parseFloat(((userMission.tlScore + dmScoreNum) / 2).toFixed(1));
+    } else {
+      finalScore = dmScoreNum;
+    }
     const starsEarned = parseFloat(((finalScore / 100) * 5).toFixed(1));
 
     const result = await prisma.$transaction(async (tx) => {
@@ -973,7 +1098,12 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
           dmReviewedAt: new Date(),
           status: 'APPROVED_BY_DM'
         },
-        include: { mission: true, user: true }
+        include: {
+          mission: {
+            include: { batch: true, batchDetail: true }
+          },
+          user: true
+        }
       });
 
       // Award stars & points ke user profile
@@ -1040,7 +1170,9 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
       finalScore,
       stars: starsEarned,
       status: 'APPROVED_BY_DM',
-      missionTitle: userMission.mission?.missionTitle
+      missionTitle: userMission.mission?.missionTitle,
+      isSlScored,
+      isDirectDmScore: !isSlScored
     };
     if (userMission.tlId) {
       emitToUser(userMission.tlId, 'evaluation:approved', approvePayload);
@@ -1050,6 +1182,8 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
         message: `Evaluasi misi "${userMission.mission?.missionTitle}" kru ${userMission.user?.name || ''} telah disetujui DM.`,
         type: 'DM_APPROVED'
       }).catch(() => {});
+    } else {
+      emitToRole('STORE_LEADER', 'evaluation:approved', approvePayload);
     }
     emitToUser(userMission.userId, 'evaluation:approved', approvePayload);
     notificationService.createNotification({
@@ -1072,9 +1206,10 @@ const reviewJourneyByDM = async (userMissionId, dmId, { action, score, notes }) 
       });
     }
 
+    const enrichedUserMission = enrichEvaluationFlags(result.userMission);
     return {
-      ...result.userMission,
-      userMission: result.userMission,
+      ...enrichedUserMission,
+      userMission: enrichedUserMission,
       gamification: result.gamification
     };
   }

@@ -382,13 +382,20 @@ const createBatch = async (payload, creatorId = null) => {
     code,
     name,
     startDate,
-    status = 'DRAFT',
+    status: rawStatus,
+    isDraft,
     currentWeek = 1,
     tplJourneyId,
     tplBuddyId = null,
     tplFeedbackId = null,
     crewIds = []
   } = payload;
+
+  let status = rawStatus;
+  if (!status && isDraft !== undefined) {
+    status = isDraft ? 'DRAFT' : 'OPEN';
+  }
+  if (!status) status = 'DRAFT';
 
   if (!name || !startDate || !tplJourneyId) {
     throw new Error('Field "name", "startDate", dan "tplJourneyId" wajib diisi.');
@@ -529,7 +536,7 @@ const createBatch = async (payload, creatorId = null) => {
     });
   });
 
-  return result;
+  return await enrichSingleBatchWithTotalWeeks(result);
 };
 
 /**
@@ -947,6 +954,8 @@ const enrichBatchesWithTotalWeeks = async (batches, currentUser = null) => {
     b.averageScore = bAvgScore;
     b.totalStars = parseFloat(bStarsSum.toFixed(1));
     b.totalCrew = b.users?.length ?? b._count?.users ?? 0;
+    b.isDraft = b.status === 'DRAFT';
+    b.isGenerated = (b.missions?.length ?? b._count?.missions ?? 0) > 0;
   }
 
   return batches;
@@ -1116,6 +1125,8 @@ const enrichSingleBatchWithTotalWeeks = async (batch, currentUser = null) => {
   batch.completedMissions = completedBatchUms.length;
   batch.averageScore = avgScore;
   batch.totalStars = parseFloat(starsSum.toFixed(1));
+  batch.isDraft = batch.status === 'DRAFT';
+  batch.isGenerated = (batch.missions?.length ?? batch._count?.missions ?? 0) > 0;
 
   return batch;
 };
@@ -1354,26 +1365,145 @@ const getBatchById = async (batchId, currentUser = null, req = null) => {
  * Update data batch atau lock status.
  */
 const updateBatch = async (batchId, payload, updaterId = null) => {
-  const { name, code, currentWeek, status, isLock, crewIds } = payload;
+  const {
+    name,
+    code,
+    startDate,
+    currentWeek,
+    status: rawStatus,
+    isDraft,
+    isLock,
+    crewIds,
+    tplJourneyId,
+    tplBuddyId,
+    tplFeedbackId
+  } = payload;
 
   const existing = await prisma.batch.findUnique({
     where: { batchId },
-    include: { missions: true }
+    include: {
+      missions: true,
+      details: {
+        include: { tplMission: { include: { details: true } } }
+      }
+    }
   });
 
   if (!existing) {
     return null;
   }
 
-  if (existing.status === 'DRAFT' && status === 'OPEN' && existing.missions.length === 0) {
-    await generateBatch(batchId, updaterId);
+  // Resolusi status dari payload.status atau payload.isDraft
+  let resolvedStatus = rawStatus;
+  if (resolvedStatus === undefined && isDraft !== undefined) {
+    resolvedStatus = isDraft ? 'DRAFT' : 'OPEN';
   }
 
   const dataToUpdate = { updatedBy: updaterId };
-  if (name !== undefined) dataToUpdate.name = name;
-  if (code !== undefined) dataToUpdate.code = code;
+  if (name !== undefined) dataToUpdate.name = String(name).trim();
+  if (code !== undefined) dataToUpdate.code = String(code).trim();
   if (currentWeek !== undefined) dataToUpdate.currentWeek = Number(currentWeek);
-  if (status !== undefined) dataToUpdate.status = status;
+  if (resolvedStatus !== undefined) dataToUpdate.status = resolvedStatus;
+
+  // Jika batch masih DRAFT, izinkan perubahan startDate dan pergantian template master
+  if (existing.status === 'DRAFT') {
+    let tplJourney = null;
+    let tplBuddy = null;
+    let tplFeedback = null;
+
+    const existingJourney = existing.details.find(d => d.tplMission?.type === 'JOURNEY')?.tplMission;
+    const existingBuddy = existing.details.find(d => d.tplMission?.type === 'BUDDY')?.tplMission;
+    const existingFeedback = existing.details.find(d => d.tplMission?.type === 'FEEDBACK')?.tplMission;
+
+    // Resolve Journey
+    if (tplJourneyId) {
+      tplJourney = await prisma.tplMission.findUnique({
+        where: { tplMissionId: tplJourneyId },
+        include: { details: true }
+      });
+    } else {
+      tplJourney = existingJourney;
+    }
+
+    // Resolve Buddy
+    if (tplBuddyId !== undefined) {
+      if (tplBuddyId && tplBuddyId !== 'NONE') {
+        tplBuddy = await prisma.tplMission.findUnique({
+          where: { tplMissionId: tplBuddyId },
+          include: { details: true }
+        });
+      } else {
+        tplBuddy = null;
+      }
+    } else {
+      tplBuddy = existingBuddy;
+    }
+
+    // Resolve Feedback
+    if (tplFeedbackId !== undefined) {
+      if (tplFeedbackId && tplFeedbackId !== 'NONE') {
+        tplFeedback = await prisma.tplMission.findUnique({
+          where: { tplMissionId: tplFeedbackId },
+          include: { details: true }
+        });
+      } else {
+        tplFeedback = null;
+      }
+    } else {
+      tplFeedback = existingFeedback;
+    }
+
+    const resolvedStartDate = startDate ? toDateOnly(startDate) : existing.startDate;
+    dataToUpdate.startDate = resolvedStartDate;
+
+    if (tplJourney) {
+      const timeline = calculateTimeline(resolvedStartDate, tplBuddy, tplJourney, tplFeedback);
+      dataToUpdate.endDate = timeline.batchEndDate;
+
+      // Perbarui draft batchDetails jika tanggal atau template diubah
+      if (startDate || tplJourneyId || tplBuddyId !== undefined || tplFeedbackId !== undefined) {
+        await prisma.batchDetail.deleteMany({ where: { batchId } });
+
+        const draftDetails = [
+          {
+            batchId,
+            tplMissionId: tplJourney.tplMissionId,
+            status: 'DRAFT',
+            startDate: timeline.journeySchedule.startDate,
+            endDate: timeline.journeySchedule.endDate,
+            isLock: true,
+            createdBy: updaterId
+          }
+        ];
+
+        if (timeline.buddySchedule) {
+          draftDetails.push({
+            batchId,
+            tplMissionId: tplBuddy.tplMissionId,
+            status: 'DRAFT',
+            startDate: timeline.buddySchedule.startDate,
+            endDate: timeline.buddySchedule.endDate,
+            isLock: true,
+            createdBy: updaterId
+          });
+        }
+
+        if (timeline.feedbackSchedule) {
+          draftDetails.push({
+            batchId,
+            tplMissionId: tplFeedback.tplMissionId,
+            status: 'DRAFT',
+            startDate: timeline.feedbackSchedule.startDate,
+            endDate: timeline.feedbackSchedule.endDate,
+            isLock: true,
+            createdBy: updaterId
+          });
+        }
+
+        await prisma.batchDetail.createMany({ data: draftDetails });
+      }
+    }
+  }
 
   await prisma.batch.update({
     where: { batchId },
@@ -1398,6 +1528,11 @@ const updateBatch = async (batchId, payload, updaterId = null) => {
         data: { batchId }
       });
     }
+  }
+
+  // Jika status bertransisi dari DRAFT ke OPEN dan misi belum digenerate, langsung jalankan generateBatch!
+  if (existing.status === 'DRAFT' && resolvedStatus === 'OPEN' && existing.missions.length === 0) {
+    await generateBatch(batchId, updaterId);
   }
 
   const updated = await getBatchById(batchId);

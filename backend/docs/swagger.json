@@ -2414,6 +2414,11 @@
                     "example": [
                       "UUID-USER-CREW-1"
                     ]
+                  },
+                  "isDraft": {
+                    "type": "boolean",
+                    "description": "Jika true, batch disimpan sebagai draft dan misi belum di-generate",
+                    "example": true
                   }
                 }
               }
@@ -2556,6 +2561,34 @@
                   "endDate": {
                     "type": "string",
                     "format": "date-time"
+                  },
+                  "isDraft": {
+                    "type": "boolean",
+                    "description": "Ubah draft ke published/open. Jika diubah ke false saat DRAFT, otomatis men-generate misi atomik.",
+                    "example": false
+                  },
+                  "tplJourneyId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Pergantian Template Journey (hanya saat DRAFT)"
+                  },
+                  "tplBuddyId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Pergantian Template Buddy (hanya saat DRAFT)"
+                  },
+                  "tplFeedbackId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Pergantian Template Feedback (hanya saat DRAFT)"
+                  },
+                  "crewIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "description": "Daftar ID Kru baru untuk batch ini"
                   }
                 }
               }
@@ -3145,7 +3178,8 @@
           "200": {
             "description": "Review DM berhasil diproses."
           }
-        }
+        },
+        "description": "Review evaluasi Journey oleh DM. Jika Store Leader (SL) tidak mengisi pada periode/week yang telah lewat, DM diizinkan menilai langsung tanpa nilai SL (100% skor DM, isSlScored: false, isDirectDmScore: true)."
       }
     },
     "/evaluations/user-missions/{id}/sl-score": {
