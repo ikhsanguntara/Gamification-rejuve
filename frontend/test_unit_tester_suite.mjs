@@ -2,10 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import {
   calculateStars,
   starsToPoints,
-  calculateAverageDmSl,
-  calculateStarLevel,
-  getNextStarLevel,
-  getStarProgress
+  calculateAverageDmSl
 } from './utils/star.js'
 import {
   MISSION_STATUSES,
@@ -62,9 +59,9 @@ const pinia = createPinia()
 setActivePinia(pinia)
 
 // ============================================================================
-// SUITE 1: FORMULA PERHITUNGAN BINTANG & GAMIFIKASI (utils/star.js)
+// SUITE 1: FORMULA PERHITUNGAN BINTANG & POIN GAMIFIKASI (utils/star.js)
 // ============================================================================
-console.log('📌 1. Menguji Formula Perhitungan Bintang & Gamifikasi (Happy Path & Edge Cases):')
+console.log('📌 1. Menguji Formula Perhitungan Bintang & Poin Gamifikasi (Happy Path & Edge Cases):')
 
 // 1.1 Happy Path
 test('calculateStars: skor 100 menghasilkan 5.0 bintang', () => {
@@ -105,7 +102,7 @@ test('calculateStars: input tidak valid (null, undefined, NaN, "abc") harus aman
   assertEqual(calculateStars('invalid_text'), 0)
 })
 
-// 1.3 Stars to Points
+// 1.3 Stars to Points (1 Bintang = 20 Points)
 test('starsToPoints: konversi 5.0 bintang menjadi 100 poin', () => {
   assertEqual(starsToPoints(5), 100)
 })
@@ -118,22 +115,49 @@ test('starsToPoints: konversi 56.5 bintang menjadi 1130 poin (Leaderboard spec)'
   assertEqual(starsToPoints(56.5), 1130)
 })
 
+test('starsToPoints: konversi 100 bintang menjadi 2000 poin', () => {
+  assertEqual(starsToPoints(100), 2000)
+})
+
 test('starsToPoints: input null/undefined menghasilkan 0 poin', () => {
   assertEqual(starsToPoints(null), 0)
   assertEqual(starsToPoints(undefined), 0)
 })
 
-// 1.4 Rumus Rata-rata SL & DM ((SL + DM) / 2)
-test('calculateAverageDmSl: SL=78 dan DM=85 menghasilkan avgScore 81.5 dan 4.1 bintang', () => {
-  const res = calculateAverageDmSl(78, 85)
+// 1.4 Rumus Rata-rata SL & DM ((SL + DM) / 2) vs Penilaian Murni DM (isSlNotScored: true)
+test('calculateAverageDmSl: SL=78 dan DM=85 (Reguler) menghasilkan avgScore 81.5 dan 4.1 bintang', () => {
+  const res = calculateAverageDmSl(78, 85, false)
   assertEqual(res.avgScore, 81.5)
   assertEqual(res.stars, 4.1)
+  assertEqual(res.isPureDm, false)
 })
 
 test('calculateAverageDmSl: SL=100 dan DM=100 menghasilkan avgScore 100 dan 5.0 bintang', () => {
   const res = calculateAverageDmSl(100, 100)
   assertEqual(res.avgScore, 100)
   assertEqual(res.stars, 5.0)
+  assertEqual(res.isPureDm, false)
+})
+
+test('calculateAverageDmSl: SL Tidak Menilai / Auto-Forward Job (isSlNotScored: true) menghasilkan nilai murni DM 100% (DM=85 -> 85, 4.3⭐)', () => {
+  const res = calculateAverageDmSl(0, 85, true)
+  assertEqual(res.avgScore, 85)
+  assertEqual(res.stars, 4.3)
+  assertEqual(res.isPureDm, true)
+})
+
+test('calculateAverageDmSl: SL Tidak Menilai (isSlNotScored: true) dengan DM=100 menghasilkan 100 dan 5.0⭐', () => {
+  const res = calculateAverageDmSl(null, 100, true)
+  assertEqual(res.avgScore, 100)
+  assertEqual(res.stars, 5.0)
+  assertEqual(res.isPureDm, true)
+})
+
+test('calculateAverageDmSl: SL Tidak Menilai (isSlNotScored: true) dengan DM=70 menghasilkan 70 dan 3.5⭐', () => {
+  const res = calculateAverageDmSl(undefined, 70, true)
+  assertEqual(res.avgScore, 70)
+  assertEqual(res.stars, 3.5)
+  assertEqual(res.isPureDm, true)
 })
 
 test('calculateAverageDmSl: edge case nilai 0 pada kedua penilai', () => {
@@ -142,46 +166,10 @@ test('calculateAverageDmSl: edge case nilai 0 pada kedua penilai', () => {
   assertEqual(res.stars, 0)
 })
 
-test('calculateAverageDmSl: edge case penilai DM undefined (fallback aman)', () => {
+test('calculateAverageDmSl: edge case penilai DM undefined pada mode reguler (fallback aman)', () => {
   const res = calculateAverageDmSl(90, undefined)
   assertEqual(res.avgScore, 45)
   assertEqual(res.stars, 2.3)
-})
-
-// 1.5 Star Progression & Levels
-test('calculateStarLevel: level 1 untuk bintang awal (0 - 99)', () => {
-  assertEqual(calculateStarLevel(0), 1)
-  assertEqual(calculateStarLevel(50), 1)
-  assertEqual(calculateStarLevel(99), 1)
-})
-
-test('calculateStarLevel: transisi level 2 pada 100 bintang', () => {
-  assertEqual(calculateStarLevel(100), 2)
-})
-
-test('calculateStarLevel: level 10 (Star Legend) pada >= 3500 bintang', () => {
-  assertEqual(calculateStarLevel(3500), 10)
-  assertEqual(calculateStarLevel(9999), 10)
-})
-
-test('calculateStarLevel: edge case bintang negatif harus fallback ke level 1', () => {
-  assertEqual(calculateStarLevel(-50), 1)
-})
-
-test('getStarProgress: progres kalkulasi normal dan sisa bintang ke level berikutnya', () => {
-  const prog = getStarProgress(150)
-  assertEqual(prog.currentLevel, 2)
-  assertEqual(prog.nextLevel, 3)
-  assertEqual(prog.starsToNextLevel, 100) // 250 - 150
-  assertEqual(prog.isMaxLevel, false)
-})
-
-test('getStarProgress: akun dengan bintang maksimum (>= 3500) menghasilkan isMaxLevel true dan 100%', () => {
-  const prog = getStarProgress(4000)
-  assertEqual(prog.currentLevel, 10)
-  assertEqual(prog.isMaxLevel, true)
-  assertEqual(prog.progressPercent, 100)
-  assertEqual(prog.starsToNextLevel, 0)
 })
 
 console.log('')
@@ -402,6 +390,45 @@ test('DM Notes Visibility: Catatan persetujuan DM (dmNotes) dan catatan SL (tlNo
   assertEqual(getMissionComment(missionItem), 'Kru sudah bekerja sesuai standar SOP operasional.', 'Catatan Evaluator SL terbaca dengan tepat')
   assertEqual(getMissionDmNotes(missionItem), 'Disetujui oleh District Manager. Pertahankan kebersihan chiller.', 'Catatan DM terbaca dengan tepat')
   assertEqual(getMissionDmName(missionItem), 'Ahmad Dahlan', 'Nama DM teridentifikasi dengan tepat')
+})
+
+test('approveMission (Reguler): SL=80 dan DM=90 menghasilkan skor rata-rata 85 (4.3⭐)', () => {
+  approvalStore.approvals.push({
+    id: 'app-test-reguler',
+    missionId: 'msn-test-reguler',
+    status: 'PENDING_REVIEW',
+    crewId: 'crew-001',
+    slScore: 80,
+    isSlNotScored: false
+  })
+
+  const res = approvalStore.approveMission('app-test-reguler', { dmScore: 90 })
+  assertTrue(res.success, 'Approval reguler harus berhasil')
+  assertEqual(res.finalScore, 85, 'Skor akhir harus rata-rata (80+90)/2 = 85')
+  assertEqual(res.awardedStars, 4.3, 'Bintang harus 4.3⭐')
+  assertEqual(res.isAdjustedByDm, true, 'isAdjustedByDm harus true')
+})
+
+test('approveMission (Auto-Forward Job / SL Tidak Menilai): Nilai murni 100% dari DM (DM=90 -> Skor=90, 4.5⭐)', () => {
+  approvalStore.approvals.push({
+    id: 'app-test-job-autoforward',
+    missionId: 'msn-test-job-01',
+    status: 'PENDING_REVIEW',
+    crewId: 'crew-002',
+    slScore: 0,
+    isSlNotScored: true
+  })
+
+  const res = approvalStore.approveMission('app-test-job-autoforward', { dmScore: 90, dmNote: 'Disetujui murni oleh DM' })
+  assertTrue(res.success, 'Approval auto-forward harus berhasil')
+  assertEqual(res.finalScore, 90, 'Skor akhir wajib 100% murni DM (90) bukan dirata-rata dengan SL')
+  assertEqual(res.awardedStars, 4.5, 'Bintang wajib 4.5⭐ (90/100 * 5)')
+  
+  const savedItem = approvalStore.approvals.find(a => a.id === 'app-test-job-autoforward')
+  assertEqual(savedItem.score, 90, 'Score di state approval harus 90')
+  assertEqual(savedItem.calculatedStars, 4.5, 'Calculated stars di state approval harus 4.5')
+  assertEqual(savedItem.status, 'APPROVED', 'Status harus APPROVED')
+  assertEqual(savedItem.isSlNotScored, true, 'Flag isSlNotScored harus tetap true')
 })
 
 console.log('')

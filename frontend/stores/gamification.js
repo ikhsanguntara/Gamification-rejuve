@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
-import { calculateStarLevel } from '../utils/star.js'
+import { starsToPoints } from '../utils/star.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { gamificationApi } from '../services/api.js'
 import { cachedApiCall, invalidateApiCache } from '../utils/apiCache.js'
 
 /**
- * Gamification Store: Stars, Levels, Leaderboard & Achievements
+ * Gamification Store: Stars, Points, Leaderboard & Achievements (Murni Bintang & Poin)
  */
 
 export const useGamificationStore = defineStore('gamification', {
@@ -183,6 +183,7 @@ export const useGamificationStore = defineStore('gamification', {
     },
 
     addCrew(payload) {
+      const stars = Number(payload.stars) || 0
       const newCrew = {
         id: payload.id || `crew-${Date.now()}`,
         name: payload.name,
@@ -192,8 +193,8 @@ export const useGamificationStore = defineStore('gamification', {
         department: payload.department || 'Store Operations',
         storeLocation: payload.storeLocation || 'Re.juve Store',
         batchId: payload.batchId || null,
-        stars: Number(payload.stars) || 0,
-        level: calculateStarLevel(Number(payload.stars) || 0),
+        stars,
+        points: starsToPoints(stars),
         completedMissions: Number(payload.completedMissions) || 0,
         averageScore: Number(payload.averageScore) || 0,
         status: 'ACTIVE'
@@ -209,7 +210,7 @@ export const useGamificationStore = defineStore('gamification', {
       if (!crew) return null
       Object.assign(crew, payload)
       if (payload.stars !== undefined) {
-        crew.level = calculateStarLevel(crew.stars)
+        crew.points = starsToPoints(crew.stars)
       }
       setStoredData('rejuve_crews_v3', this.crews)
       return crew
@@ -241,16 +242,11 @@ export const useGamificationStore = defineStore('gamification', {
       const crew = this.crews.find(c => c.id === crewId)
       if (!crew) return null
 
-      const prevLevel = crew.level
       const starsToAdd = Number(starsAmount) || 0
 
       crew.stars += starsToAdd
+      crew.points = starsToPoints(crew.stars)
       crew.completedMissions += 1
-
-      // Recalculate level
-      const newLevel = calculateStarLevel(crew.stars)
-      const leveledUp = newLevel > prevLevel
-      crew.level = newLevel
 
       // Check achievements
       const newlyUnlocked = this.evaluateAchievements(crew, meta)
@@ -261,9 +257,7 @@ export const useGamificationStore = defineStore('gamification', {
         crewName: crew.name,
         starsAdded: starsToAdd,
         totalStars: crew.stars,
-        previousLevel: prevLevel,
-        newLevel,
-        leveledUp,
+        totalPoints: crew.points,
         unlockedAchievements: newlyUnlocked
       }
     },
@@ -295,13 +289,13 @@ export const useGamificationStore = defineStore('gamification', {
           if (crew.stars >= ach.targetValue) shouldUnlock = true
         }
 
-        // 4. Rising Star (Level 5)
+        // 4. Rising Star (500 Stars)
         if (ach.id === 'ach-006') {
-          ach.currentValue = crew.level
-          if (crew.level >= ach.targetValue) shouldUnlock = true
+          ach.currentValue = crew.stars
+          if (crew.stars >= (ach.targetValue || 500)) shouldUnlock = true
         }
 
-        // 5. Star Legend (Level 10 / 3,500 Stars)
+        // 5. Star Legend (3,500 Stars)
         if (ach.id === 'ach-007') {
           ach.currentValue = crew.stars
           if (crew.stars >= ach.targetValue) shouldUnlock = true
@@ -311,6 +305,7 @@ export const useGamificationStore = defineStore('gamification', {
           ach.isUnlocked = true
           ach.unlockedAt = now
           crew.stars += (ach.starRewardBonus || 0)
+          crew.points = starsToPoints(crew.stars)
           unlockedList.push(ach)
         }
       })

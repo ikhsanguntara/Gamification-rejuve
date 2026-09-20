@@ -81,9 +81,6 @@
               {{ formatPoints(topThreeList[1].points || topThreeList[1].stars) }} Points
             </span>
           </div>
-          <span class="text-[10px] font-bold text-slate-400 mt-2">
-            Lvl {{ topThreeList[1].level || 1 }} ({{ topThreeList[1].levelTitle || 'Novice' }})
-          </span>
         </div>
 
         <!-- 1st Place (Gold Podium - Elevated) -->
@@ -125,10 +122,6 @@
               {{ formatPoints(topThreeList[0].points || topThreeList[0].stars) }} Points
             </span>
           </div>
-
-          <span class="text-xs font-bold text-amber-700 dark:text-amber-300 mt-2">
-            Level {{ topThreeList[0].level || 1 }} ({{ topThreeList[0].levelTitle || 'Star' }})
-          </span>
         </div>
 
         <!-- 3rd Place (Bronze) -->
@@ -167,9 +160,6 @@
               {{ formatPoints(topThreeList[2].points || topThreeList[2].stars) }} Points
             </span>
           </div>
-          <span class="text-[10px] font-bold text-slate-400 mt-2">
-            Lvl {{ topThreeList[2].level || 1 }} ({{ topThreeList[2].levelTitle || 'Novice' }})
-          </span>
         </div>
       </div>
 
@@ -221,7 +211,6 @@
                 <th class="py-3 px-3.5 w-16 text-center">Peringkat</th>
                 <th class="py-3 px-3.5">Kru Ekspedisi</th>
                 <th class="py-3 px-3.5">Lokasi Gerai</th>
-                <th class="py-3 px-3.5 text-center">Level Bintang</th>
                 <th class="py-3 px-3.5 text-center">Misi Selesai</th>
                 <th class="py-3 px-3.5 text-right">Perolehan Bintang & Poin</th>
               </tr>

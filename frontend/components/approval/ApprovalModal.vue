@@ -51,30 +51,52 @@
           <div>
             <div class="flex items-center justify-between mb-2">
               <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                <span class="w-2 h-2 rounded-full" :class="isSlNotScored ? 'bg-amber-500' : 'bg-slate-400'"></span>
                 Skor Store Leader
               </span>
-              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+              <span
+                v-if="isSlNotScored"
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800"
+              >
+                Auto-Forward (Job)
+              </span>
+              <span
+                v-else
+                class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+              >
                 Diajukan
               </span>
             </div>
 
             <div class="flex items-baseline gap-2 my-1">
-              <span class="text-3xl font-black text-slate-800 dark:text-white">
-                {{ slScore }}
-              </span>
-              <span class="text-xs text-slate-400 font-semibold">/ 100</span>
-              <span class="text-xs text-amber-500 font-bold ml-auto flex items-center gap-0.5">
-                <Star class="w-3.5 h-3.5 fill-amber-400" />
-                {{ calculateStars(slScore) }}
-              </span>
+              <template v-if="isSlNotScored">
+                <span class="text-2xl font-black text-amber-700 dark:text-amber-400">
+                  Tidak Dinilai
+                </span>
+                <span class="text-[10px] text-slate-400 font-semibold">(Otomatis Job)</span>
+              </template>
+              <template v-else>
+                <span class="text-3xl font-black text-slate-800 dark:text-white">
+                  {{ slScore }}
+                </span>
+                <span class="text-xs text-slate-400 font-semibold">/ 100</span>
+                <span class="text-xs text-amber-500 font-bold ml-auto flex items-center gap-0.5">
+                  <Star class="w-3.5 h-3.5 fill-amber-400" />
+                  {{ calculateStars(slScore) }}
+                </span>
+              </template>
             </div>
           </div>
 
           <div class="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-700/60">
             <span class="text-[10px] font-semibold text-slate-400 block mb-0.5">Catatan SL:</span>
             <p class="text-xs text-slate-600 dark:text-slate-300 italic leading-snug line-clamp-2">
-              "{{ item.comment || item.tlNotes || 'Standar SOP operasional telah diperiksa dan terpenuhi.' }}"
+              <span v-if="isSlNotScored" class="text-amber-700 dark:text-amber-400 font-medium not-italic">
+                "Store Leader tidak mengisi evaluasi dalam batas waktu siklus. Evaluasi dialihkan ke DM untuk penilaian murni."
+              </span>
+              <span v-else>
+                "{{ item.comment || item.tlNotes || 'Standar SOP operasional telah diperiksa dan terpenuhi.' }}"
+              </span>
             </p>
           </div>
         </div>
@@ -130,6 +152,7 @@
             <!-- Quick Preset Pills -->
             <div class="flex items-center justify-between gap-1 pt-0.5">
               <button
+                v-if="!isSlNotScored"
                 type="button"
                 @click="dmScore = slScore"
                 class="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
@@ -138,7 +161,7 @@
                 = SL ({{ slScore }})
               </button>
               <button
-                v-for="p in [80, 90, 100]"
+                v-for="p in (isSlNotScored ? [70, 80, 90, 100] : [80, 90, 100])"
                 :key="p"
                 type="button"
                 @click="dmScore = p"
@@ -183,11 +206,16 @@
         </div>
       </div>
 
-      <!-- 4. Nilai Gabungan (SL + DM) & Pencairan Bintang -->
+      <!-- 4. Nilai Akhir & Pencairan Bintang -->
       <div class="p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 to-[#500e28] text-white shadow-md flex items-center justify-between gap-4">
         <div>
           <div class="flex items-center gap-1.5 text-[11px] text-slate-300 font-medium">
-            <span>Rata-rata: (SL {{ slScore }} + DM {{ dmScore }}) / 2 = {{ finalScore }} Poin</span>
+            <span v-if="isSlNotScored" class="text-amber-300 font-bold flex items-center gap-1">
+              <span>⚡ Penilaian Murni DM (SL Tidak Menilai) = {{ finalScore }} Poin</span>
+            </span>
+            <span v-else>
+              Rata-rata: (SL {{ slScore }} + DM {{ dmScore }}) / 2 = {{ finalScore }} Poin
+            </span>
           </div>
           <div class="flex items-baseline gap-1.5 mt-0.5">
             <span class="text-2xl font-black tracking-tight text-white">{{ finalScore }}</span>
@@ -209,7 +237,10 @@
       <div class="space-y-1">
         <label class="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center justify-between">
           <span>Catatan / Arahan DM (Opsional):</span>
-          <span v-if="isAdjusted" class="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+          <span v-if="isSlNotScored" class="text-[11px] text-amber-600 dark:text-amber-400 font-bold">
+            Penilaian Murni DM (100% Skor DM)
+          </span>
+          <span v-else-if="isAdjusted" class="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
             Nilai disesuaikan ({{ slScore }} → {{ dmScore }})
           </span>
         </label>
@@ -305,6 +336,7 @@ const props = defineProps({
 defineEmits(['update:modelValue', 'confirm', 'cancel'])
 
 const previewImage = ref(null)
+const isSlNotScored = computed(() => Boolean(props.item?.isSlNotScored))
 const slScore = computed(() => Number(props.item?.slScore ?? props.item?.originalScore ?? props.item?.score ?? props.item?.averageScore ?? 0))
 const dmScore = ref(0)
 const dmNote = ref('')
@@ -346,8 +378,15 @@ function getEvidenceCaption(ev) {
 
 watch(() => props.item, (newItem) => {
   if (newItem) {
+    const isNotScored = Boolean(newItem.isSlNotScored)
     const base = Number(newItem.slScore ?? newItem.originalScore ?? newItem.score ?? newItem.averageScore ?? 0)
-    dmScore.value = Number(newItem.dmScore ?? base)
+    if (newItem.dmScore !== undefined && newItem.dmScore !== null && Number(newItem.dmScore) > 0) {
+      dmScore.value = Number(newItem.dmScore)
+    } else if (isNotScored) {
+      dmScore.value = 85
+    } else {
+      dmScore.value = base
+    }
     dmNote.value = newItem.dmNote || ''
   }
 }, { immediate: true, deep: true })
@@ -375,11 +414,13 @@ watch(dmScore, (newVal) => {
   }
 })
 
-// Rumus Resmi: Avg(SL + DM) Score -> (Avg/100)*5 dibulatkan 1 angka di belakang koma
-const averageCalc = computed(() => calculateAverageDmSl(slScore.value, dmScore.value))
+// Rumus Resmi:
+// 1. Reguler: Avg(SL + DM) -> (Avg/100)*5 dibulatkan 1 angka di belakang koma
+// 2. SL Tidak Menilai (Job Forward): Murni Nilai DM -> (DM/100)*5
+const averageCalc = computed(() => calculateAverageDmSl(slScore.value, dmScore.value, isSlNotScored.value))
 const finalScore = computed(() => averageCalc.value.avgScore)
 const finalStars = computed(() => averageCalc.value.stars)
-const isAdjusted = computed(() => Number(dmScore.value) !== Number(slScore.value))
+const isAdjusted = computed(() => !isSlNotScored.value && Number(dmScore.value) !== Number(slScore.value))
 
 function getScoreTier(score) {
   const val = Math.min(100, Math.max(0, Number(score) || 0))

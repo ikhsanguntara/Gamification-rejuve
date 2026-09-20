@@ -93,9 +93,6 @@
               {{ (topThreeList[1].points || starsToPoints(topThreeList[1].stars)).toLocaleString() }} Points
             </span>
           </div>
-          <span class="text-[11px] font-medium text-slate-400 mt-2">
-            Level {{ topThreeList[1].level || 1 }} ({{ topThreeList[1].levelTitle || 'Novice' }})
-          </span>
         </div>
 
         <!-- 1st Place (Gold Podium - Elevated) -->
@@ -137,10 +134,6 @@
               {{ (topThreeList[0].points || starsToPoints(topThreeList[0].stars)).toLocaleString() }} Points
             </span>
           </div>
-
-          <span class="text-xs font-bold text-amber-700 dark:text-amber-300 mt-2">
-            Level {{ topThreeList[0].level || 1 }} ({{ topThreeList[0].levelTitle || 'Star' }})
-          </span>
         </div>
 
         <!-- 3rd Place (Bronze) -->
@@ -179,9 +172,6 @@
               {{ (topThreeList[2].points || starsToPoints(topThreeList[2].stars)).toLocaleString() }} Points
             </span>
           </div>
-          <span class="text-[11px] font-medium text-slate-400 mt-2">
-            Level {{ topThreeList[2].level || 1 }} ({{ topThreeList[2].levelTitle || 'Novice' }})
-          </span>
         </div>
       </div>
 
@@ -208,7 +198,6 @@
                 <th class="py-3 px-4 w-16 text-center">Peringkat</th>
                 <th class="py-3 px-4">Anggota Kru</th>
                 <th class="py-3 px-4">Lokasi Gerai</th>
-                <th class="py-3 px-4 text-center">Level Bintang</th>
                 <th class="py-3 px-4 text-center">Misi Selesai</th>
                 <th class="py-3 px-4 text-center">Rata-rata Skor</th>
                 <th class="py-3 px-4 text-right">Bintang & Poin</th>
@@ -273,13 +262,6 @@
                 <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400">
                   <span class="font-semibold text-slate-800 dark:text-slate-200 block">{{ crew.storeLocation || 'Gerai Re.juve' }}</span>
                   <span v-if="crew.batchName" class="text-[10px] text-slate-400 block truncate max-w-[150px]">{{ crew.batchName }}</span>
-                </td>
-
-                <!-- Level -->
-                <td class="py-3.5 px-4 text-center">
-                  <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                    Lvl {{ crew.level || 1 }}
-                  </span>
                 </td>
 
                 <!-- Completed Missions -->

@@ -13,7 +13,7 @@
             :alt="userStore.currentUser?.name || 'Crew Avatar'"
             class="hero-avatar"
           />
-          <span class="hero-level-badge">LVL {{ myProgress.currentLevel }}</span>
+          <span class="hero-level-badge">⭐ {{ myTotalStars }}</span>
         </div>
 
         <div class="hero-info">
@@ -26,7 +26,7 @@
           </div>
           <h3 class="hero-name">{{ userStore.currentUser?.name || 'Crew Specialist' }}</h3>
           <p class="hero-subtitle">
-            Selesaikan {{ totalMissions }} misi untuk meraih predikat <strong>Star Legend</strong>!
+            Selesaikan seluruh {{ totalMissions }} misi operasional untuk mengumpulkan bintang dan poin maksimal!
           </p>
         </div>
       </div>
@@ -156,7 +156,7 @@ import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useMissionStore } from '~/stores/mission.js'
 import { useGamificationStore } from '~/stores/gamification.js'
-import { getStarProgress } from '~/utils/star.js'
+import { starsToPoints } from '~/utils/star.js'
 import AdventureMap from '~/components/gamification/adventure/AdventureMap.vue'
 import AdventureWeekModal from '~/components/gamification/adventure/AdventureWeekModal.vue'
 import AdventureLeaderboard from '~/components/gamification/adventure/AdventureLeaderboard.vue'
@@ -205,7 +205,6 @@ const myCrewData = computed(() => {
 })
 
 const myTotalStars = computed(() => myCrewData.value?.stars || userStore.currentUser?.stars || 0)
-const myProgress = computed(() => getStarProgress(myTotalStars.value))
 
 const effectiveBatchId = computed(() => {
   if (userStore.isCrew) {

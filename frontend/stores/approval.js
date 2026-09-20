@@ -82,13 +82,14 @@ export const useApprovalStore = defineStore('approval', {
           this.approvals = eligibleMissions.map(m => {
             const isApproved = m.status === 'APPROVED_BY_DM' || m.status === 'APPROVED'
             const status = isApproved ? 'APPROVED' : 'PENDING_REVIEW'
+            const isSlNotScored = Boolean(m.isSlNotScored)
             const slScore = m.tlScore !== null && m.tlScore !== undefined ? Number(m.tlScore) : 0
-            const dmScore = m.dmScore !== null && m.dmScore !== undefined ? Number(m.dmScore) : slScore
-            const avgCalc = calculateAverageDmSl(slScore, dmScore)
+            const dmScore = m.dmScore !== null && m.dmScore !== undefined ? Number(m.dmScore) : (isSlNotScored ? 85 : slScore)
+            const avgCalc = calculateAverageDmSl(slScore, dmScore, isSlNotScored)
             const finalScore = m.finalScore !== null && m.finalScore !== undefined
               ? Number(m.finalScore)
-              : (isApproved ? avgCalc.avgScore : slScore)
-            const stars = isApproved ? avgCalc.stars : calculateStars(slScore)
+              : (isApproved ? avgCalc.avgScore : (isSlNotScored ? dmScore : slScore))
+            const stars = isApproved ? avgCalc.stars : (isSlNotScored ? calculateStars(dmScore) : calculateStars(slScore))
 
             return {
               id: m.userMissionId,
@@ -106,7 +107,8 @@ export const useApprovalStore = defineStore('approval', {
               crewRole: m.user?.position || 'Crew Specialist',
               storeLocation: m.user?.department?.departmentName || m.user?.storeLocation || 'Gerai Re.juve',
               supervisorId: m.tlId || '',
-              supervisorName: m.tl?.name || 'Store Leader',
+              supervisorName: m.tl?.name || (isSlNotScored ? 'System (Auto-Forward)' : 'Store Leader'),
+              isSlNotScored,
               slScore,
               dmScore,
               score: finalScore,
@@ -115,7 +117,9 @@ export const useApprovalStore = defineStore('approval', {
               status,
               submittedAt: m.tlScoredAt || m.createdAt,
               reviewedAt: m.dmReviewedAt,
-              comment: m.tlNotes || 'Standar operasional telah diverifikasi.',
+              comment: isSlNotScored
+                ? 'Store Leader tidak mengisi evaluasi dalam batas waktu siklus. Evaluasi dimajukan ke DM oleh sistem untuk penilaian mandiri.'
+                : (m.tlNotes || 'Standar operasional telah diverifikasi.'),
               evidence: m.evidenceUrl ? [{ url: m.evidenceUrl, caption: 'Bukti Foto Operasional' }] : []
             }
           })
@@ -140,19 +144,24 @@ export const useApprovalStore = defineStore('approval', {
       if (!item) return { success: false, error: 'Approval item not found' }
 
       const now = new Date().toISOString()
+      const isSlNotScored = Boolean(item.isSlNotScored)
 
-      // Calculate Final Score: Nilai Gabungan Rata-rata (SL + DM) / 2
-      const slScore = Number(item.slScore ?? item.originalScore ?? item.score ?? item.averageScore ?? 90)
-      let dmScore = slScore
+      // Calculate Final Score:
+      // Skenario 1 (Reguler): Nilai Gabungan Rata-rata (SL + DM) / 2
+      // Skenario 2 (SL Tidak Menilai / Auto-Forward): Murni Nilai DM (100% DM)
+      const slScore = Number(item.slScore ?? item.originalScore ?? item.score ?? item.averageScore ?? (isSlNotScored ? 0 : 90))
+      let dmScore = isSlNotScored ? 85 : slScore
 
       if (overridePayload.dmScore !== undefined && overridePayload.dmScore !== null) {
         dmScore = Math.min(100, Math.max(0, Number(overridePayload.dmScore)))
       } else if (overridePayload.score !== undefined && overridePayload.score !== null) {
         dmScore = Math.min(100, Math.max(0, Number(overridePayload.score)))
+      } else if (item.dmScore !== undefined && item.dmScore !== null && Number(item.dmScore) > 0) {
+        dmScore = Number(item.dmScore)
       }
 
-      // Rumus Resmi Average DM + SL:
-      const avgCalc = calculateAverageDmSl(slScore, dmScore)
+      // Rumus Resmi Average DM + SL (atau Murni DM jika isSlNotScored = true):
+      const avgCalc = calculateAverageDmSl(slScore, dmScore, isSlNotScored)
       const finalScore = avgCalc.avgScore
       const finalStars = avgCalc.stars
 
@@ -162,7 +171,8 @@ export const useApprovalStore = defineStore('approval', {
       item.score = finalScore
       item.averageScore = finalScore
       item.calculatedStars = finalStars
-      item.isAdjustedByDm = dmScore !== slScore
+      item.isSlNotScored = isSlNotScored
+      item.isAdjustedByDm = !isSlNotScored && (dmScore !== slScore)
 
       if (overridePayload.dmNote !== undefined) {
         item.dmNote = overridePayload.dmNote
@@ -176,9 +186,9 @@ export const useApprovalStore = defineStore('approval', {
         evaluationApi.submitDmReview(item.userMissionId, {
           action: 'APPROVE',
           score: finalScore,
-          notes: item.dmNote || 'Disetujui oleh District Manager',
+          notes: item.dmNote || (isSlNotScored ? 'Disetujui oleh District Manager (Penilaian Murni DM)' : 'Disetujui oleh District Manager'),
           dmScore: finalScore,
-          dmNotes: item.dmNote || 'Disetujui oleh District Manager'
+          dmNotes: item.dmNote || (isSlNotScored ? 'Disetujui oleh District Manager (Penilaian Murni DM)' : 'Disetujui oleh District Manager')
         }).catch(e => console.warn('API sync submitDmReview notice:', e.message))
       }
 
@@ -236,7 +246,9 @@ export const useApprovalStore = defineStore('approval', {
       })
 
       // 5. Prepend to Live Activity Feed
-      const adjustInfo = item.isAdjustedByDm ? ` (Rata-rata SL: ${slScore} + DM: ${dmScore} = ${finalScore})` : ` (Skor: ${finalScore})`
+      const adjustInfo = isSlNotScored
+        ? ` (Penilaian Murni DM: ${dmScore})`
+        : (item.isAdjustedByDm ? ` (Rata-rata SL: ${slScore} + DM: ${dmScore} = ${finalScore})` : ` (Skor: ${finalScore})`)
       this.activities.unshift({
         id: `act-${Date.now()}`,
         actor: 'District Manager',

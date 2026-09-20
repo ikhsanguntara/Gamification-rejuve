@@ -1,66 +1,37 @@
 <template>
-  <div class="p-4 sm:p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/80 dark:border-amber-900/40 relative overflow-hidden shadow-sm">
+  <div class="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/80 dark:border-amber-900/40 relative overflow-hidden shadow-sm">
     <!-- Star Glow Accent -->
     <div class="absolute -right-8 -top-8 w-32 h-32 bg-amber-400/20 rounded-full blur-2xl pointer-events-none"></div>
 
-    <!-- Header Row -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20 flex-shrink-0">
-          <Star class="w-5 h-5 fill-white" />
+    <!-- Header Row: Akumulasi Bintang & Poin Kru -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20 flex-shrink-0">
+          <Star class="w-6 h-6 fill-white" />
         </div>
         <div>
-          <span class="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-            Gamification Status
+          <span class="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">
+            Status Gamifikasi Kru
           </span>
-          <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
-            <span>LEVEL {{ progress.currentLevel }}</span>
-            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
-              ({{ progress.currentLevelTitle }})
-            </span>
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span>{{ Number(stars || 0).toLocaleString() }} Bintang Terkumpul</span>
           </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Setara dengan <strong class="text-slate-800 dark:text-slate-200 font-bold">{{ totalPoints.toLocaleString() }} Poin</strong> (1 Bintang = 20 Poin)
+          </p>
         </div>
       </div>
 
-      <!-- Total Star Badge -->
-      <div class="self-start sm:self-auto">
-        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 font-bold text-xs sm:text-sm shadow-sm">
+      <!-- Quick Metrics Pills -->
+      <div class="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+        <div class="px-3.5 py-2 rounded-2xl bg-amber-100/90 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 font-bold text-xs sm:text-sm shadow-xs flex items-center gap-1.5">
           <Star class="w-4 h-4 fill-amber-400 text-amber-500" />
-          <span>{{ progress.currentStars.toLocaleString() }}</span>
-          <span class="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase">Stars</span>
+          <span>{{ Number(stars || 0).toLocaleString() }} ⭐ Bintang</span>
         </div>
-      </div>
-    </div>
-
-    <!-- Progress Bar -->
-    <div class="mt-3">
-      <div class="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
-        <span>Lvl {{ progress.currentLevel }} ({{ progress.levelMinStars }} ⭐)</span>
-        <span>
-          <span v-if="!progress.isMaxLevel">
-            Lvl {{ progress.nextLevel }} ({{ progress.levelMaxStars }} ⭐)
-          </span>
-          <span v-else class="text-amber-500 font-bold">Max Level 🏆</span>
-        </span>
-      </div>
-
-      <!-- Outer Track using Reka UI ProgressRoot -->
-      <ProgressRoot
-        :model-value="progress.progressPercent"
-        class="relative w-full bg-slate-200 dark:bg-slate-800 h-2.5 sm:h-3 rounded-full overflow-hidden p-0.5 shadow-inner"
-      >
-        <ProgressIndicator
-          class="h-full rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 transition-all duration-700 ease-out shadow-sm"
-          :style="{ width: `${progress.progressPercent}%` }"
-        />
-      </ProgressRoot>
-
-      <!-- Subtext -->
-      <div class="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 text-xs text-slate-500 dark:text-slate-400 mt-2">
-        <span>{{ progress.progressPercent }}% to next milestone</span>
-        <span v-if="!progress.isMaxLevel" class="font-semibold text-amber-600 dark:text-amber-400">
-          {{ progress.starsToNextLevel }} Stars to Level {{ progress.nextLevel }}
-        </span>
+        <div class="px-3.5 py-2 rounded-2xl bg-slate-900 dark:bg-slate-950 border border-slate-800 text-amber-300 font-bold text-xs sm:text-sm shadow-xs flex items-center gap-1.5">
+          <Sparkles class="w-4 h-4 text-amber-400" />
+          <span>{{ totalPoints.toLocaleString() }} Points</span>
+        </div>
       </div>
     </div>
   </div>
@@ -68,16 +39,17 @@
 
 <script setup>
 import { computed } from 'vue'
-import { ProgressRoot, ProgressIndicator } from 'reka-ui'
-import { getStarProgress } from '~/utils/star.js'
-import { Star } from 'lucide-vue-next'
+import { starsToPoints } from '~/utils/star.js'
+import { Star, Sparkles } from 'lucide-vue-next'
 
 const props = defineProps({
   stars: {
     type: Number,
-    required: true
+    required: true,
+    default: 0
   }
 })
 
-const progress = computed(() => getStarProgress(props.stars))
+const totalPoints = computed(() => starsToPoints(props.stars))
 </script>
+
