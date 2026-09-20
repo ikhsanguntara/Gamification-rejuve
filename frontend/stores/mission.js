@@ -4,6 +4,7 @@ import { useGamificationStore } from './gamification.js'
 import { getStoredData, setStoredData } from '../utils/storage.js'
 import { batchApi, evaluationApi } from '../services/api.js'
 import { cachedApiCall, invalidateApiCache } from '../utils/apiCache.js'
+import { calculateActiveWeek } from './batch.js'
 
 /**
  * Mission Store: Manages store-wide missions across batches and weeks, and Superadmin CRUD
@@ -93,12 +94,25 @@ export const useMissionStore = defineStore('mission', {
             const m = um.mission || {}
             const missionKey = m.missionId || um.userMissionId || `msn-${idx}`
 
+            const rawBatchId = um.batchId || m.batchId || um.user?.batchId || um.user?.activeBatchId || actualParams?.batchId || ''
+            const matchedBatch = batches.find(b => b.batchId === rawBatchId || b.id === rawBatchId || b.code === rawBatchId)
+            const resolvedBatchId = rawBatchId || matchedBatch?.batchId || matchedBatch?.id || ''
+            const missionWeekNum = Number(m.weekOrDayNumber || m.week || 1)
+            const activeWeek = matchedBatch ? calculateActiveWeek(matchedBatch) : 1
+            const isUserBuddyLocked = um.user?.step === 'BUDDY'
+
             let status = 'IN_PROGRESS'
-            if (um.status === 'LOCKED') status = 'LOCKED'
-            else if (um.status === 'SCORED_BY_TL') status = 'PENDING_REVIEW'
+            if (um.status === 'SCORED_BY_TL') status = 'PENDING_REVIEW'
             else if (um.status === 'APPROVED_BY_DM' || um.status === 'COMPLETED') status = 'COMPLETED'
             else if (um.status === 'REVISED_BY_DM') status = 'REVISION_REQUIRED'
             else if (um.status === 'OPEN' || um.status === 'ACTIVE') status = 'IN_PROGRESS'
+            else if (um.status === 'LOCKED') {
+              if (isUserBuddyLocked || missionWeekNum > activeWeek) {
+                status = 'LOCKED'
+              } else {
+                status = 'IN_PROGRESS'
+              }
+            }
 
             const score = Number(um.finalScore !== null && um.finalScore !== undefined ? um.finalScore : (um.dmScore !== null && um.dmScore !== undefined ? um.dmScore : (um.tlScore || 0)))
             const earnedStars = calculateStars(score)
@@ -117,10 +131,6 @@ export const useMissionStore = defineStore('mission', {
               awardedStars: (status === 'COMPLETED') ? earnedStars : 0,
               status
             }
-
-            const rawBatchId = um.batchId || m.batchId || um.user?.batchId || um.user?.activeBatchId || actualParams?.batchId || ''
-            const matchedBatch = batches.find(b => b.batchId === rawBatchId || b.id === rawBatchId || b.code === rawBatchId)
-            const resolvedBatchId = rawBatchId || matchedBatch?.batchId || matchedBatch?.id || ''
 
             if (!missionMap.has(missionKey)) {
               missionMap.set(missionKey, {

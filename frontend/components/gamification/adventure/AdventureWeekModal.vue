@@ -24,7 +24,7 @@
           <div class="flex items-center justify-between gap-2 flex-wrap mb-1.5">
             <div class="week-chapter-badge" :class="weekThemeClass">
               <component :is="weekIcon" class="w-3.5 h-3.5" />
-              <span>WEEK {{ week.weekNumber }} • {{ weekThemeName }}</span>
+              <span>{{ unitCode.toUpperCase() }} {{ week.weekNumber }} • {{ weekThemeName }}</span>
             </div>
 
             <span class="week-status-badge" :class="statusBadgeClass">
@@ -52,7 +52,7 @@
                 <span class="stat-mainval text-amber-700">★ {{ totalStarsEarned }} / {{ maxPossibleStars }}</span>
               </div>
               <div>
-                <span class="stat-sublabel">Progres Week</span>
+                <span class="stat-sublabel">Progres {{ unitCode }}</span>
                 <span class="stat-mainval text-emerald-700">{{ weekPercent }}%</span>
               </div>
             </div>
@@ -78,7 +78,7 @@
             </div>
             <h4 class="font-black text-slate-800 text-sm">Pos Ekspedisi Ini Masih Terkunci</h4>
             <p class="text-xs text-slate-600 text-center max-w-sm mt-1">
-              Selesaikan seluruh misi operasional pada <strong>Week {{ week.weekNumber - 1 }}</strong> terlebih dahulu untuk membuka rangkaian pos ini.
+              Selesaikan seluruh misi operasional pada <strong>{{ unitCode }} {{ week.weekNumber - 1 }}</strong> terlebih dahulu untuk membuka rangkaian pos ini.
             </p>
           </div>
 
@@ -87,7 +87,7 @@
             <div class="flex items-center justify-between px-1">
               <span class="text-xs font-black uppercase tracking-wider text-[#5C3D1E] flex items-center gap-1.5">
                 <span>📋</span>
-                <span>Daftar Misi Operasional Week {{ week.weekNumber }}</span>
+                <span>Daftar Misi Operasional {{ unitCode }} {{ week.weekNumber }}</span>
               </span>
               <span class="text-[11px] font-bold text-[#8B6914]">
                 {{ missions.length }} Pos Misi
@@ -98,9 +98,9 @@
               <div class="w-10 h-10 mx-auto rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center text-lg">
                 📋
               </div>
-              <h5 class="text-xs font-bold text-slate-800">Belum Ada Misi Pada Week {{ week.weekNumber }}</h5>
+              <h5 class="text-xs font-bold text-slate-800">Belum Ada Misi Pada {{ unitCode }} {{ week.weekNumber }}</h5>
               <p class="text-[11px] text-slate-600 max-w-xs mx-auto">
-                Misi untuk minggu ini belum ditugaskan ke dalam batch atau template yang digunakan belum memiliki butir misi di minggu ke-{{ week.weekNumber }}.
+                Misi untuk {{ unitLabel.toLowerCase() }} ini belum ditugaskan ke dalam batch atau template yang digunakan belum memiliki butir misi di {{ unitLabel.toLowerCase() }} ke-{{ week.weekNumber }}.
               </p>
             </div>
 
@@ -198,7 +198,7 @@
             @click="switchWeek(prevWeek.weekNumber)"
           >
             <ChevronLeft class="w-3.5 h-3.5" />
-            <span>Week {{ prevWeek.weekNumber }}</span>
+            <span>{{ unitCode }} {{ prevWeek.weekNumber }}</span>
           </button>
           <div v-else class="w-20"></div>
 
@@ -218,7 +218,7 @@
             class="nav-week-btn"
             @click="switchWeek(nextWeek.weekNumber)"
           >
-            <span>Week {{ nextWeek.weekNumber }}</span>
+            <span>{{ unitCode }} {{ nextWeek.weekNumber }}</span>
             <ChevronRight class="w-3.5 h-3.5" />
           </button>
           <div v-else class="w-20"></div>
@@ -239,6 +239,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useBatchStore } from '~/stores/batch.js'
 import { calculateStars } from '~/utils/star.js'
 import {
   X, Lock, CheckCircle2, ChevronRight, ChevronLeft,
@@ -257,6 +258,10 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'selectWeek'])
 
 const router = useRouter()
+const batchStore = useBatchStore()
+
+const unitCode = computed(() => props.week?.unitCode || batchStore.currentBatchUnitCode || 'Week')
+const unitLabel = computed(() => props.week?.unitLabel || batchStore.currentBatchUnitLabel || 'Minggu')
 
 const close = () => {
   emit('update:modelValue', false)

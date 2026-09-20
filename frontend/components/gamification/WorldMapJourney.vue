@@ -74,7 +74,7 @@
               'milestone-active': week.status === 'ACTIVE'
             }"
           >
-            <span class="milestone-label">W{{ week.weekNumber }}</span>
+            <span class="milestone-label">{{ (week.unitCode || batchStore.currentBatchUnitCode || 'W')[0] }}{{ week.weekNumber }}</span>
           </div>
         </div>
       </div>
@@ -98,7 +98,7 @@
         @click="selectWeekFilter(week.weekNumber)"
       >
         <component :is="weekTabIcon(week.weekNumber)" class="w-3.5 h-3.5" />
-        <span class="tab-num">WEEK {{ week.weekNumber }}</span>
+        <span class="tab-num">{{ (week.unitCode || batchStore.currentBatchUnitCode || 'WEEK').toUpperCase() }} {{ week.weekNumber }}</span>
         <span class="tab-name">{{ weekThemeName(week.weekNumber) }}</span>
         <Lock v-if="week.isLocked" class="w-2.5 h-2.5 opacity-60 ml-auto" />
         <CheckCircle2 v-else-if="week.status === 'COMPLETED'" class="w-2.5 h-2.5 text-emerald-400 ml-auto" />

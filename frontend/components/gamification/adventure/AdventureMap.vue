@@ -17,7 +17,7 @@
           >
             <div class="zone-pill" :class="zone.pillClass">
               <component :is="zone.icon" class="w-3 h-3" />
-              <span class="zone-week">W{{ zone.week }}</span>
+              <span class="zone-week">{{ (zone.unitCode || 'W')[0] }}{{ zone.week }}</span>
               <span class="zone-name">{{ zone.shortName }}</span>
             </div>
             <div v-if="zone.isLocked" class="zone-lock-badge">
@@ -389,6 +389,8 @@ const weekZones = computed(() => {
       pillClass,
       labelX: `${centerX}%`,
       dividerX,
+      unitCode: week.unitCode || batchStore.currentBatchUnitCode || 'Week',
+      unitLabel: week.unitLabel || batchStore.currentBatchUnitLabel || 'Minggu'
     }
   })
 })

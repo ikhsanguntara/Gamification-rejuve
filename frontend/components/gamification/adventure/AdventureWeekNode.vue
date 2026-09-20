@@ -29,13 +29,13 @@
 
     <!-- Week Number Badge -->
     <div class="week-number-badge" :class="numberBadgeClass">
-      W{{ week.weekNumber }}
+      {{ (week.unitCode || 'W')[0] }}{{ week.weekNumber }}
     </div>
 
     <!-- Outpost Label Pill -->
     <div class="week-label-pill" :class="pillClass">
       <div class="pill-top-row">
-        <span class="pill-week-tag">WEEK {{ week.weekNumber }}</span>
+        <span class="pill-week-tag">{{ (week.unitCode || 'WEEK').toUpperCase() }} {{ week.weekNumber }}</span>
         <span class="pill-status-dot" :class="dotClass"></span>
       </div>
       <span class="pill-name">{{ weekThemeName }}</span>
@@ -50,7 +50,7 @@
     <!-- Hover Tooltip -->
     <Transition name="tooltip">
       <div v-if="hovered" class="week-hover-tooltip">
-        <span class="tooltip-week">WEEK {{ week.weekNumber }} • {{ weekThemeName }}</span>
+        <span class="tooltip-week">{{ (week.unitCode || 'WEEK').toUpperCase() }} {{ week.weekNumber }} • {{ weekThemeName }}</span>
         <span class="tooltip-title">{{ week.title || 'Misi Operasional SOP' }}</span>
         <span class="tooltip-hint">Klik untuk buka {{ missionsCount }} detail misi ➔</span>
       </div>

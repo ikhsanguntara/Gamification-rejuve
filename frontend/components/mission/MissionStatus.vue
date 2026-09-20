@@ -51,13 +51,19 @@ const statusMeta = computed(() => getMissionStatusMeta(props.status))
 
 const statusIcon = computed(() => {
   switch (statusMeta.value.key) {
-    case 'NOT_STARTED': return Circle
-    case 'IN_PROGRESS': return Clock
+    case 'NOT_STARTED':
+    case 'UNGRADED': return Circle
+    case 'IN_PROGRESS':
+    case 'ACTIVE':
+    case 'OPEN': return Clock
     case 'DRAFT': return FileText
     case 'EVALUATED': return ClipboardCheck
-    case 'PENDING_REVIEW': return Hourglass
-    case 'REVISION_REQUIRED': return RotateCcw
-    case 'APPROVED': return CheckCircle2
+    case 'PENDING_REVIEW':
+    case 'SCORED_BY_TL': return Hourglass
+    case 'REVISION_REQUIRED':
+    case 'REVISED_BY_DM': return RotateCcw
+    case 'APPROVED':
+    case 'APPROVED_BY_DM': return CheckCircle2
     case 'COMPLETED': return CheckCheck
     case 'LOCKED': return Lock
     default: return Circle

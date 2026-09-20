@@ -282,7 +282,7 @@
                     <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#831843]/10 text-[#831843] dark:text-[#f472b6]">
                       {{ mission.category }}
                     </span>
-                    <MissionStatus :status="mission.status" />
+                    <MissionStatus :status="getMissionStatus(mission.id)" />
                   </div>
                   <h4 class="text-sm font-bold text-slate-900 dark:text-white pt-0.5">
                     {{ mIdx + 1 }}. {{ mission.title }}
@@ -627,7 +627,7 @@
                     class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold"
                   >
                     <Lock class="w-3 h-3 text-slate-400" />
-                    <span>🔒 Minggu Terkunci (Hanya Lihat)</span>
+                    <span>🔒 {{ batchStore.currentBatchUnitLabel }} Terkunci (Hanya Lihat)</span>
                   </span>
 
                   <span
@@ -647,14 +647,15 @@
                   </span>
 
                   <span
-                    v-else-if="getMissionStatus(mission.id) === 'LOCKED'"
-                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold"
+                    v-else-if="getMissionStatus(mission.id) === 'REVISION_REQUIRED' || getMissionStatus(mission.id) === 'REVISED_BY_DM'"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 text-[11px] font-bold"
                   >
-                    <span>🔒 Terkunci (Selesaikan Buddy Terlebih Dahulu)</span>
+                    <AlertCircle class="w-3 h-3 text-rose-600" />
+                    <span>⚠️ Perlu Revisi</span>
                   </span>
 
-                  <span v-else class="text-[11px] text-slate-400 font-medium">
-                    ⚡ Siap dinilai & diajukan
+                  <span v-else class="text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                    <span>⚡ Siap dinilai & diajukan</span>
                   </span>
                 </div>
 
@@ -677,7 +678,7 @@
                   <button
                     v-if="!isMissionSubmitted(mission.id)"
                     type="button"
-                    :disabled="isWeekLocked || isCrewBuddyLocked || getMissionStatus(mission.id) === 'LOCKED'"
+                    :disabled="isWeekLocked || isCrewBuddyLocked"
                     @click="submitSingleMission(mission.id)"
                     class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     :class="[
@@ -928,6 +929,20 @@ const currentWeekMissions = computed(() => {
   if (evalStore.selectedCrewMissions && evalStore.selectedCrewMissions.length > 0) {
     return evalStore.selectedCrewMissions.map((um, idx) => {
       const m = um.mission || {}
+      
+      let effectiveStatus = um.status || 'ACTIVE'
+      const isAlreadyEvaluated = ['SCORED_BY_TL', 'PENDING_REVIEW', 'APPROVED_BY_DM', 'COMPLETED', 'APPROVED', 'REVISION_REQUIRED', 'REVISED_BY_DM'].includes(um.status)
+
+      if (!isAlreadyEvaluated) {
+        if (isCrewBuddyLocked.value) {
+          effectiveStatus = 'LOCKED'
+        } else if (isWeekLocked.value) {
+          effectiveStatus = 'LOCKED'
+        } else {
+          effectiveStatus = 'ACTIVE'
+        }
+      }
+
       return {
         id: um.userMissionId || um.missionId || `m-${idx}`,
         userMissionId: um.userMissionId,
@@ -936,7 +951,8 @@ const currentWeekMissions = computed(() => {
         title: m.missionTitle || `Misi ${idx + 1}`,
         category: m.category || 'STANDAR OPERASIONAL',
         description: m.description || 'Pemeriksaan kepatuhan standar operasional Re.juve.',
-        status: um.status || 'ACTIVE',
+        status: effectiveStatus,
+        rawStatus: um.status,
         tlScore: um.tlScore,
         tlNotes: um.tlNotes,
         dmScore: um.dmScore,
@@ -950,7 +966,21 @@ const currentWeekMissions = computed(() => {
     })
   }
 
-  return missionStore.missionsByWeek(batchStore.currentBatch?.id || '', batchStore.selectedWeek)
+  return (missionStore.missionsByWeek(batchStore.currentBatch?.id || '', batchStore.selectedWeek) || []).map((m, idx) => {
+    let effectiveStatus = m.status || 'ACTIVE'
+    const isAlreadyEvaluated = ['SCORED_BY_TL', 'PENDING_REVIEW', 'APPROVED_BY_DM', 'COMPLETED', 'APPROVED', 'REVISION_REQUIRED', 'REVISED_BY_DM'].includes(m.status)
+    if (!isAlreadyEvaluated) {
+      if (isCrewBuddyLocked.value || isWeekLocked.value) {
+        effectiveStatus = 'LOCKED'
+      } else {
+        effectiveStatus = 'ACTIVE'
+      }
+    }
+    return {
+      ...m,
+      status: effectiveStatus
+    }
+  })
 })
 
 // Mission scores map for selected crew: { [missionId]: score }
