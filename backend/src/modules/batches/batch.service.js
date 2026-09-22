@@ -27,6 +27,18 @@ const addDays = (date, days) => {
 };
 
 /**
+ * Helper memicu background progression job secara asinkron (tidak memblokir response).
+ */
+const triggerBackgroundProgression = () => {
+  try {
+    const { runBatchProgressionCheck } = require('../../jobs/batchProgression.job');
+    setTimeout(() => {
+      runBatchProgressionCheck().catch(() => {});
+    }, 100);
+  } catch (_) {}
+};
+
+/**
  * Menghitung durasi hari dari durationCode dan durationValue.
  */
 const getUnitDays = (durationCode, durationValue = 1) => {
@@ -292,7 +304,9 @@ const executeBatchGeneration = async (tx, {
       } else if (mission.templateType === 'JOURNEY') {
         tlId = storeLeaderId;
         dmId = districtManagerId;
-        initialStatus = mission.weekOrDayNumber === 1 ? 'ACTIVE' : 'LOCKED';
+        const nowWib = new Date(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date()));
+        const isStarted = mission.startDate && new Date(mission.startDate) <= nowWib;
+        initialStatus = (mission.weekOrDayNumber === 1 || isStarted) ? 'ACTIVE' : 'LOCKED';
       } else if (mission.templateType === 'FEEDBACK') {
         initialStatus = 'LOCKED';
       }
@@ -536,6 +550,10 @@ const createBatch = async (payload, creatorId = null) => {
     });
   });
 
+  if (result && result.status === 'OPEN') {
+    triggerBackgroundProgression();
+  }
+
   return await enrichSingleBatchWithTotalWeeks(result);
 };
 
@@ -601,6 +619,8 @@ const generateBatch = async (batchId, creatorId = null) => {
       ...genResult
     };
   });
+
+  triggerBackgroundProgression();
 
   return result;
 };
@@ -1536,6 +1556,9 @@ const updateBatch = async (batchId, payload, updaterId = null) => {
   }
 
   const updated = await getBatchById(batchId);
+  if (updated && updated.status === 'OPEN') {
+    triggerBackgroundProgression();
+  }
   return updated;
 };
 

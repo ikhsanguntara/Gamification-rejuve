@@ -159,6 +159,20 @@ const toggleBatchDetailLock = async (req, res, next) => {
   }
 };
 
+const triggerProgression = async (req, res, next) => {
+  try {
+    const { runBatchProgressionCheck } = require('../../jobs/batchProgression.job');
+    const result = await runBatchProgressionCheck();
+
+    return sendSuccess(res, {
+      message: 'Pengecekan transisi siklus batch berhasil dijalankan.',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getBatches,
   getBatchById,
@@ -167,5 +181,6 @@ module.exports = {
   generateBatchMissions,
   updateBatch,
   deleteBatch,
-  toggleBatchDetailLock
+  toggleBatchDetailLock,
+  triggerProgression
 };

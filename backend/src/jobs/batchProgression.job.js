@@ -34,10 +34,33 @@ const getMsUntilNextWibMidnight = () => {
 };
 
 /**
+ * Helper menghitung durasi hari dari durationCode dan durationValue.
+ */
+const getUnitDays = (durationCode, durationValue = 1) => {
+  const val = Number(durationValue) || 1;
+  switch (durationCode?.toUpperCase()) {
+    case 'DAY':
+    case 'DAYS':
+      return val;
+    case 'WEEK':
+    case 'WEEKS':
+      return val * 7;
+    case 'MONTH':
+    case 'MONTHS':
+      return val * 30;
+    case 'YEAR':
+    case 'YEARS':
+      return val * 365;
+    default:
+      return val * 7;
+  }
+};
+
+/**
  * Fungsi utama untuk mengevaluasi seluruh batch OPEN terhadap waktu kalender hari ini.
  */
 const runBatchProgressionCheck = async () => {
-  console.log('[BatchJob] Menjalankan pengecekan transisi siklus mingguan batch...');
+  console.log('[BatchJob] Menjalankan pengecekan transisi siklus batch...');
   try {
     const today = getTodayWib();
 
@@ -45,7 +68,14 @@ const runBatchProgressionCheck = async () => {
       where: { status: 'OPEN' },
       include: {
         details: {
-          include: { tplMission: true }
+          include: {
+            tplMission: {
+              include: { details: true }
+            }
+          }
+        },
+        missions: {
+          select: { missionId: true, weekOrDayNumber: true, type: true, startDate: true }
         },
         users: {
           select: { userId: true, role: true, department: true }
@@ -82,7 +112,7 @@ const runBatchProgressionCheck = async () => {
           }).catch(() => {});
         }
 
-        const io = getIO();
+        const io = typeof getIO === 'function' ? getIO() : null;
         if (io) {
           io.emit('batch:status_changed', {
             batchId: batch.batchId,
@@ -92,16 +122,24 @@ const runBatchProgressionCheck = async () => {
         continue;
       }
 
-      // 2. Cek pergantian minggu (current_week)
+      // 2. Cek pergantian periode / minggu (current_week)
       const diffTime = today.getTime() - journeyStart.getTime();
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
       if (diffDays >= 0) {
-        const totalWeeks = batch.details?.find(d => d.tplMission?.type === 'JOURNEY')?.tplMission?.details?.reduce(
-          (max, d) => Math.max(max, d.durationNumber || 1), 1
-        ) || 3;
+        const journeyDurCode = journeyDetail?.tplMission?.durationCode || 'WEEK';
+        const journeyDurVal = journeyDetail?.tplMission?.durationValue || 1;
+        const journeyUnitDays = getUnitDays(journeyDurCode, journeyDurVal);
 
-        const targetWeek = Math.min(Math.floor(diffDays / 7) + 1, totalWeeks);
+        const journeyMissions = batch.missions?.filter(m => m.type === 'JOURNEY') || [];
+        const maxMissionWeek = journeyMissions.reduce((max, m) => Math.max(max, m.weekOrDayNumber || 1), 0);
+        const totalPeriods = Math.max(
+          maxMissionWeek,
+          journeyDetail?.tplMission?.details?.reduce((max, d) => Math.max(max, d.durationNumber || 1), 1) || 1,
+          Number(journeyDurVal) || 1
+        );
+
+        const targetWeek = Math.min(Math.floor(diffDays / journeyUnitDays) + 1, totalPeriods);
 
         if (targetWeek > batch.currentWeek) {
           await prisma.batch.update({
@@ -109,32 +147,22 @@ const runBatchProgressionCheck = async () => {
             data: { currentWeek: targetWeek }
           });
 
-          // Buka kunci misi Journey untuk week baru ini jika ada kru yang statusnya LOCKED
-          await prisma.userMission.updateMany({
-            where: {
-              mission: {
-                batchId: batch.batchId,
-                type: 'JOURNEY',
-                weekOrDayNumber: targetWeek
-              },
-              status: 'LOCKED'
-            },
-            data: { status: 'ACTIVE' }
-          });
+          console.log(`[BatchJob] Batch "${batch.name}" naik ke Periode ${targetWeek} (durasi: ${journeyDurCode}, unitDays: ${journeyUnitDays}).`);
 
-          console.log(`[BatchJob] Batch "${batch.name}" naik ke Week ${targetWeek}. Misi diaktifkan.`);
+          const isDay = journeyDurCode?.toUpperCase() === 'DAY' || journeyDurCode?.toUpperCase() === 'DAYS';
+          const periodUnitLabel = isDay ? 'Hari' : 'Minggu';
 
           // Broadcast notifikasi ke seluruh anggota batch
           for (const u of batch.users) {
             notificationService.createNotification({
               userId: u.userId,
-              title: `Siklus Minggu ${targetWeek} Dimulai`,
-              message: `Periode observasi & evaluasi Minggu ke-${targetWeek} untuk batch "${batch.name}" resmi dibuka.`,
+              title: `Siklus ${periodUnitLabel} ${targetWeek} Dimulai`,
+              message: `Periode observasi & evaluasi ${periodUnitLabel} ke-${targetWeek} untuk batch "${batch.name}" resmi dibuka.`,
               type: 'WEEK_STARTED'
             }).catch(() => {});
           }
 
-          const io = getIO();
+          const io = typeof getIO === 'function' ? getIO() : null;
           if (io) {
             io.emit('batch:week_changed', {
               batchId: batch.batchId,
@@ -142,12 +170,35 @@ const runBatchProgressionCheck = async () => {
             });
           }
         }
+
+        // Buka kunci misi Journey untuk seluruh periode yang sudah berjalan (weekOrDayNumber <= effectivePeriod ATAU startDate <= today)
+        const effectivePeriod = Math.max(targetWeek, batch.currentWeek);
+        const unlocked = await prisma.userMission.updateMany({
+          where: {
+            mission: {
+              batchId: batch.batchId,
+              type: 'JOURNEY',
+              OR: [
+                { weekOrDayNumber: { lte: effectivePeriod } },
+                { startDate: { lte: today } }
+              ]
+            },
+            status: 'LOCKED'
+          },
+          data: { status: 'ACTIVE' }
+        });
+
+        if (unlocked.count > 0) {
+          console.log(`[BatchJob] Batch "${batch.name}": Membuka ${unlocked.count} kartu misi Journey yang sebelumnya LOCKED.`);
+        }
       }
     }
 
     console.log('[BatchJob] Selesai memproses pengecekan batch.');
+    return { success: true };
   } catch (error) {
     console.error('[BatchJob] Error saat menjalankan transisi batch:', error);
+    return { success: false, error: error.message };
   }
 };
 

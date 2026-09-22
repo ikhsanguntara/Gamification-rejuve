@@ -13,6 +13,7 @@ router.get('/next-code', batchController.getNextBatchCode);
 router.get('/:id', batchController.getBatchById);
 
 // ─── Write (HEAD dan SUPERADMIN) ──────────────────────────────────────────────
+router.post('/trigger-progression', authorizeRole(['SUPERADMIN', 'HEAD']), batchController.triggerProgression);
 router.post('/', authorizeRole(['SUPERADMIN', 'HEAD']), batchController.createBatch);
 router.post('/:id/generate', authorizeRole(['SUPERADMIN', 'HEAD']), batchController.generateBatchMissions);
 router.patch('/:batchId/details/:batchDetailId/toggle-lock', authorizeRole(['SUPERADMIN', 'HEAD', 'STORE_LEADER']), batchController.toggleBatchDetailLock);

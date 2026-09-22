@@ -72,7 +72,23 @@ const getIo = () => {
   return io;
 };
 
+const emitToRole = (roleCode, event, data) => {
+  if (io) {
+    io.to(`role:${roleCode}`).emit(event, data);
+  }
+};
+
+const emitToUser = (userId, event, data) => {
+  if (io) {
+    io.to(`user:${userId}`).emit(event, data);
+  }
+};
+
 module.exports = {
   initSocket,
-  getIo
+  getIo,
+  getIO: getIo,
+  emitToRole,
+  emitToUser
 };
+
