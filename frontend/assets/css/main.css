@@ -11,6 +11,11 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  html.dark,
+  .dark {
+    color-scheme: dark;
+  }
+
   body {
     @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
@@ -32,6 +37,37 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-slate-400 dark:bg-slate-600;
+  }
+
+  /* Native Date, Time & Calendar Picker in Dark Mode */
+  .dark input,
+  .dark select,
+  .dark textarea,
+  .dark input[type="date"],
+  .dark input[type="time"],
+  .dark input[type="datetime-local"],
+  .dark input[type="month"],
+  .dark input[type="week"] {
+    color-scheme: dark !important;
+  }
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator,
+  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+  .dark input[type="month"]::-webkit-calendar-picker-indicator,
+  .dark input[type="week"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.9;
+    transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+  }
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator:hover,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator:hover,
+  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+  .dark input[type="month"]::-webkit-calendar-picker-indicator:hover,
+  .dark input[type="week"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    transform: scale(1.08);
   }
 }
 

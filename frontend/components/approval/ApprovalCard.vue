@@ -69,7 +69,7 @@
           <div>
             <span class="text-[10px] font-bold uppercase tracking-wider block" :class="item.isSlNotScored ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'">
               <template v-if="item.isSlNotScored">
-                {{ item.status === 'APPROVED' ? 'Nilai Murni DM (SL Tidak Menilai)' : 'Auto-Forward Job (SL Tidak Menilai)' }}
+                {{ item.status === 'APPROVED' ? 'Nilai Murni DM' : 'Penilaian Langsung DM' }}
               </template>
               <template v-else>
                 {{ item.status === 'APPROVED' ? 'Nilai Gabungan (SL & DM)' : 'Skor Pengajuan SL' }}
@@ -116,7 +116,7 @@
         <p class="text-[11px] text-slate-400 flex items-center gap-1 pt-0.5">
           <UserCheck class="w-3 h-3 text-slate-400" />
           <span v-if="item.isSlNotScored">
-            Status: <strong class="text-amber-600 dark:text-amber-400 font-bold">Auto-Forward Job (SL Tidak Menilai)</strong>
+            Status: <strong class="text-amber-600 dark:text-amber-400 font-semibold">Otomatis ke DM (SL Lewat Waktu)</strong>
           </span>
           <span v-else>
             Dinilai oleh: <strong class="text-slate-700 dark:text-slate-300 font-semibold">{{ item.supervisorName || 'Store Leader' }}</strong>
@@ -132,7 +132,7 @@
         </span>
         <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed italic p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/30 border border-slate-200/60 dark:border-slate-800/60">
           <span v-if="item.isSlNotScored" class="text-amber-700 dark:text-amber-400 not-italic font-medium">
-            "Store Leader tidak mengisi evaluasi dalam batas waktu siklus. Evaluasi dimajukan ke DM oleh sistem untuk penilaian mandiri."
+            "Otomatis dialihkan ke DM untuk penilaian mandiri."
           </span>
           <span v-else>
             "{{ item.comment || 'Pemeriksaan operasional telah memenuhi standar SOP.' }}"

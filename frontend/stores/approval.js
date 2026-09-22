@@ -118,7 +118,7 @@ export const useApprovalStore = defineStore('approval', {
               submittedAt: m.tlScoredAt || m.createdAt,
               reviewedAt: m.dmReviewedAt,
               comment: isSlNotScored
-                ? 'Store Leader tidak mengisi evaluasi dalam batas waktu siklus. Evaluasi dimajukan ke DM oleh sistem untuk penilaian mandiri.'
+                ? 'Otomatis dialihkan ke DM untuk penilaian mandiri.'
                 : (m.tlNotes || 'Standar operasional telah diverifikasi.'),
               evidence: m.evidenceUrl ? [{ url: m.evidenceUrl, caption: 'Bukti Foto Operasional' }] : []
             }

@@ -56,9 +56,9 @@
               </span>
               <span
                 v-if="isSlNotScored"
-                class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800"
+                class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800"
               >
-                Auto-Forward (Job)
+                Otomatis ke DM
               </span>
               <span
                 v-else
@@ -73,7 +73,6 @@
                 <span class="text-2xl font-black text-amber-700 dark:text-amber-400">
                   Tidak Dinilai
                 </span>
-                <span class="text-[10px] text-slate-400 font-semibold">(Otomatis Job)</span>
               </template>
               <template v-else>
                 <span class="text-3xl font-black text-slate-800 dark:text-white">
@@ -92,7 +91,7 @@
             <span class="text-[10px] font-semibold text-slate-400 block mb-0.5">Catatan SL:</span>
             <p class="text-xs text-slate-600 dark:text-slate-300 italic leading-snug line-clamp-2">
               <span v-if="isSlNotScored" class="text-amber-700 dark:text-amber-400 font-medium not-italic">
-                "Store Leader tidak mengisi evaluasi dalam batas waktu siklus. Evaluasi dialihkan ke DM untuk penilaian murni."
+                "Otomatis dialihkan ke DM untuk penilaian mandiri."
               </span>
               <span v-else>
                 "{{ item.comment || item.tlNotes || 'Standar SOP operasional telah diperiksa dan terpenuhi.' }}"
@@ -211,7 +210,7 @@
         <div>
           <div class="flex items-center gap-1.5 text-[11px] text-slate-300 font-medium">
             <span v-if="isSlNotScored" class="text-amber-300 font-bold flex items-center gap-1">
-              <span>⚡ Penilaian Murni DM (SL Tidak Menilai) = {{ finalScore }} Poin</span>
+              <span>⚡ Skor Akhir (100% Nilai DM): {{ finalScore }} Poin</span>
             </span>
             <span v-else>
               Rata-rata: (SL {{ slScore }} + DM {{ dmScore }}) / 2 = {{ finalScore }} Poin
@@ -220,7 +219,7 @@
           <div class="flex items-baseline gap-1.5 mt-0.5">
             <span class="text-2xl font-black tracking-tight text-white">{{ finalScore }}</span>
             <span class="text-xs text-slate-300">/ 100 Poin</span>
-            <span class="text-[10px] text-slate-400 font-normal ml-1">({{ finalScore }}/100 × 5 = {{ finalStars }}⭐)</span>
+            <span class="text-[10px] text-slate-400 font-normal ml-1">(⭐ {{ finalStars }} Bintang)</span>
           </div>
         </div>
 
@@ -237,8 +236,8 @@
       <div class="space-y-1">
         <label class="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center justify-between">
           <span>Catatan / Arahan DM (Opsional):</span>
-          <span v-if="isSlNotScored" class="text-[11px] text-amber-600 dark:text-amber-400 font-bold">
-            Penilaian Murni DM (100% Skor DM)
+          <span v-if="isSlNotScored" class="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+            100% Nilai DM
           </span>
           <span v-else-if="isAdjusted" class="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
             Nilai disesuaikan ({{ slScore }} → {{ dmScore }})

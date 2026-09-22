@@ -120,7 +120,7 @@
             v-model="startDate"
             type="date"
             @change="onFilterChange"
-            class="w-full px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#831843]/20 text-slate-900 dark:text-white"
+            class="w-full px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#831843]/20 text-slate-900 dark:text-white dark:[color-scheme:dark]"
           />
         </div>
 
@@ -133,7 +133,7 @@
             v-model="endDate"
             type="date"
             @change="onFilterChange"
-            class="w-full px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#831843]/20 text-slate-900 dark:text-white"
+            class="w-full px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#831843]/20 text-slate-900 dark:text-white dark:[color-scheme:dark]"
           />
         </div>
       </div>

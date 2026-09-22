@@ -20,14 +20,100 @@
       <div class="flex items-center gap-2.5 flex-wrap">
         <span class="text-xs font-semibold px-3.5 py-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1.5 shadow-xs">
           <Hourglass class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-          <span>{{ approvalStore.pendingApprovals.length }} Menunggu Keputusan</span>
+          <span>{{ filteredPendingApprovals.length }} Menunggu Keputusan</span>
         </span>
+      </div>
+    </div>
+
+    <!-- Filter & Search Toolbar (Adaptive for DM) -->
+    <div class="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+        <!-- Search Input -->
+        <div class="lg:col-span-4">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+            Pencarian
+          </label>
+          <div class="relative">
+            <Search class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Cari nama kru / misi / kode / toko..."
+              class="w-full pl-9 pr-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#831843]/20 focus:border-[#831843] dark:focus:border-[#f472b6] text-slate-900 dark:text-white transition-all"
+            />
+          </div>
+        </div>
+
+        <!-- Filter Tipe Penilaian -->
+        <div class="lg:col-span-3">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+            Tipe Evaluasi
+          </label>
+          <select
+            v-model="selectedType"
+            class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#831843]/20 focus:border-[#831843] dark:focus:border-[#f472b6] text-slate-900 dark:text-white cursor-pointer transition-all"
+          >
+            <option value="ALL">Semua Tipe Evaluasi</option>
+            <option value="AUTO_FORWARD">⚡ Penilaian Langsung DM (Otomatis)</option>
+            <option value="REGULAR">📋 Penilaian Reguler SL</option>
+          </select>
+        </div>
+
+        <!-- Filter Gerai / Store -->
+        <div class="lg:col-span-3">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+            Gerai / Lokasi
+          </label>
+          <select
+            v-model="selectedStore"
+            class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#831843]/20 focus:border-[#831843] dark:focus:border-[#f472b6] text-slate-900 dark:text-white cursor-pointer transition-all"
+          >
+            <option value="">Semua Gerai</option>
+            <option
+              v-for="s in storeStore.allStores"
+              :key="s.code || s.id"
+              :value="s.name || s.code"
+            >
+              {{ s.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Filter Week -->
+        <div class="lg:col-span-1">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+            Week
+          </label>
+          <select
+            v-model="selectedWeek"
+            class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#831843]/20 focus:border-[#831843] dark:focus:border-[#f472b6] text-slate-900 dark:text-white cursor-pointer transition-all"
+          >
+            <option value="">Semua</option>
+            <option :value="1">W1</option>
+            <option :value="2">W2</option>
+            <option :value="3">W3</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="lg:col-span-1 flex justify-end">
+          <button
+            type="button"
+            @click="resetFilters"
+            :disabled="!hasActiveFilter"
+            class="w-full py-2 px-2.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1 transition-all"
+            title="Reset Seluruh Filter"
+          >
+            <RotateCcw class="w-3.5 h-3.5" />
+            <span>Reset</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Bulk Action Toolbar (When on PENDING tab and items available) -->
     <div
-      v-if="activeTab === 'PENDING' && approvalStore.pendingApprovals.length > 0"
+      v-if="activeTab === 'PENDING' && filteredPendingApprovals.length > 0"
       class="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3"
     >
       <div class="flex items-center gap-3">
@@ -38,7 +124,7 @@
             @change="toggleSelectAll"
             class="w-4 h-4 rounded text-[#831843] focus:ring-[#831843] cursor-pointer"
           />
-          <span>Pilih Semua ({{ approvalStore.pendingApprovals.length }} Misi Pending)</span>
+          <span>Pilih Semua ({{ filteredPendingApprovals.length }} Misi Terfilter)</span>
         </label>
         <span
           v-if="selectedIds.length > 0"
@@ -85,7 +171,7 @@
           <Hourglass class="w-3.5 h-3.5" />
           <span>Menunggu Persetujuan</span>
           <span class="px-1.5 py-0.2 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-            {{ approvalStore.pendingApprovals.length }}
+            {{ filteredPendingApprovals.length }}
           </span>
         </TabsTrigger>
 
@@ -96,7 +182,7 @@
           <CheckCircle2 class="w-3.5 h-3.5" />
           <span>Disetujui (Approved)</span>
           <span class="px-1.5 py-0.2 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
-            {{ approvalStore.approvedItems.length }}
+            {{ filteredApprovedItems.length }}
           </span>
         </TabsTrigger>
       </TabsList>
@@ -104,7 +190,7 @@
       <!-- Pending Tab Content -->
       <TabsContent value="PENDING" class="focus:outline-hidden space-y-4">
         <div
-          v-if="approvalStore.pendingApprovals.length > 0"
+          v-if="filteredPendingApprovals.length > 0"
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
         >
           <ApprovalCard
@@ -118,16 +204,16 @@
           />
         </div>
         <AppPagination
-          v-if="approvalStore.pendingApprovals.length > 0"
+          v-if="filteredPendingApprovals.length > 0"
           v-model:current-page="currentPendingPage"
-          :total-items="approvalStore.pendingApprovals.length"
+          :total-items="filteredPendingApprovals.length"
           :items-per-page="itemsPerPage"
           item-label="evaluasi"
         />
         <EmptyState
           v-else
-          title="Semua Evaluasi Telah Disetujui"
-          description="Tidak ada antrean evaluasi dari Store Leader yang menunggu persetujuan saat ini."
+          title="Tidak Ada Evaluasi yang Cocok"
+          description="Tidak ditemukan kartu evaluasi yang sesuai dengan filter atau kata kunci pencarian Anda."
           icon="CheckCircle2"
         />
       </TabsContent>
@@ -135,7 +221,7 @@
       <!-- Approved Tab Content -->
       <TabsContent value="APPROVED" class="focus:outline-hidden space-y-4">
         <div
-          v-if="approvalStore.approvedItems.length > 0"
+          v-if="filteredApprovedItems.length > 0"
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
         >
           <ApprovalCard
@@ -172,9 +258,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from 'reka-ui'
 import { useApprovalStore } from '~/stores/approval.js'
+import { useStoreStore } from '~/stores/store.js'
+import { useBatchStore } from '~/stores/batch.js'
 import { useToast } from '~/composables/useToast.js'
 import { useConfetti } from '~/composables/useConfetti.js'
 import ApprovalCard from '~/components/approval/ApprovalCard.vue'
@@ -185,22 +273,49 @@ import { confirmActionDialog } from '~/utils/dialog.js'
 import {
   Hourglass,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Search,
+  RotateCcw
 } from 'lucide-vue-next'
 
 const approvalStore = useApprovalStore()
+const storeStore = useStoreStore()
+const batchStore = useBatchStore()
 const toast = useToast()
 const confetti = useConfetti()
 
 const activeTab = ref('PENDING')
 const isApproveModalOpen = ref(false)
 const selectedItem = ref(null)
-
 const selectedIds = ref([])
+
+// Filter State
+const searchQuery = ref('')
+const selectedType = ref('ALL') // 'ALL' | 'AUTO_FORWARD' | 'REGULAR'
+const selectedStore = ref('')
+const selectedWeek = ref('')
 
 const currentPendingPage = ref(1)
 const currentApprovedPage = ref(1)
 const itemsPerPage = 9
+
+const hasActiveFilter = computed(() => {
+  return Boolean(
+    searchQuery.value.trim() ||
+    selectedType.value !== 'ALL' ||
+    selectedStore.value ||
+    selectedWeek.value
+  )
+})
+
+const resetFilters = () => {
+  searchQuery.value = ''
+  selectedType.value = 'ALL'
+  selectedStore.value = ''
+  selectedWeek.value = ''
+  currentPendingPage.value = 1
+  currentApprovedPage.value = 1
+}
 
 const loadApprovals = async (page = 1) => {
   await approvalStore.fetchApprovalsFromApi({
@@ -209,8 +324,14 @@ const loadApprovals = async (page = 1) => {
   })
 }
 
-onMounted(() => {
+onMounted(async () => {
   loadApprovals(1)
+  if (storeStore.allStores.length === 0) {
+    await storeStore.fetchStoresFromApi().catch(() => {})
+  }
+  if (batchStore.allBatches.length === 0) {
+    await batchStore.fetchBatchesFromApi().catch(() => {})
+  }
 })
 
 watch([currentPendingPage, currentApprovedPage], ([pPage, aPage]) => {
@@ -218,18 +339,72 @@ watch([currentPendingPage, currentApprovedPage], ([pPage, aPage]) => {
   loadApprovals(targetPage)
 })
 
+// Reset pagination to page 1 whenever search/filter changes
+watch([searchQuery, selectedType, selectedStore, selectedWeek], () => {
+  currentPendingPage.value = 1
+  currentApprovedPage.value = 1
+})
+
+// Helper filter function
+const applyApprovalFilters = (items) => {
+  let list = items || []
+
+  // 1. Search Query
+  const q = searchQuery.value.trim().toLowerCase()
+  if (q) {
+    list = list.filter(item =>
+      (item.crewName && item.crewName.toLowerCase().includes(q)) ||
+      (item.missionTitle && item.missionTitle.toLowerCase().includes(q)) ||
+      (item.missionCode && item.missionCode.toLowerCase().includes(q)) ||
+      (item.storeLocation && item.storeLocation.toLowerCase().includes(q)) ||
+      (item.supervisorName && item.supervisorName.toLowerCase().includes(q))
+    )
+  }
+
+  // 2. Type Filter (Auto-Forward vs Regular)
+  if (selectedType.value === 'AUTO_FORWARD') {
+    list = list.filter(item => item.isSlNotScored)
+  } else if (selectedType.value === 'REGULAR') {
+    list = list.filter(item => !item.isSlNotScored)
+  }
+
+  // 3. Store Filter
+  if (selectedStore.value) {
+    const s = selectedStore.value.toLowerCase()
+    list = list.filter(item =>
+      (item.storeLocation && item.storeLocation.toLowerCase().includes(s)) ||
+      (item.storeName && item.storeName.toLowerCase().includes(s))
+    )
+  }
+
+  // 4. Week Filter
+  if (selectedWeek.value) {
+    list = list.filter(item => String(item.week) === String(selectedWeek.value))
+  }
+
+  return list
+}
+
+const filteredPendingApprovals = computed(() => {
+  return applyApprovalFilters(approvalStore.pendingApprovals)
+})
+
+const filteredApprovedItems = computed(() => {
+  return applyApprovalFilters(approvalStore.approvedItems)
+})
+
 const paginatedPending = computed(() => {
   const start = (currentPendingPage.value - 1) * itemsPerPage
-  return approvalStore.pendingApprovals.slice(start, start + itemsPerPage)
+  return filteredPendingApprovals.value.slice(start, start + itemsPerPage)
 })
 
 const paginatedApproved = computed(() => {
   const start = (currentApprovedPage.value - 1) * itemsPerPage
-  return approvalStore.approvedItems.slice(start, start + itemsPerPage)
+  return filteredApprovedItems.value.slice(start, start + itemsPerPage)
 })
 
 const isAllSelected = computed(() => {
-  const pending = approvalStore.pendingApprovals
+  const pending = filteredPendingApprovals.value
   return pending.length > 0 && selectedIds.value.length === pending.length
 })
 
@@ -237,7 +412,7 @@ function toggleSelectAll() {
   if (isAllSelected.value) {
     selectedIds.value = []
   } else {
-    selectedIds.value = approvalStore.pendingApprovals.map(a => a.id)
+    selectedIds.value = filteredPendingApprovals.value.map(a => a.id)
   }
 }
 

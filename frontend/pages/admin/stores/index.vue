@@ -1,6 +1,6 @@
 <template>
   <div class="w-full space-y-6">
-    <!-- Header with Action -->
+    <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <div class="flex items-center gap-2 mb-1">
@@ -12,14 +12,6 @@
           </span>
         </div>
       </div>
-
-      <NuxtLink
-        to="/admin/stores/create"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#831843] hover:bg-[#6b133a] text-white text-xs font-semibold transition-all shadow-md shadow-[#831843]/20 active:scale-95 cursor-pointer self-start sm:self-auto"
-      >
-        <Plus class="w-4 h-4" />
-        <span>Tambah Gerai Baru</span>
-      </NuxtLink>
     </div>
 
 
@@ -212,18 +204,6 @@
       description="Tidak ada gerai yang cocok dengan filter atau kata kunci pencarian Anda."
       icon="Store"
     />
-
-    <!-- Delete Confirmation Modal -->
-    <ConfirmationModal
-      :model-value="showDeleteModal"
-      title="Hapus Master Gerai?"
-      :message="`Apakah Anda yakin ingin menghapus outlet '${storeToDelete?.name}'? Data gerai dan alokasi penanggung jawab akan dihapus.`"
-      confirm-text="Ya, Hapus Gerai"
-      cancel-text="Batal"
-      variant="danger"
-      @update:model-value="showDeleteModal = $event"
-      @confirm="handleDeleteStore"
-    />
   </div>
 </template>
 
@@ -232,19 +212,15 @@ import { ref, watch, onMounted } from 'vue'
 import { useStoreStore } from '~/stores/store.js'
 import { useUserStore } from '~/stores/user.js'
 import { useToast } from '~/composables/useToast.js'
-import { departmentApi } from '~/services/api.js'
-import ConfirmationModal from '~/components/ui/ConfirmationModal.vue'
 import EmptyState from '~/components/ui/EmptyState.vue'
 import AppPagination from '~/components/ui/AppPagination.vue'
 import {
   Store,
-  Plus,
   Search,
   MapPin,
   Phone,
   Clock,
-  Edit3,
-  Trash2
+  Edit3
 } from 'lucide-vue-next'
 
 const storeStore = useStoreStore()
@@ -257,9 +233,6 @@ const selectedStatus = ref('ALL')
 
 const currentPage = ref(1)
 const itemsPerPage = 9
-
-const showDeleteModal = ref(false)
-const storeToDelete = ref(null)
 
 // Server-side load function: langsung menembak API backend dengan parameter page, limit, dan filters
 const loadStores = async (page = 1) => {
@@ -296,25 +269,4 @@ watch([selectedRegion, selectedStatus], () => {
   currentPage.value = 1
   loadStores(1)
 })
-
-import { confirmDeleteDialog } from '~/utils/dialog.js'
-
-const confirmDelete = async (store) => {
-  const isConfirmed = await confirmDeleteDialog({
-    title: 'Hapus Master Gerai?',
-    text: `Apakah Anda yakin ingin menghapus outlet "${store.name}" (${store.code})? Data gerai akan dihapus dari server backend.`,
-    confirmButtonText: 'Ya, Hapus Gerai'
-  })
-
-  if (isConfirmed) {
-    try {
-      await departmentApi.delete(store.id)
-      toast.success('Gerai Dihapus', `Outlet ${store.name} telah berhasil dihapus dari backend.`)
-      await loadStores(currentPage.value)
-    } catch (err) {
-      console.error('Delete store error:', err)
-      toast.error('Gagal Menghapus Gerai', err.message || 'Tidak dapat menghapus data dari server.')
-    }
-  }
-}
 </script>

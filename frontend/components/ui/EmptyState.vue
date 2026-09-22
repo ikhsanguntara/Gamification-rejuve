@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col items-center justify-center text-center p-8 sm:p-12 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
-    <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4">
+    <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-300 mb-4">
       <component :is="iconComponent" class="w-7 h-7" />
     </div>
     <h3 class="text-base font-semibold text-slate-900 dark:text-white">

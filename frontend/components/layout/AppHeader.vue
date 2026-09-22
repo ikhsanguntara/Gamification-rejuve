@@ -84,18 +84,18 @@
       <button
         type="button"
         @click="toggleTheme"
-        class="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+        class="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
         aria-label="Toggle theme"
       >
         <Sun v-if="isDark" class="w-4 h-4 text-amber-400" />
-        <Moon v-else class="w-4 h-4 text-slate-600" />
+        <Moon v-else class="w-4 h-4 text-slate-600 dark:text-slate-200" />
       </button>
 
       <!-- Notification Popover using Reka UI Popover -->
       <PopoverRoot>
         <PopoverTrigger
-          class="relative p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer focus:outline-hidden"
+          class="relative p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer focus:outline-hidden"
           aria-label="Notifications"
           @click="onNotificationPopoverOpen"
         >

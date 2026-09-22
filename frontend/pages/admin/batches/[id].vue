@@ -136,7 +136,7 @@
                   v-model="editForm.startDate"
                   type="date"
                   required
-                  class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+                  class="w-full text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] dark:[color-scheme:dark]"
                 />
                 <p class="text-[11px] text-slate-400 mt-1">Titik awal dibukanya misi kurikulum SOP mingguan.</p>
               </div>
@@ -151,7 +151,7 @@
                   type="date"
                   readonly
                   disabled
-                  class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-700 dark:text-slate-300 cursor-not-allowed"
+                  class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-slate-700 dark:text-slate-300 cursor-not-allowed dark:[color-scheme:dark]"
                 />
                 <p class="text-[11px] text-slate-400 mt-1">Dihitung otomatis berdasarkan total durasi template Journey SOP.</p>
               </div>
@@ -159,11 +159,41 @@
           </div>
         </div>
 
-        <!-- 2. Pilihan Paket Template Journey -->
+        <!-- 2. Pilihan Paket Template Misi Buddy (Pra-Batch) -->
         <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div class="flex items-center justify-between flex-wrap gap-2">
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              2. Pilihan Paket Template Journey *
+              2. Pilihan Paket Template Buddy (Pra-Batch)
+            </h3>
+            <span v-if="editBuddyDateRangeText !== '-'" class="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 px-2.5 py-0.5 rounded-full">
+              🤝 Periode Buddy: {{ editBuddyDateRangeText }}
+            </span>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40 space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                Pilih Kurikulum Template Misi Buddy
+              </label>
+              <select
+                v-model="editForm.buddyPackageId"
+                class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 cursor-pointer"
+              >
+                <option value="">-- Pilih Paket Template Buddy (Opsional) --</option>
+                <option v-for="bpkg in (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages)" :key="bpkg.id" :value="bpkg.id">
+                  {{ bpkg.name }} ({{ (bpkg.templates || bpkg.details || bpkg.competencies)?.length || 0 }} Misi • {{ bpkg.code }})
+                </option>
+                <option value="NONE">-- Lewati / Tanpa Program Buddy --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Pilihan Paket Template Journey -->
+        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              3. Pilihan Paket Template Journey *
             </h3>
             <NuxtLink to="/admin/templates" class="text-[11px] text-[#831843] dark:text-[#f472b6] font-semibold hover:underline">
               Kelola Master Template →
@@ -216,36 +246,6 @@
                   />
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. Pilihan Paket Template Misi Buddy (Pra-Batch) -->
-        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-          <div class="flex items-center justify-between flex-wrap gap-2">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              3. Pilihan Paket Template Buddy (Pra-Batch)
-            </h3>
-            <span v-if="editBuddyDateRangeText !== '-'" class="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 px-2.5 py-0.5 rounded-full">
-              🤝 Periode Buddy: {{ editBuddyDateRangeText }}
-            </span>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40 space-y-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-                Pilih Kurikulum Template Misi Buddy
-              </label>
-              <select
-                v-model="editForm.buddyPackageId"
-                class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 cursor-pointer"
-              >
-                <option value="">-- Pilih Paket Template Buddy (Opsional) --</option>
-                <option v-for="bpkg in (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages)" :key="bpkg.id" :value="bpkg.id">
-                  {{ bpkg.name }} ({{ (bpkg.templates || bpkg.details || bpkg.competencies)?.length || 0 }} Misi • {{ bpkg.code }})
-                </option>
-                <option value="NONE">-- Lewati / Tanpa Program Buddy --</option>
-              </select>
             </div>
           </div>
         </div>

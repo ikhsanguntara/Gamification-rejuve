@@ -31,15 +31,6 @@
             </p>
           </div>
         </div>
-
-        <button
-          type="button"
-          @click="showDeleteModal = true"
-          class="px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 transition-colors flex items-center gap-1.5 cursor-pointer"
-        >
-          <Trash2 class="w-3.5 h-3.5" />
-          <span>Hapus Gerai</span>
-        </button>
       </div>
 
       <form @submit.prevent="handleUpdate" class="space-y-6 pt-6">
@@ -268,18 +259,6 @@
         Kembali ke Direktori Gerai
       </NuxtLink>
     </div>
-
-    <!-- Delete Confirmation Modal -->
-    <ConfirmationModal
-      :model-value="showDeleteModal"
-      title="Hapus Master Gerai?"
-      :message="`Apakah Anda yakin ingin menghapus outlet '${store?.name}'? Data gerai dan alokasi penanggung jawab akan dihapus.`"
-      confirm-text="Ya, Hapus Gerai"
-      cancel-text="Batal"
-      variant="danger"
-      @update:model-value="showDeleteModal = $event"
-      @confirm="handleDeleteStore"
-    />
   </div>
 </template>
 
@@ -290,12 +269,10 @@ import { useStoreStore } from '~/stores/store.js'
 import { useUserStore } from '~/stores/user.js'
 import { useBatchStore } from '~/stores/batch.js'
 import { useToast } from '~/composables/useToast.js'
-import ConfirmationModal from '~/components/ui/ConfirmationModal.vue'
 import {
   Store,
   ArrowLeft,
-  Check,
-  Trash2
+  Check
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -307,7 +284,6 @@ const toast = useToast()
 
 const storeId = route.params.id
 const store = computed(() => storeStore.storeById(storeId))
-const showDeleteModal = ref(false)
 
 const form = reactive({
   name: '',
@@ -402,23 +378,6 @@ const handleUpdate = async () => {
     toast.error('Gagal Memperbarui Gerai', err.message || 'Terjadi kesalahan saat memproses data.')
   } finally {
     isUpdating.value = false
-  }
-}
-
-const handleDeleteStore = async () => {
-  try {
-    const res = await departmentApi.delete(storeId)
-    if (res && (res.success || res.data !== undefined)) {
-      toast.success('Gerai Dihapus', `Outlet ${store.value?.name || form.name} telah dihapus dari backend.`)
-      showDeleteModal.value = false
-      await storeStore.fetchStoresFromApi({ page: 1, limit: 9 })
-      router.push('/admin/stores')
-    } else {
-      throw new Error(res?.message || 'Gagal menghapus gerai di server.')
-    }
-  } catch (err) {
-    console.error('Delete store error:', err)
-    toast.error('Gagal Menghapus Gerai', err.message || 'Tidak dapat menghapus data.')
   }
 }
 </script>

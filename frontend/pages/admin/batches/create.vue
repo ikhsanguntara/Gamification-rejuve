@@ -62,14 +62,65 @@
           </div>
         </div>
 
-        <!-- 2. Pilihan Paket Master Template SOP Misi (Siklus 2, 3, 4, 5 Minggu) -->
+        <!-- 2. Pilihan Paket Template Misi Buddy (3 Hari Pre-Batch Khusus Store Leader) -->
         <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div class="flex items-center justify-between flex-wrap gap-2">
             <div>
               <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                2. Pilihan Paket Template Journey  *
+                2. Pilihan Paket Template Buddy
               </h3>
-          
+            </div>
+            <span v-if="form.buddyPackageId && form.buddyPackageId !== 'NONE'" class="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 px-2.5 py-0.5 rounded-full">
+              🤝 Periode Buddy: {{ buddyDateRangeText }}
+            </span>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40 space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                Pilih Kurikulum Template Misi Buddy
+              </label>
+              <select
+                v-model="form.buddyPackageId"
+                class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 cursor-pointer shadow-2xs"
+              >
+                <option value="">-- Pilih Paket Template Buddy (Opsional) --</option>
+                <option v-for="bpkg in (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages)" :key="bpkg.id" :value="bpkg.id">
+                  {{ bpkg.name }} ({{ (bpkg.templates || bpkg.details || bpkg.competencies)?.length || 0 }} Misi • {{ bpkg.code }})
+                </option>
+                <option value="NONE">-- Lewati / Tanpa Program Buddy --</option>
+              </select>
+            </div>
+
+            <!-- Pratinjau Rapor New Hire / Misi Buddy -->
+            <div v-if="selectedBuddyPackage" class="pt-2 border-t border-purple-200/60 dark:border-purple-800/40">
+              <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-2">
+                📋 Pratinjau Misi Buddy ({{ (selectedBuddyPackage.templates || selectedBuddyPackage.details || selectedBuddyPackage.competencies)?.length || 0 }} Misi/Kompetensi • {{ selectedBuddyPackage.durationValue || 3 }} Hari Pra-Batch):
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div
+                  v-for="comp in (selectedBuddyPackage.templates || selectedBuddyPackage.details || selectedBuddyPackage.competencies || [])"
+                  :key="comp.id"
+                  class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/60 text-xs space-y-0.5"
+                >
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-purple-600 flex-shrink-0"></span>
+                    <span class="font-bold text-purple-700 dark:text-purple-300 truncate text-[11px]">{{ comp.missionTitle || comp.title || comp.name }}</span>
+                  </div>
+                  <span class="text-[10px] text-slate-400 font-semibold block">{{ (comp.sopChecklist || comp.requirements || comp.indicators)?.length || 0 }} Indikator / SOP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Pilihan Paket Master Template SOP Misi (Siklus 2, 3, 4, 5 Minggu) -->
+        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                3. Pilihan Paket Template Journey *
+              </h3>
             </div>
             <NuxtLink to="/admin/templates" class="text-[11px] text-[#831843] dark:text-[#f472b6] font-semibold hover:underline">
               Kelola Master Template →
@@ -148,59 +199,6 @@
           </div>
         </div>
 
-        <!-- 3. Pilihan Paket Template Misi Buddy (3 Hari Pre-Batch Khusus Store Leader) -->
-        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-          <div class="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                3. Pilihan Paket Template Buddy
-              </h3>
-    
-            </div>
-            <span v-if="form.buddyPackageId && form.buddyPackageId !== 'NONE'" class="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 px-2.5 py-0.5 rounded-full">
-              🤝 Periode Buddy: {{ buddyDateRangeText }}
-            </span>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40 space-y-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-                Pilih Kurikulum Template Misi Buddy
-              </label>
-              <select
-                v-model="form.buddyPackageId"
-                class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-600 cursor-pointer shadow-2xs"
-              >
-                <option value="">-- Pilih Paket Template Buddy (Opsional) --</option>
-                <option v-for="bpkg in (templateStore.buddyTemplates.length > 0 ? templateStore.buddyTemplates : buddyStore.allPackages)" :key="bpkg.id" :value="bpkg.id">
-                  {{ bpkg.name }} ({{ (bpkg.templates || bpkg.details || bpkg.competencies)?.length || 0 }} Misi • {{ bpkg.code }})
-                </option>
-                <option value="NONE">-- Lewati / Tanpa Program Buddy --</option>
-              </select>
-            </div>
-
-            <!-- Pratinjau Rapor New Hire / Misi Buddy -->
-            <div v-if="selectedBuddyPackage" class="pt-2 border-t border-purple-200/60 dark:border-purple-800/40">
-              <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-2">
-                📋 Pratinjau Misi Buddy ({{ (selectedBuddyPackage.templates || selectedBuddyPackage.details || selectedBuddyPackage.competencies)?.length || 0 }} Misi/Kompetensi • {{ selectedBuddyPackage.durationValue || 3 }} Hari Pra-Batch):
-              </div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div
-                  v-for="comp in (selectedBuddyPackage.templates || selectedBuddyPackage.details || selectedBuddyPackage.competencies || [])"
-                  :key="comp.id"
-                  class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/60 text-xs space-y-0.5"
-                >
-                  <div class="flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-purple-600 flex-shrink-0"></span>
-                    <span class="font-bold text-purple-700 dark:text-purple-300 truncate text-[11px]">{{ comp.missionTitle || comp.title || comp.name }}</span>
-                  </div>
-                  <span class="text-[10px] text-slate-400 font-semibold block">{{ (comp.sopChecklist || comp.requirements || comp.indicators)?.length || 0 }} Indikator / SOP</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- 4. Pilihan Paket Template Feedback Onboarding (End-of-Journey) -->
         <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div class="flex items-center justify-between flex-wrap gap-2">
@@ -208,7 +206,6 @@
               <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 4. Pilihan Paket Template Feedback
               </h3>
-           
             </div>
             <span v-if="selectedFeedbackPackage" class="text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full">
               📋 Periode Feedback: Akhir Siklus ({{ selectedFeedbackPackage.durationValue || 1 }} {{ selectedFeedbackPackage.durationCode === 'MONTH' ? 'Bulan' : 'Hari' }})
@@ -295,7 +292,7 @@
                   v-model="form.startDate"
                   type="date"
                   required
-                  class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843]"
+                  class="w-full text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#831843] dark:[color-scheme:dark]"
                 />
                 <p class="text-[11px] text-slate-400 mt-1">Titik awal pembukaan siklus onboarding gerai.</p>
               </div>
@@ -315,7 +312,7 @@
                   :value="form.endDate"
                   type="date"
                   readonly
-                  class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-700 dark:text-slate-300 cursor-not-allowed"
+                  class="w-full text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-slate-700 dark:text-slate-300 cursor-not-allowed dark:[color-scheme:dark]"
                 />
                 <p class="text-[11px] text-slate-400 mt-1">
                   <template v-if="templateDurationDays > 0">

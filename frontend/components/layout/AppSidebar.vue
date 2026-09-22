@@ -264,7 +264,7 @@
           :class="[
             $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/dashboard' && !item.path.startsWith('/admin') && !item.path.startsWith('/reports'))
               ? 'text-[#831843] dark:text-[#f472b6]'
-              : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+              : 'text-slate-400 dark:text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
           ]"
         />
         <span>{{ item.label }}</span>
