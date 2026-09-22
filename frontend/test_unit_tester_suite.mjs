@@ -779,15 +779,30 @@ console.log('\n📌 10. Menguji Modul Laporan & Ekspor Spreadsheet (.xlsx):')
 
 const reportStore = useReportStore()
 
-test('Report API Interface: Memastikan 8 endpoint laporan tersedia', () => {
+test('Report API Interface: Memastikan 14 endpoint laporan & ekspor tersedia', () => {
+  // 1. Buddy Incentive Endpoints
   assertTrue(typeof reportApi.getBuddyIncentives === 'function', 'reportApi.getBuddyIncentives tersedia')
   assertTrue(typeof reportApi.getBuddyIncentiveDetail === 'function', 'reportApi.getBuddyIncentiveDetail tersedia')
   assertTrue(typeof reportApi.exportBuddyIncentives === 'function', 'reportApi.exportBuddyIncentives tersedia')
   assertTrue(typeof reportApi.exportBuddyIncentiveDetail === 'function', 'reportApi.exportBuddyIncentiveDetail tersedia')
+
+  // 2. User Traceability Endpoints
   assertTrue(typeof reportApi.getUserTraceability === 'function', 'reportApi.getUserTraceability tersedia')
   assertTrue(typeof reportApi.getUserTraceabilityDetail === 'function', 'reportApi.getUserTraceabilityDetail tersedia')
   assertTrue(typeof reportApi.exportUserTraceability === 'function', 'reportApi.exportUserTraceability tersedia')
   assertTrue(typeof reportApi.exportUserTraceabilityDetail === 'function', 'reportApi.exportUserTraceabilityDetail tersedia')
+
+  // 3. Score Report Endpoints
+  assertTrue(typeof reportApi.getScoreReport === 'function', 'reportApi.getScoreReport tersedia')
+  assertTrue(typeof reportApi.exportScoreReport === 'function', 'reportApi.exportScoreReport tersedia')
+
+  // 4. Report by Store Endpoints
+  assertTrue(typeof reportApi.getStoreReport === 'function', 'reportApi.getStoreReport tersedia')
+  assertTrue(typeof reportApi.exportStoreReport === 'function', 'reportApi.exportStoreReport tersedia')
+
+  // 5. Report by DM Endpoints
+  assertTrue(typeof reportApi.getDmReport === 'function', 'reportApi.getDmReport tersedia')
+  assertTrue(typeof reportApi.exportDmReport === 'function', 'reportApi.exportDmReport tersedia')
 })
 
 test('Blob Downloader Helper: Menangani eksekusi di environment Node.js & Browser secara aman', () => {
@@ -795,18 +810,39 @@ test('Blob Downloader Helper: Menangani eksekusi di environment Node.js & Browse
   assertTrue(res === true, 'downloadFileBlob berjalan tanpa error di runtime non-browser')
 })
 
-test('Report Store: Sinkronisasi Tab & Filter State', () => {
+test('Report Store: Sinkronisasi 5 Tab & Filter State', () => {
   reportStore.activeTab = 'buddy-incentive'
   assertEqual(reportStore.activeTab, 'buddy-incentive', 'Tab aktif awal adalah buddy-incentive')
 
   reportStore.activeTab = 'user-traceability'
   assertEqual(reportStore.activeTab, 'user-traceability', 'Tab aktif berhasil dialihkan ke user-traceability')
 
+  reportStore.activeTab = 'score-report'
+  assertEqual(reportStore.activeTab, 'score-report', 'Tab aktif berhasil dialihkan ke score-report')
+
+  reportStore.activeTab = 'store-report'
+  assertEqual(reportStore.activeTab, 'store-report', 'Tab aktif berhasil dialihkan ke store-report')
+
+  reportStore.activeTab = 'dm-report'
+  assertEqual(reportStore.activeTab, 'dm-report', 'Tab aktif berhasil dialihkan ke dm-report')
+
   reportStore.setFilter('status', 'COMPLETED')
   assertEqual(reportStore.filters.status, 'COMPLETED', 'Filter status berhasil diperbarui')
 
+  reportStore.setFilter('departmentId', 'dept-ops')
+  assertEqual(reportStore.filters.departmentId, 'dept-ops', 'Filter departmentId berhasil diperbarui')
+
+  reportStore.setFilter('storeCode', 'ST-001')
+  assertEqual(reportStore.filters.storeCode, 'ST-001', 'Filter storeCode berhasil diperbarui')
+
+  reportStore.setFilter('dmId', 'dm-001')
+  assertEqual(reportStore.filters.dmId, 'dm-001', 'Filter dmId berhasil diperbarui')
+
   reportStore.resetFilters()
   assertEqual(reportStore.filters.status, '', 'Filter status berhasil direset')
+  assertEqual(reportStore.filters.departmentId, '', 'Filter departmentId berhasil direset')
+  assertEqual(reportStore.filters.storeCode, '', 'Filter storeCode berhasil direset')
+  assertEqual(reportStore.filters.dmId, '', 'Filter dmId berhasil direset')
 })
 
 // ============================================================================

@@ -53,12 +53,43 @@ export const useReportStore = defineStore('report', {
     },
     selectedTraceabilityDetail: null,
 
-    // 3. UI & Filter State
-    activeTab: 'buddy-incentive', // 'buddy-incentive' | 'user-traceability'
+    // 3. Data Score Report (Rekapitulasi Nilai Misi & Skor Kru)
+    scoreReports: [],
+    scorePagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 1
+    },
+
+    // 4. Data Report by Store (Progress Onboarding per Gerai)
+    storeReports: [],
+    storePagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 1
+    },
+
+    // 5. Data Report by DM (Evaluasi Supervisi & Approval DM)
+    dmReports: [],
+    dmPagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 1
+    },
+
+    // UI & Filter State
+    activeTab: 'buddy-incentive', // 'buddy-incentive' | 'user-traceability' | 'score-report' | 'store-report' | 'dm-report'
     filters: {
       batchId: '',
       departmentId: '',
+      storeCode: '',
       storeId: '',
+      dmId: '',
+      startDate: '',
+      endDate: '',
       status: '',
       stageId: '',
       search: ''
@@ -70,7 +101,7 @@ export const useReportStore = defineStore('report', {
   }),
 
   getters: {
-    // Statistik Ringkasan Insentif Buddy
+    // 1. Statistik Ringkasan Insentif Buddy
     buddySummaryStats: (state) => {
       const items = state.buddyIncentives || []
       const totalBuddies = items.length
@@ -88,7 +119,7 @@ export const useReportStore = defineStore('report', {
       }
     },
 
-    // Statistik Ringkasan Audit Traceability Kru
+    // 2. Statistik Ringkasan Audit Traceability Kru
     traceabilitySummaryStats: (state) => {
       const items = state.userTraceability || []
       const totalCrews = items.length
@@ -105,6 +136,92 @@ export const useReportStore = defineStore('report', {
         activeCrews,
         atRiskCrews,
         avgScore
+      }
+    },
+
+    // 3. Statistik Ringkasan Score Report
+    scoreSummaryStats: (state) => {
+      const items = state.scoreReports || []
+      const totalCrews = items.length
+      const totalStars = items.reduce((acc, curr) => acc + (Number(curr.scoreBintang) || 0), 0)
+      const totalPoints = items.reduce((acc, curr) => acc + (Number(curr.scorePoint) || 0), 0)
+      
+      const scoredWeek1 = items.filter(i => (Number(i.week1Score) || 0) > 0)
+      const avgWeek1 = scoredWeek1.length > 0
+        ? parseFloat((scoredWeek1.reduce((acc, curr) => acc + Number(curr.week1Score), 0) / scoredWeek1.length).toFixed(1))
+        : 0
+
+      const scoredWeek2 = items.filter(i => (Number(i.week2Score) || 0) > 0)
+      const avgWeek2 = scoredWeek2.length > 0
+        ? parseFloat((scoredWeek2.reduce((acc, curr) => acc + Number(curr.week2Score), 0) / scoredWeek2.length).toFixed(1))
+        : 0
+
+      const scoredWeek3 = items.filter(i => (Number(i.week3Score) || 0) > 0)
+      const avgWeek3 = scoredWeek3.length > 0
+        ? parseFloat((scoredWeek3.reduce((acc, curr) => acc + Number(curr.week3Score), 0) / scoredWeek3.length).toFixed(1))
+        : 0
+
+      return {
+        totalCrews,
+        totalStars: parseFloat(totalStars.toFixed(1)),
+        totalPoints: Math.round(totalPoints),
+        avgWeek1,
+        avgWeek2,
+        avgWeek3
+      }
+    },
+
+    // 4. Statistik Ringkasan Report by Store
+    storeSummaryStats: (state) => {
+      const items = state.storeReports || []
+      const totalStores = items.length
+      const totalNewHires = items.reduce((acc, curr) => acc + (Number(curr.numberOfNewHire) || 0), 0)
+      const totalCompleted = items.reduce((acc, curr) => acc + (Number(curr.newHireCompleteCount) || 0), 0)
+      
+      const storesWithAvg = items.filter(i => (Number(i.avgCompleteDays) || 0) > 0)
+      const overallAvgDays = storesWithAvg.length > 0
+        ? parseFloat((storesWithAvg.reduce((acc, curr) => acc + Number(curr.avgCompleteDays), 0) / storesWithAvg.length).toFixed(1))
+        : 0
+
+      return {
+        totalStores,
+        totalNewHires,
+        totalCompleted,
+        overallAvgDays
+      }
+    },
+
+    // 5. Statistik Ringkasan Report by DM
+    dmSummaryStats: (state) => {
+      const items = state.dmReports || []
+      const totalStores = items.length
+      const totalNewHires = items.reduce((acc, curr) => acc + (Number(curr.numberOfNewHire) || 0), 0)
+      const totalPointsGiven = items.reduce((acc, curr) => acc + (Number(curr.totalPointsGiven) || 0), 0)
+      const totalUnscoredSl = items.reduce((acc, curr) => acc + (Number(curr.unscoredMissionsBySl) || 0), 0)
+      const totalUnscoredDm = items.reduce((acc, curr) => acc + (Number(curr.unscoredMissionsByDm) || 0), 0)
+
+      const itemsWithHours = items.filter(i => (Number(i.avgApprovalHours) || 0) > 0)
+      const avgHours = itemsWithHours.length > 0
+        ? parseFloat((itemsWithHours.reduce((acc, curr) => acc + Number(curr.avgApprovalHours), 0) / itemsWithHours.length).toFixed(1))
+        : 0
+
+      let avgFormatted = '-'
+      if (avgHours > 0) {
+        if (avgHours >= 24) {
+          avgFormatted = `${(avgHours / 24).toFixed(1)} Hari`
+        } else {
+          avgFormatted = `${avgHours} Jam`
+        }
+      }
+
+      return {
+        totalStores,
+        totalNewHires,
+        totalPointsGiven: Math.round(totalPointsGiven),
+        totalUnscoredSl,
+        totalUnscoredDm,
+        avgHours,
+        avgFormatted
       }
     }
   },
@@ -124,7 +241,11 @@ export const useReportStore = defineStore('report', {
       this.filters = {
         batchId: '',
         departmentId: '',
+        storeCode: '',
         storeId: '',
+        dmId: '',
+        startDate: '',
+        endDate: '',
         status: '',
         stageId: '',
         search: ''
@@ -144,7 +265,11 @@ export const useReportStore = defineStore('report', {
         const queryParams = {
           batchId: customParams.batchId ?? (this.filters.batchId || undefined),
           departmentId: customParams.departmentId ?? (this.filters.departmentId || undefined),
+          storeCode: customParams.storeCode ?? (this.filters.storeCode || undefined),
           storeId: customParams.storeId ?? (this.filters.storeId || undefined),
+          dmId: customParams.dmId ?? (this.filters.dmId || undefined),
+          startDate: customParams.startDate ?? (this.filters.startDate || undefined),
+          endDate: customParams.endDate ?? (this.filters.endDate || undefined),
           page: customParams.page ?? this.buddyPagination.page,
           limit: customParams.limit ?? this.buddyPagination.limit,
           search: customParams.search ?? (this.filters.search || undefined)
@@ -217,7 +342,11 @@ export const useReportStore = defineStore('report', {
         const queryParams = {
           batchId: customParams.batchId ?? (this.filters.batchId || undefined),
           departmentId: customParams.departmentId ?? (this.filters.departmentId || undefined),
+          storeCode: customParams.storeCode ?? (this.filters.storeCode || undefined),
           storeId: customParams.storeId ?? (this.filters.storeId || undefined),
+          dmId: customParams.dmId ?? (this.filters.dmId || undefined),
+          startDate: customParams.startDate ?? (this.filters.startDate || undefined),
+          endDate: customParams.endDate ?? (this.filters.endDate || undefined),
           search: customParams.search ?? (this.filters.search || undefined)
         }
 
@@ -276,7 +405,11 @@ export const useReportStore = defineStore('report', {
         const queryParams = {
           batchId: customParams.batchId ?? (this.filters.batchId || undefined),
           departmentId: customParams.departmentId ?? (this.filters.departmentId || undefined),
+          storeCode: customParams.storeCode ?? (this.filters.storeCode || undefined),
           storeId: customParams.storeId ?? (this.filters.storeId || undefined),
+          dmId: customParams.dmId ?? (this.filters.dmId || undefined),
+          startDate: customParams.startDate ?? (this.filters.startDate || undefined),
+          endDate: customParams.endDate ?? (this.filters.endDate || undefined),
           status: customParams.status ?? (this.filters.status || undefined),
           stageId: customParams.stageId ?? (this.filters.stageId || undefined),
           page: customParams.page ?? this.traceabilityPagination.page,
@@ -347,7 +480,11 @@ export const useReportStore = defineStore('report', {
         const queryParams = {
           batchId: customParams.batchId ?? (this.filters.batchId || undefined),
           departmentId: customParams.departmentId ?? (this.filters.departmentId || undefined),
+          storeCode: customParams.storeCode ?? (this.filters.storeCode || undefined),
           storeId: customParams.storeId ?? (this.filters.storeId || undefined),
+          dmId: customParams.dmId ?? (this.filters.dmId || undefined),
+          startDate: customParams.startDate ?? (this.filters.startDate || undefined),
+          endDate: customParams.endDate ?? (this.filters.endDate || undefined),
           status: customParams.status ?? (this.filters.status || undefined),
           stageId: customParams.stageId ?? (this.filters.stageId || undefined),
           search: customParams.search ?? (this.filters.search || undefined)
@@ -392,7 +529,259 @@ export const useReportStore = defineStore('report', {
     },
 
     // ──────────────────────────────────────────────────────────────────────────
-    // 3. GENERATOR DATA CADANGAN (FALLBACK DEMO & OFFLINE RESILIENCE)
+    // 3. SCORE REPORT (REKAPITULASI NILAI MISI & SKOR KRU)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Fetch score report dari API
+     */
+    async fetchScoreReport(customParams = {}) {
+      this.isLoading = true
+      try {
+        const queryParams = {
+          batchId: customParams.batchId ?? (this.filters.batchId || undefined),
+          departmentId: customParams.departmentId ?? (this.filters.departmentId || undefined),
+          storeCode: customParams.storeCode ?? (this.filters.storeCode || undefined),
+          dmId: customParams.dmId ?? (this.filters.dmId || undefined),
+          startDate: customParams.startDate ?? (this.filters.startDate || undefined),
+          endDate: customParams.endDate ?? (this.filters.endDate || undefined),
+          page: customParams.page ?? this.scorePagination.page,
+          limit: customParams.limit ?? this.scorePagination.limit,
+          search: customParams.search ?? (this.filters.search || undefined)
+        }
+
+        const res = await reportApi.getScoreReport(queryParams)
+        if (res && res.data) {
+          const list = Array.isArray(res.data) ? res.data : (res.data.items || res.data.rows || [])
+          this.scoreReports = list
+          if (res.data.pagination || res.pagination) {
+            const p = res.data.pagination || res.pagination
+            this.scorePagination = {
+              page: Number(p.page || 1),
+              limit: Number(p.limit || 10),
+              total: Number(p.total || list.length),
+              totalPages: Number(p.totalPages || Math.ceil((p.total || list.length) / (p.limit || 10)) || 1)
+            }
+          } else {
+            this.scorePagination.total = list.length
+            this.scorePagination.totalPages = Math.ceil(list.length / this.scorePagination.limit) || 1
+          }
+          return res.data
+        }
+
+        this.generateFallbackScoreReport()
+        return this.scoreReports
+      } catch (err) {
+        console.warn('fetchScoreReport API error, using fallback:', err.message)
+        this.generateFallbackScoreReport()
+        return this.scoreReports
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    /**
+     * Ekspor spreadsheet Excel Score Report (.xlsx)
+     */
+    async exportScoreReport(customParams = {}) {
+      this.isExporting = true
+      this.exportingTarget = 'score-all'
+      try {
+        const queryParams = {
+          batchId: customParams.batchId ?? (this.filters.batchId || undefined),
+          departmentId: customParams.departmentId ?? (this.filters.departmentId || undefined),
+          storeCode: customParams.storeCode ?? (this.filters.storeCode || undefined),
+          dmId: customParams.dmId ?? (this.filters.dmId || undefined),
+          startDate: customParams.startDate ?? (this.filters.startDate || undefined),
+          endDate: customParams.endDate ?? (this.filters.endDate || undefined),
+          search: customParams.search ?? (this.filters.search || undefined)
+        }
+
+        const dateStr = new Date().toISOString().slice(0, 10)
+        const filename = `Score_Report_Rekapitulasi_Nilai_Kru_${dateStr}.xlsx`
+
+        const res = await reportApi.exportScoreReport(queryParams)
+        downloadFileBlob(res, filename)
+        return true
+      } catch (err) {
+        console.error('exportScoreReport error:', err)
+        throw err
+      } finally {
+        this.isExporting = false
+        this.exportingTarget = null
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 4. REPORT BY STORE (PROGRESS ONBOARDING PER GERAI)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Fetch report by store dari API
+     */
+    async fetchStoreReport(customParams = {}) {
+      this.isLoading = true
+      try {
+        const queryParams = {
+          batchId: customParams.batchId ?? (this.filters.batchId || undefined),
+          departmentId: customParams.departmentId ?? (this.filters.departmentId || undefined),
+          storeCode: customParams.storeCode ?? (this.filters.storeCode || undefined),
+          dmId: customParams.dmId ?? (this.filters.dmId || undefined),
+          startDate: customParams.startDate ?? (this.filters.startDate || undefined),
+          endDate: customParams.endDate ?? (this.filters.endDate || undefined),
+          page: customParams.page ?? this.storePagination.page,
+          limit: customParams.limit ?? this.storePagination.limit,
+          search: customParams.search ?? (this.filters.search || undefined)
+        }
+
+        const res = await reportApi.getStoreReport(queryParams)
+        if (res && res.data) {
+          const list = Array.isArray(res.data) ? res.data : (res.data.items || res.data.rows || [])
+          this.storeReports = list
+          if (res.data.pagination || res.pagination) {
+            const p = res.data.pagination || res.pagination
+            this.storePagination = {
+              page: Number(p.page || 1),
+              limit: Number(p.limit || 10),
+              total: Number(p.total || list.length),
+              totalPages: Number(p.totalPages || Math.ceil((p.total || list.length) / (p.limit || 10)) || 1)
+            }
+          } else {
+            this.storePagination.total = list.length
+            this.storePagination.totalPages = Math.ceil(list.length / this.storePagination.limit) || 1
+          }
+          return res.data
+        }
+
+        this.generateFallbackStoreReport()
+        return this.storeReports
+      } catch (err) {
+        console.warn('fetchStoreReport API error, using fallback:', err.message)
+        this.generateFallbackStoreReport()
+        return this.storeReports
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    /**
+     * Ekspor spreadsheet Excel Report by Store (.xlsx)
+     */
+    async exportStoreReport(customParams = {}) {
+      this.isExporting = true
+      this.exportingTarget = 'store-all'
+      try {
+        const queryParams = {
+          batchId: customParams.batchId ?? (this.filters.batchId || undefined),
+          departmentId: customParams.departmentId ?? (this.filters.departmentId || undefined),
+          storeCode: customParams.storeCode ?? (this.filters.storeCode || undefined),
+          dmId: customParams.dmId ?? (this.filters.dmId || undefined),
+          startDate: customParams.startDate ?? (this.filters.startDate || undefined),
+          endDate: customParams.endDate ?? (this.filters.endDate || undefined),
+          search: customParams.search ?? (this.filters.search || undefined)
+        }
+
+        const dateStr = new Date().toISOString().slice(0, 10)
+        const filename = `Report_by_Store_Progress_Onboarding_${dateStr}.xlsx`
+
+        const res = await reportApi.exportStoreReport(queryParams)
+        downloadFileBlob(res, filename)
+        return true
+      } catch (err) {
+        console.error('exportStoreReport error:', err)
+        throw err
+      } finally {
+        this.isExporting = false
+        this.exportingTarget = null
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 5. REPORT BY DM (EVALUASI SUPERVISI & APPROVAL DM)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Fetch report by DM dari API
+     */
+    async fetchDmReport(customParams = {}) {
+      this.isLoading = true
+      try {
+        const queryParams = {
+          batchId: customParams.batchId ?? (this.filters.batchId || undefined),
+          departmentId: customParams.departmentId ?? (this.filters.departmentId || undefined),
+          storeCode: customParams.storeCode ?? (this.filters.storeCode || undefined),
+          dmId: customParams.dmId ?? (this.filters.dmId || undefined),
+          startDate: customParams.startDate ?? (this.filters.startDate || undefined),
+          endDate: customParams.endDate ?? (this.filters.endDate || undefined),
+          page: customParams.page ?? this.dmPagination.page,
+          limit: customParams.limit ?? this.dmPagination.limit,
+          search: customParams.search ?? (this.filters.search || undefined)
+        }
+
+        const res = await reportApi.getDmReport(queryParams)
+        if (res && res.data) {
+          const list = Array.isArray(res.data) ? res.data : (res.data.items || res.data.rows || [])
+          this.dmReports = list
+          if (res.data.pagination || res.pagination) {
+            const p = res.data.pagination || res.pagination
+            this.dmPagination = {
+              page: Number(p.page || 1),
+              limit: Number(p.limit || 10),
+              total: Number(p.total || list.length),
+              totalPages: Number(p.totalPages || Math.ceil((p.total || list.length) / (p.limit || 10)) || 1)
+            }
+          } else {
+            this.dmPagination.total = list.length
+            this.dmPagination.totalPages = Math.ceil(list.length / this.dmPagination.limit) || 1
+          }
+          return res.data
+        }
+
+        this.generateFallbackDmReport()
+        return this.dmReports
+      } catch (err) {
+        console.warn('fetchDmReport API error, using fallback:', err.message)
+        this.generateFallbackDmReport()
+        return this.dmReports
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    /**
+     * Ekspor spreadsheet Excel Report by DM (.xlsx)
+     */
+    async exportDmReport(customParams = {}) {
+      this.isExporting = true
+      this.exportingTarget = 'dm-all'
+      try {
+        const queryParams = {
+          batchId: customParams.batchId ?? (this.filters.batchId || undefined),
+          departmentId: customParams.departmentId ?? (this.filters.departmentId || undefined),
+          storeCode: customParams.storeCode ?? (this.filters.storeCode || undefined),
+          dmId: customParams.dmId ?? (this.filters.dmId || undefined),
+          startDate: customParams.startDate ?? (this.filters.startDate || undefined),
+          endDate: customParams.endDate ?? (this.filters.endDate || undefined),
+          search: customParams.search ?? (this.filters.search || undefined)
+        }
+
+        const dateStr = new Date().toISOString().slice(0, 10)
+        const filename = `Report_by_DM_Supervisi_Approval_${dateStr}.xlsx`
+
+        const res = await reportApi.exportDmReport(queryParams)
+        downloadFileBlob(res, filename)
+        return true
+      } catch (err) {
+        console.error('exportDmReport error:', err)
+        throw err
+      } finally {
+        this.isExporting = false
+        this.exportingTarget = null
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 6. GENERATOR DATA CADANGAN (FALLBACK DEMO & OFFLINE RESILIENCE)
     // ──────────────────────────────────────────────────────────────────────────
 
     generateFallbackBuddyIncentives() {
@@ -489,7 +878,7 @@ export const useReportStore = defineStore('report', {
       }
     },
 
-    generateFallbackTraceability(userId) {
+    generateFallbackTraceability() {
       const userStore = useUserStore()
       const batchStore = useBatchStore()
       const storeStore = useStoreStore()
@@ -607,6 +996,80 @@ export const useReportStore = defineStore('report', {
         finalScore: 91,
         totalStars: 45
       }
+    },
+
+    generateFallbackScoreReport() {
+      const userStore = useUserStore()
+      const batchStore = useBatchStore()
+      const crews = (userStore.allUsers || []).filter(u => u.role === 'CREW')
+      const activeBatchName = batchStore.currentBatch?.code || 'BATCH-01'
+
+      this.scoreReports = crews.map((c, idx) => ({
+        id: c.id,
+        userId: c.id,
+        batch: activeBatchName,
+        name: c.name,
+        buddySL: 'Budi Santoso (SL)',
+        buddyStoreCode: 'BKI_01',
+        viewBuddyReport: `/api/reports/buddy-incentive/${c.id}`,
+        assignmentSL: 'Budi Santoso',
+        assignmentStoreCode: 'BKI_01',
+        week1Score: 85 + (idx % 10),
+        week2Score: 88 + (idx % 8),
+        week3Score: 90 + (idx % 6),
+        scoreBintang: 15.5 + (idx % 5),
+        scorePoint: 310 + (idx * 20)
+      }))
+
+      this.scorePagination.total = this.scoreReports.length
+      this.scorePagination.totalPages = Math.ceil(this.scoreReports.length / this.scorePagination.limit) || 1
+    },
+
+    generateFallbackStoreReport() {
+      const storeStore = useStoreStore()
+      const stores = storeStore.allStores || []
+
+      this.storeReports = stores.map((s, idx) => ({
+        departmentId: s.id,
+        storeCode: s.code || `STR-${100 + idx}`,
+        storeName: s.name || `Gerai Re.juve ${idx + 1}`,
+        dm: 'Ahmad Dahlan (DM)',
+        storeLeader: 'Budi Santoso (SL)',
+        batchCount: 2,
+        numberOfNewHire: 3 + (idx % 4),
+        newHireStepBuddyCount: 1,
+        newHireStepWeek1Count: 1,
+        newHireStepWeek2Count: 1,
+        newHireStepWeek3Count: idx % 2 === 0 ? 1 : 0,
+        newHireCompleteCount: idx % 2 === 0 ? 1 : 0,
+        avgCompleteDays: 24.5 + (idx % 5)
+      }))
+
+      this.storePagination.total = this.storeReports.length
+      this.storePagination.totalPages = Math.ceil(this.storeReports.length / this.storePagination.limit) || 1
+    },
+
+    generateFallbackDmReport() {
+      const storeStore = useStoreStore()
+      const stores = storeStore.allStores || []
+
+      this.dmReports = stores.map((s, idx) => ({
+        departmentId: s.id,
+        storeCode: s.code || `STR-${100 + idx}`,
+        storeName: s.name || `Gerai Re.juve ${idx + 1}`,
+        dm: 'Ahmad Dahlan (DM)',
+        avgApprovalHours: 14.5 + (idx % 10),
+        avgApprovalFormatted: '14.5 Jam',
+        batchCount: 2,
+        numberOfNewHire: 3 + (idx % 4),
+        totalPointsGiven: 1250 + (idx * 150),
+        unscoredMissionsBySl: idx % 3 === 0 ? 1 : 0,
+        unscoredMissionsByDm: idx % 4 === 0 ? 1 : 0
+      }))
+
+      this.dmPagination.total = this.dmReports.length
+      this.dmPagination.totalPages = Math.ceil(this.dmReports.length / this.dmPagination.limit) || 1
     }
   }
 })
+

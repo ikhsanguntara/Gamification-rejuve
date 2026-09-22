@@ -184,6 +184,18 @@ export const reportApi = {
   getUserTraceability: (params) => apiFetch('/reports/user-traceability', { method: 'GET', params }),
   getUserTraceabilityDetail: (userId, params) => apiFetch(`/reports/user-traceability/${userId}`, { method: 'GET', params }),
   exportUserTraceability: (params) => apiFetch('/reports/user-traceability/export', { method: 'GET', params, responseType: 'blob' }),
-  exportUserTraceabilityDetail: (userId, params) => apiFetch(`/reports/user-traceability/${userId}/export`, { method: 'GET', params, responseType: 'blob' })
+  exportUserTraceabilityDetail: (userId, params) => apiFetch(`/reports/user-traceability/${userId}/export`, { method: 'GET', params, responseType: 'blob' }),
+
+  // 3. Score Report (Rekapitulasi Nilai Misi & Skor Kru)
+  getScoreReport: (params) => apiFetch('/reports/score', { method: 'GET', params }),
+  exportScoreReport: (params) => apiFetch('/reports/score/export', { method: 'GET', params, responseType: 'blob' }),
+
+  // 4. Report by Store (Progress Onboarding per Gerai)
+  getStoreReport: (params) => apiFetch('/reports/store', { method: 'GET', params }),
+  exportStoreReport: (params) => apiFetch('/reports/store/export', { method: 'GET', params, responseType: 'blob' }),
+
+  // 5. Report by DM (Evaluasi Supervisi & Approval DM)
+  getDmReport: (params) => apiFetch('/reports/dm', { method: 'GET', params }),
+  exportDmReport: (params) => apiFetch('/reports/dm/export', { method: 'GET', params, responseType: 'blob' })
 }
 

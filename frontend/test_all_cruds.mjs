@@ -584,9 +584,9 @@ await userStore.markAllNotificationsAsRead()
 assert(userStore.unreadNotificationCount === 0 && userStore.notifications.every(n => n.isRead), 'Mark All Read: Berhasil menandai semua notifikasi sebagai dibaca')
 
 // ==========================================
-// TEST SUITE 10: REPORTS & TRACEABILITY CRUD & EXPORT SPREADSHEET
+// TEST SUITE 10: REPORTS & TRACEABILITY CRUD & EXPORT SPREADSHEET (5 TABS)
 // ==========================================
-console.log('\n📌 10. Menguji Modul Laporan Insentif Buddy & Audit Traceability Pengguna:')
+console.log('\n📌 10. Menguji 5 Modul Laporan, Traceability & Ekspor Spreadsheet:')
 
 // 10.1 FETCH BUDDY INCENTIVES
 await reportStore.fetchBuddyIncentives()
@@ -625,11 +625,43 @@ assert(tDetail && (tDetail.userInfo || tDetail.auditTimeline), 'Traceability Det
 assert(typeof reportStore.exportUserTraceability === 'function', 'Export Action: Action exportUserTraceability tersedia di store')
 assert(typeof reportStore.exportUserTraceabilityDetail === 'function', 'Export Action: Action exportUserTraceabilityDetail tersedia di store')
 
-// 10.9 FILTERING ACTIONS
+// 10.9 FETCH SCORE REPORT
+await reportStore.fetchScoreReport()
+assert(Array.isArray(reportStore.scoreReports) && reportStore.scoreReports.length > 0, 'Score Report: Berhasil memuat daftar nilai & skor gamifikasi kru')
+assert(reportStore.scorePagination.total > 0, 'Score Report: Pagination terhitung dengan benar')
+
+// 10.10 SCORE SUMMARY STATS & EXPORT
+const scoreStats = reportStore.scoreSummaryStats
+assert(scoreStats.totalRecords > 0 && typeof scoreStats.avgScorePoint === 'number', 'Score Stats: Ringkasan rata-rata poin terhitung akurat')
+assert(typeof reportStore.exportScoreReport === 'function', 'Score Export: Action exportScoreReport tersedia di store')
+
+// 10.11 FETCH STORE REPORT
+await reportStore.fetchStoreReport()
+assert(Array.isArray(reportStore.storeReports) && reportStore.storeReports.length > 0, 'Store Report: Berhasil memuat rekapitulasi progres per gerai')
+assert(reportStore.storePagination.total > 0, 'Store Report: Pagination terhitung dengan benar')
+
+// 10.12 STORE SUMMARY STATS & EXPORT
+const storeStats = reportStore.storeSummaryStats
+assert(storeStats.totalStores > 0 && storeStats.totalNewHires >= 0, 'Store Stats: Ringkasan store & new hire terhitung akurat')
+assert(typeof reportStore.exportStoreReport === 'function', 'Store Export: Action exportStoreReport tersedia di store')
+
+// 10.13 FETCH DM REPORT
+await reportStore.fetchDmReport()
+assert(Array.isArray(reportStore.dmReports) && reportStore.dmReports.length > 0, 'DM Report: Berhasil memuat rekapitulasi supervisi DM')
+assert(reportStore.dmPagination.total > 0, 'DM Report: Pagination terhitung dengan benar')
+
+// 10.14 DM SUMMARY STATS & EXPORT
+const dmStats = reportStore.dmSummaryStats
+assert(dmStats.totalStores > 0 && typeof dmStats.avgApprovalHours === 'number', 'DM Stats: Ringkasan durasi approval DM terhitung akurat')
+assert(typeof reportStore.exportDmReport === 'function', 'DM Export: Action exportDmReport tersedia di store')
+
+// 10.15 FILTERING ACTIONS
 reportStore.setFilter('search', 'Budi')
 assert(reportStore.filters.search === 'Budi', 'Filters: Berhasil memperbarui nilai parameter filter')
+reportStore.setFilter('departmentId', 'dept-ops')
+assert(reportStore.filters.departmentId === 'dept-ops', 'Filters: Berhasil memperbarui filter departmentId')
 reportStore.resetFilters()
-assert(reportStore.filters.search === '' && reportStore.filters.batchId === '', 'Filters: Berhasil me-reset seluruh parameter filter')
+assert(reportStore.filters.search === '' && reportStore.filters.batchId === '' && reportStore.filters.departmentId === '', 'Filters: Berhasil me-reset seluruh parameter filter')
 
 console.log('')
 console.log(`==========================================`)
