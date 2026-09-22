@@ -649,6 +649,14 @@
               "type": "integer",
               "default": 10
             }
+          },
+          {
+            "name": "cityCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter kode kota gerai"
           }
         ],
         "responses": {
@@ -688,6 +696,18 @@
                   "isActive": {
                     "type": "boolean",
                     "example": true
+                  },
+                  "cityCode": {
+                    "type": "string",
+                    "example": "JAKARTA_SELATAN"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "Jl. Metro Pondok Indah"
+                  },
+                  "noTelp": {
+                    "type": "string",
+                    "example": "021-7506888"
                   }
                 }
               }
@@ -756,6 +776,18 @@
                   "isActive": {
                     "type": "boolean",
                     "example": true
+                  },
+                  "cityCode": {
+                    "type": "string",
+                    "example": "JAKARTA_SELATAN"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "Jl. Metro Pondok Indah Rev"
+                  },
+                  "noTelp": {
+                    "type": "string",
+                    "example": "021-7506999"
                   }
                 }
               }
@@ -5456,6 +5488,130 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/masters/departments/template": {
+      "get": {
+        "tags": [
+          "2. Master Departments"
+        ],
+        "summary": "Unduh Template Excel Update Departemen (Pre-Populated)",
+        "description": "Menghasilkan berkas Excel (.xlsx) dengan data gerai terisi, kolom Store Code & Store Name terkunci, serta dropdown referensi Store Leader dan District Manager.",
+        "responses": {
+          "200": {
+            "description": "Berkas Excel berhasil diunduh.",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/masters/departments/bulk-preview": {
+      "post": {
+        "tags": [
+          "2. Master Departments"
+        ],
+        "summary": "Preview Kering (Dry-Run) Pembaruan Departemen dari Excel",
+        "description": "Membaca dan memvalidasi file Excel pembaruan departemen. Mendeteksi selisih perubahan (diff) dan mengembalikan preview validitas tanpa menulis ke database.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Berkas Excel (.xlsx / .xls / .csv) departemen"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Hasil evaluasi baris valid dan invalid beserta deteksi perubahan data."
+          }
+        }
+      }
+    },
+    "/masters/departments/bulk-commit": {
+      "post": {
+        "tags": [
+          "2. Master Departments"
+        ],
+        "summary": "Commit Pembaruan Massal Departemen ke Database",
+        "description": "Menerapkan pembaruan data departemen secara atomik ($transaction) setelah disetujui pada tahap preview.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "departments"
+                ],
+                "properties": {
+                  "departments": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "departmentCode"
+                      ],
+                      "properties": {
+                        "departmentCode": {
+                          "type": "string",
+                          "example": "AE10"
+                        },
+                        "regionCode": {
+                          "type": "string",
+                          "example": "JABODETABEK"
+                        },
+                        "cityCode": {
+                          "type": "string",
+                          "example": "TANGERANG"
+                        },
+                        "address": {
+                          "type": "string",
+                          "example": "AEON Mall Citra Raya"
+                        },
+                        "noTelp": {
+                          "type": "string",
+                          "example": "021-59981234"
+                        },
+                        "emailSl": {
+                          "type": "string",
+                          "example": "storeleader@rejuve.co.id"
+                        },
+                        "emailDm": {
+                          "type": "string",
+                          "example": "districtmanager@rejuve.co.id"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pembaruan massal berhasil disimpan."
           }
         }
       }

@@ -348,7 +348,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/masters/departments?departmentCode[contains]=BKI",
+                  "raw": "{{base_url}}/masters/departments?departmentCode[contains]=BKI&cityCode=JAKARTA_PUSAT&page=1&limit=10",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -360,7 +360,22 @@
                     {
                       "key": "departmentCode[contains]",
                       "value": "BKI",
-                      "description": "Filter kode gerai"
+                      "description": "Pencarian kode toko parsial"
+                    },
+                    {
+                      "key": "cityCode",
+                      "value": "JAKARTA_PUSAT",
+                      "description": "Filter kode kota"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Nomor halaman"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10",
+                      "description": "Jumlah per halaman"
                     }
                   ]
                 }
@@ -411,7 +426,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"departmentCode\": \"BKI99\",\n  \"departmentName\": \"Store Rejuve Bekasi Baru\",\n  \"regionCode\": \"JABODETABEK\",\n  \"isActive\": true,\n  \"userSlId\": null,\n  \"userDmId\": null\n}"
+                  "raw": "{\n  \"departmentCode\": \"BKI99\",\n  \"departmentName\": \"Store Rejuve Bekasi Baru\",\n  \"regionCode\": \"JABODETABEK\",\n  \"cityCode\": \"BEKASI\",\n  \"address\": \"Jl. Ahmad Yani No. 10, Bekasi Selatan\",\n  \"noTelp\": \"021-88997766\",\n  \"isActive\": true,\n  \"userSlId\": null,\n  \"userDmId\": null\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/masters/departments",
@@ -441,7 +456,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"departmentName\": \"Store Rejuve Grand Metropolitan\",\n  \"regionCode\": \"JABODETABEK\",\n  \"isActive\": true\n}"
+                  "raw": "{\n  \"departmentName\": \"Store Rejuve Grand Metropolitan\",\n  \"regionCode\": \"JABODETABEK\",\n  \"cityCode\": \"BEKASI\",\n  \"address\": \"Mall Grand Metropolitan Lt. 1 No. 12\",\n  \"noTelp\": \"021-88995544\",\n  \"isActive\": true\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/masters/departments/:id",
@@ -490,6 +505,109 @@
                   ]
                 }
               }
+            },
+            {
+              "name": "GET Download Department Update Template (.xlsx)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/masters/departments/template",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "departments",
+                    "template"
+                  ]
+                },
+                "description": "Mengunduh file Excel template pembaruan departemen/gerai (.xlsx) yang sudah terisi otomatis (pre-populated) dengan data toko yang ada di database. Kolom Store Code dan Store Name terproteksi (freeze/locked), serta dilengkapi dengan dropdown Store Leader dan District Manager aktif."
+              },
+              "response": []
+            },
+            {
+              "name": "POST Bulk Preview Departments (Dry Run Validation)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "",
+                      "description": "Berkas Excel (.xlsx) pembaruan master store yang telah diisi"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/departments/bulk-preview",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "departments",
+                    "bulk-preview"
+                  ]
+                },
+                "description": "Validasi dry-run spreadsheet update departemen. Memvalidasi store code, email Store Leader & District Manager, dan memetakan perubahan (diff detection: regionCode, cityCode, address, noTelp, emailSl, emailDm) tanpa langsung mengubah DB."
+              },
+              "response": []
+            },
+            {
+              "name": "POST Bulk Commit Departments",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"departments\": [\n    {\n      \"departmentCode\": \"AE10\",\n      \"regionCode\": \"JABODETABEK\",\n      \"cityCode\": \"TANGERANG\",\n      \"address\": \"AEON Mall Citra Raya Lt. Dasar\",\n      \"noTelp\": \"021-59981234\",\n      \"emailSl\": \"storeleader@rejuve.co.id\",\n      \"emailDm\": \"districtmanager@rejuve.co.id\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/departments/bulk-commit",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "departments",
+                    "bulk-commit"
+                  ]
+                },
+                "description": "Menerapkan commit pembaruan departemen ke PostgreSQL secara atomik ($transaction) setelah baris diperiksa pada tahap preview."
+              },
+              "response": []
             }
           ]
         },

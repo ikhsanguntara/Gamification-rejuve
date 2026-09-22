@@ -88,8 +88,8 @@ const getDepartments = async (req, res, next) => {
     delete queryClone.page;
     delete queryClone.limit;
 
-    // Searchable: departmentCode, departmentName, regionCode
-    const where = parsePrismaQuery(queryClone, ['departmentCode', 'departmentName', 'regionCode']);
+    // Searchable: departmentCode, departmentName, regionCode, cityCode
+    const where = parsePrismaQuery(queryClone, ['departmentCode', 'departmentName', 'regionCode', 'cityCode']);
 
     const [rawDepartments, total] = await Promise.all([
       prisma.department.findMany({
@@ -139,14 +139,17 @@ const getDepartmentById = async (req, res, next) => {
 
 const createDepartment = async (req, res, next) => {
   try {
-    const { departmentCode, departmentName, regionCode, isActive, userSlId, userDmId } = req.body;
+    const { departmentCode, departmentName, cityCode, regionCode, address, noTelp, phone, isActive, userSlId, userDmId } = req.body;
     const creatorId = req.user?.id || req.user?.userId || null;
 
     const department = await prisma.department.create({
       data: {
         departmentCode,
         departmentName,
-        regionCode,
+        cityCode: cityCode || null,
+        regionCode: regionCode || null,
+        address: address || null,
+        noTelp: (noTelp !== undefined ? noTelp : phone) || null,
         isActive: isActive !== undefined ? isActive : true,
         userSlId: userSlId || null,
         userDmId: userDmId || null,
@@ -172,18 +175,21 @@ const createDepartment = async (req, res, next) => {
 const updateDepartment = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { departmentCode, departmentName, regionCode, isActive, userSlId, userDmId } = req.body;
+    const { departmentCode, departmentName, cityCode, regionCode, address, noTelp, phone, isActive, userSlId, userDmId } = req.body;
     const updaterId = req.user?.id || req.user?.userId || null;
 
     const department = await prisma.department.update({
       where: { departmentId: id },
       data: {
-        departmentCode,
-        departmentName,
-        regionCode,
-        isActive,
-        userSlId,
-        userDmId,
+        ...(departmentCode !== undefined && { departmentCode }),
+        ...(departmentName !== undefined && { departmentName }),
+        ...(cityCode !== undefined && { cityCode: cityCode || null }),
+        ...(regionCode !== undefined && { regionCode: regionCode || null }),
+        ...(address !== undefined && { address: address || null }),
+        ...((noTelp !== undefined || phone !== undefined) && { noTelp: (noTelp !== undefined ? noTelp : phone) || null }),
+        ...(isActive !== undefined && { isActive }),
+        ...(userSlId !== undefined && { userSlId }),
+        ...(userDmId !== undefined && { userDmId }),
         updatedBy: updaterId
       }
     });
@@ -702,7 +708,324 @@ const deleteRole = async (req, res, next) => {
 // BULK USER IMPORT (TWO-PHASE: TEMPLATE -> PREVIEW -> COMMIT)
 // =============================================================================
 
-const { generateUserImportTemplate, parseUserImportFile } = require('../../utils/excelParser');
+const {
+  generateUserImportTemplate,
+  parseUserImportFile,
+  generateDepartmentUpdateTemplate,
+  parseDepartmentUpdateFile
+} = require('../../utils/excelParser');
+
+// =============================================================================
+// BULK DEPARTMENT UPDATE (TWO-PHASE: TEMPLATE -> PREVIEW -> COMMIT)
+// =============================================================================
+
+const downloadDepartmentTemplate = async (req, res, next) => {
+  try {
+    const [rawDepartments, storeLeaders, districtManagers] = await Promise.all([
+      prisma.department.findMany({
+        orderBy: { departmentCode: 'asc' }
+      }),
+      prisma.user.findMany({
+        where: {
+          role: { roleCode: 'STORE_LEADER' },
+          isActive: true
+        },
+        select: { userId: true, email: true, name: true },
+        orderBy: { name: 'asc' }
+      }),
+      prisma.user.findMany({
+        where: {
+          role: { roleCode: 'DISTRICT_MANAGER' },
+          isActive: true
+        },
+        select: { userId: true, email: true, name: true },
+        orderBy: { name: 'asc' }
+      })
+    ]);
+
+    const departments = await enrichDepartmentsWithManagers(rawDepartments);
+    const buffer = await generateDepartmentUpdateTemplate(departments, storeLeaders, districtManagers);
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="template_update_department.xlsx"');
+    return res.send(buffer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const bulkPreviewDepartments = async (req, res, next) => {
+  try {
+    const uploadedFile = req.file || (Array.isArray(req.files) ? (req.files.find(f => f.fieldname === 'file' || f.fieldname === 'excel') || req.files[0]) : null);
+    if (!uploadedFile || !uploadedFile.buffer) {
+      return sendError(res, { statusCode: 400, message: 'File Excel/CSV wajib diunggah (field: "file" atau "excel").' });
+    }
+
+    const parsedRows = parseDepartmentUpdateFile(uploadedFile.buffer);
+    if (!parsedRows || parsedRows.length === 0) {
+      return sendError(res, { statusCode: 400, message: 'File Excel tidak memiliki baris data atau kosong.' });
+    }
+
+    const [existingDepartments, allUsers] = await Promise.all([
+      prisma.department.findMany(),
+      prisma.user.findMany({
+        include: { role: true }
+      })
+    ]);
+
+    await enrichDepartmentsWithManagers(existingDepartments);
+
+    const deptMap = new Map();
+    existingDepartments.forEach(d => deptMap.set(d.departmentCode.toUpperCase(), d));
+
+    const slUserMap = new Map();
+    const dmUserMap = new Map();
+    const userByEmailMap = new Map();
+
+    allUsers.forEach(u => {
+      const emailLower = (u.email || '').toLowerCase();
+      userByEmailMap.set(emailLower, u);
+      if (u.role?.roleCode === 'STORE_LEADER') {
+        slUserMap.set(emailLower, u);
+      }
+      if (u.role?.roleCode === 'DISTRICT_MANAGER') {
+        dmUserMap.set(emailLower, u);
+      }
+    });
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const evaluatedRows = [];
+
+    for (const row of parsedRows) {
+      const errors = [];
+      const code = (row.departmentCode || '').toUpperCase();
+
+      if (!code) {
+        errors.push('Store Code (departmentCode) wajib diisi.');
+      }
+
+      const existingDept = deptMap.get(code);
+      if (!existingDept) {
+        errors.push(`Store Code "${row.departmentCode}" tidak ditemukan di sistem.`);
+      }
+
+      // Validasi Email SL jika diisi
+      let matchedSl = null;
+      if (row.emailSl) {
+        if (!emailRegex.test(row.emailSl)) {
+          errors.push(`Format Email Store Leader "${row.emailSl}" tidak valid.`);
+        } else {
+          matchedSl = slUserMap.get(row.emailSl);
+          if (!matchedSl) {
+            const anyUser = userByEmailMap.get(row.emailSl);
+            if (anyUser) {
+              errors.push(`User "${row.emailSl}" memiliki role ${anyUser.role?.roleCode || 'LAIN'}, bukan STORE_LEADER.`);
+            } else {
+              errors.push(`Email Store Leader "${row.emailSl}" tidak terdaftar di sistem.`);
+            }
+          }
+        }
+      }
+
+      // Validasi Email DM jika diisi
+      let matchedDm = null;
+      if (row.emailDm) {
+        if (!emailRegex.test(row.emailDm)) {
+          errors.push(`Format Email District Manager "${row.emailDm}" tidak valid.`);
+        } else {
+          matchedDm = dmUserMap.get(row.emailDm);
+          if (!matchedDm) {
+            const anyUser = userByEmailMap.get(row.emailDm);
+            if (anyUser) {
+              errors.push(`User "${row.emailDm}" memiliki role ${anyUser.role?.roleCode || 'LAIN'}, bukan DISTRICT_MANAGER.`);
+            } else {
+              errors.push(`Email District Manager "${row.emailDm}" tidak terdaftar di sistem.`);
+            }
+          }
+        }
+      }
+
+      // Diff detection (cek apakah ada perubahan data dibanding data di DB)
+      const changedFields = [];
+      if (existingDept) {
+        const curRegion = (existingDept.regionCode || '').trim();
+        const newRegion = (row.regionCode || '').trim();
+        if (curRegion !== newRegion) changedFields.push('regionCode');
+
+        const curCity = (existingDept.cityCode || '').trim();
+        const newCity = (row.cityCode || '').trim();
+        if (curCity !== newCity) changedFields.push('cityCode');
+
+        const curAddress = (existingDept.address || '').trim();
+        const newAddress = (row.address || '').trim();
+        if (curAddress !== newAddress) changedFields.push('address');
+
+        const curPhone = (existingDept.noTelp || '').trim();
+        const newPhone = (row.noTelp || '').trim();
+        if (curPhone !== newPhone) changedFields.push('noTelp');
+
+        const curSlEmail = (existingDept.userSl?.email || '').toLowerCase();
+        const newSlEmail = (row.emailSl || '').toLowerCase();
+        if (curSlEmail !== newSlEmail) changedFields.push('emailSl');
+
+        const curDmEmail = (existingDept.userDm?.email || '').toLowerCase();
+        const newDmEmail = (row.emailDm || '').toLowerCase();
+        if (curDmEmail !== newDmEmail) changedFields.push('emailDm');
+      }
+
+      const isValid = errors.length === 0;
+      const isModified = changedFields.length > 0;
+      const status = isValid ? 'VALID' : 'INVALID';
+      const action = !isValid ? 'REJECT' : (isModified ? 'UPDATE' : 'NO_CHANGE');
+
+      evaluatedRows.push({
+        rowNumber: row.rowNumber,
+        departmentId: existingDept ? existingDept.departmentId : null,
+        departmentCode: row.departmentCode,
+        departmentName: existingDept ? existingDept.departmentName : row.departmentName,
+        regionCode: row.regionCode || null,
+        cityCode: row.cityCode || null,
+        address: row.address || null,
+        noTelp: row.noTelp || null,
+        emailSl: row.emailSl || null,
+        userSlId: matchedSl ? matchedSl.userId : (row.emailSl === '' ? null : (existingDept?.userSlId || null)),
+        userSlName: matchedSl ? matchedSl.name : (existingDept?.userSl?.name || null),
+        emailDm: row.emailDm || null,
+        userDmId: matchedDm ? matchedDm.userId : (row.emailDm === '' ? null : (existingDept?.userDmId || null)),
+        userDmName: matchedDm ? matchedDm.name : (existingDept?.userDm?.name || null),
+        isModified,
+        changedFields,
+        status,
+        action,
+        errors
+      });
+    }
+
+    const totalRows = evaluatedRows.length;
+    const validCount = evaluatedRows.filter(r => r.status === 'VALID').length;
+    const invalidCount = evaluatedRows.filter(r => r.status === 'INVALID').length;
+    const modifiedCount = evaluatedRows.filter(r => r.status === 'VALID' && r.isModified).length;
+    const unmodifiedCount = evaluatedRows.filter(r => r.status === 'VALID' && !r.isModified).length;
+
+    return sendSuccess(res, {
+      statusCode: 200,
+      message: 'Preview data update departemen berhasil diproses.',
+      data: {
+        summary: {
+          totalRows,
+          validCount,
+          invalidCount,
+          modifiedCount,
+          unmodifiedCount
+        },
+        rows: evaluatedRows
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const bulkCommitDepartments = async (req, res, next) => {
+  try {
+    const { departments } = req.body;
+
+    if (!Array.isArray(departments) || departments.length === 0) {
+      return sendError(res, { statusCode: 400, message: 'Daftar departemen yang akan di-commit wajib berupa array dan tidak boleh kosong.' });
+    }
+
+    const currentUserId = req.user?.id || req.user?.userId || null;
+
+    const codes = departments.map(d => (d.departmentCode || '').toUpperCase()).filter(Boolean);
+    const existingDepartments = await prisma.department.findMany({
+      where: { departmentCode: { in: codes } }
+    });
+    const deptMap = new Map();
+    existingDepartments.forEach(d => deptMap.set(d.departmentCode.toUpperCase(), d));
+
+    const slEmails = departments.map(d => (d.emailSl || '').toLowerCase()).filter(Boolean);
+    const dmEmails = departments.map(d => (d.emailDm || '').toLowerCase()).filter(Boolean);
+    const managerEmails = [...new Set([...slEmails, ...dmEmails])];
+
+    const users = managerEmails.length > 0 ? await prisma.user.findMany({
+      where: { email: { in: managerEmails } },
+      include: { role: true }
+    }) : [];
+
+    const userEmailMap = new Map();
+    users.forEach(u => userEmailMap.set(u.email.toLowerCase(), u));
+
+    let updatedCount = 0;
+    let skippedCount = 0;
+
+    await prisma.$transaction(async (tx) => {
+      for (const item of departments) {
+        const code = (item.departmentCode || '').toUpperCase();
+        const existingDept = deptMap.get(code);
+
+        if (!existingDept) {
+          skippedCount++;
+          continue;
+        }
+
+        // Resolusi userSlId
+        let resolvedSlId = existingDept.userSlId;
+        if (item.userSlId !== undefined) {
+          resolvedSlId = item.userSlId || null;
+        } else if (item.emailSl !== undefined) {
+          if (item.emailSl) {
+            const slUser = userEmailMap.get(item.emailSl.toLowerCase());
+            if (slUser) resolvedSlId = slUser.userId;
+          } else {
+            resolvedSlId = null;
+          }
+        }
+
+        // Resolusi userDmId
+        let resolvedDmId = existingDept.userDmId;
+        if (item.userDmId !== undefined) {
+          resolvedDmId = item.userDmId || null;
+        } else if (item.emailDm !== undefined) {
+          if (item.emailDm) {
+            const dmUser = userEmailMap.get(item.emailDm.toLowerCase());
+            if (dmUser) resolvedDmId = dmUser.userId;
+          } else {
+            resolvedDmId = null;
+          }
+        }
+
+        await tx.department.update({
+          where: { departmentId: existingDept.departmentId },
+          data: {
+            ...(item.regionCode !== undefined && { regionCode: item.regionCode ? item.regionCode.trim() : null }),
+            ...(item.cityCode !== undefined && { cityCode: item.cityCode ? item.cityCode.trim() : null }),
+            ...(item.address !== undefined && { address: item.address ? item.address.trim() : null }),
+            ...((item.noTelp !== undefined || item.phone !== undefined) && {
+              noTelp: (item.noTelp !== undefined ? item.noTelp : item.phone) ? String(item.noTelp !== undefined ? item.noTelp : item.phone).trim() : null
+            }),
+            userSlId: resolvedSlId,
+            userDmId: resolvedDmId,
+            updatedBy: currentUserId
+          }
+        });
+
+        updatedCount++;
+      }
+    });
+
+    return sendSuccess(res, {
+      statusCode: 200,
+      message: `Bulk update departemen berhasil diproses. ${updatedCount} gerai diperbarui, ${skippedCount} dilewati.`,
+      data: {
+        totalSubmitted: departments.length,
+        updatedCount,
+        skippedCount
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const downloadUserTemplate = async (req, res, next) => {
   try {
@@ -1087,5 +1410,8 @@ module.exports = {
   deleteRole,
   downloadUserTemplate,
   bulkPreviewUsers,
-  bulkCommitUsers
+  bulkCommitUsers,
+  downloadDepartmentTemplate,
+  bulkPreviewDepartments,
+  bulkCommitDepartments
 };

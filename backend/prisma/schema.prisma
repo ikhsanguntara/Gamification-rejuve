@@ -76,7 +76,10 @@ model Department {
   departmentId   String  @id @default(uuid()) @db.Uuid @map("department_id")
   departmentCode String  @unique                       @map("department_code")
   departmentName String                                @map("department_name")
+  cityCode       String?                               @map("city_code")
   regionCode     String?                               @map("region_code")
+  address        String?                               @map("address")
+  noTelp         String?                               @map("no_telp")
   isActive       Boolean @default(true)                @map("is_active")
   
   userSlId       String? @db.Uuid                      @map("user_sl_id")

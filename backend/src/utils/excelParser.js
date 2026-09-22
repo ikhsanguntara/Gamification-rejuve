@@ -296,7 +296,231 @@ const parseUserImportFile = (fileBuffer) => {
   });
 };
 
+/**
+ * Helper untuk normalisasi header kolom update departemen
+ */
+const normalizeDeptKey = (key) => {
+  if (!key) return '';
+  const clean = String(key).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (clean.includes('emailsl') || clean.includes('storeleader') || clean === 'sl') return 'emailSl';
+  if (clean.includes('emaildm') || clean.includes('districtmanager') || clean === 'dm') return 'emailDm';
+  if (clean.includes('kodedepartemen') || clean.includes('kodestore') || clean.includes('storecode') || clean.includes('departmentcode') || clean === 'code') return 'departmentCode';
+  if (clean.includes('namadepartemen') || clean.includes('namastore') || clean.includes('storename') || clean.includes('departmentname')) return 'departmentName';
+  if (clean.includes('region') || clean.includes('wilayah')) return 'regionCode';
+  if (clean.includes('city') || clean.includes('kota')) return 'cityCode';
+  if (clean.includes('alamat') || clean.includes('address')) return 'address';
+  if (clean.includes('notelp') || clean.includes('phone') || clean.includes('telepon') || clean.includes('telp') || clean.includes('handphone') || clean.includes('hp')) return 'noTelp';
+  return key;
+};
+
+/**
+ * Menghasilkan buffer file Excel template update departemen (.xlsx) pre-populated dengan Store Code & Store Name ter-lock
+ */
+const generateDepartmentUpdateTemplate = async (departmentsList = [], slList = [], dmList = []) => {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Re.juve Gamification Platform';
+  workbook.created = new Date();
+
+  // 1. Sheet Template Update Department
+  const ws = workbook.addWorksheet('Update Master Store', {
+    views: [{ state: 'frozen', xSplit: 2, ySplit: 1, showGridLines: true }]
+  });
+
+  const columns = [
+    { header: 'Store Code', key: 'departmentCode', width: 18 },
+    { header: 'Store Name', key: 'departmentName', width: 34 },
+    { header: 'Region', key: 'regionCode', width: 22 },
+    { header: 'City', key: 'cityCode', width: 22 },
+    { header: 'Address', key: 'address', width: 40 },
+    { header: 'No Telp', key: 'noTelp', width: 20 },
+    { header: 'Email Store Leader', key: 'emailSl', width: 34 },
+    { header: 'Email District Manager', key: 'emailDm', width: 34 }
+  ];
+  ws.columns = columns;
+
+  // Header style
+  const headerRow = ws.getRow(1);
+  headerRow.height = 28;
+  headerRow.eachCell((cell) => {
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF831843' } // Signature Re.juve
+    };
+    cell.font = {
+      name: 'Calibri',
+      size: 11,
+      bold: true,
+      color: { argb: 'FFFFFFFF' }
+    };
+    cell.alignment = {
+      vertical: 'middle',
+      horizontal: 'center',
+      wrapText: true
+    };
+    cell.border = {
+      top: { style: 'thin', color: { argb: 'FF6B133A' } },
+      left: { style: 'thin', color: { argb: 'FF6B133A' } },
+      bottom: { style: 'medium', color: { argb: 'FF4A0D28' } },
+      right: { style: 'thin', color: { argb: 'FF6B133A' } }
+    };
+  });
+
+  // Isi data departemen yang sudah ada
+  departmentsList.forEach((dept) => {
+    ws.addRow({
+      departmentCode: dept.departmentCode || '',
+      departmentName: dept.departmentName || '',
+      regionCode: dept.regionCode || '',
+      cityCode: dept.cityCode || '',
+      address: dept.address || '',
+      noTelp: dept.noTelp || '',
+      emailSl: dept.userSl?.email || '',
+      emailDm: dept.userDm?.email || ''
+    });
+  });
+
+  // 2. Sheet Referensi Dropdown
+  const wsRef = workbook.addWorksheet('Referensi Dropdown', {
+    views: [{ showGridLines: true }]
+  });
+
+  wsRef.columns = [
+    { header: 'Email Store Leader', key: 'slEmail', width: 35 },
+    { header: 'Nama Store Leader', key: 'slName', width: 30 },
+    { header: 'Email District Manager', key: 'dmEmail', width: 35 },
+    { header: 'Nama District Manager', key: 'dmName', width: 30 }
+  ];
+
+  const refHeader = wsRef.getRow(1);
+  refHeader.height = 24;
+  refHeader.eachCell((cell) => {
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFF1F5F9' }
+    };
+    cell.font = { bold: true, color: { argb: 'FF1E293B' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
+
+  const maxRef = Math.max(slList.length, dmList.length, 1);
+  for (let i = 0; i < maxRef; i++) {
+    const sl = slList[i] || {};
+    const dm = dmList[i] || {};
+    wsRef.addRow({
+      slEmail: sl.email || '',
+      slName: sl.name || '',
+      dmEmail: dm.email || '',
+      dmName: dm.name || ''
+    });
+  }
+
+  const slFormula = slList.length > 0 ? `'Referensi Dropdown'!$A$2:$A$${slList.length + 1}` : null;
+  const dmFormula = dmList.length > 0 ? `'Referensi Dropdown'!$C$2:$C$${dmList.length + 1}` : null;
+
+  const totalDataRows = Math.max(departmentsList.length, 100);
+  for (let r = 2; r <= totalDataRows + 1; r++) {
+    const row = ws.getRow(r);
+    // Col 1 & 2: Locked
+    row.getCell(1).protection = { locked: true };
+    row.getCell(2).protection = { locked: true };
+
+    // Col 3 s/d 8: Unlocked
+    for (let c = 3; c <= 8; c++) {
+      row.getCell(c).protection = { locked: false };
+    }
+
+    // Col 7: Dropdown SL
+    if (slFormula) {
+      row.getCell(7).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: [slFormula],
+        showErrorMessage: true,
+        errorTitle: 'Store Leader Tidak Valid',
+        error: 'Pilih Store Leader dari daftar dropdown.'
+      };
+    }
+
+    // Col 8: Dropdown DM
+    if (dmFormula) {
+      row.getCell(8).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: [dmFormula],
+        showErrorMessage: true,
+        errorTitle: 'District Manager Tidak Valid',
+        error: 'Pilih District Manager dari daftar dropdown.'
+      };
+    }
+  }
+
+  // Proteksi sheet dengan password kosong agar cell yang terkunci tidak bisa dimodifikasi user biasa
+  await ws.protect('', {
+    selectLockedCells: true,
+    selectUnlockedCells: true,
+    formatCells: false,
+    formatColumns: false,
+    formatRows: false,
+    insertColumns: false,
+    insertRows: false,
+    insertHyperlinks: false,
+    deleteColumns: false,
+    deleteRows: false,
+    sort: true,
+    autoFilter: true
+  });
+
+  return await workbook.xlsx.writeBuffer();
+};
+
+/**
+ * Membaca buffer file Excel update departemen (.xlsx / .xls / .csv) dan mengembalikan baris yang ter-mapping
+ */
+const parseDepartmentUpdateFile = (fileBuffer) => {
+  const wb = xlsx.read(fileBuffer, { type: 'buffer' });
+  const sheetName = wb.SheetNames[0];
+  if (!sheetName) {
+    throw new Error('File Excel tidak memiliki sheet yang dapat dibaca.');
+  }
+
+  const ws = wb.Sheets[sheetName];
+  const rawRows = xlsx.utils.sheet_to_json(ws, { defval: '' });
+
+  if (!rawRows || rawRows.length === 0) {
+    return [];
+  }
+
+  return rawRows.map((raw, index) => {
+    const rowNumber = index + 2;
+    const mapped = {};
+
+    for (const [key, val] of Object.entries(raw)) {
+      const normalizedKey = normalizeDeptKey(key);
+      const strVal = typeof val === 'string' ? val.trim() : String(val).trim();
+      mapped[normalizedKey] = strVal;
+    }
+
+    return {
+      rowNumber,
+      departmentCode: mapped.departmentCode || '',
+      departmentName: mapped.departmentName || '',
+      regionCode: mapped.regionCode || '',
+      cityCode: mapped.cityCode || '',
+      address: mapped.address || '',
+      noTelp: mapped.noTelp || '',
+      emailSl: (mapped.emailSl || '').toLowerCase(),
+      emailDm: (mapped.emailDm || '').toLowerCase(),
+      raw
+    };
+  });
+};
+
 module.exports = {
   generateUserImportTemplate,
-  parseUserImportFile
+  parseUserImportFile,
+  generateDepartmentUpdateTemplate,
+  parseDepartmentUpdateFile
 };
+

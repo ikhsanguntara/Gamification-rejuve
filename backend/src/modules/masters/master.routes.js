@@ -18,6 +18,9 @@ router.use(authenticate);
 router.use(authorizeRole(['SUPERADMIN']));
 
 // ─── Departments ─────────────────────────────────────────────────────────────
+router.get('/departments/template', masterController.downloadDepartmentTemplate);
+router.post('/departments/bulk-preview', uploadExcel.any(), masterController.bulkPreviewDepartments);
+router.post('/departments/bulk-commit', masterController.bulkCommitDepartments);
 router.get('/departments', masterController.getDepartments);
 router.get('/departments/:id', masterController.getDepartmentById);
 router.post('/departments', masterController.createDepartment);
