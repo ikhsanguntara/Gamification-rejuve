@@ -12,6 +12,17 @@
           </span>
         </div>
       </div>
+
+      <div class="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
+        <button
+          type="button"
+          @click="showBulkUploadModal = true"
+          class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all shadow-2xs active:scale-95 cursor-pointer"
+        >
+          <FileSpreadsheet class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span>Update Bulk Excel</span>
+        </button>
+      </div>
     </div>
 
 
@@ -204,6 +215,12 @@
       description="Tidak ada gerai yang cocok dengan filter atau kata kunci pencarian Anda."
       icon="Store"
     />
+
+    <!-- Bulk Store Excel Update Modal -->
+    <BulkStoreUploadModal
+      v-model="showBulkUploadModal"
+      @imported="onBulkImported"
+    />
   </div>
 </template>
 
@@ -214,19 +231,22 @@ import { useUserStore } from '~/stores/user.js'
 import { useToast } from '~/composables/useToast.js'
 import EmptyState from '~/components/ui/EmptyState.vue'
 import AppPagination from '~/components/ui/AppPagination.vue'
+import BulkStoreUploadModal from '~/components/store/BulkStoreUploadModal.vue'
 import {
   Store,
   Search,
   MapPin,
   Phone,
   Clock,
-  Edit3
+  Edit3,
+  FileSpreadsheet
 } from 'lucide-vue-next'
 
 const storeStore = useStoreStore()
 const userStore = useUserStore()
 const toast = useToast()
 
+const showBulkUploadModal = ref(false)
 const searchQuery = ref('')
 const selectedRegion = ref('ALL')
 const selectedStatus = ref('ALL')
@@ -243,6 +263,10 @@ const loadStores = async (page = 1) => {
     region: selectedRegion.value,
     status: selectedStatus.value
   })
+}
+
+const onBulkImported = async () => {
+  await loadStores(currentPage.value)
 }
 
 onMounted(() => {

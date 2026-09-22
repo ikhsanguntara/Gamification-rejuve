@@ -309,6 +309,45 @@ export const useStoreStore = defineStore('store', {
         return removed
       }
       return null
+    },
+
+    async downloadTemplate() {
+      try {
+        const res = await departmentApi.downloadTemplate()
+        if (typeof window !== 'undefined') {
+          let blob = res
+          if (!(blob instanceof Blob)) {
+            blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+          }
+          const downloadUrl = window.URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = downloadUrl
+          link.download = `Template_Update_Gerai_Rejuve_${new Date().toISOString().slice(0, 10)}.xlsx`
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          window.URL.revokeObjectURL(downloadUrl)
+        }
+        return true
+      } catch (err) {
+        console.error('Failed to download department template:', err)
+        throw err
+      }
+    },
+
+    async previewBulkDepartments(file) {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await departmentApi.bulkPreview(formData)
+      return res?.data || res
+    },
+
+    async commitBulkDepartments(payload) {
+      const res = await departmentApi.bulkCommit(payload)
+      invalidateApiCache('stores')
+      invalidateApiCache('/masters/departments')
+      await this.fetchStoresFromApi({ limit: 100, page: 1 }, true).catch(() => {})
+      return res?.data || res
     }
   }
 })

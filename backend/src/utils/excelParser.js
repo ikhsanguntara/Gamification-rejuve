@@ -296,56 +296,50 @@ const parseUserImportFile = (fileBuffer) => {
   });
 };
 
-/**
- * Helper untuk normalisasi header kolom update departemen
- */
 const normalizeDeptKey = (key) => {
   if (!key) return '';
   const clean = String(key).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (clean.includes('emailsl') || clean.includes('storeleader') || clean === 'sl') return 'emailSl';
-  if (clean.includes('emaildm') || clean.includes('districtmanager') || clean === 'dm') return 'emailDm';
-  if (clean.includes('kodedepartemen') || clean.includes('kodestore') || clean.includes('storecode') || clean.includes('departmentcode') || clean === 'code') return 'departmentCode';
-  if (clean.includes('namadepartemen') || clean.includes('namastore') || clean.includes('storename') || clean.includes('departmentname')) return 'departmentName';
-  if (clean.includes('region') || clean.includes('wilayah')) return 'regionCode';
-  if (clean.includes('city') || clean.includes('kota')) return 'cityCode';
-  if (clean.includes('alamat') || clean.includes('address')) return 'address';
-  if (clean.includes('notelp') || clean.includes('phone') || clean.includes('telepon') || clean.includes('telp') || clean.includes('handphone') || clean.includes('hp')) return 'noTelp';
+  if (clean.includes('kodegerai') || clean.includes('deptcode') || clean.includes('kodedepartemen') || clean.includes('storecode') || clean === 'code' || clean === 'kode') return 'departmentCode';
+  if (clean.includes('namagerai') || clean.includes('deptname') || clean.includes('namadepartemen') || clean.includes('storename') || clean === 'nama' || clean === 'name') return 'departmentName';
+  if (clean.includes('wilayah') || clean.includes('region') || clean.includes('area') || clean.includes('regioncode')) return 'regionCode';
+  if (clean.includes('emailsl') || clean.includes('emailsleader') || clean.includes('storeleaderemail') || clean.includes('emailstoreleader') || clean.includes('slemail') || clean.includes('sl')) return 'slEmail';
+  if (clean.includes('emaildm') || clean.includes('emaildmanager') || clean.includes('districtmanageremail') || clean.includes('emaildistrictmanager') || clean.includes('dmemail') || clean.includes('dm')) return 'dmEmail';
+  if (clean.includes('isactive') || clean.includes('statusaktif') || clean.includes('aktif') || clean.includes('status') || clean.includes('active')) return 'isActive';
   return key;
 };
 
 /**
- * Menghasilkan buffer file Excel template update departemen (.xlsx) pre-populated dengan Store Code & Store Name ter-lock
+ * Menghasilkan buffer file Excel template update departemen/gerai (.xlsx)
+ * Bersifat PRE-POPULATED (berisi data gerai terkini) dengan dropdown validation.
  */
-const generateDepartmentUpdateTemplate = async (departmentsList = [], slList = [], dmList = [], cityList = []) => {
+const generateDepartmentImportTemplate = async (departmentsList = [], slList = [], dmList = []) => {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Re.juve Gamification Platform';
   workbook.created = new Date();
 
-  // 1. Sheet Template Update Department
-  const ws = workbook.addWorksheet('Update Master Store', {
-    views: [{ state: 'frozen', xSplit: 2, ySplit: 1, showGridLines: true }]
+  // 1. Sheet Template Update Gerai
+  const ws = workbook.addWorksheet('Template Update Gerai', {
+    views: [{ showGridLines: true }]
   });
 
   const columns = [
-    { header: 'Store Code', key: 'departmentCode', width: 18 },
-    { header: 'Store Name', key: 'departmentName', width: 34 },
-    { header: 'Region', key: 'regionCode', width: 22 },
-    { header: 'City', key: 'cityCode', width: 25 },
-    { header: 'Address', key: 'address', width: 40 },
-    { header: 'No Telp', key: 'noTelp', width: 20 },
-    { header: 'Email Store Leader', key: 'emailSl', width: 34 },
-    { header: 'Email District Manager', key: 'emailDm', width: 34 }
+    { header: 'Kode Gerai (Wajib)', key: 'departmentCode', width: 24 },
+    { header: 'Nama Gerai', key: 'departmentName', width: 36 },
+    { header: 'Wilayah / Region', key: 'regionCode', width: 22 },
+    { header: 'Email Store Leader (SL)', key: 'slEmail', width: 35 },
+    { header: 'Email District Manager (DM)', key: 'dmEmail', width: 35 },
+    { header: 'Status Aktif (TRUE/FALSE)', key: 'isActive', width: 22 }
   ];
   ws.columns = columns;
 
-  // Header style
+  // Style Header Row (Baris 1)
   const headerRow = ws.getRow(1);
   headerRow.height = 28;
   headerRow.eachCell((cell) => {
     cell.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FF831843' } // Signature Re.juve
+      fgColor: { argb: 'FF831843' } // Re.juve Signature Maroon
     };
     cell.font = {
       name: 'Calibri',
@@ -366,32 +360,41 @@ const generateDepartmentUpdateTemplate = async (departmentsList = [], slList = [
     };
   });
 
-  // Isi data departemen yang sudah ada
-  departmentsList.forEach((dept) => {
-    ws.addRow({
-      departmentCode: dept.departmentCode || '',
-      departmentName: dept.departmentName || '',
-      regionCode: dept.regionCode || '',
-      cityCode: dept.cityCode || '',
-      address: dept.address || '',
-      noTelp: dept.noTelp || '',
-      emailSl: dept.userSl?.email || '',
-      emailDm: dept.userDm?.email || ''
+  // Pre-populate data gerai dari database atau contoh
+  if (departmentsList && departmentsList.length > 0) {
+    departmentsList.forEach((d) => {
+      ws.addRow({
+        departmentCode: d.departmentCode || '',
+        departmentName: d.departmentName || '',
+        regionCode: d.regionCode || 'JABODETABEK',
+        slEmail: d.userSl?.email || d.storeLeader?.email || '',
+        dmEmail: d.userDm?.email || d.districtManager?.email || '',
+        isActive: d.isActive !== false ? 'TRUE' : 'FALSE'
+      });
     });
-  });
+  } else {
+    // Sample rows jika data kosong
+    ws.addRow({
+      departmentCode: 'BKI_01',
+      departmentName: 'Re.juve Bintaro Xchange',
+      regionCode: 'JABODETABEK',
+      slEmail: 'sl.bintaro@rejuve.co.id',
+      dmEmail: 'dm.south@rejuve.co.id',
+      isActive: 'TRUE'
+    });
+  }
 
-  // 2. Sheet Referensi Dropdown
-  const wsRef = workbook.addWorksheet('Referensi Dropdown', {
+  // 2. Sheet Referensi Master Data (Dropdown Sources)
+  const wsRef = workbook.addWorksheet('Daftar Referensi Dropdown', {
     views: [{ showGridLines: true }]
   });
 
   wsRef.columns = [
     { header: 'Email Store Leader', key: 'slEmail', width: 35 },
-    { header: 'Nama Store Leader', key: 'slName', width: 30 },
+    { header: 'Nama Store Leader', key: 'slName', width: 28 },
     { header: 'Email District Manager', key: 'dmEmail', width: 35 },
-    { header: 'Nama District Manager', key: 'dmName', width: 30 },
-    { header: 'Pilihan City Code', key: 'cityCode', width: 25 },
-    { header: 'Nama Kota', key: 'cityName', width: 30 }
+    { header: 'Nama District Manager', key: 'dmName', width: 28 },
+    { header: 'Pilihan Wilayah / Region', key: 'region', width: 25 }
   ];
 
   const refHeader = wsRef.getRow(1);
@@ -406,97 +409,106 @@ const generateDepartmentUpdateTemplate = async (departmentsList = [], slList = [
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
   });
 
-  const maxRef = Math.max(slList.length, dmList.length, cityList.length, 1);
-  for (let i = 0; i < maxRef; i++) {
+  const regionsList = [
+    'JABODETABEK',
+    'Jakarta Pusat',
+    'Jakarta Selatan',
+    'Jakarta Barat',
+    'Jakarta Timur',
+    'Jakarta Utara',
+    'Tangerang',
+    'Bekasi',
+    'Depok',
+    'Bogor',
+    'Surabaya',
+    'Bali',
+    'Bandung',
+    'Medan',
+    'Yogyakarta',
+    'Semarang'
+  ];
+
+  const maxRefRows = Math.max(slList.length, dmList.length, regionsList.length, 1);
+  for (let i = 0; i < maxRefRows; i++) {
     const sl = slList[i] || {};
     const dm = dmList[i] || {};
-    const city = cityList[i] || {};
+    const reg = regionsList[i] || '';
     wsRef.addRow({
       slEmail: sl.email || '',
       slName: sl.name || '',
       dmEmail: dm.email || '',
       dmName: dm.name || '',
-      cityCode: city.code || '',
-      cityName: city.value || ''
+      region: reg
     });
   }
 
-  const slFormula = slList.length > 0 ? `'Referensi Dropdown'!$A$2:$A$${slList.length + 1}` : null;
-  const dmFormula = dmList.length > 0 ? `'Referensi Dropdown'!$C$2:$C$${dmList.length + 1}` : null;
-  const cityFormula = cityList.length > 0 ? `'Referensi Dropdown'!$E$2:$E$${cityList.length + 1}` : null;
+  // Range rumus Excel untuk dropdown list
+  const slRefFormula = slList.length > 0 ? `'Daftar Referensi Dropdown'!$A$2:$A$${slList.length + 1}` : null;
+  const dmRefFormula = dmList.length > 0 ? `'Daftar Referensi Dropdown'!$C$2:$C$${dmList.length + 1}` : null;
+  const regionRefFormula = `'Daftar Referensi Dropdown'!$E$2:$E$${regionsList.length + 1}`;
 
-  const totalDataRows = Math.max(departmentsList.length, 100);
-  for (let r = 2; r <= totalDataRows + 1; r++) {
-    const row = ws.getRow(r);
-    // Col 1 & 2: Locked
-    row.getCell(1).protection = { locked: true };
-    row.getCell(2).protection = { locked: true };
+  const rowCount = Math.max(departmentsList.length + 10, 200);
 
-    // Col 3 s/d 8: Unlocked (Col 3 / Region tetap free text)
-    for (let c = 3; c <= 8; c++) {
-      row.getCell(c).protection = { locked: false };
-    }
+  // Pasang Data Validation Dropdown pada baris 2 s/d rowCount di Sheet Template
+  for (let rowIdx = 2; rowIdx <= rowCount; rowIdx++) {
+    const row = ws.getRow(rowIdx);
 
-    // Col 4: Dropdown City (City Code dari master referensi)
-    if (cityFormula) {
-      row.getCell(4).dataValidation = {
+    // Col C: Region (Dropdown)
+    const regionCell = row.getCell(3);
+    regionCell.dataValidation = {
+      type: 'list',
+      allowBlank: true,
+      formulae: [regionRefFormula],
+      showErrorMessage: true,
+      errorTitle: 'Wilayah Tidak Valid',
+      error: 'Pilih wilayah dari daftar dropdown referensi.'
+    };
+
+    // Col D: SL Email (Dropdown)
+    if (slRefFormula) {
+      const slCell = row.getCell(4);
+      slCell.dataValidation = {
         type: 'list',
         allowBlank: true,
-        formulae: [cityFormula],
+        formulae: [slRefFormula],
         showErrorMessage: true,
-        errorTitle: 'Pilihan Kota Tidak Valid',
-        error: 'Pilih Kota dari daftar dropdown referensi.'
-      };
-    }
-
-    // Col 7: Dropdown SL
-    if (slFormula) {
-      row.getCell(7).dataValidation = {
-        type: 'list',
-        allowBlank: true,
-        formulae: [slFormula],
-        showErrorMessage: true,
-        errorTitle: 'Store Leader Tidak Valid',
+        errorTitle: 'Store Leader Tidak Terdaftar',
         error: 'Pilih Store Leader dari daftar dropdown.'
       };
     }
 
-    // Col 8: Dropdown DM
-    if (dmFormula) {
-      row.getCell(8).dataValidation = {
+    // Col E: DM Email (Dropdown)
+    if (dmRefFormula) {
+      const dmCell = row.getCell(5);
+      dmCell.dataValidation = {
         type: 'list',
         allowBlank: true,
-        formulae: [dmFormula],
+        formulae: [dmRefFormula],
         showErrorMessage: true,
-        errorTitle: 'District Manager Tidak Valid',
+        errorTitle: 'District Manager Tidak Terdaftar',
         error: 'Pilih District Manager dari daftar dropdown.'
       };
     }
-  }
 
-  // Proteksi sheet dengan password kosong agar cell yang terkunci tidak bisa dimodifikasi user biasa
-  await ws.protect('', {
-    selectLockedCells: true,
-    selectUnlockedCells: true,
-    formatCells: false,
-    formatColumns: false,
-    formatRows: false,
-    insertColumns: false,
-    insertRows: false,
-    insertHyperlinks: false,
-    deleteColumns: false,
-    deleteRows: false,
-    sort: true,
-    autoFilter: true
-  });
+    // Col F: Is Active (Dropdown: TRUE, FALSE)
+    const activeCell = row.getCell(6);
+    activeCell.dataValidation = {
+      type: 'list',
+      allowBlank: false,
+      formulae: ['"TRUE,FALSE"'],
+      showErrorMessage: true,
+      errorTitle: 'Status Tidak Valid',
+      error: 'Pilih status TRUE (Aktif) atau FALSE (Non-Aktif).'
+    };
+  }
 
   return await workbook.xlsx.writeBuffer();
 };
 
 /**
- * Membaca buffer file Excel update departemen (.xlsx / .xls / .csv) dan mengembalikan baris yang ter-mapping
+ * Membaca buffer file Excel (.xlsx / .xls / .csv) untuk update massal departemen/gerai
  */
-const parseDepartmentUpdateFile = (fileBuffer) => {
+const parseDepartmentImportFile = (fileBuffer) => {
   const wb = xlsx.read(fileBuffer, { type: 'buffer' });
   const sheetName = wb.SheetNames[0];
   if (!sheetName) {
@@ -511,7 +523,7 @@ const parseDepartmentUpdateFile = (fileBuffer) => {
   }
 
   return rawRows.map((raw, index) => {
-    const rowNumber = index + 2;
+    const rowNumber = index + 2; // Baris 1 adalah header di Excel
     const mapped = {};
 
     for (const [key, val] of Object.entries(raw)) {
@@ -520,16 +532,17 @@ const parseDepartmentUpdateFile = (fileBuffer) => {
       mapped[normalizedKey] = strVal;
     }
 
+    const isActiveRaw = String(mapped.isActive !== undefined ? mapped.isActive : 'TRUE').toUpperCase();
+    const isActive = isActiveRaw === 'TRUE' || isActiveRaw === '1' || isActiveRaw === 'AKTIF' || isActiveRaw === 'ACTIVE' || isActiveRaw === 'YES' || isActiveRaw === 'YA';
+
     return {
       rowNumber,
       departmentCode: mapped.departmentCode || '',
       departmentName: mapped.departmentName || '',
       regionCode: mapped.regionCode || '',
-      cityCode: mapped.cityCode || '',
-      address: mapped.address || '',
-      noTelp: mapped.noTelp || '',
-      emailSl: (mapped.emailSl || '').toLowerCase(),
-      emailDm: (mapped.emailDm || '').toLowerCase(),
+      slEmail: (mapped.slEmail || '').toLowerCase(),
+      dmEmail: (mapped.dmEmail || '').toLowerCase(),
+      isActive,
       raw
     };
   });
@@ -538,7 +551,6 @@ const parseDepartmentUpdateFile = (fileBuffer) => {
 module.exports = {
   generateUserImportTemplate,
   parseUserImportFile,
-  generateDepartmentUpdateTemplate,
-  parseDepartmentUpdateFile
+  generateDepartmentImportTemplate,
+  parseDepartmentImportFile
 };
-

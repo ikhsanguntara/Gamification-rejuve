@@ -9,7 +9,7 @@ import { useGamificationStore } from './stores/gamification.js'
 import { useStoreStore } from './stores/store.js'
 import { calculateAverageDmSl } from './utils/star.js'
 import { useReportStore } from './stores/report.js'
-import { authApi } from './services/api.js'
+import { authApi, departmentApi } from './services/api.js'
 
 console.log('🚀 MEMULAI AUDIT & PENGUJIAN SEMUA FITUR CRUD SISTEM RE.JUVE...\n')
 
@@ -387,6 +387,14 @@ assert(storeStore.storeById(newStore.id) === null, 'Delete Store: Berhasil mengh
 
 // 6.5 STORE DETAIL API ACTION
 assert(typeof storeStore.fetchStoreByIdFromApi === 'function', 'Store Detail API: Action fetchStoreByIdFromApi tersedia di store')
+
+// 6.6 BULK STORE / DEPARTMENT UPDATE ACTIONS & API
+assert(typeof departmentApi.downloadTemplate === 'function', 'Department API: Endpoint downloadTemplate (GET /masters/departments/template) tersedia')
+assert(typeof departmentApi.bulkPreview === 'function', 'Department API: Endpoint bulkPreview (POST /masters/departments/bulk-preview) tersedia')
+assert(typeof departmentApi.bulkCommit === 'function', 'Department API: Endpoint bulkCommit (POST /masters/departments/bulk-commit) tersedia')
+assert(typeof storeStore.downloadTemplate === 'function', 'Store Store: Action downloadTemplate tersedia')
+assert(typeof storeStore.previewBulkDepartments === 'function', 'Store Store: Action previewBulkDepartments (Dry Run) tersedia')
+assert(typeof storeStore.commitBulkDepartments === 'function', 'Store Store: Action commitBulkDepartments tersedia')
 
 console.log('')
 

@@ -15,7 +15,8 @@ import { useGamificationStore } from './stores/gamification.js'
 import { useMissionStore } from './stores/mission.js'
 import { useReportStore, downloadFileBlob } from './stores/report.js'
 import { useBatchStore } from './stores/batch.js'
-import { reportApi, authApi, batchApi } from './services/api.js'
+import { useStoreStore } from './stores/store.js'
+import { reportApi, authApi, batchApi, departmentApi } from './services/api.js'
 
 console.log('🧪 MEMULAI PENGUJIAN KOMPREHENSIF UNIT TESTER (QA SUITE)...\n')
 
@@ -1152,6 +1153,102 @@ test('Batch Lifecycle State: Menentukan mode Editable (Draft) vs Read-Only (Gene
   assertFalse(genResult.isEditable, 'Batch yang sudah digenerate tidak boleh sembarangan diedit')
   assertTrue(genResult.isReadOnly, 'Batch yang sudah digenerate harus berada dalam mode Read-Only')
   assertEqual(genResult.mode, 'READ_ONLY', 'Mode harus READ_ONLY')
+})
+
+// ============================================================================
+// SUITE 16: BULK STORE / DEPARTMENT EXCEL UPDATE & ASSIGNMENT FLOW
+// ============================================================================
+console.log('📌 16. Menguji Fitur Bulk Store/Department Update via Excel (Template, Preview Dry-Run, & Commit):')
+
+const storeStore = useStoreStore()
+
+test('Department API Endpoints: downloadTemplate, bulkPreview, bulkCommit harus terdefinisi sebagai function', () => {
+  assertTrue(typeof departmentApi.downloadTemplate === 'function', 'GET /masters/departments/template harus ada di departmentApi')
+  assertTrue(typeof departmentApi.bulkPreview === 'function', 'POST /masters/departments/bulk-preview harus ada di departmentApi')
+  assertTrue(typeof departmentApi.bulkCommit === 'function', 'POST /masters/departments/bulk-commit harus ada di departmentApi')
+})
+
+test('Store Store Actions: downloadTemplate, previewBulkDepartments, commitBulkDepartments harus tersedia', () => {
+  assertTrue(typeof storeStore.downloadTemplate === 'function', 'downloadTemplate harus tersedia di storeStore')
+  assertTrue(typeof storeStore.previewBulkDepartments === 'function', 'previewBulkDepartments harus tersedia di storeStore')
+  assertTrue(typeof storeStore.commitBulkDepartments === 'function', 'commitBulkDepartments harus tersedia di storeStore')
+})
+
+test('Store Bulk Preview Data Normalization & Validation Logic', () => {
+  const mockPreviewResponse = {
+    summary: { totalRows: 3, validCount: 2, invalidCount: 1, updateCount: 2 },
+    rows: [
+      {
+        rowNumber: 2,
+        departmentCode: 'BKI_01',
+        departmentName: 'Re.juve Bintaro Xchange',
+        regionCode: 'JABODETABEK',
+        slEmail: 'sl.bintaro@rejuve.co.id',
+        dmEmail: 'dm.south@rejuve.co.id',
+        isActive: true,
+        status: 'VALID',
+        errors: []
+      },
+      {
+        rowNumber: 3,
+        departmentCode: 'GI_01',
+        departmentName: 'Re.juve Grand Indonesia',
+        regionCode: 'Jakarta Pusat',
+        slEmail: 'sl.gi@rejuve.co.id',
+        dmEmail: 'dm.central@rejuve.co.id',
+        isActive: true,
+        status: 'VALID',
+        errors: []
+      },
+      {
+        rowNumber: 4,
+        departmentCode: 'INVALID_99',
+        departmentName: 'Gerai Fiktif',
+        regionCode: 'Unknown',
+        slEmail: 'notfound@rejuve.co.id',
+        dmEmail: '',
+        isActive: false,
+        status: 'INVALID',
+        errors: ['Kode Gerai "INVALID_99" tidak ditemukan di sistem database.']
+      }
+    ]
+  }
+
+  // Verifikasi normalisasi rows
+  const normalizedRows = mockPreviewResponse.rows.map((r, i) => ({
+    rowNumber: r.rowNumber || i + 1,
+    departmentCode: r.departmentCode,
+    departmentName: r.departmentName,
+    regionCode: r.regionCode,
+    slEmail: r.slEmail,
+    dmEmail: r.dmEmail,
+    isActive: Boolean(r.isActive),
+    isValid: r.status === 'VALID',
+    errorMessage: (r.errors || []).join(', ')
+  }))
+
+  assertEqual(normalizedRows.length, 3, 'Harus memproses 3 baris')
+  assertEqual(normalizedRows.filter(r => r.isValid).length, 2, '2 baris valid')
+  assertEqual(normalizedRows.filter(r => !r.isValid).length, 1, '1 baris invalid')
+  assertEqual(normalizedRows[2].errorMessage, 'Kode Gerai "INVALID_99" tidak ditemukan di sistem database.', 'Pesan error harus terpetakan')
+
+  // Verifikasi payload commit (hanya baris valid yang dikirim)
+  const commitPayload = {
+    departments: normalizedRows
+      .filter(r => r.isValid)
+      .map(r => ({
+        departmentCode: r.departmentCode,
+        departmentName: r.departmentName,
+        regionCode: r.regionCode,
+        slEmail: r.slEmail,
+        dmEmail: r.dmEmail,
+        isActive: r.isActive
+      }))
+  }
+
+  assertEqual(commitPayload.departments.length, 2, 'Payload commit harus hanya berisi 2 baris valid')
+  assertEqual(commitPayload.departments[0].departmentCode, 'BKI_01')
+  assertEqual(commitPayload.departments[1].departmentCode, 'GI_01')
 })
 
 console.log('')

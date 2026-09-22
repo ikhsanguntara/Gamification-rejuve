@@ -27,7 +27,10 @@ export const departmentApi = {
   getById: (id) => apiFetch(`/masters/departments/${id}`, { method: 'GET' }),
   create: (data) => apiFetch('/masters/departments', { method: 'POST', body: data }),
   update: (id, data) => apiFetch(`/masters/departments/${id}`, { method: 'PUT', body: data }),
-  delete: (id) => apiFetch(`/masters/departments/${id}`, { method: 'DELETE' })
+  delete: (id) => apiFetch(`/masters/departments/${id}`, { method: 'DELETE' }),
+  downloadTemplate: () => apiFetch('/masters/departments/template', { method: 'GET', responseType: 'blob' }),
+  bulkPreview: (formData) => apiFetch('/masters/departments/bulk-preview', { method: 'POST', body: formData }),
+  bulkCommit: (data) => apiFetch('/masters/departments/bulk-commit', { method: 'POST', body: data })
 }
 
 // ─── 3. Master Users Service ────────────────────────────────────────────────
