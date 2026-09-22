@@ -266,6 +266,57 @@ async function main() {
   });
   console.log('✅ Param Group : GAMIFICATION_RULES (EARLY_BIRD_SCORES parameter tier)');
 
+  // 11. Param Group : CITY_STORE (Master Kota Gerai / Store Cities)
+  const groupCityStore = await prisma.paramGroup.upsert({
+    where: { code: 'CITY_STORE' },
+    update: {
+      name: 'Daftar Kota Gerai (Store Cities)'
+    },
+    create: {
+      code: 'CITY_STORE',
+      name: 'Daftar Kota Gerai (Store Cities)',
+      createdBy: 'seeder'
+    }
+  });
+
+  const cityParams = [
+    { code: 'JAKARTA_PUSAT', value: 'Jakarta Pusat' },
+    { code: 'JAKARTA_SELATAN', value: 'Jakarta Selatan' },
+    { code: 'JAKARTA_BARAT', value: 'Jakarta Barat' },
+    { code: 'JAKARTA_TIMUR', value: 'Jakarta Timur' },
+    { code: 'JAKARTA_UTARA', value: 'Jakarta Utara' },
+    { code: 'TANGERANG', value: 'Tangerang' },
+    { code: 'TANGERANG_SELATAN', value: 'Tangerang Selatan' },
+    { code: 'BEKASI', value: 'Bekasi' },
+    { code: 'BOGOR', value: 'Bogor' },
+    { code: 'DEPOK', value: 'Depok' },
+    { code: 'BANDUNG', value: 'Bandung' },
+    { code: 'SURABAYA', value: 'Surabaya' },
+    { code: 'BALI', value: 'Bali' },
+    { code: 'MEDAN', value: 'Medan' },
+    { code: 'SEMARANG', value: 'Semarang' },
+    { code: 'YOGYAKARTA', value: 'Yogyakarta' }
+  ];
+
+  for (const cp of cityParams) {
+    await prisma.param.upsert({
+      where: { code: cp.code },
+      update: {
+        paramgroupId: groupCityStore.paramgroupId,
+        value: cp.value,
+        isActive: true
+      },
+      create: {
+        paramgroupId: groupCityStore.paramgroupId,
+        code: cp.code,
+        value: cp.value,
+        isActive: true,
+        createdBy: 'seeder'
+      }
+    });
+  }
+  console.log(`✅ Param Group : CITY_STORE (${cityParams.length} parameter kota gerai)`);
+
   console.log('\n──────────────────────────────────────────────────');
   console.log('🎉 Seeding selesai! Data siap digunakan.\n');
   console.log('Kredensial default (semua user):');

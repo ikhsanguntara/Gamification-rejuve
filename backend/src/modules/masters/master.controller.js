@@ -721,7 +721,7 @@ const {
 
 const downloadDepartmentTemplate = async (req, res, next) => {
   try {
-    const [rawDepartments, storeLeaders, districtManagers] = await Promise.all([
+    const [rawDepartments, storeLeaders, districtManagers, cities] = await Promise.all([
       prisma.department.findMany({
         orderBy: { departmentCode: 'asc' }
       }),
@@ -740,11 +740,19 @@ const downloadDepartmentTemplate = async (req, res, next) => {
         },
         select: { userId: true, email: true, name: true },
         orderBy: { name: 'asc' }
+      }),
+      prisma.param.findMany({
+        where: {
+          paramgroup: { code: 'CITY_STORE' },
+          isActive: true
+        },
+        select: { code: true, value: true },
+        orderBy: { code: 'asc' }
       })
     ]);
 
     const departments = await enrichDepartmentsWithManagers(rawDepartments);
-    const buffer = await generateDepartmentUpdateTemplate(departments, storeLeaders, districtManagers);
+    const buffer = await generateDepartmentUpdateTemplate(departments, storeLeaders, districtManagers, cities);
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="template_update_department.xlsx"');
@@ -766,10 +774,17 @@ const bulkPreviewDepartments = async (req, res, next) => {
       return sendError(res, { statusCode: 400, message: 'File Excel tidak memiliki baris data atau kosong.' });
     }
 
-    const [existingDepartments, allUsers] = await Promise.all([
+    const [existingDepartments, allUsers, cityParams] = await Promise.all([
       prisma.department.findMany(),
       prisma.user.findMany({
         include: { role: true }
+      }),
+      prisma.param.findMany({
+        where: {
+          paramgroup: { code: 'CITY_STORE' },
+          isActive: true
+        },
+        select: { code: true, value: true }
       })
     ]);
 
@@ -807,6 +822,22 @@ const bulkPreviewDepartments = async (req, res, next) => {
       const existingDept = deptMap.get(code);
       if (!existingDept) {
         errors.push(`Store Code "${row.departmentCode}" tidak ditemukan di sistem.`);
+      }
+
+      // Validasi & Resolusi City Code jika diisi
+      if (row.cityCode) {
+        const rawCity = String(row.cityCode).trim();
+        const normalizedInput = rawCity.toUpperCase().replace(/\s+/g, '_');
+        const matchedCity = cityParams.find(c =>
+          c.code.toUpperCase() === normalizedInput ||
+          c.value.toUpperCase() === rawCity.toUpperCase()
+        );
+
+        if (matchedCity) {
+          row.cityCode = matchedCity.code;
+        } else {
+          row.cityCode = rawCity;
+        }
       }
 
       // Validasi Email SL jika diisi

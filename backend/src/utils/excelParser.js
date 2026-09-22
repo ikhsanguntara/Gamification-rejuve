@@ -316,7 +316,7 @@ const normalizeDeptKey = (key) => {
 /**
  * Menghasilkan buffer file Excel template update departemen (.xlsx) pre-populated dengan Store Code & Store Name ter-lock
  */
-const generateDepartmentUpdateTemplate = async (departmentsList = [], slList = [], dmList = []) => {
+const generateDepartmentUpdateTemplate = async (departmentsList = [], slList = [], dmList = [], cityList = []) => {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Re.juve Gamification Platform';
   workbook.created = new Date();
@@ -330,7 +330,7 @@ const generateDepartmentUpdateTemplate = async (departmentsList = [], slList = [
     { header: 'Store Code', key: 'departmentCode', width: 18 },
     { header: 'Store Name', key: 'departmentName', width: 34 },
     { header: 'Region', key: 'regionCode', width: 22 },
-    { header: 'City', key: 'cityCode', width: 22 },
+    { header: 'City', key: 'cityCode', width: 25 },
     { header: 'Address', key: 'address', width: 40 },
     { header: 'No Telp', key: 'noTelp', width: 20 },
     { header: 'Email Store Leader', key: 'emailSl', width: 34 },
@@ -389,7 +389,9 @@ const generateDepartmentUpdateTemplate = async (departmentsList = [], slList = [
     { header: 'Email Store Leader', key: 'slEmail', width: 35 },
     { header: 'Nama Store Leader', key: 'slName', width: 30 },
     { header: 'Email District Manager', key: 'dmEmail', width: 35 },
-    { header: 'Nama District Manager', key: 'dmName', width: 30 }
+    { header: 'Nama District Manager', key: 'dmName', width: 30 },
+    { header: 'Pilihan City Code', key: 'cityCode', width: 25 },
+    { header: 'Nama Kota', key: 'cityName', width: 30 }
   ];
 
   const refHeader = wsRef.getRow(1);
@@ -404,20 +406,24 @@ const generateDepartmentUpdateTemplate = async (departmentsList = [], slList = [
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
   });
 
-  const maxRef = Math.max(slList.length, dmList.length, 1);
+  const maxRef = Math.max(slList.length, dmList.length, cityList.length, 1);
   for (let i = 0; i < maxRef; i++) {
     const sl = slList[i] || {};
     const dm = dmList[i] || {};
+    const city = cityList[i] || {};
     wsRef.addRow({
       slEmail: sl.email || '',
       slName: sl.name || '',
       dmEmail: dm.email || '',
-      dmName: dm.name || ''
+      dmName: dm.name || '',
+      cityCode: city.code || '',
+      cityName: city.value || ''
     });
   }
 
   const slFormula = slList.length > 0 ? `'Referensi Dropdown'!$A$2:$A$${slList.length + 1}` : null;
   const dmFormula = dmList.length > 0 ? `'Referensi Dropdown'!$C$2:$C$${dmList.length + 1}` : null;
+  const cityFormula = cityList.length > 0 ? `'Referensi Dropdown'!$E$2:$E$${cityList.length + 1}` : null;
 
   const totalDataRows = Math.max(departmentsList.length, 100);
   for (let r = 2; r <= totalDataRows + 1; r++) {
@@ -426,9 +432,21 @@ const generateDepartmentUpdateTemplate = async (departmentsList = [], slList = [
     row.getCell(1).protection = { locked: true };
     row.getCell(2).protection = { locked: true };
 
-    // Col 3 s/d 8: Unlocked
+    // Col 3 s/d 8: Unlocked (Col 3 / Region tetap free text)
     for (let c = 3; c <= 8; c++) {
       row.getCell(c).protection = { locked: false };
+    }
+
+    // Col 4: Dropdown City (City Code dari master referensi)
+    if (cityFormula) {
+      row.getCell(4).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: [cityFormula],
+        showErrorMessage: true,
+        errorTitle: 'Pilihan Kota Tidak Valid',
+        error: 'Pilih Kota dari daftar dropdown referensi.'
+      };
     }
 
     // Col 7: Dropdown SL
