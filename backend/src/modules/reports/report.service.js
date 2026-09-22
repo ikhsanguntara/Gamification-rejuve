@@ -22,6 +22,139 @@ const formatDate = (dateVal) => {
 };
 
 /**
+ * Helper untuk mencari daftar batchId yang beririsan dengan filter periode (startDate - endDate)
+ * dan filter batchId / batchCode yang dikirimkan client.
+ */
+const resolveBatchFilter = async (query = {}) => {
+  const { startDate, endDate, batchId, batchCode } = query;
+  const batchConditions = [];
+
+  if (startDate && endDate) {
+    batchConditions.push({
+      startDate: { lte: new Date(endDate) },
+      endDate: { gte: new Date(startDate) }
+    });
+  } else if (startDate) {
+    batchConditions.push({
+      endDate: { gte: new Date(startDate) }
+    });
+  } else if (endDate) {
+    batchConditions.push({
+      startDate: { lte: new Date(endDate) }
+    });
+  }
+
+  if (batchId) {
+    batchConditions.push({ batchId });
+  }
+
+  if (batchCode) {
+    batchConditions.push({ code: batchCode });
+  }
+
+  if (batchConditions.length === 0) {
+    return null; // Tidak ada filter batch spesifik
+  }
+
+  const matchingBatches = await prisma.batch.findMany({
+    where: { AND: batchConditions },
+    select: { batchId: true, code: true, name: true, startDate: true, endDate: true }
+  });
+
+  return matchingBatches.map(b => b.batchId);
+};
+
+/**
+ * Helper untuk menyusun array AND conditions untuk filtering User / Crew pada modul laporan.
+ */
+const buildUserFilterConditions = async (query = {}, currentUser = null) => {
+  const andConditions = [];
+
+  // Role Scoping
+  if (currentUser) {
+    const roleCode = (currentUser.role?.roleCode || currentUser.role || '').toUpperCase();
+    const currentUserId = currentUser.userId || currentUser.id;
+
+    if (roleCode === 'STORE_LEADER') {
+      const slDepts = await prisma.department.findMany({
+        where: {
+          OR: [
+            { userSlId: currentUserId },
+            ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
+          ]
+        },
+        select: { departmentId: true }
+      });
+      const slDeptIds = slDepts.map(d => d.departmentId);
+      andConditions.push({
+        OR: [
+          { userBuddyId: currentUserId },
+          ...(slDeptIds.length > 0 ? [{ departmentId: { in: slDeptIds } }] : [])
+        ]
+      });
+    } else if (roleCode === 'DISTRICT_MANAGER') {
+      const dmDepts = await prisma.department.findMany({
+        where: {
+          OR: [
+            { userDmId: currentUserId },
+            ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
+          ]
+        },
+        select: { departmentId: true }
+      });
+      const dmDeptIds = dmDepts.map(d => d.departmentId);
+      andConditions.push({ departmentId: { in: dmDeptIds } });
+    }
+  }
+
+  // Filter Store / Department
+  if (query.storeCode || query.departmentCode) {
+    const code = query.storeCode || query.departmentCode;
+    andConditions.push({
+      department: { departmentCode: code }
+    });
+  } else if (query.departmentId) {
+    andConditions.push({ departmentId: query.departmentId });
+  }
+
+  // Filter DM
+  if (query.dmId || query.userDmId) {
+    const dmId = query.dmId || query.userDmId;
+    andConditions.push({
+      department: { userDmId: dmId }
+    });
+  }
+
+  // Filter Batch & Periode Tanggal Journey
+  const matchedBatchIds = await resolveBatchFilter(query);
+  if (matchedBatchIds !== null) {
+    if (matchedBatchIds.length === 0) {
+      andConditions.push({ batchId: '00000000-0000-0000-0000-000000000000' });
+    } else {
+      andConditions.push({
+        OR: [
+          { batchId: { in: matchedBatchIds } },
+          { activeBatchId: { in: matchedBatchIds } }
+        ]
+      });
+    }
+  }
+
+  // Pencarian Teks
+  if (query.search || query.q) {
+    const s = String(query.search || query.q).trim();
+    andConditions.push({
+      OR: [
+        { name: { contains: s, mode: 'insensitive' } },
+        { email: { contains: s, mode: 'insensitive' } }
+      ]
+    });
+  }
+
+  return andConditions;
+};
+
+/**
  * 1. GET BUDDY INCENTIVE REPORT
  * Menghasilkan rekapitulasi data bimbingan mentor buddy untuk dasar perhitungan insentif HR.
  */
@@ -61,8 +194,19 @@ const getBuddyIncentiveReport = async (query = {}, currentUser = null) => {
     }
   }
 
-  if (query.departmentId) {
+  if (query.storeCode || query.departmentCode) {
+    const code = query.storeCode || query.departmentCode;
+    whereBuddy.department = { departmentCode: code };
+  } else if (query.departmentId) {
     whereBuddy.departmentId = query.departmentId;
+  }
+
+  if (query.dmId || query.userDmId) {
+    const dmId = query.dmId || query.userDmId;
+    whereBuddy.department = {
+      ...(whereBuddy.department || {}),
+      userDmId: dmId
+    };
   }
 
   if (query.search || query.q) {
@@ -105,11 +249,29 @@ const getBuddyIncentiveReport = async (query = {}, currentUser = null) => {
     isActive: true
   };
 
-  if (query.batchId) {
-    whereMentee.OR = [
-      { batchId: query.batchId },
-      { activeBatchId: query.batchId }
-    ];
+  const matchedBatchIds = await resolveBatchFilter(query);
+  if (matchedBatchIds !== null) {
+    if (matchedBatchIds.length === 0) {
+      whereMentee.batchId = '00000000-0000-0000-0000-000000000000';
+    } else {
+      whereMentee.OR = [
+        { batchId: { in: matchedBatchIds } },
+        { activeBatchId: { in: matchedBatchIds } }
+      ];
+    }
+  }
+
+  if (query.storeCode || query.departmentCode) {
+    whereMentee.department = { departmentCode: query.storeCode || query.departmentCode };
+  } else if (query.departmentId) {
+    whereMentee.departmentId = query.departmentId;
+  }
+
+  if (query.dmId || query.userDmId) {
+    whereMentee.department = {
+      ...(whereMentee.department || {}),
+      userDmId: query.dmId || query.userDmId
+    };
   }
 
   const mentees = await prisma.user.findMany({
@@ -789,68 +951,13 @@ const getUserTraceabilityList = async (query = {}, currentUser = null) => {
   const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 10));
   const skip = (page - 1) * limit;
 
-  const where = {};
-
-  // Role Scoping untuk STORE_LEADER dan DISTRICT_MANAGER
-  if (currentUser) {
-    const roleCode = (currentUser.role?.roleCode || currentUser.role || '').toUpperCase();
-    const currentUserId = currentUser.userId || currentUser.id;
-
-    if (roleCode === 'STORE_LEADER') {
-      const slDepts = await prisma.department.findMany({
-        where: {
-          OR: [
-            { userSlId: currentUserId },
-            ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
-          ]
-        },
-        select: { departmentId: true }
-      });
-      const slDeptIds = slDepts.map(d => d.departmentId);
-
-      const slConditions = [
-        { userBuddyId: currentUserId },
-        ...(slDeptIds.length > 0 ? [{ departmentId: { in: slDeptIds } }] : [])
-      ];
-
-      where.OR = slConditions;
-    } else if (roleCode === 'DISTRICT_MANAGER') {
-      const dmDepts = await prisma.department.findMany({
-        where: {
-          OR: [
-            { userDmId: currentUserId },
-            ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
-          ]
-        },
-        select: { departmentId: true }
-      });
-      const dmDeptIds = dmDepts.map(d => d.departmentId);
-      where.departmentId = { in: dmDeptIds };
-    }
-  }
-
+  const andConditions = await buildUserFilterConditions(query, currentUser);
   if (query.role) {
-    where.role = { roleCode: String(query.role).toUpperCase() };
+    andConditions.push({ role: { roleCode: String(query.role).toUpperCase() } });
+  } else {
+    andConditions.push({ role: { roleCode: 'CREW' } });
   }
-
-  if (query.departmentId) {
-    where.departmentId = query.departmentId;
-  }
-
-  if (query.batchId) {
-    where.OR = [
-      { batchId: query.batchId },
-      { activeBatchId: query.batchId }
-    ];
-  }
-
-  if (query.search || query.q) {
-    const s = String(query.search || query.q).trim();
-    where.OR = [
-      { name: { contains: s, mode: 'insensitive' } },
-      { email: { contains: s, mode: 'insensitive' } }
-    ];
-  }
+  const where = andConditions.length > 0 ? { AND: andConditions } : {};
 
   const [total, users] = await Promise.all([
     prisma.user.count({ where }),
@@ -1011,6 +1118,9 @@ const getUserTraceabilityList = async (query = {}, currentUser = null) => {
 
     const assignmentSlName = slByDept.get(u.departmentId) || '-';
 
+    const completedMissionsCount = allMissions.filter(m => m.status === 'COMPLETED').length;
+    const notCompletedMissionsCount = allMissions.filter(m => m.status !== 'COMPLETED').length;
+
     return {
       // ─── 17 Kolom Utama Spesifikasi Active New Recruit Report ───
       id: u.userId,
@@ -1020,6 +1130,7 @@ const getUserTraceabilityList = async (query = {}, currentUser = null) => {
       gender: u.gender || '-',
       phone: u.phone || '-',
       email: u.email,
+      buddy: u.userBuddy?.name || '-',
       buddySL: u.userBuddy?.name || '-',
       buddyStoreCode: u.userBuddy?.department?.departmentCode || '-',
       assignmentSL: assignmentSlName,
@@ -1028,6 +1139,8 @@ const getUserTraceabilityList = async (query = {}, currentUser = null) => {
       week1Status,
       week2Status,
       week3Status,
+      completedMissionsCount,
+      notCompletedMissionsCount,
       lapsingApprovalDays,
       scoreBintang: u.stars || 0,
       scorePoint: u.points || 0,
@@ -1080,8 +1193,8 @@ const exportUserTraceabilityExcel = async (query = {}, currentUser = null) => {
     views: [{ showGridLines: true }]
   });
 
-  // Judul & Banner Laporan (A1:V1)
-  ws.mergeCells('A1:V1');
+  // Judul & Banner Laporan (A1:X1)
+  ws.mergeCells('A1:X1');
   const titleCell = ws.getCell('A1');
   titleCell.value = 'RE.JUVE — ACTIVE NEW RECRUIT REPORT (USER TRACEABILITY AUDIT)';
   titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -1089,13 +1202,14 @@ const exportUserTraceabilityExcel = async (query = {}, currentUser = null) => {
   titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
   ws.getRow(1).height = 32;
 
-  // Metadata Cetak (A2:V2)
-  ws.mergeCells('A2:V2');
+  // Metadata Cetak (A2:X2)
+  ws.mergeCells('A2:X2');
   const metaCell = ws.getCell('A2');
   const filterDesc = [
     query.search || query.q ? `Pencarian: "${query.search || query.q}"` : null,
     query.role ? `Role: ${query.role}` : null,
-    query.departmentId ? `Dept ID: ${query.departmentId}` : null,
+    query.storeCode ? `Store: ${query.storeCode}` : (query.departmentId ? `Dept ID: ${query.departmentId}` : null),
+    query.startDate && query.endDate ? `Periode: ${query.startDate} s/d ${query.endDate}` : null,
     query.batchId ? `Batch ID: ${query.batchId}` : 'Semua Batch'
   ].filter(Boolean).join(' | ');
 
@@ -1106,7 +1220,7 @@ const exportUserTraceabilityExcel = async (query = {}, currentUser = null) => {
 
   ws.addRow([]); // Baris 3 kosong
 
-  // Header Kolom Tabel (Baris 4) - 22 Kolom (17 spesifikasi foto + pelengkap)
+  // Header Kolom Tabel (Baris 4) - 24 Kolom (17 spesifikasi foto + pelengkap)
   const headers = [
     'No',
     'ID (User UUID)',
@@ -1125,6 +1239,8 @@ const exportUserTraceabilityExcel = async (query = {}, currentUser = null) => {
     'Week 1 Status',
     'Week 2 Status',
     'Week 3 Status',
+    'Jumlah Misi Complete',
+    'Jumlah Misi Not Complete',
     'Lapsing Approval Days (Pending DM)',
     'Score Bintang',
     'Score Point',
@@ -1167,6 +1283,8 @@ const exportUserTraceabilityExcel = async (query = {}, currentUser = null) => {
       u.week1Status,
       u.week2Status,
       u.week3Status,
+      u.completedMissionsCount,
+      u.notCompletedMissionsCount,
       u.lapsingApprovalDays,
       u.scoreBintang,
       u.scorePoint,
@@ -1663,6 +1781,890 @@ const exportSingleUserTraceabilityExcel = async (userId) => {
   return await workbook.xlsx.writeBuffer();
 };
 
+/**
+ * 4. GET SCORE REPORT
+ * Menampilkan rekapitulasi nilai mingguan (Week 1, 2, 3), score bintang, dan point kru.
+ */
+const getScoreReport = async (query = {}, currentUser = null) => {
+  const isExportAll = query.exportAll === true || query.exportAll === 'true';
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 10));
+  const skip = (page - 1) * limit;
+
+  const andConditions = await buildUserFilterConditions(query, currentUser);
+  andConditions.push({ role: { roleCode: 'CREW' } });
+  const where = { AND: andConditions };
+
+  const [total, users] = await Promise.all([
+    prisma.user.count({ where }),
+    prisma.user.findMany({
+      where,
+      skip: isExportAll ? undefined : skip,
+      take: isExportAll ? undefined : limit,
+      select: {
+        userId: true,
+        name: true,
+        email: true,
+        gender: true,
+        phone: true,
+        stars: true,
+        points: true,
+        departmentId: true,
+        department: {
+          select: {
+            departmentId: true,
+            departmentCode: true,
+            departmentName: true
+          }
+        },
+        userBuddyId: true,
+        userBuddy: {
+          select: {
+            userId: true,
+            name: true,
+            email: true,
+            department: {
+              select: {
+                departmentCode: true,
+                departmentName: true
+              }
+            }
+          }
+        },
+        batch: {
+          select: {
+            batchId: true,
+            code: true,
+            name: true
+          }
+        },
+        activeBatch: {
+          select: {
+            batchId: true,
+            code: true,
+            name: true
+          }
+        },
+        missions: {
+          select: {
+            userMissionId: true,
+            status: true,
+            tlScore: true,
+            dmScore: true,
+            finalScore: true,
+            mission: {
+              select: {
+                type: true,
+                weekOrDayNumber: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: { name: 'asc' }
+    })
+  ]);
+
+  const deptIds = users.map(u => u.departmentId).filter(Boolean);
+  const storeLeaders = deptIds.length > 0
+    ? await prisma.user.findMany({
+        where: {
+          departmentId: { in: deptIds },
+          role: { roleCode: { in: ['STORE_LEADER', 'SUPERVISOR'] } },
+          isActive: true
+        },
+        select: {
+          userId: true,
+          name: true,
+          departmentId: true
+        }
+      })
+    : [];
+
+  const slByDept = new Map();
+  storeLeaders.forEach(sl => slByDept.set(sl.departmentId, sl.name));
+
+  const data = users.map(u => {
+    const currentBatch = u.activeBatch || u.batch;
+    const allMissions = u.missions || [];
+
+    const calculateWeekScore = (weekNum) => {
+      const weekMissions = allMissions.filter(m => m.mission?.type === 'JOURNEY' && m.mission?.weekOrDayNumber === weekNum);
+      const scored = weekMissions.filter(m => m.finalScore !== null || m.tlScore !== null);
+      if (scored.length === 0) return 0;
+      const sum = scored.reduce((acc, curr) => acc + (curr.finalScore ?? curr.tlScore ?? 0), 0);
+      return parseFloat((sum / scored.length).toFixed(1));
+    };
+
+    return {
+      id: u.userId,
+      userId: u.userId,
+      batch: currentBatch?.code || '-',
+      name: u.name,
+      buddySL: u.userBuddy?.name || '-',
+      buddyStoreCode: u.userBuddy?.department?.departmentCode || '-',
+      viewBuddyReport: u.userBuddyId ? `/api/reports/buddy-incentive/${u.userBuddyId}` : null,
+      assignmentSL: slByDept.get(u.departmentId) || '-',
+      assignmentStoreCode: u.department?.departmentCode || '-',
+      week1Score: calculateWeekScore(1),
+      week2Score: calculateWeekScore(2),
+      week3Score: calculateWeekScore(3),
+      scoreBintang: u.stars || 0,
+      scorePoint: u.points || 0
+    };
+  });
+
+  return {
+    data,
+    pagination: {
+      total,
+      page: isExportAll ? 1 : page,
+      limit: isExportAll ? total : limit,
+      totalPages: isExportAll ? 1 : (Math.ceil(total / limit) || 1)
+    }
+  };
+};
+
+/**
+ * 4b. EXPORT SCORE REPORT EXCEL
+ */
+const exportScoreReportExcel = async (query = {}, currentUser = null) => {
+  const result = await getScoreReport({ ...query, exportAll: true }, currentUser);
+  const list = result.data || [];
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Re.juve Gamification Platform';
+  workbook.created = new Date();
+
+  const ws = workbook.addWorksheet('Score Report', {
+    views: [{ showGridLines: true }]
+  });
+
+  ws.mergeCells('A1:M1');
+  const titleCell = ws.getCell('A1');
+  titleCell.value = 'RE.JUVE — SCORE REPORT (REKAPITULASI NILAI MISI & SKOR KRU)';
+  titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+  titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF831843' } };
+  titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  ws.getRow(1).height = 32;
+
+  ws.mergeCells('A2:M2');
+  const metaCell = ws.getCell('A2');
+  metaCell.value = `Tanggal Ekspor: ${formatDate(new Date())} | Total Data: ${list.length} Kru`;
+  metaCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF475569' } };
+  metaCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  ws.getRow(2).height = 20;
+
+  ws.addRow([]);
+
+  const headers = [
+    'No',
+    'ID (User UUID)',
+    'Batch',
+    'Nama Kru',
+    'Buddy SL',
+    'Buddy Store Code',
+    'Assignment SL',
+    'Assignment Store Code',
+    'Week 1 Score',
+    'Week 2 Score',
+    'Week 3 Score',
+    'Score Bintang',
+    'Score Point'
+  ];
+
+  ws.addRow(headers);
+  const headerRow = ws.getRow(4);
+  headerRow.height = 26;
+  headerRow.eachCell(cell => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF9D174D' } };
+    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    cell.border = {
+      top: { style: 'thin', color: { argb: 'FF6B133A' } },
+      left: { style: 'thin', color: { argb: 'FF6B133A' } },
+      bottom: { style: 'medium', color: { argb: 'FF4A0D28' } },
+      right: { style: 'thin', color: { argb: 'FF6B133A' } }
+    };
+  });
+
+  list.forEach((item, idx) => {
+    const row = ws.addRow([
+      idx + 1,
+      item.id,
+      item.batch,
+      item.name,
+      item.buddySL,
+      item.buddyStoreCode,
+      item.assignmentSL,
+      item.assignmentStoreCode,
+      item.week1Score,
+      item.week2Score,
+      item.week3Score,
+      item.scoreBintang,
+      item.scorePoint
+    ]);
+    row.height = 22;
+    const isEven = idx % 2 === 0;
+    const bgArgb = isEven ? 'FFFFFFFF' : 'FFFDF2F8';
+
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
+      cell.font = { name: 'Calibri', size: 10 };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+      };
+      if ([1, 3, 5, 6, 8, 9, 10, 11, 12, 13].includes(colNumber)) {
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      } else {
+        cell.alignment = { vertical: 'middle', horizontal: 'left' };
+      }
+    });
+  });
+
+  ws.columns = [
+    { width: 6 },
+    { width: 36 },
+    { width: 16 },
+    { width: 24 },
+    { width: 22 },
+    { width: 18 },
+    { width: 22 },
+    { width: 22 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 }
+  ];
+
+  return await workbook.xlsx.writeBuffer();
+};
+
+/**
+ * 5. GET REPORT BY STORE
+ * Rekapitulasi progres onboarding new hire per gerai (Store).
+ */
+const getStoreReport = async (query = {}, currentUser = null) => {
+  const isExportAll = query.exportAll === true || query.exportAll === 'true';
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 10));
+  const skip = (page - 1) * limit;
+
+  // Department where conditions
+  const deptWhere = { isActive: true };
+
+  // Role Scoping
+  if (currentUser) {
+    const roleCode = (currentUser.role?.roleCode || currentUser.role || '').toUpperCase();
+    const currentUserId = currentUser.userId || currentUser.id;
+
+    if (roleCode === 'STORE_LEADER') {
+      deptWhere.OR = [
+        { userSlId: currentUserId },
+        ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
+      ];
+    } else if (roleCode === 'DISTRICT_MANAGER') {
+      deptWhere.OR = [
+        { userDmId: currentUserId },
+        ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
+      ];
+    }
+  }
+
+  if (query.storeCode || query.departmentCode) {
+    deptWhere.departmentCode = query.storeCode || query.departmentCode;
+  }
+  if (query.departmentId) {
+    deptWhere.departmentId = query.departmentId;
+  }
+  if (query.dmId || query.userDmId) {
+    deptWhere.userDmId = query.dmId || query.userDmId;
+  }
+  if (query.search || query.q) {
+    const s = String(query.search || query.q).trim();
+    deptWhere.OR = [
+      { departmentCode: { contains: s, mode: 'insensitive' } },
+      { departmentName: { contains: s, mode: 'insensitive' } }
+    ];
+  }
+
+  const [total, departments] = await Promise.all([
+    prisma.department.count({ where: deptWhere }),
+    prisma.department.findMany({
+      where: deptWhere,
+      skip: isExportAll ? undefined : skip,
+      take: isExportAll ? undefined : limit,
+      orderBy: { departmentCode: 'asc' }
+    })
+  ]);
+
+  const deptIds = departments.map(d => d.departmentId);
+  const managerIds = [...new Set(departments.flatMap(d => [d.userSlId, d.userDmId]).filter(Boolean))];
+
+  const managers = managerIds.length > 0
+    ? await prisma.user.findMany({
+        where: { userId: { in: managerIds } },
+        select: { userId: true, name: true }
+      })
+    : [];
+  const managerMap = new Map();
+  managers.forEach(m => managerMap.set(m.userId, m.name));
+
+  // Ambil data kru di gerai-gerai ini
+  const matchedBatchIds = await resolveBatchFilter(query);
+  const crewWhere = {
+    departmentId: { in: deptIds },
+    role: { roleCode: 'CREW' },
+    isActive: true
+  };
+  if (matchedBatchIds !== null) {
+    if (matchedBatchIds.length === 0) {
+      crewWhere.batchId = '00000000-0000-0000-0000-000000000000';
+    } else {
+      crewWhere.OR = [
+        { batchId: { in: matchedBatchIds } },
+        { activeBatchId: { in: matchedBatchIds } }
+      ];
+    }
+  }
+
+  const crews = await prisma.user.findMany({
+    where: crewWhere,
+    select: {
+      userId: true,
+      name: true,
+      departmentId: true,
+      createdAt: true,
+      batch: { select: { batchId: true, code: true, startDate: true } },
+      activeBatch: { select: { batchId: true, code: true, startDate: true } },
+      missions: {
+        select: {
+          userMissionId: true,
+          status: true,
+          tlScore: true,
+          dmScore: true,
+          finalScore: true,
+          dmReviewedAt: true,
+          updatedAt: true,
+          mission: {
+            select: {
+              type: true,
+              weekOrDayNumber: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  const crewsByDept = new Map();
+  crews.forEach(c => {
+    if (!crewsByDept.has(c.departmentId)) crewsByDept.set(c.departmentId, []);
+    crewsByDept.get(c.departmentId).push(c);
+  });
+
+  const data = departments.map(d => {
+    const deptCrews = crewsByDept.get(d.departmentId) || [];
+    const dmName = d.userDmId ? (managerMap.get(d.userDmId) || '-') : '-';
+    const slName = d.userSlId ? (managerMap.get(d.userSlId) || '-') : '-';
+
+    const uniqueBatches = new Set();
+    let stepBuddyCount = 0;
+    let stepWeek1Count = 0;
+    let stepWeek2Count = 0;
+    let stepWeek3Count = 0;
+    let completeCount = 0;
+    const completeDurations = [];
+
+    deptCrews.forEach(c => {
+      const b = c.activeBatch || c.batch;
+      if (b?.code) uniqueBatches.add(b.code);
+
+      const allM = c.missions || [];
+      const buddyMissions = allM.filter(m => m.mission?.type === 'BUDDY');
+      const isBuddyComplete = buddyMissions.length > 0 && buddyMissions.every(m => m.status === 'COMPLETED' || m.tlScore !== null);
+
+      const resolveWeekDone = (wn) => {
+        const wm = allM.filter(m => m.mission?.type === 'JOURNEY' && m.mission?.weekOrDayNumber === wn);
+        return wm.length > 0 && wm.every(m => m.status === 'COMPLETED');
+      };
+
+      const isW1Done = resolveWeekDone(1);
+      const isW2Done = resolveWeekDone(2);
+      const isW3Done = resolveWeekDone(3);
+
+      if (!isBuddyComplete) {
+        stepBuddyCount++;
+      } else if (!isW1Done) {
+        stepWeek1Count++;
+      } else if (!isW2Done) {
+        stepWeek2Count++;
+      } else if (!isW3Done) {
+        stepWeek3Count++;
+      } else {
+        completeCount++;
+        const lastMission = allM.filter(m => m.mission?.type === 'JOURNEY' && m.mission?.weekOrDayNumber === 3)
+          .sort((a, b) => new Date(b.dmReviewedAt || b.updatedAt) - new Date(a.dmReviewedAt || a.updatedAt))[0];
+        const endDate = lastMission?.dmReviewedAt || lastMission?.updatedAt || new Date();
+        const startDate = b?.startDate || c.createdAt;
+        const diffDays = Math.max(1, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)));
+        completeDurations.push(diffDays);
+      }
+    });
+
+    const avgCompleteDays = completeDurations.length > 0
+      ? parseFloat((completeDurations.reduce((acc, curr) => acc + curr, 0) / completeDurations.length).toFixed(1))
+      : 0;
+
+    return {
+      departmentId: d.departmentId,
+      storeCode: d.departmentCode,
+      storeName: d.departmentName,
+      dm: dmName,
+      storeLeader: slName,
+      batchCount: uniqueBatches.size,
+      numberOfNewHire: deptCrews.length,
+      newHireStepBuddyCount: stepBuddyCount,
+      newHireStepWeek1Count: stepWeek1Count,
+      newHireStepWeek2Count: stepWeek2Count,
+      newHireStepWeek3Count: stepWeek3Count,
+      newHireCompleteCount: completeCount,
+      avgCompleteDays
+    };
+  });
+
+  return {
+    data,
+    pagination: {
+      total,
+      page: isExportAll ? 1 : page,
+      limit: isExportAll ? total : limit,
+      totalPages: isExportAll ? 1 : (Math.ceil(total / limit) || 1)
+    }
+  };
+};
+
+/**
+ * 5b. EXPORT REPORT BY STORE EXCEL
+ */
+const exportStoreReportExcel = async (query = {}, currentUser = null) => {
+  const result = await getStoreReport({ ...query, exportAll: true }, currentUser);
+  const list = result.data || [];
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Re.juve Gamification Platform';
+  workbook.created = new Date();
+
+  const ws = workbook.addWorksheet('Report by Store', {
+    views: [{ showGridLines: true }]
+  });
+
+  ws.mergeCells('A1:L1');
+  const titleCell = ws.getCell('A1');
+  titleCell.value = 'RE.JUVE — REPORT BY STORE (PROGRESS ONBOARDING PER GERAI)';
+  titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+  titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF831843' } };
+  titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  ws.getRow(1).height = 32;
+
+  ws.mergeCells('A2:L2');
+  const metaCell = ws.getCell('A2');
+  metaCell.value = `Tanggal Ekspor: ${formatDate(new Date())} | Total Gerai: ${list.length}`;
+  metaCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF475569' } };
+  metaCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  ws.getRow(2).height = 20;
+
+  ws.addRow([]);
+
+  const headers = [
+    'No',
+    'Store Code',
+    'Nama Gerai',
+    'District Manager (DM)',
+    'Store Leader (SL)',
+    'Jumlah Batch',
+    'Number of New Hire',
+    'Step Buddy',
+    'Step Week 1',
+    'Step Week 2',
+    'Step Week 3',
+    'Complete',
+    'Avg Complete Days'
+  ];
+
+  ws.addRow(headers);
+  const headerRow = ws.getRow(4);
+  headerRow.height = 26;
+  headerRow.eachCell(cell => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF9D174D' } };
+    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    cell.border = {
+      top: { style: 'thin', color: { argb: 'FF6B133A' } },
+      left: { style: 'thin', color: { argb: 'FF6B133A' } },
+      bottom: { style: 'medium', color: { argb: 'FF4A0D28' } },
+      right: { style: 'thin', color: { argb: 'FF6B133A' } }
+    };
+  });
+
+  list.forEach((item, idx) => {
+    const row = ws.addRow([
+      idx + 1,
+      item.storeCode,
+      item.storeName,
+      item.dm,
+      item.storeLeader,
+      item.batchCount,
+      item.numberOfNewHire,
+      item.newHireStepBuddyCount,
+      item.newHireStepWeek1Count,
+      item.newHireStepWeek2Count,
+      item.newHireStepWeek3Count,
+      item.newHireCompleteCount,
+      item.avgCompleteDays
+    ]);
+    row.height = 22;
+    const isEven = idx % 2 === 0;
+    const bgArgb = isEven ? 'FFFFFFFF' : 'FFFDF2F8';
+
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
+      cell.font = { name: 'Calibri', size: 10 };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+      };
+      if ([1, 2, 6, 7, 8, 9, 10, 11, 12, 13].includes(colNumber)) {
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      } else {
+        cell.alignment = { vertical: 'middle', horizontal: 'left' };
+      }
+    });
+  });
+
+  ws.columns = [
+    { width: 6 },
+    { width: 16 },
+    { width: 28 },
+    { width: 22 },
+    { width: 22 },
+    { width: 14 },
+    { width: 18 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 18 }
+  ];
+
+  return await workbook.xlsx.writeBuffer();
+};
+
+/**
+ * 6. GET REPORT BY DM
+ * Evaluasi performa approval District Manager dan gerai supervisi.
+ */
+const getDmReport = async (query = {}, currentUser = null) => {
+  const isExportAll = query.exportAll === true || query.exportAll === 'true';
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 10));
+  const skip = (page - 1) * limit;
+
+  const deptWhere = { isActive: true };
+
+  // Role Scoping
+  if (currentUser) {
+    const roleCode = (currentUser.role?.roleCode || currentUser.role || '').toUpperCase();
+    const currentUserId = currentUser.userId || currentUser.id;
+
+    if (roleCode === 'STORE_LEADER') {
+      deptWhere.OR = [
+        { userSlId: currentUserId },
+        ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
+      ];
+    } else if (roleCode === 'DISTRICT_MANAGER') {
+      deptWhere.OR = [
+        { userDmId: currentUserId },
+        ...(currentUser.departmentId ? [{ departmentId: currentUser.departmentId }] : [])
+      ];
+    }
+  }
+
+  if (query.storeCode || query.departmentCode) {
+    deptWhere.departmentCode = query.storeCode || query.departmentCode;
+  }
+  if (query.departmentId) {
+    deptWhere.departmentId = query.departmentId;
+  }
+  if (query.dmId || query.userDmId) {
+    deptWhere.userDmId = query.dmId || query.userDmId;
+  }
+  if (query.search || query.q) {
+    const s = String(query.search || query.q).trim();
+    deptWhere.OR = [
+      { departmentCode: { contains: s, mode: 'insensitive' } },
+      { departmentName: { contains: s, mode: 'insensitive' } }
+    ];
+  }
+
+  const [total, departments] = await Promise.all([
+    prisma.department.count({ where: deptWhere }),
+    prisma.department.findMany({
+      where: deptWhere,
+      skip: isExportAll ? undefined : skip,
+      take: isExportAll ? undefined : limit,
+      orderBy: { departmentCode: 'asc' }
+    })
+  ]);
+
+  const deptIds = departments.map(d => d.departmentId);
+  const dmIds = [...new Set(departments.map(d => d.userDmId).filter(Boolean))];
+
+  const dmUsers = dmIds.length > 0
+    ? await prisma.user.findMany({
+        where: { userId: { in: dmIds } },
+        select: { userId: true, name: true }
+      })
+    : [];
+  const dmMap = new Map();
+  dmUsers.forEach(u => dmMap.set(u.userId, u.name));
+
+  const matchedBatchIds = await resolveBatchFilter(query);
+  const crewWhere = {
+    departmentId: { in: deptIds },
+    role: { roleCode: 'CREW' },
+    isActive: true
+  };
+  if (matchedBatchIds !== null) {
+    if (matchedBatchIds.length === 0) {
+      crewWhere.batchId = '00000000-0000-0000-0000-000000000000';
+    } else {
+      crewWhere.OR = [
+        { batchId: { in: matchedBatchIds } },
+        { activeBatchId: { in: matchedBatchIds } }
+      ];
+    }
+  }
+
+  const crews = await prisma.user.findMany({
+    where: crewWhere,
+    select: {
+      userId: true,
+      name: true,
+      departmentId: true,
+      points: true,
+      batch: { select: { batchId: true, code: true } },
+      activeBatch: { select: { batchId: true, code: true } },
+      missions: {
+        select: {
+          userMissionId: true,
+          status: true,
+          tlScore: true,
+          tlScoredAt: true,
+          dmScore: true,
+          dmReviewedAt: true,
+          submittedAt: true,
+          createdAt: true
+        }
+      }
+    }
+  });
+
+  const crewsByDept = new Map();
+  crews.forEach(c => {
+    if (!crewsByDept.has(c.departmentId)) crewsByDept.set(c.departmentId, []);
+    crewsByDept.get(c.departmentId).push(c);
+  });
+
+  const data = departments.map(d => {
+    const deptCrews = crewsByDept.get(d.departmentId) || [];
+    const dmName = d.userDmId ? (dmMap.get(d.userDmId) || '-') : '-';
+
+    const uniqueBatches = new Set();
+    let totalPoints = 0;
+    const approvalDurations = [];
+    let unscoredBySlCount = 0;
+    let unscoredByDmCount = 0;
+
+    deptCrews.forEach(c => {
+      const b = c.activeBatch || c.batch;
+      if (b?.code) uniqueBatches.add(b.code);
+      totalPoints += (c.points || 0);
+
+      (c.missions || []).forEach(m => {
+        if (m.tlScoredAt && m.dmReviewedAt) {
+          const startMs = new Date(m.tlScoredAt).getTime();
+          const endMs = new Date(m.dmReviewedAt).getTime();
+          const diffHours = Math.max(0, (endMs - startMs) / (1000 * 60 * 60));
+          approvalDurations.push(diffHours);
+        }
+
+        if (m.tlScore === null && (m.dmScore !== null || m.status === 'COMPLETED')) {
+          unscoredBySlCount++;
+        }
+
+        if (m.tlScore !== null && m.dmScore === null && m.status !== 'COMPLETED') {
+          unscoredByDmCount++;
+        }
+      });
+    });
+
+    const avgApprovalHours = approvalDurations.length > 0
+      ? parseFloat((approvalDurations.reduce((acc, curr) => acc + curr, 0) / approvalDurations.length).toFixed(1))
+      : 0;
+
+    let avgApprovalFormatted = '-';
+    if (avgApprovalHours > 0) {
+      if (avgApprovalHours >= 24) {
+        avgApprovalFormatted = `${(avgApprovalHours / 24).toFixed(1)} Hari`;
+      } else {
+        avgApprovalFormatted = `${avgApprovalHours} Jam`;
+      }
+    }
+
+    return {
+      departmentId: d.departmentId,
+      storeCode: d.departmentCode,
+      storeName: d.departmentName,
+      dm: dmName,
+      avgApprovalHours,
+      avgApprovalFormatted,
+      batchCount: uniqueBatches.size,
+      numberOfNewHire: deptCrews.length,
+      totalPointsGiven: Math.round(totalPoints),
+      unscoredMissionsBySl: unscoredBySlCount,
+      unscoredMissionsByDm: unscoredByDmCount
+    };
+  });
+
+  return {
+    data,
+    pagination: {
+      total,
+      page: isExportAll ? 1 : page,
+      limit: isExportAll ? total : limit,
+      totalPages: isExportAll ? 1 : (Math.ceil(total / limit) || 1)
+    }
+  };
+};
+
+/**
+ * 6b. EXPORT REPORT BY DM EXCEL
+ */
+const exportDmReportExcel = async (query = {}, currentUser = null) => {
+  const result = await getDmReport({ ...query, exportAll: true }, currentUser);
+  const list = result.data || [];
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Re.juve Gamification Platform';
+  workbook.created = new Date();
+
+  const ws = workbook.addWorksheet('Report by DM', {
+    views: [{ showGridLines: true }]
+  });
+
+  ws.mergeCells('A1:J1');
+  const titleCell = ws.getCell('A1');
+  titleCell.value = 'RE.JUVE — REPORT BY DM (EVALUASI SUPERVISI & APPROVAL DISTRICT MANAGER)';
+  titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+  titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF831843' } };
+  titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  ws.getRow(1).height = 32;
+
+  ws.mergeCells('A2:J2');
+  const metaCell = ws.getCell('A2');
+  metaCell.value = `Tanggal Ekspor: ${formatDate(new Date())} | Total Gerai Supervisi: ${list.length}`;
+  metaCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF475569' } };
+  metaCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  ws.getRow(2).height = 20;
+
+  ws.addRow([]);
+
+  const headers = [
+    'No',
+    'Store Code',
+    'Nama Gerai',
+    'District Manager (DM)',
+    'Rata-rata Waktu Approval (SL -> DM)',
+    'Jumlah Batch',
+    'Jumlah New Hire',
+    'Total Points Diberikan',
+    'Misi Tidak Dinilai SL',
+    'Misi Tidak Dinilai DM'
+  ];
+
+  ws.addRow(headers);
+  const headerRow = ws.getRow(4);
+  headerRow.height = 26;
+  headerRow.eachCell(cell => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF9D174D' } };
+    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    cell.border = {
+      top: { style: 'thin', color: { argb: 'FF6B133A' } },
+      left: { style: 'thin', color: { argb: 'FF6B133A' } },
+      bottom: { style: 'medium', color: { argb: 'FF4A0D28' } },
+      right: { style: 'thin', color: { argb: 'FF6B133A' } }
+    };
+  });
+
+  list.forEach((item, idx) => {
+    const row = ws.addRow([
+      idx + 1,
+      item.storeCode,
+      item.storeName,
+      item.dm,
+      item.avgApprovalFormatted,
+      item.batchCount,
+      item.numberOfNewHire,
+      item.totalPointsGiven,
+      item.unscoredMissionsBySl,
+      item.unscoredMissionsByDm
+    ]);
+    row.height = 22;
+    const isEven = idx % 2 === 0;
+    const bgArgb = isEven ? 'FFFFFFFF' : 'FFFDF2F8';
+
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
+      cell.font = { name: 'Calibri', size: 10 };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+      };
+      if ([1, 2, 5, 6, 7, 8, 9, 10].includes(colNumber)) {
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      } else {
+        cell.alignment = { vertical: 'middle', horizontal: 'left' };
+      }
+    });
+  });
+
+  ws.columns = [
+    { width: 6 },
+    { width: 16 },
+    { width: 28 },
+    { width: 22 },
+    { width: 26 },
+    { width: 14 },
+    { width: 18 },
+    { width: 20 },
+    { width: 22 },
+    { width: 22 }
+  ];
+
+  return await workbook.xlsx.writeBuffer();
+};
+
 module.exports = {
   getBuddyIncentiveReport,
   exportBuddyIncentiveExcel,
@@ -1671,5 +2673,11 @@ module.exports = {
   getUserTraceabilityList,
   exportUserTraceabilityExcel,
   getUserTraceabilityDetail,
-  exportSingleUserTraceabilityExcel
+  exportSingleUserTraceabilityExcel,
+  getScoreReport,
+  exportScoreReportExcel,
+  getStoreReport,
+  exportStoreReportExcel,
+  getDmReport,
+  exportDmReportExcel
 };

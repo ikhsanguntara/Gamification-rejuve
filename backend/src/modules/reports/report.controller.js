@@ -165,6 +165,111 @@ const getUserTraceabilityDetail = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/reports/score
+ * Rekapitulasi nilai dan skor kru per minggu (Week 1, Week 2, Week 3) beserta skor bintang dan poin.
+ */
+const getScoreReport = async (req, res, next) => {
+  try {
+    const { data, pagination } = await reportService.getScoreReport(req.query, req.user);
+    return sendPaginated(res, {
+      message: 'Laporan score berhasil diambil.',
+      data,
+      total: pagination.total,
+      page: pagination.page,
+      limit: pagination.limit
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/reports/score/export
+ * Ekspor spreadsheet Excel (.xlsx) data Score Report.
+ */
+const exportScoreReport = async (req, res, next) => {
+  try {
+    const buffer = await reportService.exportScoreReportExcel(req.query, req.user);
+    const filename = 'Score_Report_' + Date.now() + '.xlsx';
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
+    return res.send(buffer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/reports/store
+ * Rekapitulasi progres onboarding new hire berdasarkan gerai / store.
+ */
+const getStoreReport = async (req, res, next) => {
+  try {
+    const { data, pagination } = await reportService.getStoreReport(req.query, req.user);
+    return sendPaginated(res, {
+      message: 'Laporan per gerai (report by store) berhasil diambil.',
+      data,
+      total: pagination.total,
+      page: pagination.page,
+      limit: pagination.limit
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/reports/store/export
+ * Ekspor spreadsheet Excel (.xlsx) data Report by Store.
+ */
+const exportStoreReport = async (req, res, next) => {
+  try {
+    const buffer = await reportService.exportStoreReportExcel(req.query, req.user);
+    const filename = 'Report_By_Store_' + Date.now() + '.xlsx';
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
+    return res.send(buffer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/reports/dm
+ * Evaluasi performa dan kecepatan approval District Manager terhadap penilaian SL dan misi.
+ */
+const getDmReport = async (req, res, next) => {
+  try {
+    const { data, pagination } = await reportService.getDmReport(req.query, req.user);
+    return sendPaginated(res, {
+      message: 'Laporan supervisi DM (report by DM) berhasil diambil.',
+      data,
+      total: pagination.total,
+      page: pagination.page,
+      limit: pagination.limit
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/reports/dm/export
+ * Ekspor spreadsheet Excel (.xlsx) data Report by DM.
+ */
+const exportDmReport = async (req, res, next) => {
+  try {
+    const buffer = await reportService.exportDmReportExcel(req.query, req.user);
+    const filename = 'Report_By_DM_' + Date.now() + '.xlsx';
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
+    return res.send(buffer);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getBuddyIncentive,
   exportBuddyIncentive,
@@ -173,5 +278,11 @@ module.exports = {
   getUserTraceabilityList,
   exportUserTraceability,
   exportSingleUserTraceability,
-  getUserTraceabilityDetail
+  getUserTraceabilityDetail,
+  getScoreReport,
+  exportScoreReport,
+  getStoreReport,
+  exportStoreReport,
+  getDmReport,
+  exportDmReport
 };

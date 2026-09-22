@@ -1,295 +1,2765 @@
 {
   "info": {
-    "name": "Re.juve Gamification & Onboarding REST API",
-    "_postman_id": "9b12a83f-67d1-4e89-a291-72f913d82a10",
-    "description": "Koleksi API Endpoint lengkap untuk Re.juve Gamification Platform mencakup Auth, Stores, Users, Batches, Templates, Evaluations, Approvals, Gamification, Buddy Rapor New Hire, dan Feedback.",
+    "name": "Rejuve Gamification API - Complete Collection",
+    "description": "Koleksi REST API Lengkap untuk Rejuve Gamification (Auth, Masters CRUD, Bisnis Parameter, Administration, Templates, Batch Generator, Evaluations, & Lynx Sync). Seluruh endpoint GET index dilengkapi dynamic query filters.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:8000/api/v1",
+      "value": "http://localhost:3000/api",
       "type": "string"
     },
     {
-      "key": "jwt_token",
+      "key": "token",
       "value": "",
       "type": "string"
     }
   ],
   "item": [
     {
-      "name": "1. Authentication",
+      "name": "0. System & Documentation",
       "item": [
         {
-          "name": "Login Multi-Role",
+          "name": "GET Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Pemeriksaan status hidup API Gamifikasi."
+          }
+        },
+        {
+          "name": "GET Swagger UI Documentation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/swagger",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "swagger"
+              ]
+            },
+            "description": "Dokumentasi interaktif OpenAPI 3.0 via Swagger UI."
+          }
+        },
+        {
+          "name": "GET Swagger Raw OpenAPI JSON",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/swagger.json",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "swagger.json"
+              ]
+            },
+            "description": "Spesifikasi mentah OpenAPI 3.0 dalam format JSON."
+          }
+        },
+        {
+          "name": "GET WebSocket Live Tester UI",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ws-tester",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ws-tester"
+              ]
+            },
+            "description": "Konsol antarmuka interaktif Socket.IO untuk pengujian event realtime gamifikasi."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Login (Auto-set Bearer Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set(\"token\", jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"budi.santoso@rejuve.co.id\",\n  \"password\": \"Password123!\"\n}"
+              "raw": "{\n  \"email\": \"superadmin@example.com\",\n  \"password\": \"password123\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             }
           }
         },
         {
-          "name": "Get Authenticated User (Me)",
+          "name": "Get Current User Profile (Me)",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/auth/me",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "me"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "2. Master Stores",
-      "item": [
-        {
-          "name": "Get All Stores",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/stores",
-              "host": ["{{base_url}}"],
-              "path": ["stores"]
-            }
-          }
-        },
-        {
-          "name": "Create Store",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"STR-PIM-03\",\n  \"name\": \"Pondok Indah Mall 2\",\n  \"city\": \"Jakarta Selatan\",\n  \"address\": \"Pondok Indah Mall 2 Lt. 1 No. 102\",\n  \"storeLeaderId\": \"sl-001\",\n  \"districtManagerId\": \"dm-001\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/stores",
-              "host": ["{{base_url}}"],
-              "path": ["stores"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "3. Master Users & Crew",
-      "item": [
-        {
-          "name": "Get Users (Filtered by Role & Store)",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users?role=CREW&storeId=store-001&page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["users"],
-              "query": [
-                { "key": "role", "value": "CREW" },
-                { "key": "storeId", "value": "store-001" },
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
               ]
             }
           }
         },
         {
-          "name": "Create User / Crew",
+          "name": "PATCH Switch Active Batch (SL / DM)",
           "request": {
-            "method": "POST",
+            "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Riko Pratama\",\n  \"email\": \"riko.pratama@rejuve.co.id\",\n  \"password\": \"Password123!\",\n  \"role\": \"CREW\",\n  \"position\": \"Junior Barista\",\n  \"storeId\": \"store-001\",\n  \"phone\": \"081234567890\"\n}"
+              "raw": "{\n  \"batchId\": \"BATCH_UUID_HERE\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/users",
-              "host": ["{{base_url}}"],
-              "path": ["users"]
+              "raw": "{{base_url}}/auth/active-batch",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "active-batch"
+              ]
             }
+          }
+        },
+        {
+          "name": "POST Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"password123\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/change-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PUT Update Self Profile (Avatar, Phone, Gender, Name)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": [],
+                  "description": "File gambar avatar (.jpg, .png, .webp)"
+                },
+                {
+                  "key": "avatarUrl",
+                  "value": "https://example.com/avatar.jpg",
+                  "type": "text",
+                  "description": "Alternatif URL string avatar (jika tidak upload file)"
+                },
+                {
+                  "key": "name",
+                  "value": "Nama Baru Pengguna",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "081234567890",
+                  "type": "text"
+                },
+                {
+                  "key": "gender",
+                  "value": "M",
+                  "type": "text",
+                  "description": "'M' (Male) atau 'F' (Female)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "profile"
+              ]
+            },
+            "description": "Endpoint mandiri bagi pengguna terautentikasi (kru, SL, DM, Head, dsb) untuk memperbarui data profilnya sendiri (avatar multipart / avatarUrl, phone, gender, name) tanpa batasan role Superadmin."
+          }
+        },
+        {
+          "name": "PUT Update Self Profile Alias (/auth/me)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nama Baru Pengguna\",\n  \"phone\": \"081234567890\",\n  \"gender\": \"F\",\n  \"avatarUrl\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=Rejuve\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Alias endpoint PUT /auth/me untuk memperbarui profil mandiri akun pengguna yang sedang login."
           }
         }
       ]
     },
     {
-      "name": "4. Master Templates SOP",
+      "name": "2. Master Data",
       "item": [
         {
-          "name": "Get Template Packages",
+          "name": "Departments",
+          "item": [
+            {
+              "name": "GET All Departments (Dynamic Filter)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/masters/departments?departmentCode[contains]=BKI",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "departments"
+                  ],
+                  "query": [
+                    {
+                      "key": "departmentCode[contains]",
+                      "value": "BKI",
+                      "description": "Filter kode gerai"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET Department by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/masters/departments/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "departments",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "DEPT_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST Create Department",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"departmentCode\": \"BKI99\",\n  \"departmentName\": \"Store Rejuve Bekasi Baru\",\n  \"regionCode\": \"JABODETABEK\",\n  \"isActive\": true,\n  \"userSlId\": null,\n  \"userDmId\": null\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/departments",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "departments"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "PUT Update Department",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"departmentName\": \"Store Rejuve Grand Metropolitan\",\n  \"regionCode\": \"JABODETABEK\",\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/departments/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "departments",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "DEPT_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "DELETE Department",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/masters/departments/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "departments",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "DEPT_UUID"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Users",
+          "item": [
+            {
+              "name": "GET All Users (Dynamic Filter)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/masters/users?role=CREW&isActive=true",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "role",
+                      "value": "CREW",
+                      "description": "Filter role"
+                    },
+                    {
+                      "key": "isActive",
+                      "value": "true",
+                      "description": "Filter status aktif"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET User by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/masters/users/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "users",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "USER_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST Create User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Barista Baru\",\n  \"email\": \"barista.baru@rejuve.co.id\",\n  \"password\": \"password123\",\n  \"roleId\": \"ROLE_UUID\",\n  \"departmentId\": \"DEPT_UUID\",\n  \"isBuddy\": false,\n  \"userBuddyId\": null,\n  \"isActive\": true,\n  \"gender\": \"M\",\n  \"phone\": \"081234567890\",\n  \"avatarUrl\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=BaristaBaru\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/users",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "users"
+                  ]
+                },
+                "description": "Membuat user baru. Mendukung fleksibilitas avatar: bisa dikirim berupa string `avatarUrl` via JSON, ATAU diunggah langsung sebagai file gambar `avatar` (PNG/JPEG/WEBP max 5MB) via multipart/form-data. Juga mendukung field `phone` (nomor WA/telepon) dan `gender` ('M'/'F'). Password untuk non-CREW otomatis membaca DEFAULT_PASSWORD dari user policy jika kosong, untuk CREW menggunakan email prefix."
+              }
+            },
+            {
+              "name": "PUT Update User",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Barista Hebat\",\n  \"isActive\": true,\n  \"gender\": \"M\",\n  \"phone\": \"081234567890\",\n  \"avatarUrl\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=BaristaHebat\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/users/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "users",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "USER_UUID"
+                    }
+                  ]
+                },
+                "description": "Memperbarui user. Mendukung fleksibilitas avatar: bisa dikirim berupa string `avatarUrl` via JSON, ATAU diunggah langsung sebagai file gambar `avatar` via multipart/form-data. Juga mendukung update `phone` dan `gender` ('M'/'F')."
+              }
+            },
+            {
+              "name": "DELETE User",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/masters/users/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "users",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "USER_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET Download User Import Template (.xlsx)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/masters/users/template",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "users",
+                    "template"
+                  ]
+                },
+                "description": "Unduh file template Excel (.xlsx) dengan kolom yang siap diisi beserta baris sampel."
+              }
+            },
+            {
+              "name": "POST Bulk Preview Users (Dry Run Validation)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "description": "Pilih file spreadsheet (.xlsx / .csv)"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/users/bulk-preview",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "users",
+                    "bulk-preview"
+                  ]
+                },
+                "description": "Dry-run preview validasi spreadsheet user tanpa menyimpan ke database. Menghasilkan ringkasan valid vs invalid per baris."
+              }
+            },
+            {
+              "name": "POST Bulk Commit Users",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"onDuplicate\": \"SKIP\",\n  \"users\": [\n    {\n      \"name\": \"Budi Santoso\",\n      \"email\": \"budi.santoso@rejuve.co.id\",\n      \"roleCode\": \"CREW\",\n      \"departmentCode\": \"BKI_01\",\n      \"isBuddy\": false,\n      \"buddyEmail\": null,\n      \"batchCode\": null\n    },\n    {\n      \"name\": \"Anita Wijaya\",\n      \"email\": \"anita.wijaya@rejuve.co.id\",\n      \"roleCode\": \"STORE_LEADER\",\n      \"departmentCode\": \"BKI_01\",\n      \"isBuddy\": true,\n      \"buddyEmail\": null,\n      \"batchCode\": null\n    }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/users/bulk-commit",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "users",
+                    "bulk-commit"
+                  ]
+                },
+                "description": "Menyimpan data pengguna yang telah divalidasi ke database dengan password default 'password123'."
+              }
+            },
+            {
+              "name": "POST Create User (Multipart Form-Data with Avatar File)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "Barista Baru Foto",
+                      "type": "text"
+                    },
+                    {
+                      "key": "email",
+                      "value": "barista.foto@rejuve.co.id",
+                      "type": "text"
+                    },
+                    {
+                      "key": "roleId",
+                      "value": "ROLE_UUID",
+                      "type": "text"
+                    },
+                    {
+                      "key": "departmentId",
+                      "value": "DEPT_UUID",
+                      "type": "text"
+                    },
+                    {
+                      "key": "gender",
+                      "value": "M",
+                      "type": "text"
+                    },
+                    {
+                      "key": "phone",
+                      "value": "081234567890",
+                      "type": "text"
+                    },
+                    {
+                      "key": "avatar",
+                      "type": "file",
+                      "src": [],
+                      "description": "Upload file gambar avatar (PNG/JPEG/WEBP max 5MB)"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/users",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "users"
+                  ]
+                },
+                "description": "Membuat user baru sekaligus mengunggah file foto avatar ke MinIO Storage (auto-fallback ke lokal) dalam satu panggilan API via multipart/form-data."
+              }
+            },
+            {
+              "name": "PUT Update User (Multipart Form-Data with Avatar File)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "Barista Update Foto",
+                      "type": "text"
+                    },
+                    {
+                      "key": "gender",
+                      "value": "F",
+                      "type": "text"
+                    },
+                    {
+                      "key": "phone",
+                      "value": "081987654321",
+                      "type": "text"
+                    },
+                    {
+                      "key": "avatar",
+                      "type": "file",
+                      "src": [],
+                      "description": "Upload file gambar avatar baru (PNG/JPEG/WEBP max 5MB)"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/users/{{user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "users",
+                    "{{user_id}}"
+                  ]
+                },
+                "description": "Memperbarui data user sekaligus mengunggah file foto avatar baru ke MinIO Storage via multipart/form-data."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Roles",
+          "item": [
+            {
+              "name": "GET All Roles (Dynamic Filter)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/masters/roles?roleCode[in]=CREW,STORE_LEADER",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "roles"
+                  ],
+                  "query": [
+                    {
+                      "key": "roleCode[in]",
+                      "value": "CREW,STORE_LEADER",
+                      "description": "Filter role codes"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET Role by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/masters/roles/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "roles",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "ROLE_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST Create Role",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"roleCode\": \"OPERATION_MANAGER\",\n  \"roleName\": \"Operation Manager\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/roles",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "roles"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "PUT Update Role",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"roleName\": \"Senior Operation Manager\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/masters/roles/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "roles",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "ROLE_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "DELETE Role",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/masters/roles/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "masters",
+                    "roles",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "ROLE_UUID"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Bisnis Parameter",
+      "item": [
+        {
+          "name": "Param Groups",
+          "item": [
+            {
+              "name": "GET All Param Groups (Dynamic Filter)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/params/groups?isActive=true&code[contains]=EVAL&page=1&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "params",
+                    "groups"
+                  ],
+                  "query": [
+                    {
+                      "key": "isActive",
+                      "value": "true"
+                    },
+                    {
+                      "key": "code[contains]",
+                      "value": "EVAL"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET Param Group by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/params/groups/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "params",
+                    "groups",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "PARAMGROUP_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST Create Param Group",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"EVALUATION_SCALE\",\n  \"name\": \"Skala Penilaian Evaluasi\",\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/params/groups",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "params",
+                    "groups"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "PUT Update Param Group",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Skala Penilaian Evaluasi Nasional\",\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/params/groups/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "params",
+                    "groups",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "PARAMGROUP_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "DELETE Param Group",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/params/groups/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "params",
+                    "groups",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "PARAMGROUP_UUID"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Params",
+          "item": [
+            {
+              "name": "GET All Params (Dynamic Filter)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/params?isActive=true&paramgroup.code=EVALUATION_SCALE&page=1&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "params"
+                  ],
+                  "query": [
+                    {
+                      "key": "isActive",
+                      "value": "true"
+                    },
+                    {
+                      "key": "paramgroup.code",
+                      "value": "EVALUATION_SCALE"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET Params Options by Group Code (FE Dropdown)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/params/group-code/:groupCode",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "params",
+                    "group-code",
+                    ":groupCode"
+                  ],
+                  "variable": [
+                    {
+                      "key": "groupCode",
+                      "value": "EVALUATION_SCALE"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET Param by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/params/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "params",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "PARAM_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST Create Param",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"paramgroupId\": \"PARAMGROUP_UUID\",\n  \"code\": \"SCALE_20\",\n  \"value\": \"Kelipatan 20 (Max 5 Bintang)\",\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/params",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "params"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "PUT Update Param",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"value\": \"Kelipatan 20 (Max 5 Bintang Emas)\",\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/params/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "params",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "PARAM_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "DELETE Param",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/params/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "params",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "PARAM_UUID"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Administration",
+      "item": [
+        {
+          "name": "Settings",
+          "item": [
+            {
+              "name": "GET All Settings (Dynamic Filter)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/settings?objectCode=SETTING&settingName[contains]=APP&page=1&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "settings"
+                  ],
+                  "query": [
+                    {
+                      "key": "objectCode",
+                      "value": "SETTING"
+                    },
+                    {
+                      "key": "settingName[contains]",
+                      "value": "APP"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET Setting by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/settings/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "settings",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "SETTING_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST Create Setting",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"settingName\": \"APP_THEME_COLOR\",\n  \"settingValue\": \"#008080\",\n  \"objectCode\": \"SETTING\",\n  \"companyId\": null\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/settings",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "settings"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "PUT Update Setting",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"settingValue\": \"#00A86B\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/settings/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "settings",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "SETTING_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "DELETE Setting",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/settings/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "settings",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "SETTING_UUID"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "User Policies",
+          "item": [
+            {
+              "name": "GET All User Policies (Dynamic Filter)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/user-policies?isRules=true&objectCode=USERPOLICY&page=1&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "user-policies"
+                  ],
+                  "query": [
+                    {
+                      "key": "isRules",
+                      "value": "true"
+                    },
+                    {
+                      "key": "objectCode",
+                      "value": "USERPOLICY"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET User Policy by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/user-policies/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "user-policies",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "USERPOLICY_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST Create User Policy",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userpolicyCode\": \"PRIVACY_POLICY_2026\",\n  \"userpolicyValue\": \"Kebijakan Privasi Karyawan Re.juve 2026\",\n  \"informationRemark\": \"Wajib disetujui saat onboarding\",\n  \"isRules\": true,\n  \"displayOrder\": 1,\n  \"objectCode\": \"USERPOLICY\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/user-policies",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "user-policies"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "PUT Update User Policy",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userpolicyValue\": \"Kebijakan Privasi Karyawan Re.juve 2026 (Revisi 1)\",\n  \"displayOrder\": 2\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/user-policies/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "user-policies",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "USERPOLICY_UUID"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "DELETE User Policy",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/user-policies/:id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "user-policies",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "USERPOLICY_UUID"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH Toggle Lock Batch Detail (Fast-Forward Testing)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isLock\": false,\n  \"unlockMissions\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/batches/{{batch_id}}/details/{{batch_detail_id}}/toggle-lock",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "batches",
+                "{{batch_id}}",
+                "details",
+                "{{batch_detail_id}}",
+                "toggle-lock"
+              ]
+            },
+            "description": "Membuka kunci fase Journey atau mengunci fase secara instan untuk kebutuhan testing/QA tanpa menunggu hari kalender."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Unified Master Templates",
+      "item": [
+        {
+          "name": "GET All Templates (Dynamic Filter)",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/templates/packages",
-              "host": ["{{base_url}}"],
-              "path": ["templates", "packages"]
+              "raw": "{{base_url}}/templates?type[equals]=JOURNEY&durationCode=WEEK",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "templates"
+              ],
+              "query": [
+                {
+                  "key": "type[equals]",
+                  "value": "JOURNEY",
+                  "description": "Filter tipe template misi"
+                },
+                {
+                  "key": "durationCode",
+                  "value": "WEEK",
+                  "description": "Filter durasi"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Template by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/templates/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "templates",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "TEMPLATE_UUID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Create Template (with durationNumber, inputType, scaleConfig)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"TPL-JOURNEY-CORE\",\n  \"name\": \"Core Barista Journey\",\n  \"type\": \"JOURNEY\",\n  \"durationCode\": \"WEEK\",\n  \"durationValue\": 3,\n  \"description\": \"Program akselerasi onboarding barista 3 minggu\",\n  \"details\": [\n    {\n      \"missionTitle\": \"Week 1: Standard Hygiene & Safety\",\n      \"description\": \"Kepatuhan standar hygiene\",\n      \"category\": \"TECHNICAL\",\n      \"durationNumber\": 1,\n      \"inputType\": \"SCALE\",\n      \"scaleConfig\": {\n        \"min\": 0,\n        \"max\": 100,\n        \"step\": 20,\n        \"starPerStep\": 1\n      },\n      \"sopChecklist\": [\n        \"Verifikasi checklist standar operasional\",\n        \"Pemeriksaan kepatuhan & sanitasi\"\n      ]\n    },\n    {\n      \"missionTitle\": \"Week 2: Product Knowledge & Cold Press\",\n      \"description\": \"Kuasai resep dan proses cold press\",\n      \"category\": \"TECHNICAL\",\n      \"durationNumber\": 2,\n      \"inputType\": \"SCALE\",\n      \"scaleConfig\": {\n        \"min\": 0,\n        \"max\": 100,\n        \"step\": 20,\n        \"starPerStep\": 1\n      },\n      \"sopChecklist\": [\n        \"Verifikasi checklist standar operasional\",\n        \"Pemeriksaan kepatuhan & sanitasi\"\n      ]\n    },\n    {\n      \"missionTitle\": \"Week 3: Closing Check & Inventory\",\n      \"description\": \"Closing kasir dan stock opname\",\n      \"category\": \"TECHNICAL\",\n      \"durationNumber\": 3,\n      \"inputType\": \"SCALE\",\n      \"scaleConfig\": {\n        \"min\": 0,\n        \"max\": 100,\n        \"step\": 20,\n        \"starPerStep\": 1\n      },\n      \"sopChecklist\": [\n        \"Verifikasi checklist standar operasional\",\n        \"Pemeriksaan kepatuhan & sanitasi\"\n      ]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/templates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "templates"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PUT Update Template",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Core Barista Journey Rev 1\",\n  \"durationValue\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/templates/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "templates",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "TEMPLATE_UUID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE Template",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/templates/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "templates",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "TEMPLATE_UUID"
+                }
+              ]
             }
           }
         }
       ]
     },
     {
-      "name": "5. Batch Management",
+      "name": "6. Batches & Generator",
       "item": [
         {
-          "name": "Get All Batches",
+          "name": "GET All Batches (Dynamic Filter)",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
             ],
+            "url": {
+              "raw": "{{base_url}}/batches?status[equals]=OPEN",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "batches"
+              ],
+              "query": [
+                {
+                  "key": "status[equals]",
+                  "value": "OPEN",
+                  "description": "Filter status batch aktif"
+                }
+              ]
+            },
+            "description": "Daftar batch dengan dynamic filter."
+          }
+        },
+        {
+          "name": "GET Next Batch Code (Auto-Generated Preview)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/batches/next-code",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "batches",
+                "next-code"
+              ]
+            },
+            "description": "Mengambil preview kode batch berikutnya secara otomatis dari backend (misal: BTH-02). Bermanfaat untuk tampilan formulir pembuatan batch di UI."
+          }
+        },
+        {
+          "name": "GET Batch by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/batches/{{batch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "batches",
+                "{{batch_id}}"
+              ]
+            },
+            "description": "Ambil detail batch beserta misi dan kru terdaftar."
+          }
+        },
+        {
+          "name": "POST Create Batch (DRAFT or OPEN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Batch Onboarding Jabodetabek Nov 2026\",\n  \"code\": \"BATCH-2026-NOV\",\n  \"status\": \"DRAFT\",\n  \"startDate\": \"2026-11-01\",\n  \"buddyTemplateId\": \"{{buddy_template_id}}\",\n  \"journeyTemplateId\": \"{{journey_template_id}}\",\n  \"feedbackTemplateId\": \"{{feedback_template_id}}\",\n  \"crewIds\": [\n    \"{{user_id}}\"\n  ],\n  \"isDraft\": true\n}"
+            },
             "url": {
               "raw": "{{base_url}}/batches",
-              "host": ["{{base_url}}"],
-              "path": ["batches"]
-            }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "batches"
+              ]
+            },
+            "description": "Membuat siklus Batch baru. Mendukung penyimpanan sebagai DRAFT (isDraft: true atau status: \"DRAFT\") tanpa generate misi, atau langsung OPEN. Field code bersifat OPSIONAL."
           }
         },
         {
-          "name": "Create Batch (Auto Generate Missions)",
+          "name": "POST Generate Batch Missions Manually (DRAFT -> OPEN)",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/batches/{{batch_id}}/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "batches",
+                "{{batch_id}}",
+                "generate"
+              ]
+            },
+            "description": "Memicu generator misi sekuensial dari template batch."
+          }
+        },
+        {
+          "name": "PATCH Toggle Lock Batch Detail (Fast-Forward Testing)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Batch 4 - Senayan City\",\n  \"storeId\": \"store-002\",\n  \"templatePackageId\": \"pkg-std-01\",\n  \"buddyPackageId\": \"pkg-buddy-standard\",\n  \"startDate\": \"2026-09-10\",\n  \"totalWeeks\": 3,\n  \"approvalConfig\": {\n    \"minScoreFor5Stars\": 90,\n    \"minEvidenceCount\": 1,\n    \"requireEvidence\": true\n  }\n}"
+              "raw": "{\n  \"isLock\": false,\n  \"unlockMissions\": true\n}"
             },
             "url": {
-              "raw": "{{base_url}}/batches",
-              "host": ["{{base_url}}"],
-              "path": ["batches"]
-            }
+              "raw": "{{base_url}}/batches/{{batch_id}}/details/{{batch_detail_id}}/toggle-lock",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "batches",
+                "{{batch_id}}",
+                "details",
+                "{{batch_detail_id}}",
+                "toggle-lock"
+              ]
+            },
+            "description": "Membuka kunci fase Journey atau mengunci fase secara instan untuk kebutuhan testing tanpa menunggu hari kalender."
+          }
+        },
+        {
+          "name": "PATCH Update Batch",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Batch Onboarding Updated\",\n  \"status\": \"OPEN\",\n  \"isDraft\": false,\n  \"startDate\": \"2026-11-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/batches/{{batch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "batches",
+                "{{batch_id}}"
+              ]
+            },
+            "description": "Update data batch. Jika batch masih DRAFT, mendukung perubahan tanggal mulai (startDate), pergantian template master (tplJourneyId, tplBuddyId, tplFeedbackId), alokasi kru (crewIds), dan transisi isDraft: false (otomatis memicu generate misi)."
+          }
+        },
+        {
+          "name": "DELETE Batch",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/batches/{{batch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "batches",
+                "{{batch_id}}"
+              ]
+            },
+            "description": "Hapus batch dan seluruh relasi misinya."
           }
         }
       ]
     },
     {
-      "name": "6. Store Leader Evaluations",
+      "name": "7. Evaluations & Workstation",
       "item": [
         {
-          "name": "Submit Mission Evaluation",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"batchId\": \"batch-alpha\",\n  \"missionId\": \"msn-w2-001\",\n  \"crewId\": \"crew-001\",\n  \"slScore\": 95,\n  \"comment\": \"Pemeriksaan rasa jus cold-pressed sangat segar dan takaran brix presisi.\",\n  \"evidenceUrls\": [\n    {\n      \"url\": \"https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80\",\n      \"caption\": \"Foto brix meter 12.4\"\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/evaluations",
-              "host": ["{{base_url}}"],
-              "path": ["evaluations"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "7. District Manager Approvals",
-      "item": [
-        {
-          "name": "Get Pending Approvals",
+          "name": "GET Workstation Crew Roster (Sidebar Filter)",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/approvals?status=PENDING_REVIEW&storeId=store-001",
-              "host": ["{{base_url}}"],
-              "path": ["approvals"],
+              "raw": "{{base_url}}/evaluations/crews?type=BUDDY&batchId={{batch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluations",
+                "crews"
+              ],
               "query": [
-                { "key": "status", "value": "PENDING_REVIEW" },
-                { "key": "storeId", "value": "store-001" }
+                {
+                  "key": "type",
+                  "value": "BUDDY",
+                  "description": "Tipe misi: BUDDY atau JOURNEY"
+                },
+                {
+                  "key": "batchId",
+                  "value": "{{batch_id}}",
+                  "description": "Filter batch aktif"
+                }
+              ]
+            },
+            "description": "Sidebar daftar kru yang harus dinilai oleh SL/DM/Buddy."
+          }
+        },
+        {
+          "name": "GET Crew Missions for Selected Card",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluations/crews/{{user_id}}/missions?type=BUDDY",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluations",
+                "crews",
+                "{{user_id}}",
+                "missions"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "BUDDY",
+                  "description": "Tipe misi: BUDDY atau JOURNEY"
+                }
+              ]
+            },
+            "description": "Detail kartu misi kru tertentu saat kartu kru di sidebar diklik."
+          }
+        },
+        {
+          "name": "GET All User Missions (Dynamic Filter)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluations/user-missions?status[equals]=ACTIVE&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluations",
+                "user-missions"
+              ],
+              "query": [
+                {
+                  "key": "status[equals]",
+                  "value": "ACTIVE",
+                  "description": "Filter misi aktif"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Daftar user missions dengan dynamic query filter."
+          }
+        },
+        {
+          "name": "GET User Mission by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluations/user-missions/{{user_mission_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluations",
+                "user-missions",
+                "{{user_mission_id}}"
+              ]
+            },
+            "description": "Detail user mission tertentu."
+          }
+        },
+        {
+          "name": "POST Evaluate Buddy Mission (Buddy Only -> COMPLETED)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"score\": 3,\n  \"notes\": \"Mentee menunjukkan pemahaman SOP yang sangat baik.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/evaluations/user-missions/{{user_mission_id}}/buddy-score",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluations",
+                "user-missions",
+                "{{user_mission_id}}",
+                "buddy-score"
+              ]
+            },
+            "description": "Penilaian misi Buddy oleh mentor (skala 1-3)."
+          }
+        },
+        {
+          "name": "POST Evaluate Journey Mission (Store Leader Only -> SCORED_BY_TL)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"score\": 95,\n  \"notes\": \"Kru menyelesaikan tugas kebersihan dan barista dengan teliti.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/evaluations/user-missions/{{user_mission_id}}/sl-score",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluations",
+                "user-missions",
+                "{{user_mission_id}}",
+                "sl-score"
+              ]
+            },
+            "description": "Penilaian misi Journey oleh Store Leader."
+          }
+        },
+        {
+          "name": "POST Review Journey Mission (District Manager -> APPROVE / REVISE / REJECT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"APPROVE\",\n  \"dmScore\": 95,\n  \"notes\": \"Disetujui. Pertahankan performa kerja di gerai.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/evaluations/user-missions/{{user_mission_id}}/dm-review",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluations",
+                "user-missions",
+                "{{user_mission_id}}",
+                "dm-review"
+              ]
+            },
+            "description": "Review dan approval penilaian Journey oleh District Manager (mencairkan bintang)."
+          }
+        },
+        {
+          "name": "POST Submit Crew Feedback (Crew Only -> COMPLETED)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"submissionNotes\": \"Pelatihan dan pendampingan buddy sangat membantu saya memahami tugas harian.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/evaluations/user-missions/{{user_mission_id}}/crew-feedback",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluations",
+                "user-missions",
+                "{{user_mission_id}}",
+                "crew-feedback"
+              ]
+            },
+            "description": "Pengisian survei umpan balik onboarding oleh Kru."
+          }
+        },
+        {
+          "name": "GET Buddy Evaluation History per Batch (Dynamic Filter)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluations/buddy-history?batchId={{batch_id}}&status[equals]=COMPLETED&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluations",
+                "buddy-history"
+              ],
+              "query": [
+                {
+                  "key": "batchId",
+                  "value": "{{batch_id}}",
+                  "description": "Filter batch tertentu"
+                },
+                {
+                  "key": "status[equals]",
+                  "value": "COMPLETED",
+                  "description": "Filter status kelulusan (Advanced Dynamic Filter)"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Rekapitulasi riwayat pendampingan Buddy per batch untuk setiap mentee (status, skor 7 kategori, tanggal selesai)."
+          }
+        },
+        {
+          "name": "GET Buddy Report JSON Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluations/buddy-report/{{user_id}}?batchId={{batch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluations",
+                "buddy-report",
+                "{{user_id}}"
+              ],
+              "query": [
+                {
+                  "key": "batchId",
+                  "value": "{{batch_id}}",
+                  "description": "Batch ID evaluasi"
+                }
+              ]
+            },
+            "description": "Mengambil data agregasi rapor evaluasi Buddy resmi untuk mentee berdasarkan template batch."
+          }
+        },
+        {
+          "name": "GET Buddy Report Print-Ready HTML View",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/evaluations/buddy-report/{{user_id}}/html?batchId={{batch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "evaluations",
+                "buddy-report",
+                "{{user_id}}",
+                "html"
+              ],
+              "query": [
+                {
+                  "key": "batchId",
+                  "value": "{{batch_id}}",
+                  "description": "Batch ID evaluasi"
+                }
+              ]
+            },
+            "description": "Mengambil formulir cetak rapor Buddy format resmi Re.juve yang siap di-print atau save-as-PDF di browser."
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Dashboard & Analytics",
+      "item": [
+        {
+          "name": "GET Dashboard Summary Multi-Role",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/summary?batchId={{batch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "summary"
+              ],
+              "query": [
+                {
+                  "key": "batchId",
+                  "value": "{{batch_id}}",
+                  "description": "Filter spesifik batch (opsional)"
+                }
+              ]
+            },
+            "description": "Mengambil ringkasan metrik dashboard realtime sesuai role user (Crew, SL, DM, Superadmin/Head)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Gamification & Leaderboard",
+      "item": [
+        {
+          "name": "GET Gamification Leaderboard (Podium & Dynamic Filter)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gamification/leaderboard?batchId={{batch_id}}&departmentId[equals]={{dept_id}}&stars[gte]=10&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "gamification",
+                "leaderboard"
+              ],
+              "query": [
+                {
+                  "key": "batchId",
+                  "value": "{{batch_id}}",
+                  "description": "Filter batch aktif"
+                },
+                {
+                  "key": "departmentId[equals]",
+                  "value": "{{dept_id}}",
+                  "description": "Filter gerai/toko tertentu (Advanced Dynamic Filter)"
+                },
+                {
+                  "key": "stars[gte]",
+                  "value": "10",
+                  "description": "Filter minimal perolehan bintang"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Mengambil klasemen kru batch aktif (Top 3 Podium, peringkat kru, dan myRank)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Lynx Sync (ERP Webhook)",
+      "item": [
+        {
+          "name": "POST Pull All Departments from Lynx (Deletes missing)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sync/departments/pull-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sync",
+                "departments",
+                "pull-all"
               ]
             }
           }
         },
         {
-          "name": "Approve Mission with DM Score Adjustment",
+          "name": "POST Pull All Users from Lynx",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"dmScore\": 90,\n  \"dmNote\": \"Hasil kalibrasi sensorik konsisten baik.\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/approvals/appr-001/approve",
-              "host": ["{{base_url}}"],
-              "path": ["approvals", "appr-001", "approve"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "8. Gamification & Progression",
-      "item": [
-        {
-          "name": "Get Crew Journey Map",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/gamification/journey/crew-001",
-              "host": ["{{base_url}}"],
-              "path": ["gamification", "journey", "crew-001"]
+              "raw": "{{base_url}}/sync/users/pull-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sync",
+                "users",
+                "pull-all"
+              ]
             }
           }
         },
         {
-          "name": "Get Store Leaderboard",
+          "name": "POST Receive Department Webhook from Lynx",
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"departmentId\": \"DEPT_UUID\",\n    \"departmentCode\": \"BKI01\",\n    \"departmentName\": \"Summarecon Mall Bekasi\"\n  }\n]"
+            },
             "url": {
-              "raw": "{{base_url}}/gamification/leaderboard?storeId=store-001",
-              "host": ["{{base_url}}"],
-              "path": ["gamification", "leaderboard"],
-              "query": [
-                { "key": "storeId", "value": "store-001" }
+              "raw": "{{base_url}}/sync/departments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sync",
+                "departments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Receive User Webhook from Lynx",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"userId\": \"USER_UUID\",\n    \"name\": \"Barista Lynx\",\n    \"email\": \"barista.lynx@rejuve.co.id\",\n    \"roleId\": \"ROLE_UUID\"\n  }\n]"
+            },
+            "url": {
+              "raw": "{{base_url}}/sync/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sync",
+                "users"
               ]
             }
           }
@@ -297,77 +2767,852 @@
       ]
     },
     {
-      "name": "9. Buddy Mentoring (Rapor New Hire 3 Hari)",
+      "name": "13. Notifications",
       "item": [
         {
-          "name": "Get Rapor Template (7 Kompetensi & 22 Indikator)",
+          "name": "GET Notifications (Dynamic Filter)",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/buddy/templates",
-              "host": ["{{base_url}}"],
-              "path": ["buddy", "templates"]
-            }
+              "raw": "{{base_url}}/notifications?isRead=false&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "isRead",
+                  "value": "false",
+                  "description": "Filter notifikasi belum dibaca"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Batas baris data"
+                }
+              ]
+            },
+            "description": "Mengambil riwayat notifikasi user login dengan filter."
           }
         },
         {
-          "name": "Save Rapor New Hire Evaluation",
+          "name": "GET Unread Notification Count",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"batchId\": \"batch-alpha\",\n  \"crewId\": \"crew-001\",\n  \"storeTraining\": \"Re.juve Grand Indonesia\",\n  \"storeCaptain\": \"Budi Santoso (Store Leader)\",\n  \"trainingPeriod\": \"1 - 3 September 2026\",\n  \"indicatorRatings\": {\n    \"ind-pk-01\": \"KOMPETEN\",\n    \"ind-pk-02\": \"KOMPETEN\",\n    \"ind-pk-03\": \"KOMPETEN\",\n    \"ind-cs-01\": \"KOMPETEN\",\n    \"ind-cs-02\": \"KOMPETEN\",\n    \"ind-cs-03\": \"KOMPETEN\",\n    \"ind-su-01\": \"BUTUH_PENDAMPINGAN\",\n    \"ind-su-02\": \"BUTUH_PENDAMPINGAN\",\n    \"ind-su-03\": \"KOMPETEN\",\n    \"ind-co-01\": \"KOMPETEN\",\n    \"ind-co-02\": \"KOMPETEN\",\n    \"ind-co-03\": \"KOMPETEN\",\n    \"ind-so-01\": \"KOMPETEN\",\n    \"ind-so-02\": \"KOMPETEN\",\n    \"ind-so-03\": \"BUTUH_PENDAMPINGAN\",\n    \"ind-so-04\": \"KOMPETEN\",\n    \"ind-fsq-01\": \"KOMPETEN\",\n    \"ind-fsq-02\": \"KOMPETEN\",\n    \"ind-fsq-03\": \"KOMPETEN\",\n    \"ind-ta-01\": \"KOMPETEN\",\n    \"ind-ta-02\": \"KOMPETEN\",\n    \"ind-ta-03\": \"KOMPETEN\"\n  },\n  \"recommendationNote\": \"Andi menunjukkan penguasaan SOP dan hospitality yang sangat baik.\",\n  \"status\": \"RECOMMENDED\",\n  \"captainSigned\": true,\n  \"crewSigned\": true\n}"
-            },
             "url": {
-              "raw": "{{base_url}}/buddy/evaluations",
-              "host": ["{{base_url}}"],
-              "path": ["buddy", "evaluations"]
-            }
+              "raw": "{{base_url}}/notifications/unread-count",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "unread-count"
+              ]
+            },
+            "description": "Mengambil total notifikasi belum dibaca untuk badge lonceng."
+          }
+        },
+        {
+          "name": "PATCH Mark Single Notification Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/{{notification_id}}/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ]
+            },
+            "description": "Menandai satu notifikasi sebagai telah dibaca."
+          }
+        },
+        {
+          "name": "PATCH Mark All Notifications Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/mark-all-read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "mark-all-read"
+              ]
+            },
+            "description": "Menandai seluruh notifikasi user sebagai terbaca."
           }
         }
       ]
     },
     {
-      "name": "10. Feedback Onboarding",
+      "name": "14. Feedback Kru Onboarding",
       "item": [
         {
-          "name": "Get Survey Questions",
+          "name": "GET Feedback Survey Questions (Dynamic Master Template)",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/feedback/questions",
-              "host": ["{{base_url}}"],
-              "path": ["feedback", "questions"]
-            }
+              "raw": "{{base_url}}/feedback/questions?batchId=optional-batch-uuid&templateId=optional-tpl-uuid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "feedback",
+                "questions"
+              ],
+              "query": [
+                {
+                  "key": "batchId",
+                  "value": "optional-batch-uuid",
+                  "description": "Filter kuesioner berdasarkan Batch Onboarding kru"
+                },
+                {
+                  "key": "templateId",
+                  "value": "optional-tpl-uuid",
+                  "description": "Filter kuesioner berdasarkan ID spesifik Master Template Feedback"
+                }
+              ]
+            },
+            "description": "Daftar butir pertanyaan survei onboarding dinamis dari Master Template Feedback (m_tpl_missions), dengan fallback aman jika template kosong. Mendukung filter batchId atau templateId."
           }
         },
         {
-          "name": "Submit Crew Onboarding Survey",
+          "name": "GET My Submitted Feedback",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/feedback/my-feedback",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "feedback",
+                "my-feedback"
+              ]
+            },
+            "description": "Cek apakah kru sedang login sudah pernah submit survei feedback."
+          }
+        },
+        {
+          "name": "POST Submit Crew Feedback",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"crewId\": \"crew-001\",\n  \"batchId\": \"batch-alpha\",\n  \"crewName\": \"Andi Pratama\",\n  \"storeLocation\": \"Grand Indonesia\",\n  \"buddyName\": \"Budi Santoso\",\n  \"ratings\": {\n    \"sq-01\": 10,\n    \"sq-02\": 9,\n    \"sq-03\": 10,\n    \"sq-04\": 10,\n    \"sq-05\": 9,\n    \"sq-06\": 10,\n    \"sq-07\": 8,\n    \"sq-08\": 9,\n    \"sq-09\": 10,\n    \"sq-10\": 10,\n    \"sq-11\": 9,\n    \"sq-12\": 10,\n    \"sq-13\": 10,\n    \"sq-14\": 9,\n    \"sq-15\": 10,\n    \"sq-16\": 9\n  },\n  \"essayAnswer\": \"Program pendampingan sangat menyenangkan dan penjelasan Store Leader sangat sabar dan mendetail.\"\n}"
+              "raw": "{\n  \"batchId\": \"{{batch_id}}\",\n  \"crewName\": \"Rizki Barista\",\n  \"storeLocation\": \"Re.juve Blok M Plaza\",\n  \"buddyName\": \"Anita Wijaya\",\n  \"ratings\": {\n    \"sq-01\": 10,\n    \"sq-02\": 9,\n    \"sq-03\": 10,\n    \"sq-04\": 10,\n    \"sq-05\": 9,\n    \"sq-06\": 10,\n    \"sq-07\": 8,\n    \"sq-08\": 9,\n    \"sq-09\": 10,\n    \"sq-10\": 10,\n    \"sq-11\": 9,\n    \"sq-12\": 10,\n    \"sq-13\": 10,\n    \"sq-14\": 9,\n    \"sq-15\": 10,\n    \"sq-16\": 9\n  },\n  \"essayAnswer\": \"Program onboarding sangat jelas dan mentor mendampingi dengan baik.\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/feedback/surveys",
-              "host": ["{{base_url}}"],
-              "path": ["feedback", "surveys"]
-            }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "feedback",
+                "surveys"
+              ]
+            },
+            "description": "Mengirimkan jawaban survei kepuasan & esai dari kru onboarding."
+          }
+        },
+        {
+          "name": "GET All Crew Feedbacks (Dynamic Filter)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/feedback/surveys?batchId={{batch_id}}&storeLocation[contains]=Blok M",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "feedback",
+                "surveys"
+              ],
+              "query": [
+                {
+                  "key": "batchId",
+                  "value": "{{batch_id}}",
+                  "description": "Filter spesifik batch"
+                },
+                {
+                  "key": "storeLocation[contains]",
+                  "value": "Blok M",
+                  "description": "Filter nama gerai/lokasi"
+                }
+              ]
+            },
+            "description": "Mengambil rekapitulasi masukan kru dengan dynamic filter."
+          }
+        },
+        {
+          "name": "GET Detail Crew Feedback by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/feedback/surveys/{{feedback_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "feedback",
+                "surveys",
+                "{{feedback_id}}"
+              ]
+            },
+            "description": "Mengambil detail lembar feedback dari kru tertentu."
+          }
+        }
+      ]
+    },
+    {
+      "name": "15. Reports & Traceability",
+      "description": "Modul pelaporan analitik HR: Rekapitulasi Insentif Pembimbingan Buddy dan Audit Jejak (Traceability) Pengguna komprehensif.",
+      "item": [
+        {
+          "name": "GET Laporan Insentif Buddy (List)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/buddy-incentive?startDate=2026-10-01&endDate=2026-11-01&storeCode=BKI_01&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "buddy-incentive"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-10-01",
+                  "description": "Filter tanggal awal periode Journey batch"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-01",
+                  "description": "Filter tanggal akhir periode Journey batch"
+                },
+                {
+                  "key": "storeCode",
+                  "value": "BKI_01",
+                  "description": "Filter kode gerai"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Nomor halaman"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Batas baris per halaman"
+                }
+              ]
+            },
+            "description": "Rekapitulasi data bimbingan mentor buddy untuk keperluan dasar insentif HR. Dilengkapi dynamic query filtering."
+          }
+        },
+        {
+          "name": "GET Export Laporan Insentif Buddy (Excel)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/buddy-incentive/export?departmentId=86e9013c-1c6b-4bed-8938-8ba31b2697f9",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "buddy-incentive",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "departmentId",
+                  "value": "86e9013c-1c6b-4bed-8938-8ba31b2697f9",
+                  "description": "Filter gerai opsional saat ekspor"
+                }
+              ]
+            },
+            "description": "Mengunduh spreadsheet Excel (.xlsx) dengan 2 sheet: Rekap Insentif Buddy dan Rincian Mentee Kru Baru."
+          }
+        },
+        {
+          "name": "GET Laporan User Traceability (Active New Recruit Report)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/user-traceability?startDate=2026-10-01&endDate=2026-11-01&storeCode=BKI_01&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "user-traceability"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-10-01",
+                  "description": "Filter tanggal awal periode Journey batch"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-01",
+                  "description": "Filter tanggal akhir periode Journey batch"
+                },
+                {
+                  "key": "storeCode",
+                  "value": "BKI_01",
+                  "description": "Filter kode gerai penempatan"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Nomor halaman"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Batas baris per halaman"
+                }
+              ]
+            },
+            "description": "Laporan komprehensif 17 kolom Active new Recruit Report: ID, Batch, Name, Gender, Phone/WA, Email, Buddy SL, Buddy Store Code, Assignment SL, Assignment Store Code, Buddy Status, Week 1-3 Status, Lapsing Approval Days DM, Score Bintang, dan Score Point."
+          }
+        },
+        {
+          "name": "GET Detail User Traceability",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/user-traceability/:userId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "user-traceability",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "86e9013c-1c6b-4bed-8938-8ba31b2697f9",
+                  "description": "ID pengguna yang ingin diaudit jejaknya"
+                }
+              ]
+            },
+            "description": "Detail audit jejak pengguna: gerai aktif, batch aktif, mentor buddy, pimpinan gerai (SL & DM), serta seluruh riwayat misi, nilai evaluasi SL, dan review DM."
+          }
+        },
+        {
+          "name": "GET Detail Insentif Buddy by User ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/buddy-incentive/{{user_id}}?batchId={{batch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "buddy-incentive",
+                "{{user_id}}"
+              ],
+              "query": [
+                {
+                  "key": "batchId",
+                  "value": "{{batch_id}}",
+                  "description": "Filter opsional spesifik batch tertentu"
+                }
+              ]
+            },
+            "description": "Mengambil profil Buddy, ringkasan perolehan insentif (total dibimbing, tuntas, in-progress, rata-rata skor), dan rincian lengkap seluruh mentee yang dibimbing oleh Store Leader / Buddy tersebut."
+          }
+        },
+        {
+          "name": "GET Ekspor Excel User Traceability (Active New Recruit Report)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/user-traceability/export?search=kru&role=CREW",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "user-traceability",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "kru",
+                  "description": "Filter pencarian nama / email"
+                },
+                {
+                  "key": "role",
+                  "value": "CREW",
+                  "description": "Filter spesifik role pengguna"
+                }
+              ]
+            },
+            "description": "Mengunduh berkas spreadsheet Excel (.xlsx) data audit Active New Recruit Report (Traceability) dengan 17 kolom spesifikasi gambar ditambah kolom penjelas nama gerai dan level, lengkap dengan styling korporat Re.juve."
+          }
+        },
+        {
+          "name": "GET Ekspor Excel Single Buddy Incentive Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/buddy-incentive/{{user_id}}/export?batchId={{batch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "buddy-incentive",
+                "{{user_id}}",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "batchId",
+                  "value": "{{batch_id}}",
+                  "description": "Filter opsional spesifik batch tertentu"
+                }
+              ]
+            },
+            "description": "Mengunduh file Excel (.xlsx) berisi 2 sheet (Sheet 1: Profil & Metrik Ringkasan Buddy, Sheet 2: Seluruh Riwayat Mentee Bimbingan) khusus untuk 1 Store Leader/Buddy terpilih."
+          }
+        },
+        {
+          "name": "GET Ekspor Excel Single Kru Traceability Card",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/user-traceability/{{user_id}}/export",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "user-traceability",
+                "{{user_id}}",
+                "export"
+              ]
+            },
+            "description": "Mengunduh file Excel (.xlsx) Kartu Audit Traceability berisi 2 sheet (Sheet 1: Kartu Profil Kru & Konteks Kepemimpinan SL/DM, Sheet 2: Seluruh Riwayat Penilaian Misi) khusus untuk 1 pengguna/kru."
+          }
+        },
+        {
+          "name": "GET Score Report (List)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/score?startDate=2026-10-01&endDate=2026-11-01&storeCode=BKI_01&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "score"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-10-01",
+                  "description": "Filter rentang awal periode batch"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-01",
+                  "description": "Filter rentang akhir periode batch"
+                },
+                {
+                  "key": "storeCode",
+                  "value": "BKI_01",
+                  "description": "Filter kode gerai"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Halaman data"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Batas baris per halaman"
+                }
+              ]
+            },
+            "description": "Laporan rekapitulasi nilai mingguan (Week 1, Week 2, Week 3), skor bintang, dan poin kru."
+          }
+        },
+        {
+          "name": "GET Export Score Report (Excel)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/score/export?startDate=2026-10-01&endDate=2026-11-01&storeCode=BKI_01",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "score",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-10-01",
+                  "description": "Filter rentang awal periode batch"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-01",
+                  "description": "Filter rentang akhir periode batch"
+                },
+                {
+                  "key": "storeCode",
+                  "value": "BKI_01",
+                  "description": "Filter kode gerai"
+                }
+              ]
+            },
+            "description": "Mengunduh spreadsheet Excel (.xlsx) data Score Report."
+          }
+        },
+        {
+          "name": "GET Report by Store (List)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/store?startDate=2026-10-01&endDate=2026-11-01&storeCode=BKI_01&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "store"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-10-01",
+                  "description": "Filter rentang awal periode batch"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-01",
+                  "description": "Filter rentang akhir periode batch"
+                },
+                {
+                  "key": "storeCode",
+                  "value": "BKI_01",
+                  "description": "Filter kode gerai"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Halaman data"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Batas baris per halaman"
+                }
+              ]
+            },
+            "description": "Laporan progres onboarding per gerai: jumlah kru per step (Buddy, W1, W2, W3, Complete) dan rata-rata hari penyelesaian."
+          }
+        },
+        {
+          "name": "GET Export Report by Store (Excel)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/store/export?startDate=2026-10-01&endDate=2026-11-01&storeCode=BKI_01",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "store",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-10-01",
+                  "description": "Filter rentang awal periode batch"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-01",
+                  "description": "Filter rentang akhir periode batch"
+                },
+                {
+                  "key": "storeCode",
+                  "value": "BKI_01",
+                  "description": "Filter kode gerai"
+                }
+              ]
+            },
+            "description": "Mengunduh spreadsheet Excel (.xlsx) data Report by Store."
+          }
+        },
+        {
+          "name": "GET Report by DM (List)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/dm?startDate=2026-10-01&endDate=2026-11-01&storeCode=BKI_01&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "dm"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-10-01",
+                  "description": "Filter rentang awal periode batch"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-01",
+                  "description": "Filter rentang akhir periode batch"
+                },
+                {
+                  "key": "storeCode",
+                  "value": "BKI_01",
+                  "description": "Filter kode gerai supervisi"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Halaman data"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Batas baris per halaman"
+                }
+              ]
+            },
+            "description": "Evaluasi kecepatan approval DM (dari SL submit ke DM review), total points, dan jumlah kartu misi yang tidak dinilai SL/DM."
+          }
+        },
+        {
+          "name": "GET Export Report by DM (Excel)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/dm/export?startDate=2026-10-01&endDate=2026-11-01&storeCode=BKI_01",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "dm",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-10-01",
+                  "description": "Filter rentang awal periode batch"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-01",
+                  "description": "Filter rentang akhir periode batch"
+                },
+                {
+                  "key": "storeCode",
+                  "value": "BKI_01",
+                  "description": "Filter kode gerai supervisi"
+                }
+              ]
+            },
+            "description": "Mengunduh spreadsheet Excel (.xlsx) data Report by DM."
           }
         }
       ]

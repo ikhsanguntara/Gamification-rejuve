@@ -25,4 +25,16 @@ router.get('/user-traceability/export', reportController.exportUserTraceability)
 router.get('/user-traceability/:userId/export', reportController.exportSingleUserTraceability);
 router.get('/user-traceability/:userId', reportController.getUserTraceabilityDetail);
 
+// ─── Laporan Nilai Misi Kru (Score Report) ──────────────────────────────────
+router.get('/score', reportController.getScoreReport);
+router.get('/score/export', reportController.exportScoreReport);
+
+// ─── Laporan Rekapitulasi per Gerai (Report by Store) ───────────────────────
+router.get('/store', reportController.getStoreReport);
+router.get('/store/export', reportController.exportStoreReport);
+
+// ─── Laporan Supervisi District Manager (Report by DM) ──────────────────────
+router.get('/dm', reportController.getDmReport);
+router.get('/dm/export', reportController.exportDmReport);
+
 module.exports = router;
