@@ -5409,6 +5409,56 @@
           }
         }
       }
+    },
+    "/batches/trigger-progression": {
+      "post": {
+        "tags": [
+          "Batches & Generator"
+        ],
+        "summary": "Memicu pengecekan transisi batch dan unlock misi secara manual (Testing / Cron catch-up)",
+        "description": "Mengevaluasi seluruh batch berstatus OPEN terhadap kalender saat ini (WIB), memperbarui currentWeek (harian/mingguan), menutup batch jika melewati batas waktu, dan membuka kunci misi Journey yang telah memasuki masa aktif.",
+        "operationId": "triggerBatchProgression",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pengecekan transisi siklus batch berhasil dijalankan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Pengecekan transisi siklus batch berhasil dijalankan."
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

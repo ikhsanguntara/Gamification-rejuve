@@ -191,6 +191,30 @@ const runBatchProgressionCheck = async () => {
         if (unlocked.count > 0) {
           console.log(`[BatchJob] Batch "${batch.name}": Membuka ${unlocked.count} kartu misi Journey yang sebelumnya LOCKED.`);
         }
+
+        // Auto-forward misi Journey dari periode lampau yang belum dinilai SL ke District Manager
+        const autoForwarded = await prisma.userMission.updateMany({
+          where: {
+            mission: {
+              batchId: batch.batchId,
+              type: 'JOURNEY',
+              OR: [
+                { weekOrDayNumber: { lt: effectivePeriod } },
+                { endDate: { lt: today } }
+              ]
+            },
+            status: { in: ['ACTIVE', 'LOCKED'] },
+            tlScore: null
+          },
+          data: {
+            status: 'SCORED_BY_TL',
+            tlNotes: 'Diteruskan otomatis ke District Manager: Store Leader tidak melakukan penilaian pada periode ini.'
+          }
+        });
+
+        if (autoForwarded.count > 0) {
+          console.log(`[BatchJob] Batch "${batch.name}": Meneruskan otomatis ${autoForwarded.count} misi periode lampau ke DM (SL tidak mengisi).`);
+        }
       }
     }
 

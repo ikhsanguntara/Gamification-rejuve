@@ -2084,6 +2084,30 @@
           }
         },
         {
+          "name": "POST Trigger Batch Progression Check (Manual Transition / Testing)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/batches/trigger-progression",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "batches",
+                "trigger-progression"
+              ]
+            },
+            "description": "Memicu manual pengecekan kalender harian/mingguan batch (currentWeek transition, auto close jika melewati endDate, dan unlock kartu misi Journey yang aktif)."
+          }
+        },
+        {
           "name": "PATCH Toggle Lock Batch Detail (Fast-Forward Testing)",
           "request": {
             "method": "PATCH",

@@ -60,6 +60,7 @@ const enrichEvaluationFlags = (userMission) => {
 
   const isPastPeriod = Boolean(isPastWeekNumber || isPastEndDate || isPastBatchDetailEnd);
   const isSlMissed = Boolean(isJourney && isPastPeriod && !isSlScored);
+  const isSlNotScored = Boolean(isJourney && (!isSlScored || isSlMissed));
 
   // DM bisa langsung menilai jika misi bertipe JOURNEY, belum approved/completed, belum dinilai SL, dan periodenya sudah lewat
   const canDmDirectScore = Boolean(
@@ -76,6 +77,7 @@ const enrichEvaluationFlags = (userMission) => {
     isDirectDmScore,
     isPastPeriod,
     isSlMissed,
+    isSlNotScored,
     canDmDirectScore
   };
 };
@@ -140,6 +142,42 @@ const getUserMissions = async (query = {}, currentUser = null) => {
     where.mission = where.mission || {};
     where.mission.batchId = userActiveBatchId;
   }
+
+  // Auto-forward catch-up: Pastikan seluruh misi Journey periode lampau yang belum dinilai SL berstatus SCORED_BY_TL agar muncul di DM Approvals
+  try {
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+    const [y, m, d] = todayStr.split('-').map(Number);
+    const todayWib = new Date(y, m - 1, d, 0, 0, 0, 0);
+
+    const targetBatches = await prisma.batch.findMany({
+      where: {
+        status: 'OPEN',
+        ...(where.mission?.batchId ? { batchId: where.mission.batchId } : {})
+      },
+      select: { batchId: true, currentWeek: true }
+    });
+
+    for (const b of targetBatches) {
+      await prisma.userMission.updateMany({
+        where: {
+          mission: {
+            batchId: b.batchId,
+            type: 'JOURNEY',
+            OR: [
+              { weekOrDayNumber: { lt: b.currentWeek } },
+              { endDate: { lt: todayWib } }
+            ]
+          },
+          status: { in: ['ACTIVE', 'LOCKED'] },
+          tlScore: null
+        },
+        data: {
+          status: 'SCORED_BY_TL',
+          tlNotes: 'Diteruskan otomatis ke District Manager: Store Leader tidak melakukan penilaian pada periode ini.'
+        }
+      });
+    }
+  } catch (_) {}
 
   const [total, userMissions] = await Promise.all([
     prisma.userMission.count({ where }),
